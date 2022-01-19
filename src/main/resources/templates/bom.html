@@ -1,0 +1,120 @@
+<!DOCTYPE html>
+<html 	xmlns="http://www.w3.org/1999/xhtml"
+		xmlns:th="https://www.thymeleaf.org"
+      	xmlns:sec="https://www.thymeleaf.org/thymeleaf-extras-springsecurity5"
+      	lang="en">
+<head>
+    <title>IRT Bom.</title>
+    <link rel="shortcut icon" href="http://irttechnologies.com/favicon.ico">
+<th:block th:replace="components :: bootstrapLink">
+    <link rel="stylesheet" href="https://stackpath.bootstrapcdn.com/bootstrap/4.4.1/css/bootstrap.min.css">
+</th:block>
+    <link rel="stylesheet" href="../static/css/components.css" th:href="@{/css/components.css}">
+</head>
+<body>
+
+	<nav class="navbar fixed-top navbar-light bg-light row">
+ 
+<!-- Navigation Dropdown Menu from components.html -->
+		<div class="dropdown" th:replace="components :: dropdownMenu">
+  			<button class="btn btn-secondary dropdown-toggle" type="button" id="dropdownMenuButton" data-bs-toggle="dropdown" aria-expanded="false"></button>
+  			<div class="dropdown-menu" aria-labelledby="dropdownMenuButton">
+    			<a class="dropdown-item" href="components.html" th:href="@{/}">Components</a>
+    			<a class="dropdown-item" href="bom.html" th:href="@{/bom}">BOMs</a>
+  			</div>
+		</div>
+
+		<div class="nav-item col">
+  		<form class="row">
+<!-- BOM Part Number search-->
+  			<div class="input-group col">
+      			<label for="partNumber" class="input-group-text">PN</label>
+      			<input id="bomPartNumber" type="text" class="form-control searchInput" placeholder="BOM Part Number" aria-label="BOM Part Number">
+    		</div>
+
+ <!-- BOM Description search -->
+  			<div class="input-group ml-1 col">
+      			<label for="description" class="input-group-text">Description</label>
+      			<input id="bomDescription" type="text" class="form-control searchInput" placeholder="Description" aria-label="Description" aria-describedby="descriptionLbl" th:value="${description}">
+    		</div>
+
+<!-- Component Part Number search-->
+  			<div class="input-group ml-1 col">
+      			<label for="componentPartNumber" class="input-group-text">CPN</label>
+      			<input id="componentPartNumber" type="text" class="form-control searchInput" placeholder="Component Part Number" aria-label="Component Part Number" aria-describedby="componentPartNumberLbl">
+    		</div>
+
+ <!-- Component Mfr PN search -->
+  			<div class="input-group ml-1 col">
+      			<label for="componentMfrPN" class="input-group-text">MPN</label>
+      			<input id="componentMfrPN" type="text" class="form-control searchInput" placeholder="Component Mfr PN" aria-label="Component Mfr PN" aria-describedby="componentMfrPNLbl" th:value="${description}">
+    		</div>
+
+  		</form>
+  		</div>
+	</nav>
+
+<!-- Accordion -->
+	<div id="accordion" class="mt-5 accordion">
+
+<!-- Accordion:	Cards -->
+	<th:block th:fragment="bomCards">
+
+		<div class="accordion-item" th:each="bom, status : ${ boms }" th:with="index =${ status.index }" th:attr="data-bom-key=${ bom.key }">
+
+<!-- Accordion:	Card Header -->
+			<h5 th:id="heading + ${ index }" class="accordion-header">
+				<button type="button" class="btn btn-link accordion-button" data-bs-toggle="collapse" data-bs-target="#bom0" aria-expanded="true" aria-controls="bom0" th:attr="aria-controls ='bom'+${ index }, data-bs-target='#bom'+${ index }" style="width:100%">
+          			<div class="row" style="width:100%">
+          				<div class="col-4">
+          					<strong th:text="${ bom.owner.partNumber }"> Part Number </strong>
+          				</div>
+          				<div class="col-auto">:</div>
+          				<div class="col-5 text-secondary">
+          					<strong th:text="${ bom.description }">Description</strong>
+          				</div>
+          			</div>
+        		</button>
+			</h5>
+
+<!-- Accordion:	Card Body -->
+			<div id="bom0" th:id="bom + ${ index }" class="accordion-collapse collapse" aria-labelledby="heading0" th:attr="aria-labelledby ='heading'+${ index}" data-bs-parent="#accordion">
+				<div class="accordion-body" th:remove="body">
+				<th:blok th:fragment="bomBody">
+					<div class="row">
+						<div class="col-1">	#</div>
+						<div class="col-2"><strong>	Part Number	</strong></div>
+						<div class="col-2"><strong>	Mfr PN		</strong></div>
+						<div class="col"><strong>	Description	</strong></div>
+						<div class="col"><strong>	Reference	</strong></div>
+						<div class="col-1"><strong>	Qty			</strong></div>
+					</div>
+					<div class="row hover-light clickable" th:id="${ component.key }" th:each="bomContent, status : ${ bomContents }" th:with="component =${ bomContent.component }"th:classappend="${status.odd ? 'ood' : ''}"  th:onclick="onClick(this.id)">
+						<div class="col-1" th:text="${ status.count }">	#</div>
+						<div class="col-2 partNumber" th:text="${ component.partNumber }">	Part Number</div>
+						<div class="col-2 mfrPN" th:text="${ component.mfrPN }">			Mfr PN</div>
+						<div class="col description" th:text="${ component.description }">	Description</div>
+						<div class="col" th:text="${ bomContent.reference }">				reference</div>
+						<div class="col-1" th:text="${ bomContent.quantity }">				qty</div>
+					</div>
+				</th:blok>
+				</div>
+			</div>
+		</div>
+	</th:block>
+	</div>
+<!-- Accordion:	And -->
+
+<!-- Modal Message -->
+	<div id="modal" class="modal fade" tabindex="-1" role="dialog" th:replace="components :: componentData"></div>
+
+<th:block th:replace="components :: scripts">
+    <script type="application/javascript" src="https://ajax.googleapis.com/ajax/libs/jquery/3.6.0/jquery.min.js"></script>
+    <script type="application/javascript" src="https://cdnjs.cloudflare.com/ajax/libs/popper.js/2.9.2/umd/popper.min.js"></script>
+    <script type="application/javascript" src="https://stackpath.bootstrapcdn.com/bootstrap/4.4.1/js/bootstrap.min.js"></script>
+	<script type="application/javascript" src="https://cdn.jsdelivr.net/npm/js-cookie@2/src/js.cookie.min.js"></script>
+</th:block>
+	<script type="application/javascript" src="../static/js/irt.js" th:src="@{/js/irt.js}"></script>
+	<script type="application/javascript" src="../static/js/bom.js" th:src="@{/js/bom.js}"></script>
+</body>
+</html>

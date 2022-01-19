@@ -1,0 +1,15 @@
+.hover:hover {
+	 background-color: yellow;
+	 cursor:pointer;
+}
+.hover-light:hover {
+	 background-color: LightGrey;
+	 cursor:pointer;
+}
+.hover-almond:hover {
+	 background-color: BlanchedAlmond;
+	 cursor:pointer;
+}
+.ood{
+	background-color: rgb(240, 240, 225);
+}

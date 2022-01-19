@@ -1,0 +1,370 @@
+<!DOCTYPE html>
+<html 	xmlns="http://www.w3.org/1999/xhtml"
+		xmlns:th="https://www.thymeleaf.org"
+      	xmlns:sec="https://www.thymeleaf.org/thymeleaf-extras-springsecurity5"
+      	lang="en">
+<head>
+    <meta charset="UTF-8" />
+    <title>IRT Bom.</title>
+    <link rel="shortcut icon" href="http://irttechnologies.com/favicon.ico">
+    <link rel="stylesheet" href="https://stackpath.bootstrapcdn.com/bootstrap/4.4.1/css/bootstrap.min.css" data-integrity="sha384-Vkoo8x4CGsO3+Hhxv8T/Q5PaXtkKtu6ug5TOeNV6gBiFeWPGFN9MuhOf23Q9Ifjh" data-crossorigin="anonymous">
+    <link rel="stylesheet" href="../../static/css/components.css" th:href="@{/css/components.css}">
+</head>
+<body>
+
+<!-- Modal Message -->
+	<div id="modal" class="modal" tabindex="-1" role="dialog">
+	<th:block th:fragment="outputPower">
+  		<div class="modal-dialog">
+    		<div class="modal-content">
+<!-- Modal Header -->
+      			<div class="modal-header">
+        			<h5 id="inputValue" class="modal-title ml-3 text-primary" th:text="${power.value}">2125</h5>
+        			<h5 class="modal-title text-primary">-</h5>
+        			<input type="number" id="outputValue" placeholder="Output Power" value="30">
+        			<button type="button" id="addRow">Add Row</button>
+<!-- Calibration settings -->
+  					<div class="dropdown col-auto">
+  						<button class="btn dropdown-toggle" type="button" id="dropdownSettingsButton" data-bs-toggle="dropdown" aria-expanded="false"></button>
+  						<div class="dropdown-menu" aria-labelledby="dropdownSettingsButton">
+  							<div class="form-group row">
+    							<label class="col-sm-6 col-form-label text-end" for="minValue">Min.Value:</label>
+    							<div class="col-sm-6">
+    								<input type="number" class="form-control settings" id="minValue" placeholder="Minimum Value" value="30" th:value="${settings.startValue}">
+    							</div>
+  							</div>
+  							<div class="form-group row">
+    							<label class="col-sm-6 col-form-label text-end" for="maxValue">Max.Value:</label>
+    							<div class="col-sm-6">
+    								<input type="number" class="form-control settings" id="maxValue" placeholder="Maximum Value" value="46" th:value="${settings.stopValue}">
+    							</div>
+  							</div>
+  							<div class="form-group row">
+    							<label class="col-sm-6 col-form-label text-end" for="step">Step:</label>
+    							<div class="col-sm-6">
+    								<input type="number" class="form-control settings" id="step" placeholder="Step" value="3">
+    							</div>
+  							</div>
+   						</div>
+					</div>
+<!-- X Button -->
+        			<button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+      			</div>
+ <!-- Modal Body -->
+      			<div id="modal-body" class="modal-body">
+      			</div>
+ <!-- Modal Footer -->
+      			<div class="modal-footer">
+	        		<button type="button" id="save" class="btn btn-primary disabled">Save to Profile</button>
+	        		<button type="button" id="calc" class="btn btn-secondary disabled">Calculate Max. Value</button>
+	        		<button type="button" id="clear" class="btn btn-secondary disabled">Clear</button>
+	        		<button type="button" class="btn btn-outline-secondary" data-bs-dismiss="modal">Close</button>
+	    		</div>
+    		</div>
+  		</div>
+  		<script th:inline="javascript">
+			/*<![CDATA[*/
+
+			var unitSerialNumber =  /*[[${serialNumber}]]*/ 'IRT-2121021';
+
+			var err;
+			var interval;
+			function update(){
+				if(interval)
+					clearInterval(interval);
+
+				//get value from unit
+				interval = setInterval(function() {
+							$.post('/calibration/rest/calibrationInfo', {sn : unitSerialNumber})
+							.done(function(calInfo){
+								if(calInfo && calInfo.bias && calInfo.bias.power)
+									$('#inputValue').text(calInfo.bias.power.value);
+							})
+							.fail(function(error) {
+								if(err)
+									return;
+
+								err = error;
+								if(error.statusText!='abort'){
+									alert(error.responseText);
+									err = null;
+								};
+				   			});
+				}, 2000);
+			}
+// 			update();
+			var $modal = $('#modal');
+			$modal.on('shown.bs.modal', function (e) {
+				update();
+			});
+
+			$modal.on('hidden.bs.modal', function () {
+				clearInterval(interval);
+				interval = undefined;
+				err = null;
+			});
+
+			var ops = Cookies.get("outputPowerSteps");
+			if(ops)
+				$('#step').val(ops);
+
+			$('#step').focusout(function(){
+
+				var $this = $(this);
+				var val = $this.val();
+
+				if(val)
+					Cookies.set("outputPowerSteps", val, { expires: 99999 });
+				else{
+					Cookies.set("outputPowerSteps", null, { expires: 0 });
+					$this.val(3);
+				}
+			});
+
+			function onAddRow(){
+
+				var inputValue = $('#inputValue').text();
+				var $out = $('#outputValue');
+				var outputValue = $out.val();
+
+				if(!(inputValue && outputValue)){
+					alert('The input field cannot be empty.');
+					return;
+				}
+
+				addRow(inputValue, outputValue);
+
+				var max = parseInt($('#maxValue').val());
+				var out = parseInt(outputValue);
+
+				if(out == max){
+					alert('The value in the table has reached its maximum value.');
+					return;
+				}
+
+				if(out>max){
+					alert('The value in the table cannot be greater than the maximum set value.');
+					return;
+				}
+
+				var step = parseInt($('#step').val());
+				var newVal = out + step;
+
+				if(newVal > max)
+					newVal = max;
+
+				$out.val(newVal);
+			}
+
+			$('#addRow').click(onAddRow);
+			$('#outputValue').on('keypress', function (e) {
+				 if(e.which === 13)
+					 onAddRow();
+			});
+
+			function sortModalBody(){
+			    var items = $('#modal-body').children().sort(function(a, b) {
+			        var vA = $(a).find('.output').text();
+			        var vB = $(b).find('.output').text();
+			        return (vA < vB) ? -1 : (vA > vB) ? 1 : 0;
+			    });
+			    $('#modal-body').append(items);
+			}
+
+			function disableButtons(){
+
+				var $body = $('#modal-body');
+				var length = $body.children().length;
+
+				if(!length)
+					$('#clear').addClass('disabled');
+				else
+					$('#clear').removeClass('disabled');
+
+				var max = $('#maxValue').val();
+				var out = $body.children().last().find('.output').text();
+
+				if(length<2)
+					$('#calc').addClass('disabled');
+				else{
+					if(out>=max)
+						$('#calc').addClass('disabled');
+					else
+						$('#calc').removeClass('disabled');
+				}
+
+				if(out<max)
+					$('#save').addClass('disabled');
+				else
+					$('#save').removeClass('disabled');
+
+				return length;
+			}
+
+			function addRow(inputValue, outputValue){
+				$('<div>', {class: 'row'})
+				.append($('<div>', {class: 'col input'}).text(inputValue))
+				.append($('<div>', {class: 'col output'}).text(outputValue))
+				.append($('<div>', {class: 'col-auto'}).append($('<button>', {class: 'btn btn-link', onclick: 'removeRow(this)'}).text('Remove')))
+				.appendTo($('#modal-body'));
+
+				sortModalBody();
+				disableButtons();
+			}
+
+			function removeRow(button){
+				var parent = $(button).closest('.row').remove();
+				if(!disableButtons())
+		    		$('#outputValue').val($('#minValue').val())
+				}
+
+		    	$('#clear').click(function(){
+		    		$('#modal-body').empty();
+		    		$('#outputValue').val($('#minValue').val())
+					disableButtons();
+		    	});
+
+		    	$('#calc').click(function(){
+		    		var $last = $('#modal-body').children().last();
+		    		var $prev = $last.prev();
+
+		    		var prevIn = parseInt($prev.find('.input').text());
+		    		var prevOut = parseFloat($prev.find('.output').text());
+
+		    		var lastIn = parseInt($last.find('.input').text());
+		    		var lastOut = parseFloat($last.find('.output').text());
+
+// 		    		calculate the difference
+		    		var inpot;
+		    		if(lastIn>prevIn)
+		    			input = lastIn - prevIn;
+		    		else
+		    			input = prevIn - lastIn;
+
+		    		var out  = lastOut - prevOut;
+
+// 		    		calculate the factor
+					var factor = input/out;
+
+//					calculate max value
+					var max = parseFloat($('#maxValue').val());
+					var calc = (max-lastOut) * factor;
+
+					addRow(Math.round(lastIn + calc), max);
+					$('#outputValue').val(max);
+		    	});
+
+		    	$('#save').click(function(){
+
+		    		var hasError = false;
+		    		var direction;
+		    		var prevInput;
+		    		var array = [];
+
+		    		var table;
+		    		$('#modal-body').find('.row').each(function(){
+
+		    			if(hasError)
+		    				return;
+
+		    			var $row = $(this);
+		    			var input = $row.find('.input').text();
+
+		    			if(prevInput){
+		    				if(prevInput==input){
+		    					hasError = true;
+		    				}
+		    				if(direction !== undefined){
+		    					if(direction!=prevInput > input){
+			    					hasError = true;
+			    				}
+		    				}else
+		    					direction = prevInput > input;
+		    			}
+
+		    			if(hasError){
+		    				alert('There is an error in this table.');
+		    				return;
+		    			}
+
+		    			prevInput = input;
+		    			var out = $row.find('.output').text();
+
+		    			array.push({input: input, output: out});
+		    			table = { serialNumber: unitSerialNumber, name: 'Output Power', values: array };
+		    		});
+
+		    		if(hasError || !table)
+	    				return;
+
+		    		$.ajax({
+						url: '/calibration/rest/to_profile',
+						type: 'POST',
+						contentType: "application/json",
+						data: JSON.stringify(table),
+						dataType: 'json'
+					})
+					.done(function(data){
+						alert(data);
+					})
+					.fail(function(error) {
+						if(error.statusText!='abort'){
+							alert(error.responseText);
+						}
+					});
+		    		
+		    	});
+
+		    	/*[# th:if="${power.value}==null" ]*/
+		    		$.post('/calibration/rest/login?sn=' + unitSerialNumber);
+			    /*[/]*/
+
+		    	/*[# sec:authorize="hasAuthority('DATABASE')"]*/
+					$('#dropdownSettingsButton').on('hidden.bs.dropdown', function () {
+						if(confirm('Do you want to save your changes to the database?')){
+
+							var pn = $('#partNumber').val();
+							var min = $('#minValue').val();
+							var max = $('#maxValue').val();
+
+							if(!(pn && min && max)){
+								alert('One of the values is missing.')
+								return;
+							}
+
+							$.ajax({
+        						url: '/calibration/rest/outputpower',
+								type: 'POST',
+								contentType: "application/json",
+								data: JSON.stringify({
+									partNumber: pn,
+									startValue: min,
+									stopValue:  max,
+						        }),
+        						dataType: 'json'
+    						})
+    						.done(function(data){
+    							alert(data);
+							})
+							.fail(function(error) {
+								if(error.statusText!='abort'){
+									alert(error.responseText);
+								}
+							});
+						}
+					});
+			    /*[/]*/
+
+				/*]]>*/
+			//# sourceURL=outputPower.js
+  		</script>
+	</th:block>
+	</div>
+
+    <script type="application/javascript" src="https://ajax.googleapis.com/ajax/libs/jquery/3.5.1/jquery.min.js"></script>
+    <script type="application/javascript" src="https://cdnjs.cloudflare.com/ajax/libs/popper.js/2.10.2/umd/popper.min.js"></script>
+    <script type="application/javascript" src="https://stackpath.bootstrapcdn.com/bootstrap/4.4.1/js/bootstrap.min.js"></script>
+	<script type="application/javascript" src="https://cdn.jsdelivr.net/npm/js-cookie@2/src/js.cookie.min.js"></script>
+	<script type="application/javascript" src="../../static/js/irt.js" th:src="@{/js/irt.js}"></script>
+</body>
+</html>
