@@ -41,8 +41,9 @@
 		<div class="nav-item dropstart col-auto">
   			<button class="btn dropdown-toggle" type="button" id="dropdownCalibrateButton" data-bs-toggle="dropdown" aria-haspopup="true" aria-expanded="false">Calibrate</button>
   			<div class="dropdown-menu" aria-labelledby="dropdownCalibrateButton">
-    			<a class="dropdown-item calibrate" th:classappend="${info==null ? 'disabled list-group-item-light' : ''}" th:href="@{${info==null} ? '#' : '/calibration/output_power?sn=' + ${info.serialNumber} + '&pn=' + ${info.partNumber}}">Output Power</a>
-    			<a class="dropdown-item calibrate" th:classappend="${info==null ? 'disabled list-group-item-light' : ''}" th:href="@{${info==null} ? '#' : '/calibration/gain?sn=' + ${info.serialNumber}}">Gain</a>
+    			<a id="outputPower" class="dropdown-item calibrate" th:classappend="${info==null ? 'disabled list-group-item-light' : ''}" th:href="@{${info==null} ? '#' : '/calibration/output_power?sn=' + ${info.serialNumber} + '&pn=' + ${info.partNumber}}">Output Power</a>
+    			<a id="powerOffset" class="dropdown-item calibrate" th:classappend="${info==null ? 'disabled list-group-item-light' : ''}" th:href="@{${info==null} ? '#' : '/calibration/power_offset?sn=' + ${info.serialNumber} + '&pn=' + ${info.partNumber} + '&deviceId=' + ${#strings.substring(info.deviceId, 1, info.deviceId.length()-1)}}">Power Offset</a>
+    			<a id="temperature" class="dropdown-item calibrate" th:classappend="${info==null ? 'disabled list-group-item-light' : ''}" th:href="@{${info==null} ? '#' : '/calibration/temperature?sn=' + ${info.serialNumber}}">Temperature</a>
     			<a class="dropdown-item" id="upload" th:classappend="${info==null ? 'disabled list-group-item-light' : ''}" th:href="@{${info==null} ? '#' : '/calibration/rest/upload?sn=' + ${info.serialNumber}}">Upload Profile</a>
   			</div>
 		</div>
@@ -53,7 +54,7 @@
 	</div>
 
 <!-- Modal Message -->
-	<div id="modal" class="modal fade" tabindex="-1">
+	<div id="modal" class="modal" tabindex="-1">
   		<div class="modal-dialog">
     		<div class="modal-content">
       			<div class="modal-header">

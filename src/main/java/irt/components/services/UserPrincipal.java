@@ -8,8 +8,8 @@ import org.apache.logging.log4j.LogManager;
 import org.springframework.security.core.GrantedAuthority;
 import org.springframework.security.core.userdetails.UserDetails;
 
-import irt.components.jpa.beans.User;
-import irt.components.jpa.beans.User.Status;
+import irt.components.beans.jpa.User;
+import irt.components.beans.jpa.User.Status;
 
 public class UserPrincipal implements UserDetails {
 	private static final long serialVersionUID = -1600005108091389940L;

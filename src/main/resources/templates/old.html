@@ -1,0 +1,129 @@
+<!DOCTYPE html>
+<html 	xmlns="http://www.w3.org/1999/xhtml"
+		xmlns:th="https://www.thymeleaf.org"
+      	xmlns:sec="https://www.thymeleaf.org/thymeleaf-extras-springsecurity5"
+      	lang="en">
+<head>
+    <title>Old Database.</title>
+    <link rel="shortcut icon" href="http://irttechnologies.com/favicon.ico">
+<th:block th:replace="components :: bootstrapLink">
+    <link rel="stylesheet" href="https://stackpath.bootstrapcdn.com/bootstrap/4.4.1/css/bootstrap.min.css">
+</th:block>
+    <link rel="stylesheet" href="../static/css/components.css" th:href="@{/css/components.css}">
+</head>
+<body>
+
+	<nav class="navbar fixed-top navbar-light bg-light row">
+ 
+<!-- Navigation Dropdown Menu from components.html -->
+		<div class="dropdown" th:replace="components :: dropdownMenu">
+  			<button class="btn btn-secondary dropdown-toggle" type="button" id="dropdownMenuButton" data-bs-toggle="dropdown" aria-expanded="false"></button>
+  			<div class="dropdown-menu" aria-labelledby="dropdownMenuButton">
+    			<a class="dropdown-item" href="components.html" th:href="@{/}">Components</a>
+    			<a class="dropdown-item" href="bom.html" th:href="@{/bom}">BOMs</a>
+  			</div>
+		</div>
+
+		<div class="nav-item col">
+  		<form class="row">
+<!-- Name -->
+  			<div class="input-group col">
+      			<label for="pnName" class="input-group-text">Name</label>
+      			<select id="pnName" class="form-control" th:each="pnName : ${pnNames}">
+      				<option th:value="${pnName.code}" th:text="${pnName.code + ' - ' + pnName.name}"></option>
+      			</select>
+    		</div>
+
+ <!-- Type -->
+  			<div class="input-group ml-1 col">
+      			<label for="pnType" class="input-group-text">Type</label>
+       			<select id="pnType" class="form-control"></select>
+   		</div>
+
+<!-- Description -->
+  			<div class="input-group ml-1 col">
+      			<label for="description" class="input-group-text searchInput">Description</label>
+      			<input id="description" type="text" class="form-control searchInput" placeholder="Description" aria-label="Component Description">
+    		</div>
+
+ <!-- Create Button -->
+  		<div class="ml-1 col-auto" sec:authorize="hasAuthority('ALT_PART_NUMBER')">
+      		<button id="createBtn" type="button" class="btn btn-outline-primary disabled">Create</button>
+   		</div>
+
+<!-- Force next columns to break to new line -->
+			<div class="w-100"></div>
+
+ <!-- Component PN search -->
+  			<div class="input-group ml-1 col">
+      			<label for="componentPN" class="input-group-text searchInput">PN</label>
+      			<input id="componentPN" type="text" class="form-control searchInput" placeholder="Component PN" aria-label="Component PN">
+    		</div>
+ 
+ <!-- Component Mfr PN search -->
+  			<div class="input-group ml-1 col">
+      			<label for="componentMfrPN" class="input-group-text">MPN</label>
+      			<input id="componentMfrPN" type="text" class="form-control searchInput" placeholder="Component Mfr PN" aria-label="Component Mfr PN">
+    		</div>
+
+  		</form>
+  		</div>
+	</nav>
+
+<!-- Content -->
+	<div id="content" class="container-fluid mt-5 pt-5" th:remove="body">
+		<th:block th:fragment="content">
+			<div class="row mr">
+				<div class="col-sm-2"><strong>Part Number</strong></div>
+				<div class="col-sm-auto"><strong>Rev.</strong></div>
+				<div class="col-sm-2"><strong>Mfr PN</strong></div>
+				<div class="col-sm"><strong>Description</strong></div>
+			</div>
+			<div class="row hover mr clickable" th:if="${ components }!=null" th:each=" component, stat : ${ components }" th:id="${ component.id }" th:classappend="${stat.odd}? 'odd'">
+				<div class="col-sm-2 partNumber" th:text="${ component.partNumber }"><strong>Part Number</strong></div>
+				<div class="col-sm-auto revision">
+					<select th:if="${ component.revisions.size()>0 }">
+						<option th:each="revision : ${component.revisions}" th:value="${revision.pnRevision}" th:text="${revision.pnRevision}"></option>
+					</select>
+				</div>
+				<div class="col-sm-2 mfrPN" th:text="${ component.manufPartNumber }"><strong>Mfr PN</strong></div>
+				<div class="col-sm description" th:text="${ component.description }"><strong>Description</strong></div>
+				<div sec:authorize="hasAuthority('ALT_PART_NUMBER')" th:if="${ component.revisions.size()>0 }" class="col-auto"><button calss="btn btn-outline-warning" type="button" th:value="${ component.id }">Add Rev</button></div>
+			</div>
+ 			<script th:inline="javascript">
+				/*<![CDATA[*/
+
+				$('.clickable').click(function(e){
+
+					var target = e.target;
+					if(target.localName != 'button')
+						return;
+
+					if(!confirm('Create a new revision?'))
+						return;
+
+					var id = $(target).val();
+					$("#content").load('/create/revision', {id: id});
+				});
+				/*]]>*/
+				//# sourceURL=componentsContent.js
+  			</script>
+ 		</th:block>
+	</div>
+
+<!-- Modal Message -->
+	<div id="modal" class="modal fade" tabindex="-1" role="dialog" th:replace="components :: componentData"></div>
+
+<th:block th:replace="components :: scripts">
+    <script type="application/javascript" src="https://ajax.googleapis.com/ajax/libs/jquery/3.6.0/jquery.min.js"></script>
+    <script type="application/javascript" src="https://cdnjs.cloudflare.com/ajax/libs/popper.js/2.9.2/umd/popper.min.js"></script>
+    <script type="application/javascript" src="https://stackpath.bootstrapcdn.com/bootstrap/4.4.1/js/bootstrap.min.js"></script>
+	<script type="application/javascript" src="https://cdn.jsdelivr.net/npm/js-cookie@2/src/js.cookie.min.js"></script>
+</th:block>
+<script type="text/javascript" th:inline="javascript">
+	var pnNames = /*[[${pnNames}]]*/ [];
+	//# sourceURL=oldDB.js
+</script>
+	<script type="application/javascript" src="../static/js/old.js" th:src="@{/js/old.js}" th:inline="javascript"></script>
+</body>
+</html>

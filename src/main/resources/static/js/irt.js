@@ -3,7 +3,7 @@ function onClick(id){
 
 	if(id){
 
-		$post = $.post('/components/single', {key : id})
+		$.post('/components/single', {key : id})
 		.done(function(componentData){
 
 			if(!componentData.component){
@@ -79,6 +79,7 @@ function onClick(id){
 					}
 				});
 			}
+
 
 			$('#modal').modal('show');
 		})

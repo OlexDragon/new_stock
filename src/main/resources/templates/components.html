@@ -20,10 +20,11 @@
 
 <!-- Navigation Dropdown Menu -->
 			<div class="dropdown nav-item col-auto" th:fragment="dropdownMenu">
-  				<button class="btn btn-light dropdown-toggle" th:classappend="${#authentication.name == 'anonymousUser' ? null : 'bg-success'}" type="button" id="dropdownMenuButton" data-bs-toggle="dropdown" aria-expanded="false" th:text="${#authentication.name == 'anonymousUser' ? '' : #authentication.name}"></button>
+  				<button class="btn dropdown-toggle" th:classappend="${#authentication.name == 'anonymousUser' ? 'btn-light' : 'btn-outline-success'}" type="button" id="dropdownMenuButton" data-bs-toggle="dropdown" aria-expanded="false" th:text="${#authentication.name == 'anonymousUser' ? '' : #authentication.name}"></button>
   				<div class="dropdown-menu" aria-labelledby="dropdownMenuButton">
     				<a class="dropdown-item" href="components.html" th:href="@{/}">Components</a>
     				<a class="dropdown-item" href="bom.html" th:href="@{/bom}">BOMs</a>
+    				<a class="dropdown-item" href="old.html" th:href="@{/old}">Old DB</a>
     				<a class="dropdown-item" href="calibration.html" th:href="@{/calibration}">Calibration</a>
     				<div class="dropdown-divider"></div>
     				<div sec:authorize="isAuthenticated()" class="dropdown-item">
@@ -68,7 +69,41 @@
 	</nav>
 
 <!-- Content -->
-	<div id="content" class="container-fluid mt-5">
+	<div id="content" class="container-fluid mt-5" th:remove="body">
+		<th:block th:fragment="content">
+			<div class="row mr">
+				<div class="col-sm-2"><strong>Part Number</strong></div>
+				<div class="col-sm-2"><strong>Mfr PN</strong></div>
+				<div class="col-sm"><strong>Description</strong></div>
+			</div>
+			<div class="row hover mr clickable" th:if="${ components }!=null" th:each=" component, stat : ${ components }" th:id="${ component.key }" th:classappend="${stat.odd}? 'odd'">
+				<div class="col-sm-2 partNumber" th:text="${ component.partNumber }"><strong>Part Number</strong></div>
+				<div class="col-sm-2 mfrPN" th:text="${ component.mfrPN }"><strong>Mfr PN</strong></div>
+				<div class="col-sm description" th:text="${ component.description }"><strong>Description</strong></div>
+				<div sec:authorize="hasAuthority('STOCK')" class="col-auto"><button calss="btn btn-outline-warning">Use</button></div>
+			</div>
+  			<script th:inline="javascript">
+				/*<![CDATA[*/
+
+				$('.clickable').click(function(e){
+
+					var target = e.target;
+
+					if(target.nodeName == 'BUTTON'){
+
+						var row = target.parentNode.parentNode;
+						inventory(row);
+
+					}else{
+
+						var id = target.parentNode.id;
+						onClick(id);
+					}
+				});
+				/*]]>*/
+				//# sourceURL=componentsContent.js
+  			</script>
+		</th:block>
 	</div>
 
 <!-- Modal Message -->

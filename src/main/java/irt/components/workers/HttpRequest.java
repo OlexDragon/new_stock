@@ -36,7 +36,7 @@ import com.fasterxml.jackson.core.JsonParseException;
 import com.fasterxml.jackson.databind.DeserializationFeature;
 import com.fasterxml.jackson.databind.ObjectMapper;
 
-import irt.components.beans.calibration.update.Profile;
+import irt.components.beans.irt.update.Profile;
 
 public class HttpRequest {
 	private final static Logger logger = LogManager.getLogger();
@@ -124,7 +124,7 @@ public class HttpRequest {
 
 				json = EntityUtils.toString(entity).trim();
 
-				if(classToReturn==null || json.matches(".*\\<[^>]+>.*"))
+				if(classToReturn==null || json.matches(".*\\<[^>]+>.*"))	// If HTML page
 					return null;
 
 				final ObjectMapper mapper = new ObjectMapper();
@@ -150,6 +150,14 @@ public class HttpRequest {
 
 	private static String javaScriptToJSon(String javaScript) {
 //		logger.error("*** javaScriptToJSon input json: ({})", javaScript);
+
+		final int index = javaScript.indexOf("boards");
+		if(index>0) {
+			javaScript = javaScript.substring(0, index);
+			final int lastIndexOf = javaScript.lastIndexOf(",");
+			javaScript = javaScript.substring(0, lastIndexOf);
+			javaScript += '}';
+		}
 
 		if(javaScript.endsWith(";"))
 			javaScript = javaScript.substring(0, javaScript.lastIndexOf("}") + 1);
@@ -287,7 +295,7 @@ public class HttpRequest {
 			while ((line = reader.readLine())!=null) {
 				buf.append(line).append(System.getProperty("line.separator"));
 			}
-			logger.error(buf);
+//			logger.error(buf);
 		}
 
 		connection.disconnect();

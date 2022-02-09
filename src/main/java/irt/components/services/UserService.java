@@ -9,8 +9,8 @@ import org.springframework.security.core.userdetails.UserDetailsService;
 import org.springframework.security.core.userdetails.UsernameNotFoundException;
 import org.springframework.stereotype.Service;
 
-import irt.components.jpa.beans.User;
-import irt.components.jpa.repository.UserRepository;
+import irt.components.beans.jpa.User;
+import irt.components.beans.jpa.repository.UserRepository;
 
 @Service
 public class UserService implements UserDetailsService  {

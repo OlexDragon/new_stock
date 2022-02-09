@@ -10,6 +10,7 @@ import java.nio.file.PathMatcher;
 import java.nio.file.Paths;
 import java.nio.file.SimpleFileVisitor;
 import java.nio.file.attribute.BasicFileAttributes;
+import java.util.ArrayList;
 import java.util.List;
 import java.util.Optional;
 import java.util.Scanner;
@@ -18,13 +19,15 @@ import java.util.concurrent.atomic.AtomicReference;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 
-import irt.components.beans.calibration.ProfileTableDetails;
-import irt.components.beans.calibration.ProfileTableTypes;
-import irt.components.beans.calibration.update.TableValue;
+import irt.components.beans.irt.calibration.CalibrationTable;
+import irt.components.beans.irt.calibration.PowerDetectorSource;
+import irt.components.beans.irt.calibration.ProfileTable;
+import irt.components.beans.irt.calibration.ProfileTableDetails;
+import irt.components.beans.irt.calibration.ProfileTableTypes;
+import irt.components.beans.irt.update.TableValue;
 import lombok.Getter;
 import lombok.RequiredArgsConstructor;
 import lombok.ToString;
-import irt.components.beans.calibration.ProfileTable;
 
 @RequiredArgsConstructor @Getter @ToString
 public class ProfileWorker {
@@ -149,5 +152,166 @@ public class ProfileWorker {
 		}
 
 		return false;
+	}
+
+	public Optional<CalibrationTable> getTable(String description) {
+		return scanForTable(description).map(this::getTable);
+	}
+
+	public CalibrationTable getTable(ProfileTable profileTable) {
+
+		switch(profileTable.getType()) {
+
+		case NEW:
+			newTableScan(profileTable);
+			break;
+
+		case OLD:
+			oldTableScan(profileTable);
+			break;
+
+		case KA:
+		case UNKNOWN:
+		default:
+		}
+
+		return profileTable.getCalibrationTable();
+	}
+
+	private void newTableScan(ProfileTable profileTable) {
+
+		if(!oPath.isPresent())
+			throw new RuntimeException("The profile does not exist.");
+
+		final Path path = oPath.get();
+		final List<TableValue> table = new ArrayList<>();
+
+		try(final Scanner scanner = new Scanner(path);) {
+
+			while(scanner.hasNextLine()) {
+				final String line = scanner.nextLine();
+
+				if(line.startsWith("lut-entry")) {
+
+					final String[] split = line.split("\\s+", 5);
+
+					if(split[1].equals(profileTable.getIndex())) {
+
+						final Number input;
+						if(split[2].contains("."))
+							input = Double.parseDouble(split[2]);
+						else
+							input = Integer.parseInt(split[2]);
+
+						Number output = Double.parseDouble(split[3]);
+						table.add(new TableValue(input, output));
+					}
+				}
+			}
+
+			final CalibrationTable calibrationTable = new CalibrationTable(serialNumber, table);
+			profileTable.setCalibrationTable(calibrationTable);
+
+		} catch (IOException e) {
+			logger.catching(e);
+		}
+	}
+
+	private void oldTableScan(ProfileTable profileTable) {
+
+		if(!oPath.isPresent())
+			throw new RuntimeException("The profile does not exist.");
+
+		final Path path = oPath.get();
+		final List<TableValue> table = new ArrayList<>();
+
+		try(final Scanner scanner = new Scanner(path);) {
+
+			while(scanner.hasNextLine()) {
+				final String line = scanner.nextLine();
+
+				if(line.startsWith(profileTable.getName() + "-lut-entry")) {
+
+					final String[] split = line.split("\\s+", 5);
+
+					final Number input;
+					if(split[1].contains("."))
+						input = Double.parseDouble(split[1]);
+					else
+						input = Integer.parseInt(split[1]);
+
+					Number output = Double.parseDouble(split[2]);
+					table.add(new TableValue(input, output));
+				}
+			}
+
+			final CalibrationTable calibrationTable = new CalibrationTable(serialNumber, table);
+			profileTable.setCalibrationTable(calibrationTable);
+
+		} catch (IOException e) {
+			logger.catching(e);
+		}
+	}
+
+	public PowerDetectorSource scanForPowerDetectorSource() {
+
+		if(!oPath.isPresent())
+			throw new RuntimeException("The profile does not exist.");
+
+		final Path path = oPath.get();
+		
+		try(final Scanner scanner = new Scanner(path);) {
+
+			while(scanner.hasNextLine()) {
+				final String line = scanner.nextLine();
+
+				if(line.startsWith("power-detector-source")) {
+
+					final String[] split = line.split("#", 2)[0].split("\\s+", 3);
+
+					if(split.length>2)
+						return PowerDetectorSource.ON_BOARD_SENSOR;
+
+					final int index = Integer.parseInt(split[1]);
+
+					final PowerDetectorSource[] values = PowerDetectorSource.values();
+
+					if(index>=values.length)
+						return PowerDetectorSource.UNDEFINED;
+
+					return values[index];
+				}
+			}
+		} catch (Exception e) {
+			logger.catching(e);
+		}
+
+		return PowerDetectorSource.UNDEFINED;
+	}
+
+	public Optional<Double> getGain() {
+
+		if(!oPath.isPresent())
+			throw new RuntimeException("The profile does not exist.");
+
+		final Path path = oPath.get();
+		
+		try(final Scanner scanner = new Scanner(path);) {
+
+			while(scanner.hasNextLine()) {
+				final String line = scanner.nextLine();
+
+				if(line.startsWith("zero-attenuation-gain")) {
+
+					final String[] split = line.split("\\s+", 3);
+
+					return Optional.of(Double.parseDouble(split[1]));
+				}
+			}
+		} catch (Exception e) {
+			logger.catching(e);
+		}
+
+		return Optional.empty();
 	}
 }

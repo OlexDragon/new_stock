@@ -1,0 +1,341 @@
+<!DOCTYPE html>
+<html 	xmlns="http://www.w3.org/1999/xhtml"
+		xmlns:th="https://www.thymeleaf.org"
+      	xmlns:sec="https://www.thymeleaf.org/thymeleaf-extras-springsecurity5"
+      	lang="en">
+<head>
+    <meta charset="UTF-8" />
+    <title>IRT Bom.</title>
+    <link rel="shortcut icon" href="http://irttechnologies.com/favicon.ico">
+    <link rel="stylesheet" href="https://stackpath.bootstrapcdn.com/bootstrap/4.4.1/css/bootstrap.min.css" data-integrity="sha384-Vkoo8x4CGsO3+Hhxv8T/Q5PaXtkKtu6ug5TOeNV6gBiFeWPGFN9MuhOf23Q9Ifjh" data-crossorigin="anonymous">
+    <link rel="stylesheet" href="../../static/css/components.css" th:href="@{/css/components.css}">
+</head>
+<body>
+
+<!-- Modal Message -->
+	<div id="modal" class="modal" tabindex="-1" role="dialog">
+	<th:block th:fragment="modal">
+  		<div class="modal-dialog">
+    		<div class="modal-content">
+<!-- Modal Header -->
+      			<div class="modal-header">
+      				<select id="base" class="form-select">
+      					<option th:each="pair : ${ table }" th:value="${ pair.input }" th:text="${ pair.output }" ></option>
+      				</select>
+        			<h5 id="inputValue" class="modal-title ml-3 text-primary" th:text="${power.value}">2125</h5>
+        			<h5 class="modal-title text-primary">-</h5>
+        			<input type="number" id="outputValue" class="form-control" placeholder="Output Power" value="30" th:value="${settings.startValue.stripTrailingZeros()}">
+        			<button type="button" id="addRow">Add</button>
+<!-- Calibration settings -->
+  					<div class="dropdown col-auto">
+  						<button class="btn dropdown-toggle" type="button" id="dropdownSettingsButton" data-bs-toggle="dropdown" aria-expanded="false"></button>
+  						<div class="dropdown-menu" aria-labelledby="dropdownSettingsButton">
+  							<div class="form-group row">
+    							<label class="col-sm-5 col-form-label text-end" for="minValue">Min.:</label>
+    							<div class="col-sm-7">
+    								<input type="number" class="form-control settings" id="minValue" placeholder="Minimum Value" value="30" th:value="${settings.startValue.stripTrailingZeros()}">
+    							</div>
+  							</div>
+  							<div class="form-group row">
+    							<label class="col-sm-5 col-form-label text-end" for="maxValue">Max.:</label>
+    							<div class="col-sm-7">
+    								<input type="number" class="form-control settings" id="maxValue" placeholder="Maximum Value" value="46" th:value="${settings.stopValue.stripTrailingZeros()}">
+    							</div>
+  							</div>
+  							<div class="form-group row">
+    							<label class="col-sm-5 col-form-label text-end" for="step">Step:</label>
+    							<div class="col-sm-7">
+    								<input type="number" class="form-control settings" id="step" placeholder="Step" value="0.1">
+    							</div>
+  							</div>
+   						</div>
+					</div>
+<!-- X Button -->
+        			<button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+      			</div>
+ <!-- Modal Body -->
+      			<div id="modal-body" class="modal-body">
+      			</div>
+ <!-- Modal Footer -->
+      			<div class="modal-footer">
+	        		<button type="button" id="save" class="btn btn-primary disabled">Save to Profile</button>
+	        		<button type="button" id="clear" class="btn btn-secondary disabled">Clear</button>
+	        		<button type="button" class="btn btn-outline-secondary" data-bs-dismiss="modal">Close</button>
+	    		</div>
+    		</div>
+  		</div>
+  		<script th:inline="javascript">
+			/*<![CDATA[*/
+
+		    /*[# th:if="${message}!=null" ]*/
+				alert(/*[[${message}]]*/ 'Message');
+				return;
+			/*[/]*/
+
+			var unitSerialNumber =  /*[[${serialNumber}]]*/ 'IRT-2121021';
+
+			var pos = Cookies.get("powerOffsetSteps");
+			if(pos)
+				$('#step').val(pos);
+
+			$('#step').focusout(function(){
+
+				var $this = $(this);
+				var val = $this.val();
+
+				if(val)
+					Cookies.set("powerOffsetSteps", val, { expires: 99999 });
+				else{
+					Cookies.set("powerOffsetSteps", null, { expires: 0 });
+					$this.val('0.1');
+				}
+			});
+
+			var err;
+			var interval;
+			function update(){
+				if(interval)
+					clearInterval(interval);
+
+				//get value from unit
+				interval = setInterval(function() {
+							$.post('/calibration/rest/calibrationInfo', {sn : unitSerialNumber})
+							.done(function(calInfo){
+								if(calInfo && calInfo.bias && calInfo.bias.power)
+									$('#inputValue').text(calInfo.bias.power.value);
+							})
+							.fail(function(error) {
+								if(err)
+									return;
+
+								err = error;
+								if(error.statusText!='abort'){
+									alert(error.responseText);
+									err = null;
+								};
+				   			});
+				}, 2000);
+			}
+			update();
+			var $modal = $('#modal');
+			$modal.on('shown.bs.modal', function (e) {
+				update();
+			});
+
+			$modal.on('hidden.bs.modal', function () {
+				clearInterval(interval);
+				interval = undefined;
+				err = null;
+			});
+
+			function onAddRow(){
+
+				var base = $('#base').val();
+				var value = $('#inputValue').text();
+
+				var offset = eval(/*[[${jsFunction}]]*/);
+				if(!offset)
+					return;
+
+				var $freq = $('#outputValue');
+				var freq = $freq.val();
+
+				if(!(freq && offset)){
+					alert('The input field cannot be empty.');
+					return;
+				}
+
+				addRow(freq, offset);
+
+				var max = parseFloat($('#maxValue').val());
+				var out = parseFloat(freq);
+
+				if(out>max){
+					alert('The value in the table cannot be greater than the maximum set value.');
+					return;
+				}
+
+				var step = parseFloat($('#step').val());
+				var newVal = out + step;
+
+				if(newVal >= max){
+					newVal = max;
+					alert('The value in the table has reached its maximum value.');
+				}
+
+				$freq.val(Number(Number(newVal).toFixed(9)));
+			}
+
+			$('#addRow').click(onAddRow);
+			$('#outputValue').on('keypress', function (e) {
+				 if(e.which === 13)
+					 onAddRow();
+			});
+
+			function sortModalBody(){
+			    var items = $('#modal-body').children().sort(function(a, b) {
+			        var vA = $(a).find('.input').text();
+			        var vB = $(b).find('.input').text();
+			        return (vA < vB) ? -1 : (vA > vB) ? 1 : 0;
+			    });
+			    $('#modal-body').append(items);
+			}
+
+			function disableButtons(){
+
+				var $body = $('#modal-body');
+				var length = $body.children().length;
+
+				if(!length){
+					$('#clear').addClass('disabled');
+					$('#base').prop('disabled', false);
+				}else{
+					$('#clear').removeClass('disabled');
+					$('#base').prop('disabled', true);
+				}
+
+				var max = $('#maxValue').val();
+				var out = $('#outputValue').val();
+
+				if(out<max)
+					$('#save').addClass('disabled');
+				else
+					$('#save').removeClass('disabled');
+
+				return length;
+			}
+
+			function addRow(inputValue, outputValue){
+				$('<div>', {class: 'row'})
+				.append($('<div>', {class: 'col input'}).text(inputValue))
+				.append($('<div>', {class: 'col output'}).text(outputValue))
+				.append($('<div>', {class: 'col-auto'}).append($('<button>', {class: 'btn btn-link', onclick: 'removeRow(this)'}).text('Remove')))
+				.appendTo($('#modal-body'));
+
+				sortModalBody();
+				disableButtons();
+			}
+
+			function removeRow(button){
+				var parent = $(button).closest('.row').remove();
+				if(!disableButtons())
+		    		$('#outputValue').val($('#minValue').val())
+			}
+
+		    $('#clear').click(function(){
+		    	$('#modal-body').empty();
+		    	$('#outputValue').val($('#minValue').val())
+				disableButtons();
+		    });
+
+		    $('#save').click(function(){
+
+		    	var hasError = false;
+		    	var prevInput;
+		    	var array = [];
+
+		    	$('#modal-body').find('.row').each(function(){
+
+		    		if(hasError)
+		    			return;
+
+		    		var $row = $(this);
+		    		var input = $row.find('.input').text();
+
+		    		if(prevInput && prevInput==input)
+		    				hasError = true;
+
+		    		if(hasError){
+		    			alert('There is an error in this table.');
+		    			return;
+		    		}
+
+		    		prevInput = input;
+		    		var out = $row.find('.output').text();
+
+		    		/*[# th:if="${inHertz}" ]*/
+			    		input = parseInt(input*1000000000);
+					/*[/]*/
+
+		    		array.push({input: input, output: out});
+		    	});
+
+		    	if(hasError || !array.length){
+		    		alert('The Table is missing.');
+	    			return;
+		    	}
+
+		    	var table = { serialNumber: unitSerialNumber, name: 'Power Offset', values: array };
+
+		    	$.ajax({
+					url: '/calibration/rest/to_profile',
+					type: 'POST',
+					contentType: "application/json",
+					data: JSON.stringify(table),
+					dataType: 'json'
+				})
+				.done(function(data){
+					alert(data);
+				})
+				.fail(function(error) {
+					if(error.statusText!='abort'){
+						alert(error.responseText);
+					}
+				});
+		    		
+		    });
+
+		    /*[# th:if="${power.value}==null" ]*/
+		    	$.post('/calibration/rest/login?sn=' + unitSerialNumber);
+			/*[/]*/
+
+		    /*[# sec:authorize="hasAuthority('DATABASE')"]*/
+				$('#dropdownSettingsButton').on('hidden.bs.dropdown', function () {
+					if(confirm('Do you want to save your changes to the database?')){
+
+						var pn = $('#partNumber').val();
+						var min = $('#minValue').val();
+						var max = $('#maxValue').val();
+						var step = $('#step').val();
+
+						if(!(pn && min && max)){
+							alert('One of the values is missing.')
+							return;
+						}
+
+						$.ajax({
+        					url: '/calibration/rest/power_offset',
+							type: 'POST',
+							contentType: "application/json",
+							data: JSON.stringify({
+								partNumber: pn,
+								startValue: min,
+								stopValue:  max,
+						    }),
+        					dataType: 'json'
+    					})
+    					.done(function(data){
+    						alert(data);
+						})
+						.fail(function(error) {
+							if(error.statusText!='abort'){
+								alert(error.responseText);
+							}
+						});
+					}
+				});
+			/*[/]*/
+
+		/*]]>*/
+		//# sourceURL=powerOffset.js
+  		</script>
+	</th:block>
+	</div>
+
+    <script type="application/javascript" src="https://ajax.googleapis.com/ajax/libs/jquery/3.5.1/jquery.min.js"></script>
+    <script type="application/javascript" src="https://cdnjs.cloudflare.com/ajax/libs/popper.js/2.10.2/umd/popper.min.js"></script>
+    <script type="application/javascript" src="https://stackpath.bootstrapcdn.com/bootstrap/4.4.1/js/bootstrap.min.js"></script>
+	<script type="application/javascript" src="https://cdn.jsdelivr.net/npm/js-cookie@2/src/js.cookie.min.js"></script>
+	<script type="application/javascript" src="../../static/js/irt.js" th:src="@{/js/irt.js}"></script>
+</body>
+</html>

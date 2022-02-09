@@ -1,15 +1,20 @@
 if(!$('#serialNumber').text())
 	new bootstrap.Modal('#modal').show();
 
+var calibrateId = undefined;
+
 // Show Calibration message
 $('.calibrate').click(function(e){
 	e.preventDefault();
 
+	var id = e.target.id;
 	var $modal = $('#modal');
 
 // Load for first time or when changed the serial number 
-	if(typeof unitSerialNumber==='undefined' || !$('#serialNumber').text().match('^' + unitSerialNumber))
+	if(typeof unitSerialNumber==='undefined' || !$('#serialNumber').text().match('^' + unitSerialNumber) || calibrateId!=id){
+		calibrateId = id;
 		$modal.load(this.href);
+	}
 
 	$modal.modal('show');
 });
@@ -66,7 +71,7 @@ $('#scan').click(function(e){
 	$modal.empty();
 	$modal
 	.append(
-		$('<div>', {class:'modal-dialog'})
+		$('<div>', {class:'modal-dialog modal-lg'})
 		.append(
 			$('<div>', {class:'modal-content'})
 			.append(
@@ -77,7 +82,7 @@ $('#scan').click(function(e){
 			.append($modalBody)
 			.append(
 				$('<div>', {class:'modal-footer'})
-				.append($('<button>', {type:'button', class: 'btn btn-outline-secondary', 'data-bs-dismiss': 'modal'}).text('Close'))
+				.append($('<button>', {type:'button', class: 'btn btn-secondary', 'data-bs-dismiss': 'modal'}).text('Close'))
 			)
 		)
 	);
@@ -123,9 +128,14 @@ $('#scan').click(function(e){
 					return;
 
 				$text.append($('<a>', {href: 'http://' + ipAddress, target: "_blank"}).text(info["Serial number"]));
-				$row.append(
+				$row
+				.append(
+					$('<div>', {class: 'col-auto'}).append($('<a>', { class: 'btn btn-sm btn-outline-dark', target: "_blank", href: '/calibration?sn=' + info["Serial number"]}).text('Calibrate'))
+				)
+				.append(
 					$('<div>', {class: 'col-auto'}).append($('<a>', { class: 'btn btn-sm btn-outline-info', onclick: 'login(event, this)', target: "_blank", href: '/calibration/rest/login?sn=' + info["Serial number"]}).text('Login'))
-				);
+				)
+;
 				$row.attr('data-bs-toggle','tooltip').attr('data-bs-placement','top').attr('title', info["Product name"]);
 			});
 		});

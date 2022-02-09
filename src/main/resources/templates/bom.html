@@ -86,16 +86,20 @@
 						<div class="col-2"><strong>	Part Number	</strong></div>
 						<div class="col-2"><strong>	Mfr PN		</strong></div>
 						<div class="col"><strong>	Description	</strong></div>
+						<div class="col-auto"><strong>	L	</strong></div>
 						<div class="col"><strong>	Reference	</strong></div>
-						<div class="col-1"><strong>	Qty			</strong></div>
+						<div class="col-auto"><strong>	Qty			</strong></div>
 					</div>
-					<div class="row hover-light clickable" th:id="${ component.key }" th:each="bomContent, status : ${ bomContents }" th:with="component =${ bomContent.component }"th:classappend="${status.odd ? 'ood' : ''}"  th:onclick="onClick(this.id)">
+					<div class="row hover-light clickable" th:id="${component}!=null ? ${component.key } : null" th:each="bomContent, status : ${ bomContents }" th:with="component =${ bomContent.component }" th:classappend="${status.odd ? 'odd' : ''}"  th:onclick="onClick(this.id)">
 						<div class="col-1" th:text="${ status.count }">	#</div>
-						<div class="col-2 partNumber" th:text="${ component.partNumber }">	Part Number</div>
-						<div class="col-2 mfrPN" th:text="${ component.mfrPN }">			Mfr PN</div>
-						<div class="col description" th:text="${ component.description }">	Description</div>
-						<div class="col" th:text="${ bomContent.reference }">				reference</div>
-						<div class="col-1" th:text="${ bomContent.quantity }">				qty</div>
+						<th:block th:if="${component}!=null">
+							<div class="col-2 partNumber" th:text="${ component.partNumber }">	Part Number</div>
+							<div class="col-2 mfrPN" th:text="${ component.mfrPN }">			Mfr PN</div>
+							<div class="col description" th:text="${ component.description }">	Description</div>
+						</th:block>
+						<div class="col-auto" th:text="${ bomContent.bomLetter==null ? '_' : bomContent.bomLetter.letter }">Letter</div>
+						<div class="col" th:text="${ bomContent.reference }">					reference</div>
+						<div class="col-auto" th:text="${ bomContent.quantity }">					qty</div>
 					</div>
 				</th:blok>
 				</div>
