@@ -1,0 +1,146 @@
+<!DOCTYPE html>
+<html 	xmlns="http://www.w3.org/1999/xhtml"
+		xmlns:th="https://www.thymeleaf.org"
+      	xmlns:sec="https://www.thymeleaf.org/thymeleaf-extras-springsecurity5"
+      	lang="en">
+<head>
+    <title>IRT RMAs.</title>
+    <link rel="shortcut icon" href="http://irttechnologies.com/favicon.ico">
+<th:block th:replace="components :: bootstrapLink">
+    <link rel="stylesheet" href="https://stackpath.bootstrapcdn.com/bootstrap/4.4.1/css/bootstrap.min.css">
+</th:block>
+    <link rel="stylesheet" href="../static/css/components.css" th:href="@{/css/components.css}">
+</head>
+<body>
+
+	<nav class="navbar fixed-top navbar-light bg-light row">
+ 
+<!-- Navigation Dropdown Menu from components.html -->
+		<div class="dropdown" th:replace="components :: dropdownMenu">
+  			<button class="btn btn-secondary dropdown-toggle" type="button" id="dropdownMenuButton" data-bs-toggle="dropdown" aria-expanded="false"></button>
+  			<div class="dropdown-menu" aria-labelledby="dropdownMenuButton">
+    			<a class="dropdown-item" href="components.html" th:href="@{/}">Components</a>
+    			<a class="dropdown-item" href="bom.html" th:href="@{/bom}">BOMs</a>
+  			</div>
+		</div>
+
+		<div class="nav-item col">
+  		<form class="row">
+
+<!-- RMA Serial Number search-->
+  			<div class="input-group col">
+      			<label for="rmaSerialNumber" class="input-group-text">PN</label>
+      			<input id="rmaSerialNumber" type="text" class="form-control searchRma" placeholder="RMA Serial Number" aria-label="RMA Serial Number">
+    		</div>
+
+ <!-- RMA Description search -->
+  			<div class="input-group ml-1 col">
+      			<label for="rmaDescription" class="input-group-text">Description</label>
+      			<input id="rmaDescription" type="text" class="form-control searchRma" placeholder="Description" aria-label="Description" aria-describedby="descriptionLbl" th:value="${description}">
+    		</div>
+
+  			<div sec:authorize="hasAuthority('ADD_RMA')" class="ml-1 col-auto">
+ <!-- Add RMA unit Button -->
+      			<button id="addRMA" class="form-control btn btn-outline-primary disabled">Add</button>
+    		</div>
+
+  		</form>
+  		</div>
+	</nav>
+
+<!-- Accordion -->
+	<div id="accordion" class="mt-5 accordion">
+
+<!-- Accordion:	Cards -->
+	<th:block th:fragment="rmaCards">
+
+		<div class="accordion-item" th:each="rma, status : ${ rmas }" th:with="index =${ status.index }" th:id="${ rma.id }">
+
+<!-- Accordion:	Card Header -->
+			<h5 th:id="heading + ${ index }" class="accordion-header">
+				<button type="button" class="btn btn-link accordion-button" data-bs-toggle="collapse" data-bs-target="#rma0" aria-expanded="true" aria-controls="rma0" th:attr="aria-controls ='rma'+${ index }, data-bs-target='#rma'+${ index }" style="width:100%">
+          			<div class="row" style="width:100%">
+          				<div class="col-4">
+          					<strong class="serialNumber" th:text="${ rma.serialNumber }"> Serial Number </strong>
+          				</div>
+          				<div class="col-auto">:</div>
+          				<div class="col-5 text-secondary">
+          					<strong th:text="${ rma.description }">Description</strong>
+          				</div>
+           			</div>
+        		</button>
+			</h5>
+
+<!-- Accordion:	Card Body -->
+			<div id="rma0" th:id="rma + ${ index }" class="accordion-collapse collapse" aria-labelledby="heading0" th:attr="aria-labelledby ='heading'+${ index}" data-bs-parent="#accordion">
+				<div id="accordion-body" class="accordion-body" th:remove="body">
+				<th:block th:fragment="rmaBody">
+					<div class="row">
+						<div class="col-1"> # </div>
+						<div class="col"><strong>	  Comments </strong></div>
+						<div class="col-1"><strong>	  User </strong></div>
+						<div class="col-2"><strong>Date </strong></div>
+					</div>
+					<div class="row hover-light" th:id="${ rmaContent }!=null ? ${ rmaContent.id } : null" th:each="rmaContent, status : ${ comments }" th:with="user = ${ rmaContent.user }" th:classappend="${status.odd ? 'odd' : ''}">
+						<div class="col-1" th:text="${ status.count }">	#</div>
+						<div class="col comment pre-line" th:text="${ rmaContent.comment }">	User name </div>
+						<div class="col-1 username" th:text="${ user.username }">	User name </div>
+						<div class="col-2 date" th:text="${#dates.format( rmaContent.date, 'dd MMM yyyy hh:mm' )}">		Date </div>
+					</div>
+				</th:block>
+				</div>
+			</div>
+		</div>
+<!-- 		 sec:authorize="hasAuthority('ADD_RMA_COMMENT')" -->
+		<script th:inline="javascript" sec:authorize="hasAuthority('ADD_RMA_COMMENT')" th:if="${ rmas != null ? rmas.size() > 0 : false }">
+
+			function ondblclick(e){
+				e.preventDefault();
+
+				var $this = $(this);
+				var $serialNumber = $this.find(".serialNumber");
+				if($serialNumber){
+					var id = $this[0].id;
+					showModal(id, $serialNumber.text());
+				}
+			}
+			var items = document.getElementsByClassName('accordion-item');
+			for(const item of items){
+				item.ondblclick = ondblclick;
+			}
+			//# sourceURL=rmaComments.js
+		</script>
+	</th:block>
+	</div>
+<!-- Accordion:	And -->
+
+<!-- Modal Message -->
+	<div id="modal" class="modal fade" tabindex="-1" sec:authorize="hasAuthority('ADD_RMA_COMMENT')">
+  		<div class="modal-dialog">
+    		<div class="modal-content">
+<!-- Modal Header -->
+      			<div class="modal-header">
+        			<h5 id="modal_title" class="modal-title ml-3 text-primary">Enter the information about this RMA.</h5>
+        			<button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+      			</div>
+      			<div id="modal-body" class="modal-body form-floating">
+        			<textarea class="form-control" placeholder="Leave a comment here" id="rmaTextarea" style="height: 100px"></textarea>
+        			<label for="rmaTextarea"> Leave a comment here</label>
+      			</div>
+      			<div class="modal-footer">
+	        		<button id="saveComment" type="button" class="btn btn-outline-primary">Save Comment</button>
+	        		<button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Close</button>
+	    		</div>
+    		</div>
+  		</div>
+	</div>
+
+<th:block th:replace="components :: scripts">
+    <script type="application/javascript" src="https://ajax.googleapis.com/ajax/libs/jquery/3.6.0/jquery.min.js"></script>
+    <script type="application/javascript" src="https://cdnjs.cloudflare.com/ajax/libs/popper.js/2.9.2/umd/popper.min.js"></script>
+    <script type="application/javascript" src="https://stackpath.bootstrapcdn.com/bootstrap/4.4.1/js/bootstrap.min.js"></script>
+	<script type="application/javascript" src="https://cdn.jsdelivr.net/npm/js-cookie@2/src/js.cookie.min.js"></script>
+</th:block>
+	<script type="application/javascript" src="../static/js/rma.js" th:src="@{/js/rma.js}"></script>
+</body>
+</html>

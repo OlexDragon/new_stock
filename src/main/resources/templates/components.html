@@ -25,6 +25,7 @@
     				<a class="dropdown-item" href="components.html" th:href="@{/}">Components</a>
     				<a class="dropdown-item" href="bom.html" th:href="@{/bom}">BOMs</a>
     				<a class="dropdown-item" href="old.html" th:href="@{/old}">Old DB</a>
+    				<a class="dropdown-item" href="rma.html" th:href="@{/rma}">RMAs</a>
     				<a class="dropdown-item" href="calibration.html" th:href="@{/calibration}">Calibration</a>
     				<div class="dropdown-divider"></div>
     				<div sec:authorize="isAuthenticated()" class="dropdown-item">
@@ -80,7 +81,7 @@
 				<div class="col-sm-2 partNumber" th:text="${ component.partNumber }"><strong>Part Number</strong></div>
 				<div class="col-sm-2 mfrPN" th:text="${ component.mfrPN }"><strong>Mfr PN</strong></div>
 				<div class="col-sm description" th:text="${ component.description }"><strong>Description</strong></div>
-				<div sec:authorize="hasAuthority('STOCK')" class="col-auto"><button calss="btn btn-outline-warning">Use</button></div>
+				<div sec:authorize="hasAuthority('INVENTORY')" class="col-auto"><button calss="btn btn-outline-warning">Use</button></div>
 			</div>
   			<script th:inline="javascript">
 				/*<![CDATA[*/

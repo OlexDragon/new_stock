@@ -28,13 +28,13 @@
   		<form class="row">
 <!-- BOM Part Number search-->
   			<div class="input-group col">
-      			<label for="partNumber" class="input-group-text">PN</label>
+      			<label for="bomPartNumber" class="input-group-text">PN</label>
       			<input id="bomPartNumber" type="text" class="form-control searchInput" placeholder="BOM Part Number" aria-label="BOM Part Number">
     		</div>
 
  <!-- BOM Description search -->
   			<div class="input-group ml-1 col">
-      			<label for="description" class="input-group-text">Description</label>
+      			<label for="bomDescription" class="input-group-text">Description</label>
       			<input id="bomDescription" type="text" class="form-control searchInput" placeholder="Description" aria-label="Description" aria-describedby="descriptionLbl" th:value="${description}">
     		</div>
 
@@ -80,7 +80,7 @@
 <!-- Accordion:	Card Body -->
 			<div id="bom0" th:id="bom + ${ index }" class="accordion-collapse collapse" aria-labelledby="heading0" th:attr="aria-labelledby ='heading'+${ index}" data-bs-parent="#accordion">
 				<div class="accordion-body" th:remove="body">
-				<th:blok th:fragment="bomBody">
+				<th:block th:fragment="bomBody">
 					<div class="row">
 						<div class="col-1">	#</div>
 						<div class="col-2"><strong>	Part Number	</strong></div>
@@ -101,7 +101,7 @@
 						<div class="col" th:text="${ bomContent.reference }">					reference</div>
 						<div class="col-auto" th:text="${ bomContent.quantity }">					qty</div>
 					</div>
-				</th:blok>
+				</th:block>
 				</div>
 			</div>
 		</div>

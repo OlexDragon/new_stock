@@ -38,20 +38,7 @@ function inventory(row){
 	$('#modal_title').text(partNumber + ' : ' + description);
 	var $body = $('#modal-body').empty();
 
-	var $uSerialNumber = $('<input>', {class: 'form-control', id: 'snsUnit', type: 'text', placeholder: 'Unit Serial Number'});
-
-	$('<div>', {class: 'input-group mb-3'})
-	.append($('<label>', {class: 'input-group-text', for: 'snsInvertory'}).text('USNs:'))
-	.append($uSerialNumber)
-	.appendTo($body);
-
-	var $serialNumbers = $('<input>', {class: 'form-control', id: 'snsInvertory', type: 'text', placeholder: 'Component Serial Numbers'});
-
-	$('<div>', {class: 'input-group mb-3'})
-	.append($('<label>', {class: 'input-group-text', for: 'snsInvertory'}).text('CSNs:'))
-	.append($serialNumbers)
-	.appendTo($body);
-
+// Quantity
 	var $qty = $('<input>', {class: 'form-control', id: 'qtyInvertory', type: 'number', placeholder: 'Quantity'}).val(1);
 
 	$('<div>', {class: 'input-group mb-3'})
@@ -59,13 +46,13 @@ function inventory(row){
 	.append($qty)
 	.appendTo($body);
 
+// Comments
 	var $comments = $('<input>', {class: 'form-control', id: 'descrInvertory', type: 'text', placeholder: 'Work Order, Serial Number, Comments'});
 
 	$('<div>', {class: 'input-group'})
 	.append($('<label>', {class: 'input-group-text', for: 'descrInvertory'}).text('Comm.:'))
 	.append($comments)
 	.appendTo($body);
-
 
 	var $btnSend = $('<button>', { type:"button", class:"btn btn-primary disabled"}).text('Send');
 
@@ -94,15 +81,14 @@ function inventory(row){
 
 		$('#modal').modal('hide');
 
-		var usn = $uSerialNumber.val();
 		var id = $row.attr('id');
 		var userName = $('#dropdownMenuButton').text();
 		var qty = $qty.val();
-		var sns = $serialNumbers.val();
 		var comments = $comments.val();
 
-		$.post('/invertory/rest', {unitSerialNumber: usn, key : id, userName: userName, qty: qty, serialNumbers: sns, comments: comments})
-		.done(function(){
+		$.post('/invertory/rest', { productKey : id, userName: userName, qty: qty, comments: comments})
+		.done(function(invertoryTransfer){
+			var t = invertoryTransfer;
 		})
 		.fail(function(error) {
 			if(error.statusText!='abort')

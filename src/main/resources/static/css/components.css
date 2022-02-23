@@ -13,3 +13,6 @@
 .odd{
 	background-color: rgb(240, 240, 225);
 }
+.pre-line{
+	white-space: pre-line;
+}

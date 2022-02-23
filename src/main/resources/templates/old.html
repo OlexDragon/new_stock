@@ -47,7 +47,7 @@
     		</div>
 
  <!-- Create Button -->
-  		<div class="ml-1 col-auto" sec:authorize="hasAuthority('ALT_PART_NUMBER')">
+  		<div class="ml-1 col-auto" sec:authorize="hasAuthority('NEW_PART_NUMBER')">
       		<button id="createBtn" type="button" class="btn btn-outline-primary disabled">Create</button>
    		</div>
 
@@ -88,7 +88,7 @@
 				</div>
 				<div class="col-sm-2 mfrPN" th:text="${ component.manufPartNumber }"><strong>Mfr PN</strong></div>
 				<div class="col-sm description" th:text="${ component.description }"><strong>Description</strong></div>
-				<div sec:authorize="hasAuthority('ALT_PART_NUMBER')" th:if="${ component.revisions.size()>0 }" class="col-auto"><button calss="btn btn-outline-warning" type="button" th:value="${ component.id }">Add Rev</button></div>
+				<div sec:authorize="hasAuthority('NEW_PART_NUMBER')" th:if="${ component.revisions.size()>0 }" class="col-auto"><button calss="btn btn-outline-warning" type="button" th:value="${ component.id }">Add Rev</button></div>
 			</div>
  			<script th:inline="javascript">
 				/*<![CDATA[*/

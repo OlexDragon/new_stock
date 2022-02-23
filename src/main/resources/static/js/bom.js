@@ -24,15 +24,15 @@ function search($this){
 	$('#accordion').load('/bom/search', {id : attrId, value : val});
 }
 
-$('#accordion').on('show.bs.collapse', function () {
+$('#accordion').on('shown.bs.collapse', function () {
 
-	var $activeCard = $(this.children)
-  	var $cardBody = $activeCard.find('.accordion-body');
+	var accordionItem = $(this).children().filter(function(index,a){return $(this).find('button').hasClass('collapsed');});
+  	var $cardBody = accordionItem.find('.accordion-body');
 
 	if($cardBody.children().length)
  		return;
 
-	var bomKey = $activeCard.attr('data-bom-key');
+	var bomKey = accordionItem.attr('data-bom-key');
 	$cardBody.load('/bom/components', {bomKey: bomKey});
 });
 

@@ -289,7 +289,7 @@
 		    	$.post('/calibration/rest/login?sn=' + unitSerialNumber);
 			/*[/]*/
 
-		    /*[# sec:authorize="hasAuthority('DATABASE')"]*/
+		    /*[# sec:authorize="hasAuthority('CALIBRATION_SETTINGS')"]*/
 				$('#dropdownSettingsButton').on('hidden.bs.dropdown', function () {
 					if(confirm('Do you want to save your changes to the database?')){
 
