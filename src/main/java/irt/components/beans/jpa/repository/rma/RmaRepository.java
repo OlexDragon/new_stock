@@ -7,8 +7,9 @@ import org.springframework.data.repository.CrudRepository;
 
 import irt.components.beans.jpa.rma.Rma;
 
-public interface RmaRepository extends CrudRepository<Rma, Long> {
+public interface RmaRepository extends CrudRepository<Rma, String> {
 
 	List<Rma> findBySerialNumberContainingOrderBySerialNumber(String desired, Pageable page);
 	List<Rma> findByDescriptionContainingOrderBySerialNumber(String desired, Pageable page);
+	List<Rma> findByRmaIdStartsWith(String string);
 }

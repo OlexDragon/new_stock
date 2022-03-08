@@ -22,11 +22,12 @@
 			<div class="dropdown nav-item col-auto" th:fragment="dropdownMenu">
   				<button class="btn dropdown-toggle" th:classappend="${#authentication.name == 'anonymousUser' ? 'btn-light' : 'btn-outline-success'}" type="button" id="dropdownMenuButton" data-bs-toggle="dropdown" aria-expanded="false" th:text="${#authentication.name == 'anonymousUser' ? '' : #authentication.name}"></button>
   				<div class="dropdown-menu" aria-labelledby="dropdownMenuButton">
-    				<a class="dropdown-item" href="components.html" th:href="@{/}">Components</a>
-    				<a class="dropdown-item" href="bom.html" th:href="@{/bom}">BOMs</a>
-    				<a class="dropdown-item" href="old.html" th:href="@{/old}">Old DB</a>
-    				<a class="dropdown-item" href="rma.html" th:href="@{/rma}">RMAs</a>
-    				<a class="dropdown-item" href="calibration.html" th:href="@{/calibration}">Calibration</a>
+    				<a id="miComponents" class="dropdown-item" href="components.html" th:href="@{/}">Components</a>
+    				<a id="miBOMs" class="dropdown-item" href="bom.html" th:href="@{/bom}">BOMs</a>
+<!--     				<a id="miInventory" class="dropdown-item" href="inventory.html" th:href="@{/inventory}">Inventory</a> -->
+    				<a id="miOldDB" class="dropdown-item" href="old.html" th:href="@{/old}">Old DB</a>
+    				<a id="miRMAs" class="dropdown-item" href="rma.html" th:href="@{/rma}">RMAs</a>
+    				<a id="miCalibration" class="dropdown-item" href="calibration.html" th:href="@{/calibration}">Calibration</a>
     				<div class="dropdown-divider"></div>
     				<div sec:authorize="isAuthenticated()" class="dropdown-item">
 <!-- Log out -->

@@ -1,4 +1,4 @@
-package irt.components.controllers;
+package irt.components.controllers.inventory;
 
 import java.io.IOException;
 import java.util.Optional;
@@ -23,13 +23,13 @@ import com.fasterxml.jackson.annotation.JsonInclude.Include;
 import com.fasterxml.jackson.databind.DeserializationFeature;
 import com.fasterxml.jackson.databind.ObjectMapper;
 
-import irt.components.beans.inventory.InventoriesTransfer;
+import irt.components.beans.inventory.InventoryTransfer;
 import irt.components.beans.inventory.Inventory;
 import irt.components.beans.inventory.InventoryValues;
 
 @RestController
-@RequestMapping("/invertory/rest")
-public class InvertoryRestController {
+@RequestMapping("/inventory/rest")
+public class InventoryRestController {
 	private final static Logger logger = LogManager.getLogger();
 
 	@Value("${irt.url.protocol}")
@@ -41,26 +41,23 @@ public class InvertoryRestController {
 	@Value("${irt.url}")
 	private String url;
 
-	@Value("${irt.url.transfer}")
-	private String transferUrl;
-
-	@Value("${irt.url.inventory}")
-	private String inventoryUrl;
+	@Value("${irt.url.inventoryTransfer}")
+	private String inventoryTransferUrl;
 
 	@PostMapping
-	public Optional<InventoriesTransfer> fromStock(@RequestParam String productKey, @RequestParam int qty, @RequestParam String userName, @RequestParam String comments) throws IOException {
+	public Optional<InventoryTransfer> fromStock(@RequestParam String productKey, @RequestParam int qty, @RequestParam String userName, @RequestParam String comments) throws IOException {
 		logger.error("{}; {}; {}; {};", productKey, qty, userName, comments);
 
 		final String c = userName + ": " + comments;
-		final InventoriesTransfer inventoriesTransfer = new InventoriesTransfer();
-		inventoriesTransfer.setTransferKey("7e349b05-8dc6-11ec-b0bd-04d4c452793b");
+		final InventoryTransfer inventoryTransfer = new InventoryTransfer();
+		inventoryTransfer.setTransferKey("7e349b05-8dc6-11ec-b0bd-04d4c452793b");
 //		inventoriesTransfer.setComment(c);
 
-		final String postUrl = new StringBuilder(protocol).append(login).append(url).append(transferUrl).toString();
+		final String postUrl = new StringBuilder(protocol).append(login).append(url).append(inventoryTransferUrl).toString();
 
 		// To remove
 		final Inventory inventory = new Inventory();
-		inventoriesTransfer.addInventory(inventory);
+		inventoryTransfer.addInventory(inventory);
 		inventory.setTransferKey("7e349b05-8dc6-11ec-b0bd-04d4c452793b");
 		inventory.setLineNumber(2);
 		inventory.setProductKey(productKey);
@@ -68,11 +65,11 @@ public class InvertoryRestController {
 		final InventoryValues inventoryValues = new InventoryValues();
 		inventoryValues.getInventories().add(inventory);
 
-		return postInvertory(postUrl, inventoriesTransfer, InventoriesTransfer.class);
+		return postInventory(postUrl, inventoryTransfer, InventoryTransfer.class);
 
 	}
 
-	private <T>  Optional<T> postInvertory(String postUrl, T object, Class<T> classToReturn) throws IOException {
+	private <T>  Optional<T> postInventory(String postUrl, T object, Class<T> classToReturn) throws IOException {
 
 		final ObjectMapper mapper = new ObjectMapper().setSerializationInclusion(Include.NON_NULL).configure(DeserializationFeature.FAIL_ON_UNKNOWN_PROPERTIES, false);
 		final String json = mapper.writer().withDefaultPrettyPrinter().writeValueAsString(object);

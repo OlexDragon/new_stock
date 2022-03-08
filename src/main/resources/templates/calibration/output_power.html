@@ -266,7 +266,13 @@
 		    				return;
 
 		    			var $row = $(this);
-		    			var input = parseInt($row.find('.input').text());
+		    			var tmp = $row.find('.input').text();
+		    			var input;
+
+		    			if(tmp.indexOf('.') === -1)
+		    				input = parseInt($row.find('.input').text());
+		    			else
+		    				input = parseFloat($row.find('.input').text());
 
 		    			if(prevInput){
 		    				if(prevInput==input){
@@ -319,7 +325,7 @@
 		    		$.post('/calibration/rest/login?sn=' + unitSerialNumber);
 			    /*[/]*/
 
-		    	/*[#sec:authorize="hasAuthority('CALIBRATION_SETTINGS')"]*/
+		    	/*[# sec:authorize="hasAuthority('CALIBRATION_SETTINGS')"]*/
 					$('#dropdownSettingsButton').on('hidden.bs.dropdown', function () {
 						if(confirm('Do you want to save your changes to the database?')){
 

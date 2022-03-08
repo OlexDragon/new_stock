@@ -1,4 +1,6 @@
 
+$('#miRMAs').addClass('active');
+
 // Input listener
 timer = 0;
 $('.searchRma').on('input', function(){
@@ -11,15 +13,15 @@ $('.searchRma').on('input', function(){
 
 function search($this){
 
-	var val = $.trim($this.val());
 	var $addRMA = $('#addRMA');
-	if(!val){
-		if($addRMA.length){
-			$addRMA.removeClass('btn-outline-primary');
-			$addRMA.addClass('disabled btn-secondary');
-		}
-		return;
+	if($addRMA.length){
+		$addRMA.removeClass('btn-outline-primary');
+		$addRMA.addClass('disabled btn-secondary');
 	}
+
+	var val = $.trim($this.val());
+	if(!val)
+		return;
 
 	var attrId = $this.prop('id');
 	Cookies.set("rmaSearch", JSON.stringify([attrId, val]), { expires: 7 });
@@ -27,14 +29,6 @@ function search($this){
 
 	var $accordion = $('#accordion');
 	$accordion.load('/rma/search', {id : attrId, value : val}, function(){
-
-		if($accordion.children().length){
-			if($addRMA.length){
-				$addRMA.removeClass('btn-outline-primary');
-				$addRMA.addClass('disabled btn-secondary');
-			}
-			return;
-		}
 
 		if(!$addRMA.length || attrId != "rmaSerialNumber")
 			return;
@@ -84,7 +78,8 @@ $('#saveComment').click(function(e){
 
 	var rmaId = this.value;
 	$('#accordion-body').load("/rma/add_comment", {rmaId: rmaId, comment: comment});
-	$('#modal').modal('hide');
+//	$('#modal').modal('hide');
+	 location.reload();
 });
 
 $('#accordion').on('shown.bs.collapse', function () {

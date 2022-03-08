@@ -1,4 +1,6 @@
 
+$('#miBOMs').addClass('active');
+
 // Input listener
 timer = 0;
 $('.searchInput').on('input', function(){

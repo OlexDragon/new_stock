@@ -2,6 +2,8 @@ package irt.components.controllers.rma;
 
 import java.io.IOException;
 import java.security.Principal;
+import java.time.LocalDate;
+import java.time.format.DateTimeFormatter;
 import java.util.ArrayList;
 import java.util.List;
 
@@ -23,13 +25,13 @@ import irt.components.beans.jpa.rma.Rma;
 import irt.components.beans.jpa.rma.RmaComment;
 import irt.components.services.UserPrincipal;
 import irt.components.workers.ProfileWorker;
-//import org.apache.logging.log4j.LogManager;
-//import org.apache.logging.log4j.Logger;
+import org.apache.logging.log4j.LogManager;
+import org.apache.logging.log4j.Logger;
 
 @Controller
 @RequestMapping("rma")
 public class RmaController {
-//	private final static Logger logger = LogManager.getLogger();
+	private final static Logger logger = LogManager.getLogger();
 
 	private static final int SIZE = 40;
 
@@ -79,8 +81,14 @@ public class RmaController {
 		profileWorker.getDescription()
 		.ifPresent(
 				d->{
+					final DateTimeFormatter formatter = DateTimeFormatter.ofPattern("'RMA'yyMM");
+					final LocalDate currentdate = LocalDate.now();
+					final String format = currentdate.format(formatter);
+					final int count = rmaRepository.findByRmaIdStartsWith(format).size();
+					final String sequence = String.format("%03d", count+1);
 
 					final Rma rma = new Rma();
+					rma.setRmaId(format + sequence);
 					rma.setDescription(d);
 					rma.setSerialNumber(serialNumber);
 
@@ -88,6 +96,7 @@ public class RmaController {
 					final User user = ((UserPrincipal)pr).getUser();
 					rma.setUser(user);
 					rma.setUserId(user.getId());
+					logger.error(rma);
 
 					final Rma savedRma = rmaRepository.save(rma);
 
@@ -99,7 +108,7 @@ public class RmaController {
 	}
 
 	@PostMapping(path = "add_comment")
-	public String addComment(@RequestParam Long rmaId, @RequestParam String comment, Principal principal, Model model) throws IOException {
+	public String addComment(@RequestParam String rmaId, @RequestParam String comment, Principal principal, Model model) throws IOException {
 
 		if(!(principal instanceof UsernamePasswordAuthenticationToken) || rmaId==null || comment.isEmpty())
 			return "rma :: rmaBody";
@@ -122,7 +131,7 @@ public class RmaController {
 	}
 
 	@PostMapping(path = "comments")
-	public String getComments(@RequestParam Long rmaId, Model model) throws IOException {
+	public String getComments(@RequestParam String rmaId, Model model) throws IOException {
 //		logger.error("rmaId: {} ", rmaId );
 
 		final List<RmaComment> comments = rmaCommentsRepository.findByRmaId(rmaId);

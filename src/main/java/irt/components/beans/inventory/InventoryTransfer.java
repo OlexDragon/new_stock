@@ -14,35 +14,38 @@ import lombok.Setter;
 import lombok.ToString;
 
 @NoArgsConstructor @Getter @Setter @ToString @JsonIgnoreProperties(ignoreUnknown = true)
-public class InventoriesTransfer {
+public class InventoryTransfer {
 
 	@JsonProperty("Ref_Key")
 	private String transferKey;
 
-//	@JsonProperty("Number")
-//	private String number;
-//
-//	@JsonProperty("Comment")
-//	private String comment;
+	@JsonProperty("Number")
+	private String number;
+
+	@JsonProperty("Comment")
+	private String comment;
+
+	@JsonProperty("DeletionMark")
+	private Boolean deleted;
+
+	@JsonProperty("Posted")
+	private Boolean posted;
 
 	@JsonProperty("Inventory")
 	private List<Inventory> inventories;
-//
-//	@JsonProperty("DeletionMark")
-//	private boolean deleted = true;
-//
-//	@JsonProperty("StructuralUnit_Key")
-//	private final String fromKey = "49d8d057-81e1-11eb-b0b4-04d4c452793b"; // Stock
-//
-//	@JsonProperty("StructuralUnitPayee_Key")
-//	private final String toKey = "0221fb27-7df3-11ec-b0bd-04d4c452793b"; // Production
-//
-//	@JsonProperty("OperationKind")
-//	private String operation = "Transfer";
-//
-//	@JsonProperty("Date")
-//	@JsonFormat(shape = JsonFormat.Shape.STRING, pattern = "yyyy-MM-dd'T'HH:mm:ss")
-//	private Date date = new Date();
+
+	@JsonProperty("StructuralUnit_Key")
+	private final String fromKey = "49d8d057-81e1-11eb-b0b4-04d4c452793b"; // Stock
+
+	@JsonProperty("StructuralUnitPayee_Key")
+	private final String toKey = "0221fb27-7df3-11ec-b0bd-04d4c452793b"; // Production
+
+	@JsonProperty("OperationKind")
+	private String operation = "Transfer";
+
+	@JsonProperty("Date")
+	@JsonFormat(shape = JsonFormat.Shape.STRING, pattern = "yyyy-MM-dd'T'HH:mm:ss")
+	private Date date = new Date();
 
 	public void addInventory(Inventory inventory) {
 

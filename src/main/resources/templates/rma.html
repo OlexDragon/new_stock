@@ -54,17 +54,19 @@
 <!-- Accordion:	Cards -->
 	<th:block th:fragment="rmaCards">
 
-		<div class="accordion-item" th:each="rma, status : ${ rmas }" th:with="index =${ status.index }" th:id="${ rma.id }">
+		<div class="accordion-item" th:each="rma, status : ${ rmas }" th:with="index =${ status.index }" th:id="${ rma.rmaId }">
 
 <!-- Accordion:	Card Header -->
 			<h5 th:id="heading + ${ index }" class="accordion-header">
 				<button type="button" class="btn btn-link accordion-button" data-bs-toggle="collapse" data-bs-target="#rma0" aria-expanded="true" aria-controls="rma0" th:attr="aria-controls ='rma'+${ index }, data-bs-target='#rma'+${ index }" style="width:100%">
           			<div class="row" style="width:100%">
-          				<div class="col-4">
-          					<strong class="serialNumber" th:text="${ rma.serialNumber }"> Serial Number </strong>
+          				<div class="col-2">
+          					<strong class="serialNumber" th:text="${ rma.rmaId }"> RMA ID </strong>
           				</div>
-          				<div class="col-auto">:</div>
-          				<div class="col-5 text-secondary">
+          				<div class="col-2">
+          					<strong class="serialNumber" th:text="${ #strings.toUpperCase( rma.serialNumber ) }"> Serial Number </strong>
+          				</div>
+          				<div class="col-6 text-secondary">
           					<strong th:text="${ rma.description }">Description</strong>
           				</div>
            			</div>

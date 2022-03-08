@@ -1,73 +1,130 @@
+
+$('#miOldDB').addClass('active');
+
+$('#pnType').on('change', function(){
+
+	Cookies.set("oldPnType", this.value);
+	getPnNames();
+});
+
+var cookie = Cookies.get("oldPnType")
+if(cookie)
+	$('#pnType').val(cookie);
+
 $('#pnName').on('change', function(){
 	Cookies.set("oldPnName", this.value);
-	fillTypes();
-	toPartNumber();
+	$('#componentPN').val(this.value);
+	getPnFields();
 });
-var cookie = Cookies.get("oldPnName")
-if(cookie){
-	$('#pnName').val(cookie);
+
+getPnNames();
+
+function getPnNames(){
+
+	var $pnType = $('#pnType');
+	var typeId = $pnType.val();
+
+	$.post('/create/rest/get_names', { pnTypeId : typeId})
+	.done(function(pnNames){
+
+		var $pnName = $('#pnName').empty();
+		pnNames.forEach(function(name){
+			$('<option>', {value: name.code}).text(name.name).appendTo($pnName);
+		});
+
+		var cookie = Cookies.get("oldPnName")
+		if(cookie)
+			$pnName.val(cookie);
+
+		getPnFields();
+
+	})
+	.fail(function(error) {
+		if(error.statusText!='abort')
+			alert(error.responseText);
+	});
 }
 
-fillTypes();
-function fillTypes(){
+function getPnFields(){
 
-	var nameCode = parseInt($('#pnName').val());
-	var names = pnNames.filter(pnName=> pnName.code == nameCode);
+	$('.pn_field').remove();
+	$pnName = $('#pnName');
+	var nameCode = $pnName.val();
 
-	if(names.length){
+	if(!nameCode){
+		$('#componentPN').val("");
+		enableCreateButton();
+		return;
+	}
 
-		var $pnType = $('#pnType').empty();
-		var pnTypes = names[0].pnTypes.sort((a,b)=>a.code-b.code);
-		pnTypes.forEach(function(type){
-			$('<option>', {value: type.code}).text(type.code + ' - ' + type.type).appendTo($pnType);
-		});
+	$.post('/old/get_fields', { pnNameCode : nameCode})
+	.done(function(fields){
+
+		$pnName.parent().after(fields);
+
+		toPartNumber();
+	})
+	.fail(function(error) {
+		if(error.statusText!='abort')
+			alert(error.responseText);
+	});
+}
+
+function toPartNumber(){
+
+	enableCreateButton();
+
+	var $pn = $('#componentPN');
+	var pnNameCode = $('#pnName').val();
+	var pnSubtypeCode = $('#pnSubtype').val();
+
+// PCB Part Number
+	if(pnSubtypeCode){
+		$pn.val(pnNameCode + '-' + pnSubtypeCode + '-#');
+
+		search($('#componentPN'));
+		return
+	}
+
+// Metal parts
+	var pnMachining = $('#pnMachining').val();
+	if(pnMachining){
+
+		var val = pnNameCode + '-' + pnMachining + '-';
+
+		var pnBuc = $('#pnBuc').val();
+		if(pnBuc)
+			val += pnBuc + '-';
+
+		else{
+			var pnRfUnit = $('#pnRfUnit').val();
+			if(pnRfUnit)
+				val += pnRfUnit + '-';
+		}
+
+		val += '#'
+
+		var pnTreatment = $('#pnTreatment').val();
+		if(pnTreatment)
+			val += '-' + pnTreatment
+
+		$pn.val(val);
+
+		search($('#componentPN'));
+		return;
 	}
 }
 
-$('#pnType').on('change', function(){
-	toPartNumber();
-});
-
-toPartNumber();
-function toPartNumber(){
-	var pnNameCode = $('#pnName').val();
-	var pnTypeCode = $('#pnType').val();
-	var $pn = $('#componentPN');
-	$pn.val(concatenateNameAndType(pnNameCode, pnTypeCode));
-	search($pn);
-	enableCreateButton();
-}
-
-// Input listener
-timer = 0;
+var timer = 0;
 $('.searchInput').on('input', function(){
 
 	enableCreateButton();
 
-    if (timer) {
+    if (timer) 
     	clearTimeout(timer);
-    }
+
     timer = setTimeout(search, 800, $(this));
 });
-
-function enableCreateButton(){
-
-	var $btn = $('#createBtn');
-	if(!$btn.length)
-		return;
-
-	var pnNameCode = $('#pnName').val();
-	var pnTypeCode = $('#pnType').val();
-	var description = $('#description').val();
-	var concat = concatenateNameAndType(pnNameCode, pnTypeCode);
-	var pn = $('#componentPN').val();
-
-	if(concat==pn && description){
-		$btn.removeClass('disabled');
-	}else{
-		$btn.addClass('disabled');
-	}
-}
 
 function search($this){
 
@@ -80,18 +137,33 @@ function search($this){
 	$("#content").load('/old/search', {id: attrId, value: val});
 }
 
-$('#createBtn').click(function(){
+function enableCreateButton(){
+
+	var $btn = $('#createBtn');
+	if(!$btn.length)
+		return;
 
 	var pnNameCode = $('#pnName').val();
 	var pnTypeCode = $('#pnType').val();
 	var description = $('#description').val();
+	var pn = $('#componentPN').val();
 
-	if(!confirm('Create a new part number "' + concatenateNameAndType(pnNameCode, pnTypeCode) + '"?'))
+	if(pnNameCode && description){
+		$btn.removeClass('disabled');
+	}else{
+		$btn.addClass('disabled');
+	}
+}
+
+$('#createBtn').click(function(){
+
+	toPartNumber();
+	var pnTypeCode = $('#pnType').val();
+	var description = $('#description').val();
+	var pn = $('#componentPN').val();
+
+	if(!confirm('Create a new part number "' + pn + '"?'))
 		return;
 
-	$("#content").load('/create', {pnNameCode: pnNameCode, pnTypeCode: pnTypeCode, description : description});
+	$("#content").load('/create', {pnTypeCode: pnTypeCode, newPartNumber: pn, description : description});
 });
-
-function concatenateNameAndType(name, type){
-	return name + '-' + type;
-}

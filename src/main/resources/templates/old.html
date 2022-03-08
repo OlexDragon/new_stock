@@ -26,30 +26,210 @@
 
 		<div class="nav-item col">
   		<form class="row">
-<!-- Name -->
+
+<!-- Type -->
   			<div class="input-group col">
-      			<label for="pnName" class="input-group-text">Name</label>
-      			<select id="pnName" class="form-control" th:each="pnName : ${pnNames}">
-      				<option th:value="${pnName.code}" th:text="${pnName.code + ' - ' + pnName.name}"></option>
+      			<label for="pnType" class="input-group-text">Type</label>
+      			<select id="pnType" class="form-control">
+      				<option th:each="pnType : ${ pnTypes }"
+      						th:value="${ pnType.id }"
+      						th:text="${ pnType.name }"></option>
       			</select>
     		</div>
 
- <!-- Type -->
-  			<div class="input-group ml-1 col">
-      			<label for="pnType" class="input-group-text">Type</label>
-       			<select id="pnType" class="form-control"></select>
-   		</div>
-
-<!-- Description -->
-  			<div class="input-group ml-1 col">
-      			<label for="description" class="input-group-text searchInput">Description</label>
-      			<input id="description" type="text" class="form-control searchInput" placeholder="Description" aria-label="Component Description">
+<!-- Name -->
+  			<div class="input-group col">
+      			<label for="pnName" class="input-group-text">Name</label>
+      			<select id="pnName" class="form-control">
+      			</select>
     		</div>
 
- <!-- Create Button -->
-  		<div class="ml-1 col-auto" sec:authorize="hasAuthority('NEW_PART_NUMBER')">
-      		<button id="createBtn" type="button" class="btn btn-outline-primary disabled">Create</button>
-   		</div>
+<th:block th:remove="all">
+<th:block th:fragment="pcb">
+
+ <!-- Subtype -->
+  			<div class="input-group ml-1 col pn_field">
+      			<label for="pnSubtype" class="input-group-text">Subtype</label>
+       			<select id="pnSubtype" class="form-control">
+       				<option th:each=" subtype, stat : ${ subtypes }" th:value="${ subtype.code }" th:text="${ subtype.type }"></option>
+       			</select>
+   			</div>
+			<script>
+				$('#pnSubtype').on('change', function(){
+					toPartNumber();
+				});
+			</script>
+</th:block>
+
+<th:block th:fragment="machinning">
+
+ <!-- Machining -->
+  			<div class="input-group ml-1 col pn_field">
+      			<label for="pnMachining" class="input-group-text">Machining</label>
+       			<select id="pnMachining" class="form-control onchange">
+       				<option value="M">Machining</option>
+       				<option value="S">Sheet</option>
+       			</select>
+   			</div>
+
+ <!-- BUCs -->
+  			<div class="input-group ml-1 col pn_field">
+      			<label for="pnBuc" class="input-group-text">BUC</label>
+       			<select id="pnBuc" class="form-control onchange">
+       				<option value="">Do not use</option>
+       				<option value="A">AntBUC</option>
+       				<option value="F">FemtoBUC</option>
+       				<option value="K">KiloBUC</option>
+       				<option value="P">PicoBUC</option>
+       				<option value="R">Rack-Mount</option>
+       			</select>
+   			</div>
+
+ <!-- Treatment -->
+  			<div class="input-group ml-1 col pn_field">
+      			<label for="pnTreatment" class="input-group-text">Treatment</label>
+       			<select id="pnTreatment" class="form-control onchange">
+       				<option value="">Do not use</option>
+       				<option value="PBL">Black Paint</option>
+       				<option value="PB">Blue Paint</option>
+       				<option value="C">Clear Iridite</option>
+       				<option value="PT">Desert Tan</option>
+       				<option value="G">Gold Plated</option>
+       				<option value="PG">Green Paint</option>
+       				<option value="N">Plated Nickel</option>
+       				<option value="S">Silver Plated</option>
+       				<option value="R">ROW</option>
+       				<option value="PW">White Paint</option>
+       			</select>
+   			</div>
+   			<script>
+   				$('.onchange').on('change', function(){
+   					toPartNumber();
+   				});
+   			</script>
+
+</th:block>
+
+<th:block th:fragment="wall">
+
+ <!-- Machining -->
+  			<div class="input-group ml-1 col pn_field">
+      			<label for="pnMachining" class="input-group-text">Machining</label>
+       			<select id="pnMachining" class="form-control onchange">
+       				<option value="M">Machining</option>
+       				<option value="S">Sheet</option>
+       			</select>
+   			</div>
+
+ <!-- RF/Unit -->
+  			<div class="input-group ml-1 col pn_field">
+      			<label for="pnRfUnit" class="input-group-text">RF/UNIT</label>
+       			<select id="pnRfUnit" class="form-control onchange">
+       				<option value="U">UNIT</option>
+       				<option value="R">RF</option>
+       			</select>
+   			</div>
+
+ <!-- Treatment -->
+  			<div class="input-group ml-1 col pn_field">
+      			<label for="pnTreatment" class="input-group-text">Treatment</label>
+       			<select id="pnTreatment" class="form-control onchange">
+       				<option value="">Do not use</option>
+       				<option value="PBL">Black Paint</option>
+       				<option value="PB">Blue Paint</option>
+       				<option value="C">Clear Iridite</option>
+       				<option value="PT">Desert Tan</option>
+       				<option value="G">Gold Plated</option>
+       				<option value="PG">Green Paint</option>
+       				<option value="N">Plated Nickel</option>
+       				<option value="S">Silver Plated</option>
+       				<option value="R">ROW</option>
+       				<option value="PW">White Paint</option>
+       			</select>
+   			</div>
+   			<script>
+   				$('.onchange').on('change', function(){
+   					toPartNumber();
+   				});
+   			</script>
+
+</th:block>
+
+<th:block th:fragment="frontPanel">
+
+ <!-- Machining -->
+  			<div class="input-group ml-1 col pn_field">
+      			<label for="pnMachining" class="input-group-text">Machining</label>
+       			<select id="pnMachining" class="form-control onchange">
+       				<option value="M">Machining</option>
+       				<option value="S">Sheet</option>
+       			</select>
+   			</div>
+
+ <!-- Size -->
+  			<div class="input-group ml-1 col pn_field">
+      			<label for="pnBuc" class="input-group-text">Size</label>
+       			<select id="pnBuc" class="form-control onchange">
+       				<option value="1U">1U</option>
+       				<option value="2U">2U</option>
+       				<option value="3U">3U</option>
+       				<option value="4U">4U</option>
+       				<option value="5U">5U</option>
+       			</select>
+   			</div>
+
+ <!-- Treatment -->
+  			<div class="input-group ml-1 col pn_field">
+      			<label for="pnTreatment" class="input-group-text">Treatment</label>
+       			<select id="pnTreatment" class="form-control onchange">
+       				<option value="">Do not use</option>
+       				<option value="PBL">Black Paint</option>
+       				<option value="PB">Blue Paint</option>
+       				<option value="C">Clear Iridite</option>
+       				<option value="PT">Desert Tan</option>
+       				<option value="G">Gold Plated</option>
+       				<option value="PG">Green Paint</option>
+       				<option value="N">Plated Nickel</option>
+       				<option value="S">Silver Plated</option>
+       				<option value="R">ROW</option>
+       				<option value="PW">White Paint</option>
+       			</select>
+   			</div>
+   			<script>
+   				$('.onchange').on('change', function(){
+   					toPartNumber();
+   				});
+   			</script>
+
+</th:block>
+
+<th:block th:fragment="heatsinks">
+
+ <!-- Machining -->
+  			<div class="input-group ml-1 col pn_field">
+      			<label for="pnMachining" class="input-group-text">Machining</label>
+       			<select id="pnMachining" class="form-control onchange">
+       				<option value="M">Machining</option>
+       				<option value="SK">Skived</option>
+       			</select>
+   			</div>
+
+ <!-- For -->
+  			<div class="input-group ml-1 col pn_field">
+      			<label for="pnBuc" class="input-group-text">For</label>
+       			<select id="pnBuc" class="form-control onchange">
+       				<option value="P">Power Supply</option>
+       				<option value="R">RF</option>
+       			</select>
+   			</div>
+   			<script>
+   				$('.onchange').on('change', function(){
+   					toPartNumber();
+   				});
+   			</script>
+
+</th:block>
+</th:block>
 
 <!-- Force next columns to break to new line -->
 			<div class="w-100"></div>
@@ -65,6 +245,17 @@
       			<label for="componentMfrPN" class="input-group-text">MPN</label>
       			<input id="componentMfrPN" type="text" class="form-control searchInput" placeholder="Component Mfr PN" aria-label="Component Mfr PN">
     		</div>
+
+<!-- Description -->
+  			<div class="input-group ml-1 col">
+      			<label for="description" class="input-group-text searchInput">Description</label>
+      			<input id="description" type="text" class="form-control searchInput" placeholder="Description" aria-label="Component Description">
+    		</div>
+
+ <!-- Create Button -->
+  		<div class="ml-1 col-auto" sec:authorize="hasAuthority('NEW_PART_NUMBER')">
+      		<button id="createBtn" type="button" class="btn btn-outline-primary disabled">Create</button>
+   		</div>
 
   		</form>
   		</div>
@@ -92,6 +283,8 @@
 			</div>
  			<script th:inline="javascript">
 				/*<![CDATA[*/
+
+				$('#miOldDB').addClass('active');
 
 				$('.clickable').click(function(e){
 

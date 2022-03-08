@@ -1,11 +1,20 @@
 package irt.components.beans.jpa.rma;
 
+import java.util.Date;
+
+import javax.persistence.Column;
 import javax.persistence.Entity;
 import javax.persistence.FetchType;
+import javax.persistence.GeneratedValue;
+import javax.persistence.GenerationType;
 import javax.persistence.Id;
 import javax.persistence.JoinColumn;
 import javax.persistence.ManyToOne;
 import javax.persistence.Table;
+import javax.persistence.Temporal;
+import javax.persistence.TemporalType;
+
+import com.fasterxml.jackson.annotation.JsonFormat;
 
 import irt.components.beans.jpa.User;
 import lombok.AllArgsConstructor;
@@ -15,15 +24,22 @@ import lombok.Setter;
 import lombok.ToString;
 
 @Entity
-@Table
+@Table(name="rma_comments")
 @NoArgsConstructor @AllArgsConstructor @Getter @Setter @ToString
-public class Rma {
+public class RmaComment {
 
-	@Id
+	@Id @GeneratedValue(strategy = GenerationType.IDENTITY)
+	private Long	 id;
+
 	private String	 rmaId;
-	private String	 serialNumber;
-	private String	 description;
+	private String	 comment;
 	private Long	 userId;
+
+	@Temporal(TemporalType.TIMESTAMP)
+	@JsonFormat(pattern="dd MMM yyyy hh:mm")
+	@Column(insertable = false, updatable= false)
+	private Date date;
+
 
 	@ManyToOne(fetch = FetchType.EAGER)
 	@JoinColumn(name = "userId", referencedColumnName = "id", insertable = false, updatable = false)

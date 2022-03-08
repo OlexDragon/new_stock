@@ -1,13 +1,11 @@
 
-$('#miComponents').addClass('active');
+$('#miInventory').addClass('active');
 
 // Input listener
 timer = 0;
 $('.searchInput').on('input', function(){
-    if (timer) {
-    	clearTimeout(timer);
-    }
-    timer = setTimeout(search, 600, $(this));
+    clearTimeout(timer);
+    timer = setTimeout(search, 1000, $(this));
 });
 
 function search($this){
@@ -17,17 +15,17 @@ function search($this){
 		return;
 
 	var attrId = $this.prop('id');
-	Cookies.set("componentSearch", JSON.stringify([attrId, val]), { expires: 7 });
+	Cookies.set("inventorytSearch", JSON.stringify([attrId, val]), { expires: 7 });
 	$('.searchInput').filter(':not(#' + attrId + ')').val('');
 
-	$("#content").load('/components?id=' + attrId + '&value=' + val)
+	$("#accordion").load('/inventory', {name: attrId, value: val});
 }
 
 // Get Part Number, Mfr PN or Description from the cookies
-var cookie = Cookies.get("componentSearch")
+var cookie = Cookies.get("inventorytSearch")
 if(cookie){
-	var componentSearch = JSON.parse(cookie);
-	var $input = $("#" + componentSearch[0]).val(componentSearch[1]);
+	var inventorytSearch = JSON.parse(cookie);
+	var $input = $("#" + inventorytSearch[0]).val(inventorytSearch[1]);
 	search($input);
 }
 

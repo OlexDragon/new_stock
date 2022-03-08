@@ -2,6 +2,7 @@ package irt.components.controllers.old;
 
 import java.io.IOException;
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.Comparator;
 import java.util.HashSet;
 import java.util.List;
@@ -14,43 +15,93 @@ import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestParam;
 
+import com.mysql.cj.exceptions.WrongArgumentException;
+
 import irt.components.beans.jpa.old.OldComponent;
 import irt.components.beans.jpa.old.PnRevision;
 import irt.components.beans.jpa.repository.OldComponentRepository;
 import irt.components.beans.jpa.repository.PnRevisionRepository;
+import irt.components.beans.jpa.repository.pn.PnTypeRepository;
+
+//import org.apache.logging.log4j.LogManager;
+//import org.apache.logging.log4j.Logger;
 
 @Controller
-@RequestMapping("/create")
+@RequestMapping("create")
 public class CreateComponentController {
 //	private final static Logger logger = LogManager.getLogger();
 
+	private static final Long PCB_CODE = 1l;
+	private static final Long MUCHINING_CODE = 2l;
+
+	@Autowired private PnTypeRepository pnTypeRepository;
 	@Autowired private OldComponentRepository oldComponentRepository;
 	@Autowired private PnRevisionRepository pnRevisionRepository;
 
 	@PostMapping
-	public String createComponent(@RequestParam String pnNameCode, @RequestParam String pnTypeCode, String description, Model model) throws IOException {
-//		logger.error("{} : {}", pn, description);
+	public String createComponent(@RequestParam Long pnTypeCode, @RequestParam String newPartNumber, String description, Model model) throws IOException {
+//		logger.error("{} : {} : {}", pnTypeCode, newPartNumber, description);
 
-		final String newIndex = oldComponentRepository.getLastIndex(pnNameCode).map(index->"-" + ++index).orElse("-1");
+		pnTypeRepository.findById(pnTypeCode)
+		.ifPresent(
+				pnType->{
+					Long nextSeqNumner;
+					final List<String> partNumbers = oldComponentRepository.getLastIndex(pnType.getFirst(), pnType.getLast());
+//					logger.error("{}", partNumbers);
 
-		final OldComponent component = new OldComponent();
-		component.setPartNumber(pnNameCode + '-' + pnTypeCode + '-' + newIndex);
-		component.setDescription(description);
-		
-		final OldComponent savedComponent = oldComponentRepository.save(component);
+					if(pnTypeCode==PCB_CODE) {
+						nextSeqNumner = getPcbSeqNumber(partNumbers);
 
-		final PnRevision pnRevision = new PnRevision(savedComponent.getId(), 1L);
-		final PnRevision savedRevision = pnRevisionRepository.save(pnRevision);
+					}else if(pnTypeCode==MUCHINING_CODE) {
+						nextSeqNumner = getMachiningSeqNumber(partNumbers);
 
-		Set<PnRevision> set = new HashSet<>();
-		set.add(savedRevision);
-		savedComponent.setRevisions(set);
+					}else
 
-		List<OldComponent> components = new ArrayList<>();
-		components.add(savedComponent);
-		model.addAttribute("components", components);
+						throw new WrongArgumentException("Unknown Type Code: " + pnTypeCode);
+//					logger.error(nextSeqNumner);
+
+					final String nextPN = newPartNumber.replace("#", nextSeqNumner.toString());
+
+					final OldComponent component = new OldComponent();
+					component.setPartNumber(nextPN);
+					component.setDescription(description);
+					
+					final OldComponent savedComponent = oldComponentRepository.save(component);
+
+					final PnRevision pnRevision = new PnRevision(savedComponent.getId(), 1L);
+					final PnRevision savedRevision = pnRevisionRepository.save(pnRevision);
+
+					Set<PnRevision> set = new HashSet<>();
+					set.add(savedRevision);
+					savedComponent.setRevisions(set);
+			
+					List<OldComponent> components = new ArrayList<>();
+					components.add(savedComponent);
+					model.addAttribute("components", components);
+				});
 
 		return "old :: content";
+	}
+
+	private long getPcbSeqNumber(List<String> partNumbers) {
+		return partNumbers.parallelStream().map(
+				pn->{
+					int lastIndexOf = pn.lastIndexOf("-");
+					final String substring = pn.substring(++lastIndexOf);
+					return Long.parseLong(substring);
+				})
+				.mapToLong(Long::valueOf).max().orElse(0l) + 1;
+	}
+
+	private long getMachiningSeqNumber(List<String> partNumbers) {
+		return partNumbers.parallelStream()
+				.map(
+						pn->{
+							int indexOf = pn.indexOf("-");
+							return pn.substring(++indexOf);
+						})
+				.map(pn->Arrays.stream(pn.split("-")).map(s->s.replaceAll("\\D", "")).filter(s->!s.isEmpty()).map(Long::parseLong).findFirst().orElse(0l))
+				.mapToLong(Long::valueOf).max().orElse(0l) + 1;
 	}
 
 	@PostMapping("revision")

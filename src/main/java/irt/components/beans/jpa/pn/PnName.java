@@ -3,10 +3,11 @@ package irt.components.beans.jpa.pn;
 import java.util.Set;
 
 import javax.persistence.Entity;
-import javax.persistence.FetchType;
 import javax.persistence.Id;
 import javax.persistence.OneToMany;
 import javax.persistence.Table;
+
+import com.fasterxml.jackson.annotation.JsonIgnore;
 
 import lombok.AllArgsConstructor;
 import lombok.Getter;
@@ -21,7 +22,9 @@ public class PnName {
 
 	@Id private Long code;
 	private String name;
+	private String fragment;
 
-	@OneToMany(mappedBy="nameCode", fetch = FetchType.EAGER)
-	private Set<PnType> pnTypes; 
+	@JsonIgnore
+	@OneToMany(mappedBy="nameCode")
+	private Set<PnSubtype> pnSubtypes; 
 }

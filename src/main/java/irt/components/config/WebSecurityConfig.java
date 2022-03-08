@@ -28,8 +28,34 @@ public class WebSecurityConfig extends WebSecurityConfigurerAdapter {
 
 		http
 			.authorizeRequests()
-			.antMatchers(HttpMethod.GET, "/", "/bom", "/files", "/css/**", "/js/**", "/calibration/**", "/components", "/old", "/rma", "/rma/search").permitAll()
-			.antMatchers(HttpMethod.POST, "/components/single", "/bom/search", "/bom/components", "/calibration/**", "/old/**", "/rma/search", "/rma/comments", "/rma/rest/**").permitAll()
+			.antMatchers(HttpMethod.GET,
+										"/",
+										"/bom",
+										"/files",
+										"/css/**",
+										"/js/**",
+										"/calibration/**",
+										"/components",
+										"/old",
+										"/old/get_fields",
+										"/rma",
+										"/rma/search",
+										"/inventory")
+			.permitAll()
+
+			.antMatchers(HttpMethod.POST,
+											"/components/single",
+											"/bom/search",
+											"/bom/components",
+											"/calibration/**",
+											"/old/**",
+											"/rma/search",
+											"/rma/comments",
+											"/rma/rest/**",
+											"/inventory"
+											,"/create/rest/**")
+			.permitAll()
+
 			.anyRequest().authenticated()
 				.and()
 			.formLogin()

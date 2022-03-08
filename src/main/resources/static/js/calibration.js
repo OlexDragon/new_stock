@@ -1,3 +1,6 @@
+
+$('#miCalibration').addClass('active');
+
 if(!$('#serialNumber').text())
 	new bootstrap.Modal('#modal').show();
 
