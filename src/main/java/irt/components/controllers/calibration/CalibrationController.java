@@ -28,8 +28,10 @@ import org.springframework.web.bind.annotation.RequestParam;
 
 import irt.components.beans.irt.BiasBoard;
 import irt.components.beans.irt.CalibrationInfo;
+import irt.components.beans.irt.ConverterInfo;
 import irt.components.beans.irt.Dacs;
 import irt.components.beans.irt.Info;
+import irt.components.beans.irt.IrtFrequency;
 import irt.components.beans.irt.IrtValue;
 import irt.components.beans.irt.calibration.CalibrationTable;
 import irt.components.beans.irt.calibration.PowerDetectorSource;
@@ -70,7 +72,7 @@ public class CalibrationController {
 						logger.catching(Level.DEBUG, e);
 					}
     			});
-        return "calibration";
+        return "calibration/calibration";
     }
 
     @GetMapping("output_power")
@@ -116,37 +118,41 @@ public class CalibrationController {
     	.ifPresent(
     			s->{
 
-    				FutureTask<Void> ftProfile = new FutureTask<>(()->null);
+   					try {
 
-    				ThreadRunner.runThread(
-							()->{
+   						final FutureTask<ConverterInfo> httpDeviceDebug = getHttpDeviceDebug(s, ConverterInfo.class,
+								new BasicNameValuePair("devid", "1003"),
+								new BasicNameValuePair("command", "config"));
 
-			    				// Get Power table from the profile
-						    	ProfileWorker profileWorker = new ProfileWorker(profileFolder, sn);
-						    	try {
-									if(!profileWorker.exists()) {
-				    					model.addAttribute("message", "The profile could not be found.");
-										ThreadRunner.runThread(ftProfile);
-										return;
-									}
+   	   					FutureTask<Void> ftProfile = new FutureTask<>(()->null);
 
-									profileWorker.getTable(ProfileTableDetails.OUTPUT_POWER.getDescription()).map(CalibrationTable::getTable).ifPresent(table->model.addAttribute("table", table));
+   	    				ThreadRunner.runThread(
+   								()->{
 
-    						    	// Get Power detector source
-    						    	final PowerDetectorSource powerDetectorSource = profileWorker.scanForPowerDetectorSource();
-				    				model.addAttribute("jsFunction", powerDetectorSource.getJsFunction());
+   				    				// Get Power table from the profile
+   							    	ProfileWorker profileWorker = new ProfileWorker(profileFolder, sn);
+   							    	try {
+   										if(!profileWorker.exists()) {
+   					    					model.addAttribute("message", "The profile could not be found.");
+   											ThreadRunner.runThread(ftProfile);
+   											return;
+   										}
 
-							    	ThreadRunner.runThread(ftProfile);
+   										profileWorker.getTable(ProfileTableDetails.OUTPUT_POWER.getDescription()).map(CalibrationTable::getTable).ifPresent(table->model.addAttribute("table", table));
 
-						    	} catch (Exception e) {
-									logger.catching(e);
-			    					model.addAttribute("message", e.getLocalizedMessage());
-									ThreadRunner.runThread(ftProfile);
-									return;
-								}
-							});
+   	    						    	// Get Power detector source
+   	    						    	final PowerDetectorSource powerDetectorSource = profileWorker.scanForPowerDetectorSource();
+   					    				model.addAttribute("jsFunction", powerDetectorSource.getJsFunction());
 
-    				try {
+   								    	ThreadRunner.runThread(ftProfile);
+
+   							    	} catch (Exception e) {
+   										logger.catching(e);
+   				    					model.addAttribute("message", e.getLocalizedMessage());
+   										ThreadRunner.runThread(ftProfile);
+   										return;
+   									}
+   								});
 
     					final FutureTask<CalibrationInfo> httpUpdate = getHttpUpdate(s, CalibrationInfo.class, new BasicNameValuePair("exec", "calib_ro_info"));
     					// Get settings from DB
@@ -162,7 +168,17 @@ public class CalibrationController {
 
 						ftProfile.get(10, TimeUnit.SECONDS);
 
-    				} catch (MalformedURLException | InterruptedException | ExecutionException | TimeoutException e) {
+   						try {
+
+   							final ConverterInfo converterInfo = httpDeviceDebug.get(5, TimeUnit.SECONDS);
+//   							logger.error(converterInfo);
+   							Optional.ofNullable(converterInfo).map(ConverterInfo::getLoFrequency).map(IrtFrequency::new).flatMap(IrtFrequency::getValue).ifPresent(lo->model.addAttribute("loFrequencty", lo));
+
+   						} catch (Exception e) {
+							logger.catching(e);
+						}
+
+   					} catch (MalformedURLException | InterruptedException | ExecutionException | TimeoutException e) {
 						logger.catching(e);
 					}
     			});

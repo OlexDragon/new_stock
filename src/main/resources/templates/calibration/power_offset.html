@@ -18,14 +18,15 @@
   		<div class="modal-dialog">
     		<div class="modal-content">
 <!-- Modal Header -->
-      			<div class="modal-header">
+      			<div class="modal-header" th:with="valGHz = ${settings.startValue.stripTrailingZeros()}">
       				<select id="base" class="form-select">
       					<option th:each="pair : ${ table }" th:value="${ pair.input }" th:text="${ pair.output }" ></option>
       				</select>
         			<h5 id="inputValue" class="modal-title ml-3 text-primary" th:text="${power.value}">2125</h5>
         			<h5 class="modal-title text-primary">-</h5>
-        			<input type="number" id="outputValue" class="form-control" placeholder="Output Power" value="30" th:value="${settings.startValue.stripTrailingZeros()}">
+        			<input type="number" id="outputValue" class="form-control" placeholder="Output Power" value="30" th:value="${valGHz}">
         			<button type="button" id="addRow">Add</button>
+        			<h5 th:if="${loFrequencty}!=null" id="lBand" class="pl-2" th:text="${valGHz *1000 - loFrequencty.stripTrailingZeros()}">950</h5>
 <!-- Calibration settings -->
   					<div class="dropdown col-auto">
   						<button class="btn dropdown-toggle" type="button" id="dropdownSettingsButton" data-bs-toggle="dropdown" aria-expanded="false"></button>
@@ -73,6 +74,7 @@
 			/*[/]*/
 
 			var unitSerialNumber =  /*[[${serialNumber}]]*/ 'IRT-2121021';
+			var loFrequencty = /*[[${loFrequencty}]]*/ 12800; //MHz
 
 			var pos = Cookies.get("powerOffsetSteps");
 			if(pos)
@@ -163,7 +165,11 @@
 					alert('The value in the table has reached its maximum value.');
 				}
 
-				$freq.val(Number(Number(newVal).toFixed(9)));
+				var outputFr = Number(Number(newVal).toFixed(9))	// GHz
+				$freq.val(outputFr);
+
+				var lBand = parseFloat(outputFr * 1000 - loFrequencty);	//MHz
+				$('#lBand').text(lBand);
 			}
 
 			$('#addRow').click(onAddRow);
@@ -224,7 +230,12 @@
 
 		    $('#clear').click(function(){
 		    	$('#modal-body').empty();
-		    	$('#outputValue').val($('#minValue').val())
+
+		    	var minValue = $('#minValue').val();
+		    	$('#outputValue').val(minValue)
+
+				var lBand = parseFloat(minValue * 1000 - loFrequencty);	//MHz
+				$('#lBand').text(lBand);
 				disableButtons();
 		    });
 

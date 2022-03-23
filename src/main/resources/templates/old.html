@@ -27,9 +27,9 @@
 		<div class="nav-item col">
   		<form class="row">
 
-<!-- Type -->
+<!-- Group -->
   			<div class="input-group col">
-      			<label for="pnType" class="input-group-text">Type</label>
+      			<label for="pnType" class="input-group-text">Group</label>
       			<select id="pnType" class="form-control">
       				<option th:each="pnType : ${ pnTypes }"
       						th:value="${ pnType.id }"
@@ -49,13 +49,13 @@
 
  <!-- Subtype -->
   			<div class="input-group ml-1 col pn_field">
-      			<label for="pnSubtype" class="input-group-text">Subtype</label>
-       			<select id="pnSubtype" class="form-control">
+      			<label for="pnSubtype1" class="input-group-text">Subtype</label>
+       			<select id="pnSubtype1" class="form-control onchange">
        				<option th:each=" subtype, stat : ${ subtypes }" th:value="${ subtype.code }" th:text="${ subtype.type }"></option>
        			</select>
    			</div>
 			<script>
-				$('#pnSubtype').on('change', function(){
+				$('.onchange').on('change', function(){
 					toPartNumber();
 				});
 			</script>
@@ -65,8 +65,8 @@
 
  <!-- Machining -->
   			<div class="input-group ml-1 col pn_field">
-      			<label for="pnMachining" class="input-group-text">Machining</label>
-       			<select id="pnMachining" class="form-control onchange">
+      			<label for="pnSubtype1" class="input-group-text">Machining</label>
+       			<select id="pnSubtype1" class="form-control onchange">
        				<option value="M">Machining</option>
        				<option value="S">Sheet</option>
        			</select>
@@ -74,8 +74,8 @@
 
  <!-- BUCs -->
   			<div class="input-group ml-1 col pn_field">
-      			<label for="pnBuc" class="input-group-text">BUC</label>
-       			<select id="pnBuc" class="form-control onchange">
+      			<label for="pnSubtype2" class="input-group-text">BUC</label>
+       			<select id="pnSubtype2" class="form-control onchange">
        				<option value="">Do not use</option>
        				<option value="A">AntBUC</option>
        				<option value="F">FemtoBUC</option>
@@ -87,8 +87,8 @@
 
  <!-- Treatment -->
   			<div class="input-group ml-1 col pn_field">
-      			<label for="pnTreatment" class="input-group-text">Treatment</label>
-       			<select id="pnTreatment" class="form-control onchange">
+      			<label for="pnSubtype3" class="input-group-text">Treatment</label>
+       			<select id="pnSubtype3" class="form-control onchange">
        				<option value="">Do not use</option>
        				<option value="PBL">Black Paint</option>
        				<option value="PB">Blue Paint</option>
@@ -114,8 +114,8 @@
 
  <!-- Machining -->
   			<div class="input-group ml-1 col pn_field">
-      			<label for="pnMachining" class="input-group-text">Machining</label>
-       			<select id="pnMachining" class="form-control onchange">
+      			<label for="pnSubtype1" class="input-group-text">Machining</label>
+       			<select id="pnSubtype1" class="form-control onchange">
        				<option value="M">Machining</option>
        				<option value="S">Sheet</option>
        			</select>
@@ -123,8 +123,8 @@
 
  <!-- RF/Unit -->
   			<div class="input-group ml-1 col pn_field">
-      			<label for="pnRfUnit" class="input-group-text">RF/UNIT</label>
-       			<select id="pnRfUnit" class="form-control onchange">
+      			<label for="pnSubtype2" class="input-group-text">RF/UNIT</label>
+       			<select id="pnSubtype2" class="form-control onchange">
        				<option value="U">UNIT</option>
        				<option value="R">RF</option>
        			</select>
@@ -132,8 +132,8 @@
 
  <!-- Treatment -->
   			<div class="input-group ml-1 col pn_field">
-      			<label for="pnTreatment" class="input-group-text">Treatment</label>
-       			<select id="pnTreatment" class="form-control onchange">
+      			<label for="pnSubtype3" class="input-group-text">Treatment</label>
+       			<select id="pnSubtype3" class="form-control onchange">
        				<option value="">Do not use</option>
        				<option value="PBL">Black Paint</option>
        				<option value="PB">Blue Paint</option>
@@ -159,8 +159,8 @@
 
  <!-- Machining -->
   			<div class="input-group ml-1 col pn_field">
-      			<label for="pnMachining" class="input-group-text">Machining</label>
-       			<select id="pnMachining" class="form-control onchange">
+      			<label for="pnSubtype1" class="input-group-text">Machining</label>
+       			<select id="pnSubtype1" class="form-control onchange">
        				<option value="M">Machining</option>
        				<option value="S">Sheet</option>
        			</select>
@@ -168,8 +168,8 @@
 
  <!-- Size -->
   			<div class="input-group ml-1 col pn_field">
-      			<label for="pnBuc" class="input-group-text">Size</label>
-       			<select id="pnBuc" class="form-control onchange">
+      			<label for="pnSubtype2" class="input-group-text">Size</label>
+       			<select id="pnSubtype2" class="form-control onchange">
        				<option value="1U">1U</option>
        				<option value="2U">2U</option>
        				<option value="3U">3U</option>
@@ -180,8 +180,8 @@
 
  <!-- Treatment -->
   			<div class="input-group ml-1 col pn_field">
-      			<label for="pnTreatment" class="input-group-text">Treatment</label>
-       			<select id="pnTreatment" class="form-control onchange">
+      			<label for="pnSubtype3" class="input-group-text">Treatment</label>
+       			<select id="pnSubtype3" class="form-control onchange">
        				<option value="">Do not use</option>
        				<option value="PBL">Black Paint</option>
        				<option value="PB">Blue Paint</option>
@@ -193,6 +193,33 @@
        				<option value="S">Silver Plated</option>
        				<option value="R">ROW</option>
        				<option value="PW">White Paint</option>
+       			</select>
+   			</div>
+   			<script>
+   				$('.onchange').on('change', function(){
+   					toPartNumber();
+   				});
+   			</script>
+
+</th:block>
+
+<th:block th:fragment="inserts">
+
+ <!-- Machining -->
+  			<div class="input-group ml-1 col pn_field">
+      			<label for="pnSubtype1" class="input-group-text">Machining</label>
+       			<select id="pnSubtype1" class="form-control onchange">
+       				<option value="M">Machining</option>
+      				<option value="S">Sheet</option>
+        			</select>
+   			</div>
+
+ <!-- Material -->
+  			<div class="input-group ml-1 col pn_field">
+      			<label for="pnSubtype2" class="input-group-text">Material</label>
+       			<select id="pnSubtype2" class="form-control onchange">
+       				<option value="A">Aluminum</option>
+       				<option value="C">Copper</option>
        			</select>
    			</div>
    			<script>
@@ -229,6 +256,109 @@
    			</script>
 
 </th:block>
+
+<th:block th:fragment="wg">
+
+ <!-- Dimension -->
+  			<div class="input-group ml-1 col pn_field">
+      			<label for="pnSubtype1" class="input-group-text">Dimension</label>
+       			<select id="pnSubtype1" class="form-control onchange">
+       				<option value="WR28">WR28</option>
+       				<option value="WR62">WR62</option>
+       				<option value="WR75">WR75</option>
+       				<option value="WR137">WR137</option>
+       				<option value="WR187">WR187</option>
+       			</select>
+   			</div>
+
+ <!-- Type -->
+  			<div class="input-group ml-1 col pn_field">
+      			<label for="pnSubtype2" class="input-group-text">Type</label>
+       			<select id="pnSubtype2" class="form-control onchange">
+       				<option value="">Do not use</option>
+       				<option value="F">Flexible</option>
+       				<option value="SP">Spear</option>
+       				<option value="S">Step</option>
+       				<option value="T">Tongue</option>
+       			</select>
+   			</div>
+   			<script>
+   				$('.onchange').on('change', function(){
+   					toPartNumber();
+   				});
+   			</script>
+
+</th:block>
+
+<th:block th:fragment="wg_band">
+
+ <!-- Dimension -->
+  			<div class="input-group ml-1 col pn_field">
+      			<label for="pnSubtype1" class="input-group-text">Dimension</label>
+       			<select id="pnSubtype1" class="form-control onchange">
+       				<option value="WR28">WR28</option>
+       				<option value="WR62">WR62</option>
+       				<option value="WR75">WR75</option>
+       				<option value="WR137">WR137</option>
+       				<option value="WR187">WR187</option>
+       			</select>
+   			</div>
+
+ <!-- Type -->
+  			<div class="input-group ml-1 col pn_field">
+      			<label for="pnSubtype2" class="input-group-text">Type</label>
+       			<select id="pnSubtype2" class="form-control onchange">
+       				<option value="H">H-Plane</option>
+       				<option value="E">E-Plane</option>
+       			</select>
+   			</div>
+ 
+ <!-- Material -->
+  			<div class="input-group ml-1 col pn_field">
+      			<label for="pnSubtype3" class="input-group-text">Material</label>
+       			<select id="pnSubtype3" class="form-control onchange">
+       				<option value="A">Aluminum</option>
+       				<option value="C">Copper</option>
+       			</select>
+   			</div>
+   			<script>
+   				$('.onchange').on('change', function(){
+   					toPartNumber();
+   				});
+   			</script>
+
+</th:block>
+
+<th:block th:fragment="wg_magic">
+
+ <!-- Dimension -->
+  			<div class="input-group ml-1 col pn_field">
+      			<label for="pnSubtype1" class="input-group-text">Dimension</label>
+       			<select id="pnSubtype1" class="form-control onchange">
+      				<option value="WR28">WR28</option>
+       				<option value="WR62">WR62</option>
+       				<option value="WR75">WR75</option>
+       				<option value="WR137">WR137</option>
+       				<option value="WR187">WR187</option>
+       			</select>
+   			</div>
+
+ <!-- Type -->
+  			<div class="input-group ml-1 col pn_field">
+      			<label for="pnSubtype2" class="input-group-text">Type</label>
+       			<select id="pnSubtype2" class="form-control onchange">
+       				<option value="">Parts</option>
+       				<option value="A">Assembled</option>
+       			</select>
+   			</div>
+    			<script>
+   				$('.onchange').on('change', function(){
+   					toPartNumber();
+   				});
+   			</script>
+
+</th:block>
+
 </th:block>
 
 <!-- Force next columns to break to new line -->
@@ -271,9 +401,9 @@
 				<div class="col-sm"><strong>Description</strong></div>
 			</div>
 			<div class="row hover mr clickable" th:if="${ components }!=null" th:each=" component, stat : ${ components }" th:id="${ component.id }" th:classappend="${stat.odd}? 'odd'">
-				<div class="col-sm-2 partNumber" th:text="${ component.partNumber }"><strong>Part Number</strong></div>
-				<div class="col-sm-auto revision">
-					<select th:if="${ component.revisions.size()>0 }">
+				<div class="col-sm-2"><strong class="partNumber" th:text="${ component.partNumber }" th:data-pn="${ component.partNumber }">Part Number</strong></div>
+				<div class="col-sm-auto">
+					<select class="revision" th:if="${ component.revisions.size()>0 }">
 						<option th:each="revision : ${component.revisions}" th:value="${revision.pnRevision}" th:text="${revision.pnRevision}"></option>
 					</select>
 				</div>
@@ -298,8 +428,36 @@
 					var id = $(target).val();
 					$("#content").load('/create/revision', {id: id});
 				});
+
+				addRevision();
+				function addRevision(){
+
+					$('.row').each(function(){
+						var $this = $(this);
+						var $partNumber = $this.find('.partNumber');
+						var $revision = $this.find('.revision');
+						setPartNumber($partNumber, $revision)
+					});
+				}
+				$('.revision').on('change', function(){
+					var $revision = $(this);
+					var $parent = $revision.parent().parent();
+					var $partNumber = $parent.find('.partNumber');
+					setPartNumber($partNumber, $revision)
+				})
+
+				function setPartNumber($partNumber, $revision){
+					
+					var revision = $revision.val();
+
+					if(!revision || !$partNumber)
+						return;
+
+					var newPartNumber = $partNumber.attr("data-pn") + '-R' + revision.padStart(2, '0');
+					$partNumber.text(newPartNumber);
+				}
 				/*]]>*/
-				//# sourceURL=componentsContent.js
+				//# sourceURL=oldDbContent.js
   			</script>
  		</th:block>
 	</div>

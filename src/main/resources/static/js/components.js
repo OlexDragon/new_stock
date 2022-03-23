@@ -10,8 +10,12 @@ $('.searchInput').on('input', function(){
     timer = setTimeout(search, 600, $(this));
 });
 
+var page;
+var $lastSearch;
 function search($this){
 
+	page = 1;
+	$lastSearch = $this;
 	var val = $.trim($this.val());
 	if(!val)
 		return;
@@ -20,7 +24,7 @@ function search($this){
 	Cookies.set("componentSearch", JSON.stringify([attrId, val]), { expires: 7 });
 	$('.searchInput').filter(':not(#' + attrId + ')').val('');
 
-	$("#content").load('/components?id=' + attrId + '&value=' + val)
+	$("#content").load('/components', {id: attrId, value: val})
 }
 
 // Get Part Number, Mfr PN or Description from the cookies
@@ -97,4 +101,37 @@ function inventory(row){
 				alert(error.responseText);
 		});
 	});
+}
+
+var lastScroll = 0;
+var postComponents;
+window.onscroll =  function (e) {
+
+	var l = e.currentTarget.lastScroll;
+	var st = window.pageYOffset || document.documentElement.scrollTop;
+	var scrollUp = st <= lastScroll;
+	lastScroll = st <= 0 ? 0 : st;
+
+	if(scrollUp || $('#searchEnd').length || postComponents)
+		return; //Scroll Up
+
+    if ((window.innerHeight + window.pageYOffset) >= document.body.offsetHeight) {
+
+		if(!$lastSearch)
+			return;
+
+		var attrId = $lastSearch.prop('id');
+		var val = $.trim($lastSearch.val());
+		postComponents = $.post('/components', {id: attrId, value: val, page: page})
+							.done(function(page){
+								$('#content').append(page);
+								postComponents = 0;
+							})
+							.fail(function(error) {
+								postComponents = 0;
+								if(error.statusText!='abort')
+									alert(error.responseText);
+							});
+		page += 1;
+    }
 }

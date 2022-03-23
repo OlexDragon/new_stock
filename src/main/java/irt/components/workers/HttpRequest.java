@@ -123,16 +123,16 @@ public class HttpRequest {
 			if (entity != null) {
 
 				json = EntityUtils.toString(entity).trim();
+//				logger.error("input: '{}'", json);
 
-				if(classToReturn==null || json.matches(".*\\<[^>]+>.*"))	// If HTML page
+				if(classToReturn==null || json.isEmpty() || json.matches(".*\\<[^>]+>.*"))	// If HTML page
 					return null;
 
 				final ObjectMapper mapper = new ObjectMapper();
 				mapper.configure(DeserializationFeature.FAIL_ON_UNKNOWN_PROPERTIES, false);
 
-//				logger.error(json);
 				json = javaScriptToJSon(json);
-//				logger.error(json);
+//				logger.error("output: {}", json);
 				final T readValue = mapper.readValue(json, classToReturn);
 //				logger.error("*** httpForIrtObject: {}", readValue);
 
@@ -205,7 +205,7 @@ public class HttpRequest {
 	}
 
 	private static String textToJSON(String json) {
-//		logger.error("*** textToJSON input: ({})", json);
+//		logger.error(json);
 		
 		StringBuffer sb = new StringBuffer("{");
 
@@ -223,7 +223,7 @@ public class HttpRequest {
 		// Remove extra comma
 		sb.setLength(sb.length()-1);
 
-//		logger.error("*** textToJSON output: {}", sb);
+//		logger.error(sb);
 		return sb.append('}').toString();
 	}
 

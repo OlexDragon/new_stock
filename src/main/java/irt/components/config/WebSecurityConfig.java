@@ -35,7 +35,6 @@ public class WebSecurityConfig extends WebSecurityConfigurerAdapter {
 										"/css/**",
 										"/js/**",
 										"/calibration/**",
-										"/components",
 										"/old",
 										"/old/get_fields",
 										"/rma",
@@ -44,6 +43,7 @@ public class WebSecurityConfig extends WebSecurityConfigurerAdapter {
 			.permitAll()
 
 			.antMatchers(HttpMethod.POST,
+											"/components",
 											"/components/single",
 											"/bom/search",
 											"/bom/components",
@@ -70,7 +70,9 @@ public class WebSecurityConfig extends WebSecurityConfigurerAdapter {
 	        .csrf().disable()
 	        .headers()
 				.frameOptions().sameOrigin()
-				.httpStrictTransportSecurity().disable();
+				.httpStrictTransportSecurity().disable()
+			.and()
+            	.rememberMe().userDetailsService(userService);
 	}
 
     @Bean

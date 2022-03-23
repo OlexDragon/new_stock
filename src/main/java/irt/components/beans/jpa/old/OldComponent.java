@@ -13,6 +13,7 @@ import javax.persistence.OrderBy;
 import javax.persistence.Table;
 
 import lombok.AllArgsConstructor;
+import lombok.EqualsAndHashCode;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
 import lombok.Setter;
@@ -20,7 +21,7 @@ import lombok.ToString;
 
 @Entity
 @Table(name = "components")
-@NoArgsConstructor @AllArgsConstructor @Getter @Setter @ToString
+@NoArgsConstructor @AllArgsConstructor @Getter @Setter @ToString @EqualsAndHashCode
 public class OldComponent {
 
 	@Id @GeneratedValue(strategy = GenerationType.IDENTITY)

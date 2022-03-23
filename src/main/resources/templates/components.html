@@ -84,6 +84,7 @@
 				<div class="col-sm description" th:text="${ component.description }"><strong>Description</strong></div>
 				<div sec:authorize="hasAuthority('INVENTORY')" class="col-auto"><button calss="btn btn-outline-warning">Use</button></div>
 			</div>
+			<div id="searchEnd" th:if="${end}">*** END ***</div>
   			<script th:inline="javascript">
 				/*<![CDATA[*/
 

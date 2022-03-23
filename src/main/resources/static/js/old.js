@@ -76,43 +76,30 @@ function toPartNumber(){
 
 	var $pn = $('#componentPN');
 	var pnNameCode = $('#pnName').val();
-	var pnSubtypeCode = $('#pnSubtype').val();
 
-// PCB Part Number
-	if(pnSubtypeCode){
-		$pn.val(pnNameCode + '-' + pnSubtypeCode + '-#');
-
-		search($('#componentPN'));
-		return
-	}
-
-// Metal parts
-	var pnMachining = $('#pnMachining').val();
-	if(pnMachining){
-
-		var val = pnNameCode + '-' + pnMachining + '-';
-
-		var pnBuc = $('#pnBuc').val();
-		if(pnBuc)
-			val += pnBuc + '-';
-
-		else{
-			var pnRfUnit = $('#pnRfUnit').val();
-			if(pnRfUnit)
-				val += pnRfUnit + '-';
-		}
-
-		val += '#'
-
-		var pnTreatment = $('#pnTreatment').val();
-		if(pnTreatment)
-			val += '-' + pnTreatment
-
-		$pn.val(val);
-
-		search($('#componentPN'));
+	if(!pnNameCode)
 		return;
-	}
+
+// To Part Number
+	var val = pnNameCode;
+
+	var pnSubtype1Code = $('#pnSubtype1').val();
+	if(pnSubtype1Code)
+		val += '-' + pnSubtype1Code
+
+	var pnSubtype2Code = $('#pnSubtype2').val();
+	if(pnSubtype2Code)
+		val += '-' + pnSubtype2Code;
+
+		val += '-#'
+
+	var pnSubtype3Code = $('#pnSubtype3').val();
+	if(pnSubtype3Code)
+		val += '-' + pnSubtype3Code;
+
+	$pn.val(val);
+
+	search($pn);
 }
 
 var timer = 0;

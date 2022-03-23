@@ -62,14 +62,15 @@ public class OldComponentsController {
 		List<OldComponent> components = null;
 		Pageable size = PageRequest.of(0, 40);
 
-		value = value.replaceAll("#", "%");
-		value = value.replaceAll("\\*", "%");
-		if(!value.contains("%"))
-			value = "%" + value + "%";
-//		logger.error("value: {}", value);
-
 		switch(id) {
 		case "componentPN":
+
+			value = value.replaceAll("#", "%");
+			value = value.replaceAll("\\*", "%");
+			if(!value.contains("%"))
+				value = "%" + value + "%";
+//			logger.error("value: {}", value);
+
 			components = oldComponentRepository.findByPartNumberLikeOrderByPartNumber(value, size);
 			break;
 

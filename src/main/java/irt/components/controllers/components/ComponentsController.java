@@ -18,10 +18,11 @@ import org.apache.logging.log4j.Logger;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Controller;
 import org.springframework.ui.Model;
-import org.springframework.web.bind.annotation.GetMapping;
+import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestParam;
 
+import irt.components.beans.Component;
 import irt.components.beans.ComponentsResponse;
 import irt.components.workers.HttpRequest;
 
@@ -29,7 +30,7 @@ import irt.components.workers.HttpRequest;
 public class ComponentsController {
 	private final static Logger logger = LogManager.getLogger();
 
-	private static final String SIZE = "40";
+	private static final int SIZE = 40;
 
 	@Value("${irt.url.protocol}")
 	private String protocol;
@@ -48,17 +49,21 @@ public class ComponentsController {
         return "components";
     }
 
-	@GetMapping("components")
-	public String search( @RequestParam(required=false) String id, @RequestParam(required=false) String value, Model model) throws IOException {
+	@PostMapping("components")
+	public String search( @RequestParam(required=false) String id, @RequestParam(required=false) String value, @RequestParam(required=false) Integer page, Model model) throws IOException {
+//		logger.error("id: {}; value: {}; page: {};", id, value, page);
 
-		String url = createComponentUrl(id, value);
+		String url = createComponentUrl(id, value, page);
+//		logger.error(url);
 		
 		final FutureTask<ComponentsResponse> futureTask = HttpRequest.getForObgect(url, ComponentsResponse.class);
 
 		try {
 
 			final ComponentsResponse componentsResponse = futureTask.get(10, TimeUnit.SECONDS);
-			model.addAttribute("components", componentsResponse.getComponents());
+			final Component[] components = componentsResponse.getComponents();
+			model.addAttribute("components", components);
+			model.addAttribute("end", components.length<SIZE);
 
 		} catch (InterruptedException | ExecutionException | TimeoutException e) {
 			logger.catching(e);
@@ -68,15 +73,15 @@ public class ComponentsController {
 	}
 
 	// Search Components URL
-	private String createComponentUrl(String key, String value) throws UnsupportedEncodingException {
+	private String createComponentUrl(String key, String value, Integer page) throws UnsupportedEncodingException {
 
 		final StringBuilder sb = new StringBuilder(protocol).append(login).append(url).append(ComponentsRestController.encode(componentsCatalog)).append('?');
 
 		List<NameValuePair> params = new ArrayList<NameValuePair>();
 //		params.add(new BasicNameValuePair("$format", "json"));
-		params.add(new BasicNameValuePair("$top", SIZE));
+		params.add(new BasicNameValuePair("$top", "" + SIZE));
 		params.add(new BasicNameValuePair("$orderby", "SKU"));
-//		params.add(new BasicNameValuePair("$expand:", "IRT_SchematicLetter"));
+		Optional.ofNullable(page).map(p->p*SIZE).ifPresent(skip->params.add(new BasicNameValuePair("$skip", skip.toString())));
 
 		// Filter
 		final List<String> contains = new ArrayList<>();

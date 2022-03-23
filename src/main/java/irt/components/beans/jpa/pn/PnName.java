@@ -9,7 +9,9 @@ import javax.persistence.Table;
 
 import com.fasterxml.jackson.annotation.JsonIgnore;
 
+import irt.components.beans.jpa.old.OldComponent;
 import lombok.AllArgsConstructor;
+import lombok.EqualsAndHashCode;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
 import lombok.Setter;
@@ -17,7 +19,7 @@ import lombok.ToString;
 
 @Entity
 @Table
-@NoArgsConstructor @AllArgsConstructor @Getter @Setter @ToString
+@NoArgsConstructor @AllArgsConstructor @Getter @Setter @ToString @EqualsAndHashCode
 public class PnName {
 
 	@Id private Long code;
