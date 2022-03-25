@@ -27,13 +27,24 @@
 		<div class="nav-item col">
   		<form class="row">
 
-<!-- RMA Serial Number search-->
+<!-- Filter RMA unit by shipped or not -->
+ 			<div id="rmaFilter" class="btn btn-outline-primary ml-1 col-auto" title="Press to show RMA units in work.">ALL</div>
+ 
+<!-- RMA Number search-->
   			<div class="input-group col">
-      			<label for="rmaSerialNumber" class="input-group-text">PN</label>
+				<input type="radio" class="btn-check" name="sort_by" id="rmaSearchByRmaNumber" autocomplete="off">
+      			<label for="rmaSearchByRmaNumber" class="input-group-text btn btn-outline-secondary">RMA</label>
+      			<input id="rmaNumber" type="text" class="form-control searchRma" placeholder="RMA Number" aria-label="RMA Number">
+    		</div>
+
+<!-- RMA Unit Serial Number search-->
+  			<div class="input-group col">
+				<input type="radio" class="btn-check" name="sort_by" id="rmaSearchBySerialNumber" autocomplete="off">
+      			<label for="rmaSearchBySerialNumber" class="input-group-text btn btn-outline-secondary">SN</label>
       			<input id="rmaSerialNumber" type="text" class="form-control searchRma" placeholder="RMA Serial Number" aria-label="RMA Serial Number">
     		</div>
 
- <!-- RMA Description search -->
+ <!-- RMA Unit Description search -->
   			<div class="input-group ml-1 col">
       			<label for="rmaDescription" class="input-group-text">Description</label>
       			<input id="rmaDescription" type="text" class="form-control searchRma" placeholder="Description" aria-label="Description" aria-describedby="descriptionLbl" th:value="${description}">
@@ -54,21 +65,31 @@
 <!-- Accordion:	Cards -->
 	<th:block th:fragment="rmaCards">
 
-		<div class="accordion-item" th:each="rma, status : ${ rmas }" th:with="index =${ status.index }" th:id="${ rma.rmaId }">
+		<div class="accordion-item" th:each="rma, status : ${ rmas }" th:with="index =${ status.index }" th:id="${ rma.id }">
 
 <!-- Accordion:	Card Header -->
 			<h5 th:id="heading + ${ index }" class="accordion-header">
-				<button type="button" class="btn btn-link accordion-button" data-bs-toggle="collapse" data-bs-target="#rma0" aria-expanded="true" aria-controls="rma0" th:attr="aria-controls ='rma'+${ index }, data-bs-target='#rma'+${ index }" style="width:100%">
+				<button type="button" class="btn accordion-button" data-bs-toggle="collapse" data-bs-target="#rma0" aria-expanded="true" aria-controls="rma0" th:attr="aria-controls ='rma'+${ index }, data-bs-target='#rma'+${ index }" style="width:100%">
           			<div class="row" style="width:100%">
-          				<div class="col-2">
-          					<strong class="serialNumber" th:text="${ rma.rmaId }"> RMA ID </strong>
+           				<div class="col-auto" th:classappend="${ rma.shipped ? 'bg-secondary text-white bg-opacity-75' : ''}">
+          					<strong th:text="${ rma.rmaNumber }"> RMA Number </strong>
           				</div>
-          				<div class="col-2">
-          					<strong class="serialNumber" th:text="${ #strings.toUpperCase( rma.serialNumber ) }"> Serial Number </strong>
+          				<div class="col-auto">
+          					<strong class="text-nowrap serialNumber" th:text="${ #strings.toUpperCase( rma.serialNumber ) }"> Serial Number </strong>
           				</div>
-          				<div class="col-6 text-secondary">
+          				<div class="col text-secondary">
           					<strong th:text="${ rma.description }">Description</strong>
           				</div>
+          				<div class="col-auto text-secondary">
+          					<strong th:text="${#dates.format( rma.date, 'dd MMM yyyy' )}" th:title="${rma.date}">Date</strong>
+          				</div>
+          				<div class="col-auto text-secondary">
+          					<strong th:text="${rma.user.username}">User Name</strong>
+          				</div>
+  						<div class="col-auto" th:unless="${ rma.shipped }" sec:authorize="hasAuthority('ADD_RMA')">
+<!-- Button to Add RMA unit -->
+      						<div class="btn btn-outline-primary add-to-rma" th:data-rma-number="${ rma.rmaNumber }">Add</div>
+    					</div>
            			</div>
         		</button>
 			</h5>
@@ -85,9 +106,9 @@
 					</div>
 					<div class="row hover-light" th:id="${ rmaContent }!=null ? ${ rmaContent.id } : null" th:each="rmaContent, status : ${ comments }" th:with="user = ${ rmaContent.user }" th:classappend="${status.odd ? 'odd' : ''}">
 						<div class="col-1" th:text="${ status.count }">	#</div>
-						<div class="col comment pre-line" th:text="${ rmaContent.comment }">	User name </div>
-						<div class="col-1 username" th:text="${ user.username }">	User name </div>
-						<div class="col-2 date" th:text="${#dates.format( rmaContent.date, 'dd MMM yyyy hh:mm' )}">		Date </div>
+						<div class="col comment pre-line" th:text="${ rmaContent.comment }">Comment </div>
+						<div class="col-1 username" th:text="${ user.username }">User name </div>
+						<div class="col-2 date" th:text="${#dates.format( rmaContent.date, 'dd MMM yyyy hh:mm' )}">Date </div>
 					</div>
 				</th:block>
 				</div>
@@ -96,8 +117,7 @@
 <!-- 		 sec:authorize="hasAuthority('ADD_RMA_COMMENT')" -->
 		<script th:inline="javascript" sec:authorize="hasAuthority('ADD_RMA_COMMENT')" th:if="${ rmas != null ? rmas.size() > 0 : false }">
 
-			function ondblclick(e){
-				e.preventDefault();
+			function ondblclick(){
 
 				var $this = $(this);
 				var $serialNumber = $this.find(".serialNumber");
@@ -108,8 +128,15 @@
 			}
 			var items = document.getElementsByClassName('accordion-item');
 			for(const item of items){
-				item.ondblclick = ondblclick;
+
+				var $rmsNumber = $(item).find('.bg-secondary');
+				if(!$rmsNumber.hasClass('bg-secondary'))
+					item.ondblclick = ondblclick;	//	 for not shipped RMAs
 			}
+
+			// Add RMA Unit to the existing RMA Number
+			$('.add-to-rma').click(function(){addToRma(this.dataset.rmaNumber);});
+
 			//# sourceURL=rmaComments.js
 		</script>
 	</th:block>
@@ -122,6 +149,10 @@
     		<div class="modal-content">
 <!-- Modal Header -->
       			<div class="modal-header">
+      				<div class="btn-group" role="group" aria-label="Basic checkbox toggle button group">
+      					<input id="shipping" type="checkbox" class="btn-check" title="Shippong">
+      					<label class="btn btn-outline-primary" for="shipping">Ship</label>
+      				</div>
         			<h5 id="modal_title" class="modal-title ml-3 text-primary">Enter the information about this RMA.</h5>
         			<button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
       			</div>

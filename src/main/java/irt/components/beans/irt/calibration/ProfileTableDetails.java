@@ -10,8 +10,8 @@ import lombok.ToString;
 @RequiredArgsConstructor @Getter @ToString
 public enum ProfileTableDetails {
 
-	OUTPUT_POWER("Output Power", new String[]{"out-power", "power"}),
-	POWER_OFFSET("Power Offset", new String[]{"frequency"});
+	OUTPUT_POWER("Output Power", new String[]{"out-power", "power-out", "power"}),
+	POWER_OFFSET("Power Offset", new String[]{"power-out-freq", "frequency"});
 
 	private final String description;
 	private final String[] names;

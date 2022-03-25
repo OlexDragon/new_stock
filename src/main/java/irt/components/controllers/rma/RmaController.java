@@ -6,10 +6,12 @@ import java.time.LocalDate;
 import java.time.format.DateTimeFormatter;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Optional;
 
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.data.domain.PageRequest;
+import org.springframework.data.domain.Sort;
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
 import org.springframework.stereotype.Controller;
 import org.springframework.ui.Model;
@@ -25,13 +27,13 @@ import irt.components.beans.jpa.rma.Rma;
 import irt.components.beans.jpa.rma.RmaComment;
 import irt.components.services.UserPrincipal;
 import irt.components.workers.ProfileWorker;
-import org.apache.logging.log4j.LogManager;
-import org.apache.logging.log4j.Logger;
+//import org.apache.logging.log4j.LogManager;
+//import org.apache.logging.log4j.Logger;
 
 @Controller
 @RequestMapping("rma")
 public class RmaController {
-	private final static Logger logger = LogManager.getLogger();
+//	private final static Logger logger = LogManager.getLogger();
 
 	private static final int SIZE = 40;
 
@@ -49,15 +51,32 @@ public class RmaController {
 
 	@PostMapping(path = "search")
 	public String searchBom(
-			@RequestParam(required=false) String id,
-			@RequestParam(required=false) String value,
+			@RequestParam(required=false) 	String id,
+			@RequestParam(required=false) 	String value,
+			@RequestParam				 	String sortBy,
+			@RequestParam					RmaFilter rmaFilter,
 											Model model) throws IOException {
 
+//		logger.error("id: {}; value: {}; serchBy: {}; rmaFilter:{}", id, value, sortBy, rmaFilter);
+
+		final String name = sortBy.replace("rmaSearchBy", "");
+//		logger.error(name);
+		Sort sort = Sort.by(name.equals("rmaNumber") ? Sort.Direction.DESC : Sort.Direction.ASC, name);
 		List<Rma> rmas = null;
 		switch(id) {
 
+		case "rmaNumber":
+			if(rmaFilter.shipped==null)
+				rmas = rmaRepository.findByRmaNumberContaining(value, PageRequest.of(0, SIZE, sort));
+			else
+				rmas = rmaRepository.findByRmaNumberContainingAndShipped(value, rmaFilter.shipped, PageRequest.of(0, SIZE, sort));
+			break;
+
 		case "rmaSerialNumber":
-			rmas = rmaRepository.findBySerialNumberContainingOrderBySerialNumber(value, PageRequest.of(0, SIZE));
+			if(rmaFilter.shipped==null)
+				rmas = rmaRepository.findBySerialNumberContaining(value, PageRequest.of(0, SIZE, sort));
+			else
+				rmas = rmaRepository.findBySerialNumberContainingAndShipped(value, rmaFilter.shipped, PageRequest.of(0, SIZE, sort));
 			break;
 
 		case "rmaDescription":
@@ -78,25 +97,30 @@ public class RmaController {
 		if(!(principal instanceof UsernamePasswordAuthenticationToken) || !profileWorker.exists())
 			return null;
 
+		final Optional<Rma> oRma = rmaRepository.findBySerialNumberAndShipped(serialNumber, false);
+//		logger.error(oRma);
+		if(oRma.isPresent())
+			return null;
+
 		profileWorker.getDescription()
 		.ifPresent(
-				d->{
+				description->{
 					final DateTimeFormatter formatter = DateTimeFormatter.ofPattern("'RMA'yyMM");
 					final LocalDate currentdate = LocalDate.now();
 					final String format = currentdate.format(formatter);
-					final int count = rmaRepository.findByRmaIdStartsWith(format).size();
+					final int count = rmaRepository.findByRmaNumberStartsWith(format).size();
 					final String sequence = String.format("%03d", count+1);
 
 					final Rma rma = new Rma();
-					rma.setRmaId(format + sequence);
-					rma.setDescription(d);
+					rma.setRmaNumber(format + sequence);
+					rma.setDescription(description);
 					rma.setSerialNumber(serialNumber);
 
 					final Object pr = ((UsernamePasswordAuthenticationToken)principal).getPrincipal();
 					final User user = ((UserPrincipal)pr).getUser();
 					rma.setUser(user);
 					rma.setUserId(user.getId());
-					logger.error(rma);
+//					logger.error(rma);
 
 					final Rma savedRma = rmaRepository.save(rma);
 
@@ -108,7 +132,7 @@ public class RmaController {
 	}
 
 	@PostMapping(path = "add_comment")
-	public String addComment(@RequestParam String rmaId, @RequestParam String comment, Principal principal, Model model) throws IOException {
+	public String addComment(@RequestParam String rmaId, @RequestParam String comment, @RequestParam Boolean shipped, Principal principal, Model model) throws IOException {
 
 		if(!(principal instanceof UsernamePasswordAuthenticationToken) || rmaId==null || comment.isEmpty())
 			return "rma :: rmaBody";
@@ -127,6 +151,13 @@ public class RmaController {
 		comments.add(savedComment);
 		model.addAttribute("comments", comments);
 
+		Optional.of(shipped).filter(sh->sh).flatMap(sh->rmaRepository.findById(rmaId))
+		.ifPresent(
+				rma->{
+					rma.setShipped(true);
+					rmaRepository.save(rma);
+				});
+
 		return "rma :: rmaBody";
 	}
 
@@ -139,5 +170,16 @@ public class RmaController {
 //		logger.error("comments: {} ", comments );
 
 		return "rma :: rmaBody";
+	}
+
+	public enum RmaFilter{
+		ALL(null),	// Show all RMAs
+		SHI(true),	// Show shipped RMAs
+		WOR(false);	// Show RMAs in work
+
+		private Boolean shipped;
+		RmaFilter(Boolean shipped){
+			this.shipped = shipped;
+		}
 	}
 }
