@@ -4,6 +4,12 @@ if(filterCookie){
 	$('#rmaFilter').text(filterCookie);
 }
 
+// Get RMA sort by
+var rmaSorting = Cookies.get("rmaSorting")
+if(rmaSorting){
+	$('#' + rmaSorting).prop('checked', true);
+}
+
 $('#miRMAs').addClass('active');
 
 // Input listener
@@ -36,7 +42,7 @@ function search($this){
 // Sort By
 	var $radio = $("input[name=sort_by]").filter(':checked');
 	if(!$radio.length)
-		$radio = $('#rmaSearchBySerialNumber').prop('checked', true);
+		$radio = $('#rmaOrderBySerialNumber').prop('checked', true);
 
 	var sortBy = $radio.prop('id');
 	var rmaFilter = $('#rmaFilter').text();
@@ -86,7 +92,9 @@ $('#addRMA').click(function(e){
 $('#saveComment').click(function(e){
 	e.preventDefault();
 
-	var comment = $.trim($('#rmaTextarea').val());
+	var $rmaTextarea = $('#rmaTextarea').select();
+	document.execCommand("copy");
+	var comment = $.trim($rmaTextarea.val());
 
 	if(!comment)
 		return;
@@ -188,12 +196,6 @@ function addToRma(rmaNumber){
 		if(error.statusText!='abort')
 			alert(error.responseText);
 	});
-}
-
-// Get RMA sort by
-var rmaSorting = Cookies.get("rmaSorting")
-if(rmaSorting){
-	$('#' + rmaSorting).prop('checked', true);
 }
 
 $('input[name=sort_by]').change(function(){

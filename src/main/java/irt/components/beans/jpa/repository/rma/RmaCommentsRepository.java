@@ -8,5 +8,5 @@ import irt.components.beans.jpa.rma.RmaComment;
 
 public interface RmaCommentsRepository extends CrudRepository<RmaComment, Long> {
 
-	List<RmaComment> findByRmaId(String rmaId);
+	List<RmaComment> findByRmaId(Long rmaId);
 }

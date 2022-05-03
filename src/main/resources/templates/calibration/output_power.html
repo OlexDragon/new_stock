@@ -21,7 +21,7 @@
       			<div class="modal-header">
         			<h5 id="inputValue" class="modal-title ml-3 text-primary" th:text="${power.value}">2125</h5>
         			<h5 class="modal-title text-primary">-</h5>
-        			<input type="number" id="outputValue" placeholder="Output Power" value="30" th:value="${settings.startValue}">
+        			<input type="number" id="op_outputValue" placeholder="Output Power" value="30" th:value="${settings.startValue}">
         			<button type="button" id="addRow">Add Row</button>
 <!-- Calibration settings -->
   					<div class="dropdown col-auto">
@@ -126,7 +126,7 @@
 			function onAddRow(){
 
 				var inputValue = $('#inputValue').text();
-				var $out = $('#outputValue');
+				var $out = $('#op_outputValue');
 				var outputValue = $out.val();
 
 				if(!(inputValue && outputValue)){
@@ -156,7 +156,7 @@
 			}
 
 			$('#addRow').click(onAddRow);
-			$('#outputValue').on('keypress', function (e) {
+			$('#op_outputValue').on('keypress', function (e) {
 				 if(e.which === 13)
 					 onAddRow();
 			});
@@ -214,12 +214,12 @@
 			function removeRow(button){
 				var parent = $(button).closest('.row').remove();
 				if(!disableButtons())
-		    		$('#outputValue').val($('#minValue').val())
+		    		$('#op_outputValue').val($('#minValue').val())
 				}
 
 		    	$('#clear').click(function(){
 		    		$('#modal-body').empty();
-		    		$('#outputValue').val($('#minValue').val())
+		    		$('#op_outputValue').val($('#minValue').val())
 					disableButtons();
 		    	});
 
@@ -250,7 +250,7 @@
 					var calc = (max-lastOut) * factor;
 
 					addRow(Math.round(lastIn + calc), max);
-					$('#outputValue').val(max);
+					$('#op_outputValue').val(max);
 		    	});
 
 		    	$('#save').click(function(){

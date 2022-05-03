@@ -8,7 +8,7 @@ import org.springframework.data.repository.CrudRepository;
 
 import irt.components.beans.jpa.rma.Rma;
 
-public interface RmaRepository extends CrudRepository<Rma, String> {
+public interface RmaRepository extends CrudRepository<Rma, Long> {
 
 	List<Rma> findByRmaNumberStartsWith				(String string);
 

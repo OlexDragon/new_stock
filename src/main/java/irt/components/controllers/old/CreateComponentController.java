@@ -33,6 +33,7 @@ public class CreateComponentController {
 
 	private static final Long PCB_CODE = 1l;
 	private static final Long MUCHINING_CODE = 2l;
+	private static final Long WAVEGUIDE = 3l;
 
 	@Autowired private PnTypeRepository pnTypeRepository;
 	@Autowired private OldComponentRepository oldComponentRepository;
@@ -54,6 +55,9 @@ public class CreateComponentController {
 
 					}else if(pnTypeCode==MUCHINING_CODE) {
 						nextSeqNumner = getMachiningSeqNumber(partNumbers);
+
+					}else if(pnTypeCode==WAVEGUIDE) {
+						nextSeqNumner = getPcbSeqNumber(partNumbers);
 
 					}else
 

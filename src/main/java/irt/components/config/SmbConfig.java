@@ -5,6 +5,7 @@ import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.integration.smb.session.SmbSessionFactory;
 
+import irt.components.beans.HttpSerialPortServersCollector;
 import jcifs.DialectVersion;
 
 @Configuration
@@ -27,5 +28,10 @@ public class SmbConfig {
 	    smbSession.setSmbMaxVersion(DialectVersion.SMB311);
 
 	    return smbSession;
+	}
+
+	@Bean
+	public HttpSerialPortServersCollector httpSerialPortServersCollector() {
+		return new HttpSerialPortServersCollector();
 	}
 }

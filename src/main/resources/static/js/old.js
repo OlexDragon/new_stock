@@ -12,7 +12,7 @@ if(cookie)
 	$('#pnType').val(cookie);
 
 $('#pnName').on('change', function(){
-	Cookies.set("oldPnName", this.value);
+	Cookies.set(cookie + "oldPnName", this.value);
 	$('#componentPN').val(this.value);
 	getPnFields();
 });
@@ -32,7 +32,7 @@ function getPnNames(){
 			$('<option>', {value: name.code}).text(name.name).appendTo($pnName);
 		});
 
-		var cookie = Cookies.get("oldPnName")
+		var cookie = Cookies.get(typeId + "oldPnName")
 		if(cookie)
 			$pnName.val(cookie);
 

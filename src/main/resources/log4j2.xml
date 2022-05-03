@@ -25,6 +25,15 @@
     </Appenders>
 
     <Loggers>
+<!-- 		<logger name="irt.components.controllers.rma.RmaController" level="TRACE" /> -->
+<!-- 		<logger name="org.springframework.jdbc.core.JdbcTemplate" level="TRACE" /> -->
+<!-- 		<logger name="org.springframework.jdbc.core" level="TRACE" /> -->
+<!-- 		<logger name="org.springframework.jdbc.core.StatementCreatorUtils" level="TRACE" /> -->
+
+<!-- 		<logger name="irt.components.workers.HttpRequest" level="all" /> -->
+<!-- 		<logger name="irt.components.controllers.calibration.CalibrationController" level="all" /> -->
+<!-- 		<logger name="irt.components.controllers.calibration.HttpSerialPortRestController" level="all" /> -->
+<!-- 		<logger name="irt.components.workers.HttpRequest" level="all" /> -->
 
         <Root level="info">
             <AppenderRef ref="ConsoleAppender" />

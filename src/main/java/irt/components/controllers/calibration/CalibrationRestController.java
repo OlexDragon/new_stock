@@ -22,6 +22,7 @@ import java.util.concurrent.TimeoutException;
 
 import org.apache.http.NameValuePair;
 import org.apache.http.message.BasicNameValuePair;
+import org.apache.logging.log4j.Level;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -67,9 +68,11 @@ public class CalibrationRestController {
 
     							return CalibrationController.getHttpUpdate(s, CalibrationInfo.class, new BasicNameValuePair("exec", "calib_ro_info")).get(10, TimeUnit.SECONDS);
 
-    						} catch (MalformedURLException | InterruptedException | ExecutionException | TimeoutException e) {
-    							logger.catching(e);
-    						}
+    						} catch (MalformedURLException | InterruptedException | ExecutionException e) {
+    							logger.catching(new Throwable(sn, e));
+    						} catch (TimeoutException e) {
+    							logger.catching(Level.DEBUG, new Throwable(sn, e));
+							}
 
     						return null;
     					})
@@ -99,7 +102,7 @@ public class CalibrationRestController {
     }
 
     @PostMapping(path="outputpower", consumes = MediaType.APPLICATION_JSON_VALUE)
-    String calibrationOutputPowerSettings(@RequestBody CalibrationOutputPowerSettings settings) {
+    String saveCalibrationOutputPowerSettings(@RequestBody CalibrationOutputPowerSettings settings) {
 
     	return calibrationOutputPowerSettingRepository.findById(settings.getPartNumber())
     			.map(
@@ -121,7 +124,7 @@ public class CalibrationRestController {
     }
 
     @PostMapping(path="power_offset", consumes = MediaType.APPLICATION_JSON_VALUE)
-    String calibrationPowerOffsetSettings(@RequestBody CalibrationPowerOffsetSettings settings) {
+    String saveCalibrationPowerOffsetSettings(@RequestBody CalibrationPowerOffsetSettings settings) {
 
     	return calibrationPowerOffsetSettingRepository.findById(settings.getPartNumber())
     			.map(

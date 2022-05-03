@@ -1,6 +1,69 @@
 
 $('#miCalibration').addClass('active');
 
+// Get HTTP Serial Port from the cookies
+var cookie = Cookies.get("spServers")
+if(cookie){
+	try {
+		$('option[value=' + cookie + ']').prop('selected', true);
+		gerSerialPorts();
+	}catch(err) {}
+}
+
+$('#spServers').change(function(){
+	gerSerialPorts();
+});
+
+function gerSerialPorts(){
+
+	var spHost = $('#spServers').val();
+	if(!spHost)
+		return;
+
+	$.post('/serial_port/rest/serial-ports', {hostName: spHost})
+	.done(function(ports){
+
+		var $comPorts = $('.com-ports').empty();
+
+		$('<option>', {selected: 'selected', disabled: 'disabled', hidden: 'hidden', title:'Remote Serial Port.'}).text('Select Remote Serial Port.').appendTo($comPorts);
+
+		$.each(ports, function(index, portName){
+			$('<option>', {value: portName}).text(portName).appendTo($comPorts);
+		});
+
+		$.each($comPorts, function(index, select){
+			var value = Cookies.get(select.id)
+			if(value){
+				$(select).val(value);
+				comPortSelected(select);
+			}
+		});
+	})
+	.fail(function(error) {
+		if(error.statusText!='abort'){
+		var responseText = error.responseText;
+			if(responseText)
+				alert(error.responseText);
+			else
+				alert("Server error. Status = " + error.status)
+		}
+	});
+}
+
+$('.com-ports').on('change', function(){
+
+	comPortSelected(this);
+	Cookies.set(this.id, this.value, { expires: 999 });
+});
+
+function comPortSelected(select){
+	var messageId = select.dataset.infoMessage;
+	var $message = $('#' + messageId);
+	$message.text(select.value);
+	$message.removeClass('text-danger');
+	$(select).parent().find('.disabled').removeClass('disabled');
+}
+
 if(!$('#serialNumber').text())
 	new bootstrap.Modal('#modal').show();
 
@@ -137,8 +200,7 @@ $('#scan').click(function(e){
 				)
 				.append(
 					$('<div>', {class: 'col-auto'}).append($('<a>', { class: 'btn btn-sm btn-outline-info', onclick: 'login(event, this)', target: "_blank", href: '/calibration/rest/login?sn=' + info["Serial number"]}).text('Login'))
-				)
-;
+				);
 				$row.attr('data-bs-toggle','tooltip').attr('data-bs-placement','top').attr('title', info["Product name"]);
 			});
 		});
@@ -158,3 +220,20 @@ $('#scan').click(function(e){
 		clearInterval(scanIpInterval);
 	});
 });
+
+$('#spServers').change(function(){
+	var spServers = $(this).val();
+	if(spServers)
+		Cookies.set("spServers", spServers, { expires: 7 });
+});
+
+function getHostName(){
+
+	var spServers = $('#spServers').val();
+	if(spServers)
+		return spServers;
+	else
+		alert('The Serial Port Server is not selected.');
+
+	return null;
+}

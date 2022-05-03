@@ -4,12 +4,13 @@
       	xmlns:sec="https://www.thymeleaf.org/thymeleaf-extras-springsecurity5"
       	lang="en">
 <head>
+	<meta charset="utf-8">
     <title>IRT Calibration.</title>
     <link rel="shortcut icon" href="http://irttechnologies.com/favicon.ico">
 <th:block th:replace="components :: bootstrapLink">
     <link rel="stylesheet" href="https://stackpath.bootstrapcdn.com/bootstrap/4.4.1/css/bootstrap.min.css">
 </th:block>
-    <link rel="stylesheet" href="../static/css/components.css" th:href="@{/css/components.css}">
+    <link rel="stylesheet" href="../../static/css/components.css" th:href="@{/css/components.css}">
 </head>
 <body>
 
@@ -26,6 +27,17 @@
 		<div class="nav-item col-auto"><h4 id="serialNumber" th:text="${info==null ? '' : info.serialNumber + ' : '}">Serial Number</h4></div>
 		<div class="nav-item col"><h4 th:text="${info==null ? '' : info.name}">Unit Name</h4></div>
 		<input th:if="${info!=null}" type="hidden" id="partNumber" th:value="${info.partNumber}">
+
+		<div class="nav-item input-group col" title="Serial Port Servers">
+   			<label for="spServers" class="input-group-text">SP Server: </label>
+			<select id="spServers" class="form-select" aria-label="Serial Port Servers">
+				<option selected="selected" disabled="disabled" hidden="hidden" title="Serial Port Server" value="">Select a Serial Port Server</option>
+				<option
+					 th:each="serialPortServer : ${ serialPortServers.entrySet() }"
+					 th:value="${ serialPortServer.key}"
+					 th:text="${ 'http://' + serialPortServer.key + ':' + serialPortServer.value  }">Serial Port Server Name</option>
+			</select>
+		</div>
 
 <!-- Unit Dropdown menu -->
 		<div class="nav-item dropstart col-auto">
@@ -45,12 +57,130 @@
     			<a id="powerOffset" class="dropdown-item calibrate" th:classappend="${info==null ? 'disabled list-group-item-light' : ''}" th:href="@{${info==null} ? '#' : '/calibration/power_offset?sn=' + ${info.serialNumber} + '&pn=' + ${info.partNumber} + '&deviceId=' + ${#strings.substring(info.deviceId, 1, info.deviceId.length()-1)}}">Power Offset</a>
     			<a id="temperature" class="dropdown-item calibrate" th:classappend="${info==null ? 'disabled list-group-item-light' : ''}" th:href="@{${info==null} ? '#' : '/calibration/temperature?sn=' + ${info.serialNumber}}">Temperature</a>
     			<a class="dropdown-item" id="upload" th:classappend="${info==null ? 'disabled list-group-item-light' : ''}" th:href="@{${info==null} ? '#' : '/calibration/rest/upload?sn=' + ${info.serialNumber}}">Upload Profile</a>
+    			<div><hr class="dropdown-divider"></div>
+    			<a class="dropdown-item" href="../static/files/http.serial_port.jar" th:href="@{/files/http.serial_port.jar}">Dounload HTTP Serial Port App.</a>
   			</div>
 		</div>
 	</nav>
 
 <!-- Content -->
-	<div id="content" class="container-fluid mt-5">
+	<div id="content" class="container-fluid mt-5 pt-3">
+
+<!-- Accordion -->
+		<div class="accordion" id="accordion">
+
+<!-- Output -->
+			<div class="accordion-item">
+				<h2 class="accordion-header" id="headingOutput">
+					<button class="accordion-button" type="button" data-bs-toggle="collapse" data-bs-target="#collapseOutput" aria-expanded="true" aria-controls="collapseOutput">Output :<strong id="outputInfo" class="text-danger"> Serial Port is not selected</strong></button>
+				</h2>
+				<div id="collapseOutput" class="accordion-collapse collapse" aria-labelledby="headingOutput" data-bs-parent="#accordion">
+					<div class="accordion-body">
+						<div class="row">
+	        				<select id="outputComPorts" class="form-control col com-ports" data-info-message="outputInfo">
+								<option selected="selected" disabled="disabled" hidden="hidden" value="">Select a Serial Port</option>
+	        				</select>
+	        				<select id="outputPowermeter" class="form-control col">
+								<option selected="selected" disabled="disabled" hidden="hidden" value="">Select a Power Meter</option>
+								<option value="HP438A">HP438A</option>
+	        				</select>
+	        				<input id="ouputAddress" type="number" class="col" title="Tool Address" placeholder="Tool Address" value="13">
+							<button id="ouputGet" class="form-control col btn btn-outline-secondary output-buton disabled">Get</button>
+							<div class="col"><strong id="outputValue"></strong></div>
+							<button id="ouputZero" class="form-control col btn btn-outline-secondary output-buton disabled">Zero</button>
+      					</div>
+      				</div>
+				</div>
+			</div>
+
+<!-- Input -->
+			<div class="accordion-item">
+				<h2 class="accordion-header" id="headingInput">
+					<button class="accordion-button" type="button" data-bs-toggle="collapse" data-bs-target="#collapseInput" aria-expanded="true" aria-controls="collapseInput">Input :<strong id="inputInfo" class="text-danger"> Serial Port is not selected</strong></button>
+				</h2>
+				<div id="collapseInput" class="accordion-collapse collapse" aria-labelledby="headingInput" data-bs-parent="#accordion">
+					<div class="accordion-body">
+						<div class="row">
+	        				<select id="inputComPorts" class="form-control col com-ports" data-info-message="inputInfo">
+								<option selected="selected" disabled="disabled" hidden="hidden" title="Serial Port Server" value="">Select a Serial Port</option>
+	        				</select>
+						</div>
+      				</div>
+				</div>
+			</div>
+
+<!-- Furnace -->
+			<div class="accordion-item">
+				<h2 class="accordion-header" id="headingFurnace">
+					<button class="accordion-button" type="button" data-bs-toggle="collapse" data-bs-target="#collapseFurnace" aria-expanded="true" aria-controls="collapseFurnace">Furnace :<strong id="furnaceInfo" class="text-danger"> Serial Port is not selected</strong></button>
+				</h2>
+				<div id="collapseFurnace" class="accordion-collapse collapse" aria-labelledby="headingFurnace" data-bs-parent="#accordion">
+					<div class="accordion-body">
+						<div class="row">
+	        				<select id="furnaceComPorts" class="form-control col com-ports" data-info-message="furnaceInfo">
+								<option selected="selected" disabled="disabled" hidden="hidden" title="Serial Port Server" value="">Select a Serial Port</option>
+	        				</select>
+						</div>
+      				</div>
+				</div>
+			</div>
+
+<!-- Prologix -->
+			<div class="accordion-item">
+				<h2 class="accordion-header" id="headingPrologix">
+					<button class="accordion-button" type="button" data-bs-toggle="collapse" data-bs-target="#collapsePrologix" aria-expanded="true" aria-controls="collapsePrologix">Prologix :<strong id="prologixInfo" class="text-danger"> Serial Port is not selected</strong></button>
+				</h2>
+				<div id="collapsePrologix" class="accordion-collapse collapse" aria-labelledby="headingPrologix" data-bs-parent="#accordion">
+					<div class="accordion-body">
+						<div class="row">
+	        				<select id="prologixComPorts" class="form-control col com-ports" data-info-message="prologixInfo">
+								<option selected="selected" disabled="disabled" hidden="hidden" title="Serial Port Server" value="">Select a Serial Port</option>
+	        				</select>
+
+	        				<button id="mode"
+	        						class="form-control col btn btn-outline-secondary prologix-buton disabled"
+	        						title="Press To get the Prologix Mode"
+	        						data-command-index="2"
+	        						data-commands='["++mode 1", "++mode 0", "++mode"]'
+	        						data-get-answer="[false, false, true]"
+	        						data-message='["DEVICE", "CONTROLLER"]'
+	        						data-title='["Press to set CONTROLLER mode", "Press to set DEVICE mode"]'
+	        						data-classes='["btn-outline-primary", "btn-outline-success", "btn-outline-secondary"]'>Get Mode</button>
+
+	        				<button id="savecfg"
+	        						class="form-control col btn btn-outline-secondary prologix-buton disabled"
+	        						title="Press To get the SAVE CONFIG setting"
+	        						data-command-index="2"
+	        						data-commands='["++savecfg 1", "++savecfg 0", "++savecfg"]'
+	        						data-get-answer="[false, false, true]"
+	        						data-message='["SAVE CONF. OFF", "SAVE CONF. ON"]'
+	        						data-title='["Press to set SAVE CONFIG on", "Press to set SAVE CONFIG off"]'
+	        						data-classes='["btn-outline-success", "btn-outline-primary", "btn-outline-secondary"]'>SAVE CONFIG</button>
+
+	        				<button id="prologixGetAll"
+	        						class="form-control col btn btn-outline-secondary disabled"
+	        						data-commands='["++savecfg", "++mode", "++addr"]'>Get All</button>
+
+	        				<button id="rst"
+	        						class="form-control col btn btn-outline-secondary prologix-buton disabled"
+	        						title="Press to reset of the USB/GPIB controller"
+	        						data-command-index="0"
+	        						data-commands='["++rst"]'
+	        						data-get-answer="[false]">Reset</button>
+
+	        				<button id="prologixSetDefault"
+	        						class="form-control col btn btn-outline-secondary disabled"
+	        						data-commands='["++savecfg 0", "++mode 1"]'>Set Default</button>
+
+							<div class="col input-group">
+								<input id="prologixAddress" type="number" class="form-control" placeholder="Address" aria-label="Address">
+								<button id="prologixSetAddress" class="input-group-text btn btn-outline-secondary disabled">Get</button>
+							</div>
+						</div>
+      				</div>
+				</div>
+			</div>
+		</div>		
 	</div>
 
 <!-- Modal Message -->
@@ -91,5 +221,7 @@
 	<script type="application/javascript" src="https://cdn.jsdelivr.net/npm/js-cookie@2/src/js.cookie.min.js"></script>
 </th:block>
 	<script type="application/javascript" src="../../static/js/calibration.js" th:src="@{/js/calibration.js}"></script>
+	<script type="application/javascript" src="../../static/js/prologix.js" th:src="@{/js/prologix.js}"></script>
+	<script type="application/javascript" src="../../static/js/powermeter.js" th:src="@{/js/powermeter.js}"></script>
 </body>
 </html>

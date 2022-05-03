@@ -10,13 +10,14 @@ import java.io.UnsupportedEncodingException;
 import java.net.ConnectException;
 import java.net.HttpURLConnection;
 import java.net.URL;
-import java.util.Arrays;
 import java.util.List;
 import java.util.Optional;
 import java.util.Scanner;
 import java.util.concurrent.FutureTask;
-import java.util.stream.Collectors;
-import java.util.stream.Stream;
+
+import javax.script.ScriptEngine;
+import javax.script.ScriptEngineManager;
+import javax.script.ScriptException;
 
 import org.apache.http.HttpEntity;
 import org.apache.http.NameValuePair;
@@ -25,6 +26,7 @@ import org.apache.http.client.methods.CloseableHttpResponse;
 import org.apache.http.client.methods.HttpGet;
 import org.apache.http.client.methods.HttpPost;
 import org.apache.http.client.methods.HttpUriRequest;
+import org.apache.http.entity.StringEntity;
 import org.apache.http.impl.client.CloseableHttpClient;
 import org.apache.http.impl.client.HttpClients;
 import org.apache.http.util.EntityUtils;
@@ -32,7 +34,9 @@ import org.apache.logging.log4j.Level;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 
+import com.fasterxml.jackson.annotation.JsonInclude.Include;
 import com.fasterxml.jackson.core.JsonParseException;
+import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.DeserializationFeature;
 import com.fasterxml.jackson.databind.ObjectMapper;
 
@@ -56,7 +60,7 @@ public class HttpRequest {
 	}
 
 	public static <T> FutureTask<T> postForObgect(String url, Class<T> classToReturn, List<NameValuePair> params) {
-//		logger.error("*** postForObgect classToReturn: {}; url: {}", classToReturn, url);
+		logger.traceEntry("*** postForObgect classToReturn: {}; url: {}", classToReturn, url);
 
 		final FutureTask<T> ft = new FutureTask<T>(
 				()->{
@@ -82,11 +86,48 @@ public class HttpRequest {
 		return ft;
 	}
 
-	public static <T> FutureTask<T> postForIrtObgect(String url, Class<T> classToReturn, List<NameValuePair> params) {
-//		logger.error("*** postForIrtObgect classToReturn: {}; url: {}, params: {}", classToReturn, url, params);
+	public static <T> FutureTask<T>postForObgect(URL url, Class<T> classToReturn, Object object) {
+		logger.traceEntry("url: {}; classToReturn: {}; object: {};", url, classToReturn, object);
 
 		final FutureTask<T> ft = new FutureTask<T>(
 				()->{
+
+					final HttpPost httpPost = new HttpPost(url.toURI());
+					httpPost.setHeader("Content-type", "application/json");
+
+					Optional.ofNullable(object)
+					.map(o->{
+						final ObjectMapper mapper = new ObjectMapper().setSerializationInclusion(Include.NON_NULL).configure(DeserializationFeature.FAIL_ON_UNKNOWN_PROPERTIES, false);
+						try {
+							return mapper.writer().withDefaultPrettyPrinter().writeValueAsString(object);
+						} catch (JsonProcessingException e) {
+							logger.catching(e);
+						}
+						return null;
+					})
+					.map(json -> {
+						try {
+							return new StringEntity(json);
+						} catch (UnsupportedEncodingException e) {
+							logger.catching(e);
+						}
+						return null;
+					})
+					.ifPresent(httpPost::setEntity);
+
+					return httpForObject(classToReturn, httpPost);
+				});
+		ThreadRunner.runThread(ft);
+
+		return ft;
+	}
+
+	public static <T> FutureTask<T> postForIrtObgect(String url, Class<T> classToReturn, List<NameValuePair> params) {
+
+		final FutureTask<T> ft = new FutureTask<T>(
+				()->{
+
+					logger.traceEntry("postForIrtObgect - classToReturn: {}; url: {}, params: {}", classToReturn, url, params);
 
 					final HttpPost httpPost = new HttpPost(url);
 					Optional.ofNullable(params).map(
@@ -109,7 +150,7 @@ public class HttpRequest {
 		return ft;
 	}
 
-	private static <T> T httpForIrtObject(Class<T> classToReturn, HttpPost uriRequest) throws IOException {
+	private static <T> T httpForIrtObject(Class<T> classToReturn, HttpPost uriRequest) throws IOException, ScriptException {
 
 		uriRequest.addHeader("Accept", "text/html,application/json;metadata=full;charset=utf-8;");
 
@@ -122,25 +163,22 @@ public class HttpRequest {
 
 			if (entity != null) {
 
-				json = EntityUtils.toString(entity).trim();
-//				logger.error("input: '{}'", json);
+				final String text = EntityUtils.toString(entity);
 
-				if(classToReturn==null || json.isEmpty() || json.matches(".*\\<[^>]+>.*"))	// If HTML page
+				if(classToReturn==null || text.isEmpty() || text.matches(".*\\<[^>]+>.*"))	// If HTML page
 					return null;
+
+				json = text.contains("=") ? javaScriptToJSon(text) : textToJSON(text);
+				logger.debug("classToReturn: {}; json: {}", classToReturn, json);
 
 				final ObjectMapper mapper = new ObjectMapper();
 				mapper.configure(DeserializationFeature.FAIL_ON_UNKNOWN_PROPERTIES, false);
 
-				json = javaScriptToJSon(json);
-//				logger.error("output: {}", json);
-				final T readValue = mapper.readValue(json, classToReturn);
-//				logger.error("*** httpForIrtObject: {}", readValue);
-
-				return readValue;
+				return mapper.readValue(json, classToReturn);
 			}
 
 		}catch(JsonParseException e) {
-			logger.catching(new Throwable(json, e));
+			logger.catching(new Throwable("\n\tclass to return: " + classToReturn + "\n\tfrom:\n" + json, e));
 		}catch (ConnectException e) {
 			logger.catching(Level.DEBUG, e);
 		}
@@ -148,68 +186,23 @@ public class HttpRequest {
 		return null;
 	}
 
-	private static String javaScriptToJSon(String javaScript) {
-//		logger.error("*** javaScriptToJSon input json: ({})", javaScript);
+	private static String javaScriptToJSon(String javaScript) throws ScriptException, JsonProcessingException {
+		logger.traceEntry(javaScript);
 
-		final int index = javaScript.indexOf("boards");
-		if(index>0) {
-			javaScript = javaScript.substring(0, index);
-			final int lastIndexOf = javaScript.lastIndexOf(",");
-			javaScript = javaScript.substring(0, lastIndexOf);
-			javaScript += '}';
-		}
 
-		if(javaScript.endsWith(";"))
-			javaScript = javaScript.substring(0, javaScript.lastIndexOf("}") + 1);
-
-		// Remove declaration of JavaScript variable
-		if(javaScript.contains("="))
-			javaScript = javaScript.substring(javaScript.indexOf("{"));
-
-		if(javaScript.endsWith("}")) 
-			return addQuotation(javaScript.replaceAll("'", "\""));
-
-		else
-			return textToJSON(javaScript);
+		final ScriptEngineManager scriptEngineManager = new ScriptEngineManager();
+		ScriptEngine scriptEngine = scriptEngineManager.getEngineByName("JavaScript");
+		scriptEngine.eval("variable = " + javaScript);
+	    scriptEngine.eval("json= JSON.stringify(variable);");
+	    return (String) scriptEngine.get("json");
 	}
 
-	private static String addQuotation(String javaScript) {
-//		logger.error("*** addQuotation input: ({})", javaScript);
-
-		final String json = Optional.of(javaScript).map(js->js.split(":")).filter(split->split.length>1).map(Arrays::stream).orElseGet(()->Stream.empty())
-
-				.map(
-						str->{
-							if(str.contains(",")) {
-
-								final String[] split = str.split(",",2);
-								return split[0] + ",\"" + split[1].trim() + '\"';
-
-							}else if(str.contains("{")) {
-
-								final String[] split = str.split("\\{",2);
-								final String trim = split[1].trim();
-
-								if(trim.isEmpty())
-									return split[0] + "{";
-
-								return split[0] + "{\"" + trim + '\"';
-
-							} 
-							return str;
-						})
-				.collect(Collectors.joining(":"));
-
-//		logger.error("*** addQuotation output: '{}'", json);
-		return json.isEmpty() ? "{}" : json;
-	}
-
-	private static String textToJSON(String json) {
-//		logger.error(json);
+	private static String textToJSON(String text) {
+		logger.traceEntry(text);
 		
 		StringBuffer sb = new StringBuffer("{");
 
-		try(Scanner scanner = new Scanner(json.replaceAll("'", "\\\\'"))){
+		try(Scanner scanner = new Scanner(text.replaceAll("'", "\\\\'"))){
 			while (scanner.hasNextLine()) {
 				Optional.of(scanner.nextLine()).map(line->line.split(":", 2)).filter(split->split.length==2)
 				.ifPresent(
@@ -241,6 +234,7 @@ public class HttpRequest {
 			if (entity != null) {
 
 				json = EntityUtils.toString(entity);
+				logger.debug("json: ({})", json);
 
 				if(classToReturn==null)
 					return null;
@@ -248,10 +242,8 @@ public class HttpRequest {
 				final ObjectMapper mapper = new ObjectMapper();
 				mapper.configure(DeserializationFeature.FAIL_ON_UNKNOWN_PROPERTIES, false);
 
-//				logger.error("json: ({})", json);
-
 				final T readValue = mapper.readValue(json, classToReturn);
-//			    			logger.error("{}", readValue);
+				logger.error("{}", readValue);
 
 				return readValue;
 			}

@@ -7,11 +7,13 @@ import java.net.URL;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
+import java.util.Map;
 import java.util.Optional;
 import java.util.concurrent.ExecutionException;
 import java.util.concurrent.FutureTask;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.TimeoutException;
+import java.util.stream.Stream;
 
 import org.apache.http.NameValuePair;
 import org.apache.http.message.BasicNameValuePair;
@@ -26,6 +28,7 @@ import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestParam;
 
+import irt.components.beans.HttpSerialPortServersCollector;
 import irt.components.beans.irt.BiasBoard;
 import irt.components.beans.irt.CalibrationInfo;
 import irt.components.beans.irt.ConverterInfo;
@@ -34,6 +37,7 @@ import irt.components.beans.irt.Info;
 import irt.components.beans.irt.IrtFrequency;
 import irt.components.beans.irt.IrtValue;
 import irt.components.beans.irt.calibration.CalibrationTable;
+import irt.components.beans.irt.calibration.NameIndexPair;
 import irt.components.beans.irt.calibration.PowerDetectorSource;
 import irt.components.beans.irt.calibration.ProfileTableDetails;
 import irt.components.beans.jpa.CalibrationOutputPowerSettings;
@@ -52,13 +56,18 @@ public class CalibrationController {
 	@Value("${irt.profile.path}")
 	private String profileFolder;
 
-	@Autowired CalibrationOutputPowerSettingRepository calibrationOutputPowerSettingRepository;
-	@Autowired CalibrationPowerOffsetSettingRepository calibrationPowerOffsetSettingRepository;
+	@Autowired private CalibrationOutputPowerSettingRepository calibrationOutputPowerSettingRepository;
+	@Autowired private CalibrationPowerOffsetSettingRepository calibrationPowerOffsetSettingRepository;
+	@Autowired private HttpSerialPortServersCollector httpSerialPortServersCollector;
 
 	@GetMapping
     String calibration(@RequestParam(required = false) String sn, Model model) {
 //    	logger.error(sn);
-    	Optional.ofNullable(sn)
+
+		final Map<String, String> httpSerialPortServers = httpSerialPortServersCollector.getHttpSerialPortServers();
+		model.addAttribute("serialPortServers", httpSerialPortServers);
+
+		Optional.ofNullable(sn)
     	.filter(s->!s.isEmpty())
     	.ifPresent(
     			s->{
@@ -66,13 +75,13 @@ public class CalibrationController {
 
     					final Info info = getHttpDeviceDebug(sn, Info.class, new BasicNameValuePair("devid", "1"), new BasicNameValuePair("command", "info")).get(10, TimeUnit.SECONDS);
     					model.addAttribute("info", info);
-//    					logger.error(info);
 
     				} catch (MalformedURLException | InterruptedException | ExecutionException | TimeoutException e) {
 						logger.catching(Level.DEBUG, e);
 					}
     			});
-        return "calibration/calibration";
+
+		return "calibration/calibration";
     }
 
     @GetMapping("output_power")
@@ -105,7 +114,7 @@ public class CalibrationController {
 
     @GetMapping("power_offset")
     String powerOffset(@RequestParam String sn, @RequestParam String pn, @RequestParam String deviceId, Model model) {
-//    	logger.error("{} : {} : {}", sn, pn, deviceId);
+    	logger.traceEntry("{} : {} : {}", sn, pn, deviceId);
 
     	final String[] split = deviceId.split("\\.");
     	final int type = Integer.parseInt(split[0]);
@@ -114,15 +123,42 @@ public class CalibrationController {
 		model.addAttribute("inHertz", inHertz);
 
 		Optional.ofNullable(sn)
-    	.filter(s->!s.isEmpty())
+    	.filter(serialNumber->!serialNumber.isEmpty())
     	.ifPresent(
-    			s->{
+    			serialNumber->{
 
    					try {
 
-   						final FutureTask<ConverterInfo> httpDeviceDebug = getHttpDeviceDebug(s, ConverterInfo.class,
-								new BasicNameValuePair("devid", "1003"),
-								new BasicNameValuePair("command", "config"));
+   						final FutureTask<Void> taskLoFrequencty = new FutureTask<>(
+
+   								()->{
+
+   									// Get Converter Index.
+   									URL url = new URL("http", serialNumber, "/update.cgi");
+   									List<NameValuePair> params = new ArrayList<>();
+   									params.add(new BasicNameValuePair("exec", "debug_devices"));
+   									final NameIndexPair[] pairs = HttpRequest.postForIrtObgect(url.toString(), NameIndexPair[].class,  params).get(5, TimeUnit.SECONDS);
+   									Optional.ofNullable(pairs).map(Arrays::stream).orElse(Stream.empty()).filter(p->p.getName().equals("FCM")).findAny().map(p->p.getIndex())
+   									.ifPresent(
+   											index->{
+
+   						   						try {
+
+   						   							// LO Frequency
+   						   							final ConverterInfo converterInfo = getHttpDeviceDebug(serialNumber, ConverterInfo.class,
+															new BasicNameValuePair("devid", index.toString()),
+															new BasicNameValuePair("command", "config")).get(5, TimeUnit.SECONDS);
+   						   							logger.debug(converterInfo);
+   						   							Optional.ofNullable(converterInfo).map(ConverterInfo::getLoFrequency).map(IrtFrequency::new).flatMap(IrtFrequency::getValue).ifPresent(lo->model.addAttribute("loFrequencty", lo));
+
+   						   						} catch (MalformedURLException | InterruptedException | ExecutionException | TimeoutException e) {
+													logger.catching(e);
+												}
+   											});
+
+   									return null;
+   								});
+   						ThreadRunner.runThread(taskLoFrequencty);
 
    	   					FutureTask<Void> ftProfile = new FutureTask<>(()->null);
 
@@ -154,12 +190,12 @@ public class CalibrationController {
    									}
    								});
 
-    					final FutureTask<CalibrationInfo> httpUpdate = getHttpUpdate(s, CalibrationInfo.class, new BasicNameValuePair("exec", "calib_ro_info"));
+    					final FutureTask<CalibrationInfo> httpUpdate = getHttpUpdate(serialNumber, CalibrationInfo.class, new BasicNameValuePair("exec", "calib_ro_info"));
     					// Get settings from DB
     					final CalibrationPowerOffsetSettings settings = calibrationPowerOffsetSettingRepository.findById(pn).orElseGet(()->new CalibrationPowerOffsetSettings(pn, new BigDecimal(13.75, new MathContext(9)), new BigDecimal(14.5, new MathContext(9))));
 
 //    					logger.error("calibrationInfo: {}", calibrationInfo);
-    					model.addAttribute("serialNumber", s);
+    					model.addAttribute("serialNumber", serialNumber);
     					model.addAttribute("settings", settings);
 
     					final CalibrationInfo calibrationInfo = httpUpdate.get(10, TimeUnit.SECONDS);
@@ -168,11 +204,10 @@ public class CalibrationController {
 
 						ftProfile.get(10, TimeUnit.SECONDS);
 
+						// LO Frequency. Don't stop process on error
    						try {
 
-   							final ConverterInfo converterInfo = httpDeviceDebug.get(5, TimeUnit.SECONDS);
-//   							logger.error(converterInfo);
-   							Optional.ofNullable(converterInfo).map(ConverterInfo::getLoFrequency).map(IrtFrequency::new).flatMap(IrtFrequency::getValue).ifPresent(lo->model.addAttribute("loFrequencty", lo));
+   							taskLoFrequencty.get(10, TimeUnit.SECONDS);
 
    						} catch (Exception e) {
 							logger.catching(e);
@@ -260,7 +295,7 @@ public class CalibrationController {
 	public static <T> FutureTask<T> getHttpDeviceDebug(String ipAddress, Class<T> toClass, BasicNameValuePair...basicNameValuePairs) throws MalformedURLException{
 
 			final URL url = new URL("http", ipAddress, "/device_debug_read.cgi");
-//			logger.error(url);
+			logger.debug(url);
 			List<NameValuePair> params = new ArrayList<>();
 			params.addAll(Arrays.asList(basicNameValuePairs));
 

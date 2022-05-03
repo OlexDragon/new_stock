@@ -24,7 +24,7 @@
       				</select>
         			<h5 id="inputValue" class="modal-title ml-3 text-primary" th:text="${power.value}">2125</h5>
         			<h5 class="modal-title text-primary">-</h5>
-        			<input type="number" id="outputValue" class="form-control" placeholder="Output Power" value="30" th:value="${valGHz}">
+        			<input type="number" id="po_outputValue" class="form-control" placeholder="Output Power" value="30" th:value="${valGHz}">
         			<button type="button" id="addRow">Add</button>
         			<h5 th:if="${loFrequencty}!=null" id="lBand" class="pl-2" th:text="${valGHz *1000 - loFrequencty.stripTrailingZeros()}">950</h5>
 <!-- Calibration settings -->
@@ -139,7 +139,7 @@
 				if(!offset)
 					return;
 
-				var $freq = $('#outputValue');
+				var $freq = $('#po_outputValue');
 				var freq = $freq.val();
 
 				if(!(freq && offset)){
@@ -173,7 +173,7 @@
 			}
 
 			$('#addRow').click(onAddRow);
-			$('#outputValue').on('keypress', function (e) {
+			$('#po_outputValue').on('keypress', function (e) {
 				 if(e.which === 13)
 					 onAddRow();
 			});
@@ -201,7 +201,7 @@
 				}
 
 				var max = $('#maxValue').val();
-				var out = $('#outputValue').val();
+				var out = $('#po_outputValue').val();
 
 				if(out<max)
 					$('#save').addClass('disabled');
@@ -225,14 +225,14 @@
 			function removeRow(button){
 				var parent = $(button).closest('.row').remove();
 				if(!disableButtons())
-		    		$('#outputValue').val($('#minValue').val())
+		    		$('#po_outputValue').val($('#minValue').val())
 			}
 
 		    $('#clear').click(function(){
 		    	$('#modal-body').empty();
 
 		    	var minValue = $('#minValue').val();
-		    	$('#outputValue').val(minValue)
+		    	$('#po_outputValue').val(minValue)
 
 				var lBand = parseFloat(minValue * 1000 - loFrequencty);	//MHz
 				$('#lBand').text(lBand);

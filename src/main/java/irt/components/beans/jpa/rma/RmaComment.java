@@ -31,7 +31,7 @@ public class RmaComment {
 	@Id @GeneratedValue(strategy = GenerationType.IDENTITY)
 	private Long	 id;
 
-	private String	 rmaId;
+	private Long	 rmaId;
 	private String	 comment;
 	private Long	 userId;
 

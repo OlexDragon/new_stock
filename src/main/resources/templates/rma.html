@@ -32,15 +32,15 @@
  
 <!-- RMA Number search-->
   			<div class="input-group col">
-				<input type="radio" class="btn-check" name="sort_by" id="rmaSearchByRmaNumber" autocomplete="off">
-      			<label for="rmaSearchByRmaNumber" class="input-group-text btn btn-outline-secondary">RMA</label>
+				<input type="radio" class="btn-check" name="sort_by" id="rmaOrderByRmaNumber" autocomplete="off">
+      			<label for="rmaOrderByRmaNumber" class="input-group-text btn btn-outline-secondary">RMA</label>
       			<input id="rmaNumber" type="text" class="form-control searchRma" placeholder="RMA Number" aria-label="RMA Number">
     		</div>
 
 <!-- RMA Unit Serial Number search-->
   			<div class="input-group col">
-				<input type="radio" class="btn-check" name="sort_by" id="rmaSearchBySerialNumber" autocomplete="off">
-      			<label for="rmaSearchBySerialNumber" class="input-group-text btn btn-outline-secondary">SN</label>
+				<input type="radio" class="btn-check" name="sort_by" id="rmaOrderBySerialNumber" autocomplete="off">
+      			<label for="rmaOrderBySerialNumber" class="input-group-text btn btn-outline-secondary">SN</label>
       			<input id="rmaSerialNumber" type="text" class="form-control searchRma" placeholder="RMA Serial Number" aria-label="RMA Serial Number">
     		</div>
 
@@ -62,6 +62,7 @@
 <!-- Accordion -->
 	<div id="accordion" class="mt-5 accordion">
 
+	<div><strong>To get information about RMA Units, enter some information into one of the search fields.</strong></div>
 <!-- Accordion:	Cards -->
 	<th:block th:fragment="rmaCards">
 
@@ -71,7 +72,7 @@
 			<h5 th:id="heading + ${ index }" class="accordion-header">
 				<button type="button" class="btn accordion-button" data-bs-toggle="collapse" data-bs-target="#rma0" aria-expanded="true" aria-controls="rma0" th:attr="aria-controls ='rma'+${ index }, data-bs-target='#rma'+${ index }" style="width:100%">
           			<div class="row" style="width:100%">
-           				<div class="col-auto" th:classappend="${ rma.shipped ? 'bg-secondary text-white bg-opacity-75' : ''}">
+           				<div class="col-auto bg-shipped" th:classappend="${ rma.shipped ? 'bg-secondary text-white bg-opacity-75' : ''}">
           					<strong th:text="${ rma.rmaNumber }"> RMA Number </strong>
           				</div>
           				<div class="col-auto">
@@ -84,7 +85,7 @@
           					<strong th:text="${#dates.format( rma.date, 'dd MMM yyyy' )}" th:title="${rma.date}">Date</strong>
           				</div>
           				<div class="col-auto text-secondary">
-          					<strong th:text="${rma.user.username}">User Name</strong>
+          					<strong th:text="${rma.user.username}" th:title="${ rma.user.firstname + ' ' + rma.user.lastname}">User Name</strong>
           				</div>
   						<div class="col-auto" th:unless="${ rma.shipped }" sec:authorize="hasAuthority('ADD_RMA')">
 <!-- Button to Add RMA unit -->
@@ -107,9 +108,16 @@
 					<div class="row hover-light" th:id="${ rmaContent }!=null ? ${ rmaContent.id } : null" th:each="rmaContent, status : ${ comments }" th:with="user = ${ rmaContent.user }" th:classappend="${status.odd ? 'odd' : ''}">
 						<div class="col-1" th:text="${ status.count }">	#</div>
 						<div class="col comment pre-line" th:text="${ rmaContent.comment }">Comment </div>
-						<div class="col-1 username" th:text="${ user.username }">User name </div>
+						<div class="col-1 username" th:text="${ user.username }" th:title="${ user.firstname + ' ' + user.lastname}">User name </div>
 						<div class="col-2 date" th:text="${#dates.format( rmaContent.date, 'dd MMM yyyy hh:mm' )}">Date </div>
 					</div>
+					<script th:if="${shipped}" th:inline="javascript">
+						var rmaId = /*[[${rmaId}]]*/ 0;
+						var $rma = $('#' + rmaId);
+						var $bg_shipped = $rma.find('.bg-shipped');
+						$bg_shipped.addClass('bg-secondary text-white bg-opacity-75');
+						//# sourceURL=addBackground.js
+					</script>
 				</th:block>
 				</div>
 			</div>

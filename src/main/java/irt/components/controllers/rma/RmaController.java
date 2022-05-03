@@ -12,6 +12,7 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Sort;
+import org.springframework.data.domain.Sort.Direction;
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
 import org.springframework.stereotype.Controller;
 import org.springframework.ui.Model;
@@ -27,13 +28,13 @@ import irt.components.beans.jpa.rma.Rma;
 import irt.components.beans.jpa.rma.RmaComment;
 import irt.components.services.UserPrincipal;
 import irt.components.workers.ProfileWorker;
-//import org.apache.logging.log4j.LogManager;
-//import org.apache.logging.log4j.Logger;
+import org.apache.logging.log4j.LogManager;
+import org.apache.logging.log4j.Logger;
 
 @Controller
 @RequestMapping("rma")
 public class RmaController {
-//	private final static Logger logger = LogManager.getLogger();
+	private final static Logger logger = LogManager.getLogger();
 
 	private static final int SIZE = 40;
 
@@ -45,7 +46,6 @@ public class RmaController {
 
     @GetMapping
     String getRmas() {
-
        return "rma";
     }
 
@@ -59,9 +59,12 @@ public class RmaController {
 
 //		logger.error("id: {}; value: {}; serchBy: {}; rmaFilter:{}", id, value, sortBy, rmaFilter);
 
-		final String name = sortBy.replace("rmaSearchBy", "");
-//		logger.error(name);
-		Sort sort = Sort.by(name.equals("rmaNumber") ? Sort.Direction.DESC : Sort.Direction.ASC, name);
+		String name = sortBy.replace("rmaOrderBy", "");
+		name = name.substring(0, 1).toLowerCase() + name.substring(1);
+
+		final Direction direction = name.equals("rmaNumber") ? Sort.Direction.DESC : Sort.Direction.ASC;
+//		logger.error("name: {}; direction: {}", name, direction);
+		Sort sort = Sort.by(direction, name);
 		List<Rma> rmas = null;
 		switch(id) {
 
@@ -108,7 +111,7 @@ public class RmaController {
 					final DateTimeFormatter formatter = DateTimeFormatter.ofPattern("'RMA'yyMM");
 					final LocalDate currentdate = LocalDate.now();
 					final String format = currentdate.format(formatter);
-					final int count = rmaRepository.findByRmaNumberStartsWith(format).size();
+					final int count = rmaRepository.findByRmaNumberStartsWith(format).parallelStream().map(Rma::getRmaNumber).map(rmaNumber->rmaNumber.substring(7)).mapToInt(Integer::parseInt).max().orElse(0);
 					final String sequence = String.format("%03d", count+1);
 
 					final Rma rma = new Rma();
@@ -132,7 +135,8 @@ public class RmaController {
 	}
 
 	@PostMapping(path = "add_comment")
-	public String addComment(@RequestParam String rmaId, @RequestParam String comment, @RequestParam Boolean shipped, Principal principal, Model model) throws IOException {
+	public String addComment(@RequestParam Long rmaId, @RequestParam String comment, @RequestParam Boolean shipped, Principal principal, Model model) throws IOException {
+		logger.traceEntry("rmaId: {}; comment: {}; shipped: {}; principal: {};", rmaId, comment, shipped, principal);
 
 		if(!(principal instanceof UsernamePasswordAuthenticationToken) || rmaId==null || comment.isEmpty())
 			return "rma :: rmaBody";
@@ -143,12 +147,10 @@ public class RmaController {
 
 		final Object pr = ((UsernamePasswordAuthenticationToken)principal).getPrincipal();
 		final User user = ((UserPrincipal)pr).getUser();
-		rmaComment.setUser(user);
 		rmaComment.setUserId(user.getId());
 
-		final RmaComment savedComment = rmaCommentsRepository.save(rmaComment);
-		List<RmaComment> comments = new ArrayList<>();
-		comments.add(savedComment);
+		rmaCommentsRepository.save(rmaComment);
+		List<RmaComment> comments = rmaCommentsRepository.findByRmaId(rmaId);
 		model.addAttribute("comments", comments);
 
 		Optional.of(shipped).filter(sh->sh).flatMap(sh->rmaRepository.findById(rmaId))
@@ -156,13 +158,15 @@ public class RmaController {
 				rma->{
 					rma.setShipped(true);
 					rmaRepository.save(rma);
+					model.addAttribute("shipped", true);
+					model.addAttribute("rmaId", rmaId);
 				});
 
 		return "rma :: rmaBody";
 	}
 
 	@PostMapping(path = "comments")
-	public String getComments(@RequestParam String rmaId, Model model) throws IOException {
+	public String getComments(@RequestParam Long rmaId, Model model) throws IOException {
 //		logger.error("rmaId: {} ", rmaId );
 
 		final List<RmaComment> comments = rmaCommentsRepository.findByRmaId(rmaId);
