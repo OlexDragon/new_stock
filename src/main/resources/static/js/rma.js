@@ -83,6 +83,12 @@ $('#addRMA').click(function(e){
 	e.preventDefault();
 
 	var val = $.trim($('#rmaSerialNumber').val());
+
+	if($(this).hasClass('disabled')){
+		alert('The serial number ' + val + ' does not exist.')
+		return;
+	}
+
 	if(!confirm("Save Unit " + val + ' as RMA?'))
 		return;
 

@@ -30,7 +30,7 @@ import irt.components.workers.HttpRequest;
 public class ComponentsController {
 	private final static Logger logger = LogManager.getLogger();
 
-	private static final int SIZE = 40;
+	private static final int SIZE = 60;
 
 	@Value("${irt.url.protocol}")
 	private String protocol;

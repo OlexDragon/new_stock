@@ -1,0 +1,8 @@
+body {
+	background-image: url('/images/logo.gif');
+	background-repeat: no-repeat;
+	background-attachment: fixed;
+	background-position: center;
+	background-color: rgba(255,255,255,0.9);
+	background-blend-mode: lighten;
+}

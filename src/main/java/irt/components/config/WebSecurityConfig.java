@@ -40,7 +40,8 @@ public class WebSecurityConfig extends WebSecurityConfigurerAdapter {
 										"/rma",
 										"/rma/search",
 										"/inventory",
-										"/files/**")
+										"/files/**",
+										"/images/**")
 			.permitAll()
 
 			.antMatchers(HttpMethod.POST,
@@ -48,11 +49,11 @@ public class WebSecurityConfig extends WebSecurityConfigurerAdapter {
 											"/components/single",
 											"/bom/search",
 											"/bom/components",
-											"/calibration/**",
 											"/old/**",
 											"/rma/search",
 											"/rma/comments",
 											"/rma/rest/**",
+											"/calibration/rest/**",
 											"/inventory"
 											,"/create/rest/**"
 											,"/serial_port/rest/**")
@@ -61,7 +62,7 @@ public class WebSecurityConfig extends WebSecurityConfigurerAdapter {
 			.anyRequest().authenticated()
 				.and()
 			.formLogin()
-//				.loginPage("/login")
+//				.loginPage("/")
 				.successHandler(irtUrlAuthenticationSuccessHandler())
 			.permitAll()
 				.and()

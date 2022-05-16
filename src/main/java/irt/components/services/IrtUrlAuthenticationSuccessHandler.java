@@ -29,7 +29,7 @@ public class IrtUrlAuthenticationSuccessHandler implements AuthenticationSuccess
 		 .map(
 				 r->{
 					 try {
-//						 logger.error("redirectTo: {}", r);
+						 logger.debug("redirectTo: {}", r);
 
 						 redirectStrategy.sendRedirect(request, response, r);
 

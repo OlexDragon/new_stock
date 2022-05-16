@@ -11,6 +11,7 @@
     <link rel="stylesheet" href="https://stackpath.bootstrapcdn.com/bootstrap/4.4.1/css/bootstrap.min.css">
 </th:block>
     <link rel="stylesheet" href="../../static/css/components.css" th:href="@{/css/components.css}">
+    <link rel="stylesheet" href="../../static/css/calibration.css" th:href="@{/css/calibration.css}">
 </head>
 <body>
 
@@ -24,7 +25,8 @@
     			<a class="dropdown-item" href="bom.html" th:href="@{/bom}">BOMs</a>
   			</div>
 		</div>
-		<div class="nav-item col-auto"><h4 id="serialNumber" th:text="${info==null ? '' : info.serialNumber + ' : '}">Serial Number</h4></div>
+		<div class="nav-item col-auto"><h4 id="serialNumber" th:text="${info==null ? '' : info.serialNumber }">Serial Number</h4></div>
+		<div class="nav-item col-auto"><h4>:</h4></div>
 		<div class="nav-item col"><h4 th:text="${info==null ? '' : info.name}">Unit Name</h4></div>
 		<input th:if="${info!=null}" type="hidden" id="partNumber" th:value="${info.partNumber}">
 
@@ -44,18 +46,20 @@
   			<button class="btn dropdown-toggle" type="button" id="dropdownUnitButton" data-bs-toggle="dropdown" aria-haspopup="true" aria-expanded="false">Unit</button>
   			<div class="dropdown-menu" aria-labelledby="dropdownUnitButton">
     			<a class="dropdown-item" th:classappend="${info==null ? 'disabled list-group-item-light' : ''}" th:href="@{${info==null} ? '#' : 'http://' + ${info.serialNumber}}" target="_blank">Open Unit Web</a>
-    			<a class="dropdown-item unitLogin" th:classappend="${info==null ? 'disabled list-group-item-light' : ''}" th:href="@{${info==null} ? '#' : '/calibration/rest/login?sn=' + ${info.serialNumber}}">Unit Login</a>
+    			<a id="unitLogin" class="dropdown-item unitLogin" th:classappend="${info==null ? 'disabled list-group-item-light' : ''}" th:href="@{${info==null} ? '#' : '/calibration/rest/login?sn=' + ${info.serialNumber}}">Unit Login</a>
     			<a id="scan" class="dropdown-item" href="#">Network scan</a>
   			</div>
 		</div>
 
 <!-- Calibration select Dropdown menu -->
 		<div class="nav-item dropstart col-auto">
-  			<button class="btn dropdown-toggle" type="button" id="dropdownCalibrateButton" data-bs-toggle="dropdown" aria-haspopup="true" aria-expanded="false">Calibrate</button>
-  			<div class="dropdown-menu" aria-labelledby="dropdownCalibrateButton">
+  			<button id="dropdownCalibrateButton" class="btn dropdown-toggle" type="button" data-bs-toggle="dropdown" aria-haspopup="true" aria-expanded="false">Calibrate</button>
+  			<div id="calMenu" class="dropdown-menu" aria-labelledby="dropdownCalibrateButton">
     			<a id="outputPower" class="dropdown-item calibrate" th:classappend="${info==null ? 'disabled list-group-item-light' : ''}" th:href="@{${info==null} ? '#' : '/calibration/output_power?sn=' + ${info.serialNumber} + '&pn=' + ${info.partNumber}}">Output Power</a>
     			<a id="powerOffset" class="dropdown-item calibrate" th:classappend="${info==null ? 'disabled list-group-item-light' : ''}" th:href="@{${info==null} ? '#' : '/calibration/power_offset?sn=' + ${info.serialNumber} + '&pn=' + ${info.partNumber} + '&deviceId=' + ${#strings.substring(info.deviceId, 1, info.deviceId.length()-1)}}">Power Offset</a>
-    			<a id="temperature" class="dropdown-item calibrate" th:classappend="${info==null ? 'disabled list-group-item-light' : ''}" th:href="@{${info==null} ? '#' : '/calibration/temperature?sn=' + ${info.serialNumber}}">Temperature</a>
+    			<a id="gain" class="dropdown-item calibrate" th:classappend="${info==null ? 'disabled list-group-item-light' : ''}" th:href="@{${info==null} ? '#' : '/calibration/gain?sn=' + ${info.serialNumber} + '&pn=' + ${info.partNumber}}">Gain</a>
+    			<div><hr class="dropdown-divider"></div>
+    			<a class="dropdown-item" id="calMode" th:classappend="${info==null ? 'disabled list-group-item-light' : ''}" href="#">Calibration Mode</a>
     			<a class="dropdown-item" id="upload" th:classappend="${info==null ? 'disabled list-group-item-light' : ''}" th:href="@{${info==null} ? '#' : '/calibration/rest/upload?sn=' + ${info.serialNumber}}">Upload Profile</a>
     			<div><hr class="dropdown-divider"></div>
     			<a class="dropdown-item" href="../static/files/http.serial_port.jar" th:href="@{/files/http.serial_port.jar}">Dounload HTTP Serial Port App.</a>
@@ -82,12 +86,12 @@
 	        				</select>
 	        				<select id="outputPowermeter" class="form-control col">
 								<option selected="selected" disabled="disabled" hidden="hidden" value="">Select a Power Meter</option>
-								<option value="HP438A">HP438A</option>
+								<option value="HP438A" th:each="outputTool, stat : ${T(irt.components.beans.irt.calibration.tools.OutputTools).values()}" th:text="${outputTool.name}" th:value="${outputTool.commands}">HP438A</option>
 	        				</select>
 	        				<input id="ouputAddress" type="number" class="col" title="Tool Address" placeholder="Tool Address" value="13">
-							<button id="ouputGet" class="form-control col btn btn-outline-secondary output-buton disabled">Get</button>
-							<div class="col"><strong id="outputValue"></strong></div>
-							<button id="ouputZero" class="form-control col btn btn-outline-secondary output-buton disabled">Zero</button>
+							<button id="ouputGet" class="form-control col btn btn-outline-secondary output-buton to-disable disabled">Get</button>
+							<div class="col"><strong id="outputValue" class="fs-4"></strong></div>
+<!-- 							<button id="ouputZero" class="form-control col btn btn-outline-secondary output-buton to-disable disabled">Zero</button> -->
       					</div>
       				</div>
 				</div>
@@ -138,7 +142,7 @@
 	        				</select>
 
 	        				<button id="mode"
-	        						class="form-control col btn btn-outline-secondary prologix-buton disabled"
+	        						class="form-control col btn btn-outline-secondary prologix-buton to-disable disabled"
 	        						title="Press To get the Prologix Mode"
 	        						data-command-index="2"
 	        						data-commands='["++mode 1", "++mode 0", "++mode"]'
@@ -148,7 +152,7 @@
 	        						data-classes='["btn-outline-primary", "btn-outline-success", "btn-outline-secondary"]'>Get Mode</button>
 
 	        				<button id="savecfg"
-	        						class="form-control col btn btn-outline-secondary prologix-buton disabled"
+	        						class="form-control col btn btn-outline-secondary prologix-buton to-disable disabled"
 	        						title="Press To get the SAVE CONFIG setting"
 	        						data-command-index="2"
 	        						data-commands='["++savecfg 1", "++savecfg 0", "++savecfg"]'
@@ -158,23 +162,23 @@
 	        						data-classes='["btn-outline-success", "btn-outline-primary", "btn-outline-secondary"]'>SAVE CONFIG</button>
 
 	        				<button id="prologixGetAll"
-	        						class="form-control col btn btn-outline-secondary disabled"
+	        						class="form-control col btn btn-outline-secondary to-disable disabled"
 	        						data-commands='["++savecfg", "++mode", "++addr"]'>Get All</button>
 
 	        				<button id="rst"
-	        						class="form-control col btn btn-outline-secondary prologix-buton disabled"
+	        						class="form-control col btn btn-outline-secondary prologix-buton to-disable disabled"
 	        						title="Press to reset of the USB/GPIB controller"
 	        						data-command-index="0"
 	        						data-commands='["++rst"]'
 	        						data-get-answer="[false]">Reset</button>
 
 	        				<button id="prologixSetDefault"
-	        						class="form-control col btn btn-outline-secondary disabled"
+	        						class="form-control col btn btn-outline-secondary to-disable disabled"
 	        						data-commands='["++savecfg 0", "++mode 1"]'>Set Default</button>
 
 							<div class="col input-group">
 								<input id="prologixAddress" type="number" class="form-control" placeholder="Address" aria-label="Address">
-								<button id="prologixSetAddress" class="input-group-text btn btn-outline-secondary disabled">Get</button>
+								<button id="prologixSetAddress" class="input-group-text btn btn-outline-secondary to-disable disabled">Get</button>
 							</div>
 						</div>
       				</div>

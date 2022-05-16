@@ -7,7 +7,6 @@ $('.prologix-buton').click(function(){
 
 	if(prologixComPorts){
 
-
 		var hostName = getHostName();
 		if(!hostName) return;
 

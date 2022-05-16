@@ -36,11 +36,14 @@ import org.springframework.web.bind.annotation.RestController;
 
 import irt.components.beans.irt.CalibrationInfo;
 import irt.components.beans.irt.Info;
+import irt.components.beans.irt.calibration.CalibrationMode;
 import irt.components.beans.irt.calibration.ProfileTableTypes;
 import irt.components.beans.irt.update.Profile;
 import irt.components.beans.irt.update.Table;
+import irt.components.beans.jpa.CalibrationGainSettings;
 import irt.components.beans.jpa.CalibrationOutputPowerSettings;
 import irt.components.beans.jpa.CalibrationPowerOffsetSettings;
+import irt.components.beans.jpa.repository.CalibrationGainSettingRepository;
 import irt.components.beans.jpa.repository.CalibrationOutputPowerSettingRepository;
 import irt.components.beans.jpa.repository.CalibrationPowerOffsetSettingRepository;
 import irt.components.workers.HttpRequest;
@@ -56,6 +59,7 @@ public class CalibrationRestController {
 
 	@Autowired CalibrationOutputPowerSettingRepository calibrationOutputPowerSettingRepository;
 	@Autowired CalibrationPowerOffsetSettingRepository calibrationPowerOffsetSettingRepository;
+	@Autowired CalibrationGainSettingRepository calibrationGainSettingRepository;
 
 	@PostMapping(path="calibrationInfo", produces = "application/json;charset=utf-8")
     CalibrationInfo calibrationInfo(@RequestParam(required = false) String sn) {
@@ -80,9 +84,8 @@ public class CalibrationRestController {
     }
 
 	@PostMapping(path="deviceDebug", produces = "application/json;charset=utf-8")
-    Object deviceDebug(@RequestParam String sn, @RequestParam String devid, @RequestParam String command, @RequestParam String groupindex, @RequestParam String className) {
+    Object deviceDebug(@RequestParam String sn, @RequestParam String devid, @RequestParam String command, @RequestParam String groupindex, @RequestParam String className) throws MalformedURLException, ClassNotFoundException, InterruptedException, ExecutionException, TimeoutException {
 //    	logger.error(sn);
-		try {
 
 			return CalibrationController.getHttpDeviceDebug(
 
@@ -93,12 +96,6 @@ public class CalibrationRestController {
 					new BasicNameValuePair("groupindex", groupindex))
 
 					.get(10, TimeUnit.SECONDS);
-
-		} catch (Exception e) {
-			logger.catching(e);
-		}
-
-		return null;
     }
 
     @PostMapping(path="outputpower", consumes = MediaType.APPLICATION_JSON_VALUE)
@@ -141,6 +138,32 @@ public class CalibrationRestController {
     					()->{
 
     						calibrationPowerOffsetSettingRepository.save(settings);
+
+    						return "The setings has been saved.";
+    					});
+    }
+
+    @PostMapping("gain")
+    String saveGainSettings(@RequestParam String partNumber, int startValue, int stopValue) {
+
+    	return calibrationGainSettingRepository.findById(partNumber)
+    			.map(
+    					ops->{
+
+    						ops.setStartValue(startValue);
+    						ops.setStopValue(stopValue);
+    						calibrationGainSettingRepository.save(ops);
+
+    						return "The setings has been updated.";
+    					})
+    			.orElseGet(
+    					()->{
+
+    						CalibrationGainSettings settings = new CalibrationGainSettings();
+    						settings.setPartNumber(partNumber);
+    						settings.setStartValue(startValue);
+    						settings.setStopValue(stopValue);
+							calibrationGainSettingRepository.save(settings);
 
     						return "The setings has been saved.";
     					});
@@ -221,5 +244,35 @@ public class CalibrationRestController {
 		params.addAll(Arrays.asList(new BasicNameValuePair[]{new BasicNameValuePair("devid", "1"), new BasicNameValuePair("command", "info")}));
 
 		return HttpRequest.postForIrtObgect(url.toString(), Info.class, params).get(5, TimeUnit.SECONDS);
+    }
+
+    @PostMapping("calibration_mode")
+    CalibrationMode getCalibrationMode(@RequestParam String ip) throws InterruptedException, ExecutionException, TimeoutException, MalformedURLException {
+
+		final URL url = new URL("http", ip, "/device_debug_read.cgi");
+		List<NameValuePair> params = new ArrayList<>();
+		params.addAll(Arrays.asList(new BasicNameValuePair[]{new BasicNameValuePair("devid", "1"), new BasicNameValuePair("command", "hwinfo"), new BasicNameValuePair("groupindex", "4")}));
+
+		return HttpRequest.postForIrtObgect(url.toString(), CalibrationMode.class, params).get(5, TimeUnit.SECONDS);
+    }
+
+    @PostMapping("calibration_mode_toggle")
+    void setCalibrationMode(@RequestParam String ip) throws InterruptedException, ExecutionException, TimeoutException, MalformedURLException {
+
+		final URL url = new URL("http", ip, "/calibration.cgi");
+		List<NameValuePair> params = new ArrayList<>();
+		params.addAll(Arrays.asList(new BasicNameValuePair[]{new BasicNameValuePair("en_toggle", "1")}));
+
+		HttpRequest.postForIrtObgect(url.toString(), Object.class, params).get(5, TimeUnit.SECONDS);
+    }
+
+    @PostMapping("dac")
+    void setDac(@RequestParam String sn, int value, String channel) throws InterruptedException, ExecutionException, TimeoutException, MalformedURLException {
+
+		final URL url = new URL("http", sn, "/calibration.cgi");
+		List<NameValuePair> params = new ArrayList<>();
+		params.addAll(Arrays.asList(new BasicNameValuePair[]{new BasicNameValuePair("channel", channel), new BasicNameValuePair("index", "2"), new BasicNameValuePair("value", Integer.toString(value))}));
+
+		HttpRequest.postForIrtObgect(url.toString(), Object.class, params).get(5, TimeUnit.SECONDS);
     }
 }

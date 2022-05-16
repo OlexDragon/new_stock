@@ -10,6 +10,7 @@
     <link rel="stylesheet" href="https://stackpath.bootstrapcdn.com/bootstrap/4.4.1/css/bootstrap.min.css">
 </th:block>
     <link rel="stylesheet" href="../static/css/components.css" th:href="@{/css/components.css}">
+    <link rel="stylesheet" href="../static/css/old.css" th:href="@{/css/old.css}">
 </head>
 <body>
 
@@ -281,6 +282,36 @@
        				<option value="SP">Spear</option>
        				<option value="S">Step</option>
        				<option value="T">Tongue</option>
+       			</select>
+   			</div>
+   			<script>
+   				$('.onchange').on('change', function(){
+   					toPartNumber();
+   				});
+   			</script>
+
+</th:block>
+
+<th:block th:fragment="wg_term">
+
+ <!-- Dimension -->
+  			<div class="input-group ml-1 col pn_field">
+      			<label for="pnSubtype1" class="input-group-text">Dimension</label>
+       			<select id="pnSubtype1" class="form-control onchange">
+       				<option value="WR28">WR28</option>
+       				<option value="WR62">WR62</option>
+       				<option value="WR75">WR75</option>
+       				<option value="WR137">WR137</option>
+       				<option value="WR187">WR187</option>
+       			</select>
+   			</div>
+
+ <!-- Type -->
+  			<div class="input-group ml-1 col pn_field">
+      			<label for="pnSubtype2" class="input-group-text">Type</label>
+       			<select id="pnSubtype2" class="form-control onchange">
+       				<option value="">Do not use</option>
+       				<option value="A">Assembly</option>
        			</select>
    			</div>
    			<script>

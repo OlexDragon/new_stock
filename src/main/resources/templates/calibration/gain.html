@@ -1,0 +1,527 @@
+<!DOCTYPE html>
+<html 	xmlns="http://www.w3.org/1999/xhtml"
+		xmlns:th="https://www.thymeleaf.org"
+      	xmlns:sec="https://www.thymeleaf.org/thymeleaf-extras-springsecurity5"
+      	lang="en">
+<head>
+    <meta charset="UTF-8" />
+    <title>IRT Bom.</title>
+    <link rel="shortcut icon" href="http://irttechnologies.com/favicon.ico">
+    <link rel="stylesheet" href="https://stackpath.bootstrapcdn.com/bootstrap/4.4.1/css/bootstrap.min.css" data-integrity="sha384-Vkoo8x4CGsO3+Hhxv8T/Q5PaXtkKtu6ug5TOeNV6gBiFeWPGFN9MuhOf23Q9Ifjh" data-crossorigin="anonymous">
+    <link rel="stylesheet" href="../../static/css/components.css" th:href="@{/css/components.css}">
+</head>
+<body>
+
+<!-- Modal Message -->
+	<div id="modal" class="modal modal-lg" tabindex="-1" role="dialog">
+	<th:block th:fragment="modal">
+  		<div class="modal-dialog modal-lg">
+    		<div class="modal-content">
+<!-- Modal Header -->
+      			<div class="modal-header row">
+        			<h5 class="modal-title ml-3 text-primary col-auto" th:text="'Gain: ' + ${gain} + ' dB'">Gain: 74 dB</h5>
+        			<h5 class="modal-title text-primary col-auto">;</h5>
+        			<h5 id="temperature" class="modal-title ml-3 text-primary col-auto" th:text="${temperature}">Temperature</h5>
+        			<h5 class="modal-title text-primary col-auto">&#x2103; ;</h5>
+        			<h5 id="dacValue" class="modal-title ml-3 text-primary col-1" th:text="${dac2}">Dac2</h5>
+        			<h5 class="modal-title text-primary col-auto">;</h5>
+        			<div class="input-group col">
+        				<input type="number" id="setDacValue" class="form-control" placeholder="Dac 2" value="3000" th:value="${dac2}">
+        				<button type="button" id="addRow" class="form-control btn btn-outline-secondary" >Add Row</button>
+        			</div>
+<!-- Calibration settings -->
+  					<div class="dropdown col-auto">
+  						<button class="btn dropdown-toggle" type="button" id="dropdownSettingsButton" data-bs-toggle="dropdown" aria-expanded="false"></button>
+  						<div class="dropdown-menu" aria-labelledby="dropdownSettingsButton">
+ 							<div class="form-group row">
+    							<label class="col-sm-6 col-form-label text-end" for="minValue">Min:</label>
+    							<div class="col-sm-6">
+    								<input type="number" class="form-control settings" id="minValue" placeholder="Min. Temperarue" value="-40" th:value="${settings.startValue}">
+    							</div>
+  							</div>
+ 							<div class="form-group row">
+    							<label class="col-sm-6 col-form-label text-end" for="maxValue">Mac:</label>
+    							<div class="col-sm-6">
+    								<input type="number" class="form-control settings" id="maxValue" placeholder="Max. Temperarue" value="85" th:value="${settings.stopValue}">
+    							</div>
+  							</div>
+  							<div class="form-group row">
+    							<label class="col-sm-6 col-form-label text-end" for="step">Step:</label>
+    							<div class="col-sm-6">
+    								<input type="number" class="form-control settings" id="step" placeholder="DAC Step" value="50">
+    							</div>
+  							</div>
+   						</div>
+					</div>
+<!-- X Button -->
+        			<button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+      			</div>
+ <!-- Modal Body -->
+      			<div id="modal-body" class="modal-body">
+      			</div>
+ <!-- Modal Footer -->
+      			<div class="modal-footer">
+	        		<button type="button" id="save" class="btn btn-primary disabled">Save to Profile</button>
+	        		<button type="button" id="calc" class="btn btn-secondary disabled">Calculate Min., Max.</button>
+	        		<button type="button" id="clear" class="btn btn-secondary disabled">Clear</button>
+	        		<button type="button" class="btn btn-outline-secondary" data-bs-dismiss="modal">Close</button>
+	    		</div>
+    		</div>
+  		</div>
+  		<script th:inline="javascript">
+			/*<![CDATA[*/
+
+			/*[# th:if="${message}!=null" ]*/
+				alert(/*[[${message}]]*/ 'Some Message');
+				return;
+			/*[/]*/
+
+			var unitSerialNumber =  /*[[${serialNumber}]]*/ 'IRT-2121021';
+
+// Step
+			var step = Cookies.get("dacStep");
+			if(step)
+				$('#step').val(step);
+
+			$('#step').focusout(function() {
+				
+				var newValue = this.valueAsNumber;
+				if(!newValue || newValue<1){
+					$('#step').val(1);
+					Cookies.set("dacStep", null, { expires: 0 });
+					return;
+				}
+
+				Cookies.set("dacStep", newValue, { expires: 7 });
+			});
+
+// Copy updated value to input field
+			$('#dacValue').dblclick(function() {
+				  var value = this.textContent;
+				  $('#setDacValue').val(value);
+			});
+
+// Send chenged DAC value to the Unit
+			var channel = 'fcm_dac';
+			$('#setDacValue').on('input', function(e){
+
+				var newValue = this.valueAsNumber;
+				var defaultValue = this.defaultValue;
+				
+				if(defaultValue<newValue){
+					if((newValue - defaultValue) == 1){
+						var step = parseInt($('#step').val());
+						newValue = parseInt(defaultValue) + step;
+					}
+
+				}else{
+					if((defaultValue - newValue) == 1){
+						var step = parseInt($('#step').val());
+						newValue = parseInt(defaultValue) - step;
+					}
+				}
+
+				if(newValue>4095)
+					newValue = 4095;
+				else if(newValue<0)
+					newValue = 0;
+
+				this.defaultValue = newValue;
+				$(this).val(newValue);
+
+				$.post('/calibration/rest/dac', {sn : unitSerialNumber, devid: '1', value: newValue, channel: channel})
+				.fail(function(error) {
+
+					if(err)
+						return;
+
+					err = error;
+					if(error.statusText!='abort'){
+
+						$('#modal').hide();
+
+						alert(error.responseText);
+						err = null;
+					};
+	   			});
+			});
+
+			var err;
+			var interval;
+			function update(){
+
+				if(interval)
+					clearInterval(interval);
+
+				//get value from unit
+				interval = setInterval(function() {
+							$.post('/calibration/rest/deviceDebug', {sn : unitSerialNumber, devid: '1', command: 'regs', groupindex: '100', className: 'irt.components.beans.irt.Dacs'})
+							.done(function(dacs){
+
+								var dac2 = dacs.DAC2;
+								var index = dac2.indexOf('(');
+								var value = dac2.substring(++index, dac2.length-1);
+								$('#dacValue').text(value);
+
+								var setDacValue = $('#setDacValue').val();
+								if(setDacValue != value){
+
+									if(channel == 'fcm_dac')
+										channel = 'dac';
+
+									else
+										channel = 'fcm_dac';
+								}
+
+
+								// get Temperature
+								$.post('/calibration/rest/calibrationInfo', {sn : unitSerialNumber })
+								.done(function(data){
+
+									if(!data || !data.bias){
+										login();
+										return;
+									}
+
+									var temperature = data.bias.temperature;
+									$('#temperature').text(temperature);
+
+								})
+								.fail(function(error) {
+									if(err)
+										return;
+
+									err = error;
+									if(error.statusText!='abort'){
+
+										$('#modal').hide();
+
+										alert(error.responseText);
+										err = null;
+									};
+					   			});
+							})
+							.fail(function(error) {
+								if(err)
+									return;
+
+								err = error;
+								if(error.statusText!='abort'){
+									alert(error.responseText);
+									err = null;
+								};
+				   			});
+				}, 3000);
+			}
+			update();
+			var $modal = $('#modal');
+			$modal.on('shown.bs.modal', function (e) {
+				update();
+			});
+
+			$modal.on('hidden.bs.modal', function () {
+				clearInterval(interval);
+				interval = undefined;
+				err = null;
+			});
+
+			function onAddRow(){
+
+				var temperature = $('#temperature').text();
+				var dacValue = $('#dacValue').text();
+
+				if(!(temperature && dacValue)){
+					alert('The input field cannot be empty.');
+					return;
+				}
+
+				addRow(temperature, dacValue);
+			}
+
+			$('#addRow').click(onAddRow);
+			$('#setDacValue').on('keypress', function (e) {
+				 if(e.which === 13)
+					 onAddRow();
+			});
+
+			var gainTable = Cookies.get(unitSerialNumber + "_gainTable");
+			if(gainTable && gainTable != 'undefined'){
+				var array = JSON.parse(gainTable);
+				array.forEach( row => {
+					addRow(row.input, row.output);
+				});
+			}
+
+			function sortModalBody(){
+			    var items = $('#modal-body').children().sort(function(a, b) {
+			        var vA = parseFloat($(a).find('.input').text());
+			        var vB = parseFloat($(b).find('.input').text());
+			        return (vA < vB) ? -1 : (vA > vB) ? 1 : 0;
+			    });
+			    $('#modal-body').append(items);
+			    storeTable();
+			}
+
+			function storeTable(){
+
+			    var gainTable = [];
+			    $('#modal-body').children().each(function(){
+
+		    		var $row = $(this);
+		    		var tableRow = {}
+		    		tableRow.input = $row.find('.input').text();
+		    		tableRow.output = $row.find('.output').text();
+		    		gainTable.push(tableRow);
+			    });
+
+				var json = JSON.stringify(gainTable);
+				Cookies.set(unitSerialNumber + "_gainTable", json, { expires: 7 });
+			}
+
+			function disableButtons(){
+
+				var $body = $('#modal-body');
+				var $children = $body.children();
+				var length = $children.length;
+
+				if(!length){
+
+					$('#clear').addClass('disabled');
+					$('#calc').addClass('disabled');
+					$('#save').addClass('disabled');
+
+					return 0;
+				}
+
+				$('#clear').removeClass('disabled');
+
+				if(length>1)
+					$('#calc').removeClass('disabled');
+
+				else{
+					$('#calc').addClass('disabled');
+					$('#save').addClass('disabled');
+		    		return;
+		    	}
+
+				var minTemp			 = parseFloat($('#minValue').val());
+				var firstTemperatur	 = parseFloat($($children[0]).find('.input').text());
+
+				var maxTemp			 = parseFloat($('#maxValue').val());
+				var lastTemperatur	 = parseFloat($($children[--length]).find('.input').text());
+
+				if(minTemp < firstTemperatur || maxTemp > lastTemperatur)
+					$('#save').addClass('disabled');
+				else{
+					$('#calc').addClass('disabled');
+					$('#save').removeClass('disabled');
+				}
+
+				return length;
+			}
+
+			function addRow(inputValue, outputValue){
+				$('<div>', {class: 'row'})
+				.append($('<div>', {class: 'col input'}).text(inputValue))
+				.append($('<div>', {class: 'col output'}).text(outputValue))
+				.append($('<div>', {class: 'col-auto'}).append($('<button>', {class: 'btn btn-link', onclick: 'removeRow(this)'}).text('Remove')))
+				.appendTo($('#modal-body'));
+
+				sortModalBody();
+				disableButtons();
+			}
+
+			function removeRow(button){
+				var parent = $(button).closest('.row').remove();
+				disableButtons();
+		    	storeTable();
+			}
+
+		    $('#clear').click(function(){
+		    	$('#modal-body').empty();
+				disableButtons();
+		    });
+
+		    $('#save').click(function(){
+
+		    	var hasError = false;
+		    	var prevInput;
+		    	var array = [];
+
+		    	$('#modal-body').find('.row').each(function(){
+
+		    		if(hasError)
+		    			return;
+
+		    		var $row = $(this);
+		    		var input = $row.find('.input').text();
+
+		    		if(prevInput && prevInput==input)
+		    				hasError = true;
+
+		    		if(hasError){
+		    			alert('There is an error in this table.');
+		    			return;
+		    		}
+
+		    		prevInput = input;
+		    		var out = $row.find('.output').text();
+
+		    		/*[# th:if="${inHertz}" ]*/
+			    		input = parseInt(input*1000000000);
+					/*[/]*/
+
+		    		array.push({input: input, output: out});
+		    	});
+
+		    	if(hasError || !array.length){
+		    		alert('The Table is missing.');
+	    			return;
+		    	}
+
+		    	var table = { serialNumber: unitSerialNumber, name: 'Gain over temperature', values: array };
+
+		    	$.ajax({
+					url: '/calibration/rest/to_profile',
+					type: 'POST',
+					contentType: "application/json",
+					data: JSON.stringify(table),
+					dataType: 'json'
+				})
+				.done(function(data){
+					alert(data);
+				})
+				.fail(function(error) {
+					if(error.statusText!='abort'){
+						alert(error.responseText);
+					}
+				});
+		    		
+		    });
+
+		    $('#calc').click(function(){
+
+		    	var $children = $('#modal-body').children();
+		    	var length = $children.length;
+
+		    	if(length<2){
+					alert("Can't calculate Min., Max. values");
+					return;
+				}
+
+// Calculate Min. value:
+		    	var minTemperatur	 = parseFloat($('#minValue').val());
+				var firstTemperatur	 = parseFloat($($children[0]).find('.input').text());
+
+				if(minTemperatur < firstTemperatur){
+
+					var secondTemperatur = parseFloat($($children[1]).find('.input').text());
+					var rangeTemperatur	 = Math.max(firstTemperatur, secondTemperatur) - Math.min(firstTemperatur, secondTemperatur);
+					var minRangeTemperatur = Math.max(minTemperatur, firstTemperatur) - Math.min(minTemperatur, firstTemperatur);
+
+					var firstValue		 = parseFloat($($children[0]).find('.output').text());
+					var secondValue		 = parseFloat($($children[1]).find('.output').text());
+					var rangeValue		 = Math.max(firstValue, secondValue) - Math.min(firstValue, secondValue);
+
+					if(!rangeValue || !rangeTemperatur || !minRangeTemperatur){
+						alert("The table has an error.");
+
+					}else{
+
+						var oneDegreeValue	 = rangeValue/rangeTemperatur;
+						var toAdd			 = minRangeTemperatur * oneDegreeValue;
+
+						var newValue;
+						if(firstValue>secondValue){
+							newValue = firstValue + toAdd;
+							if(newValue > 4095)
+								newValue = 4095;
+						}else{
+							newValue = firstValue - toAdd;
+							if(newValue < 0)
+								newValue = 0;
+						}
+
+						addRow(minTemperatur, Math.round(newValue));
+					}
+				}
+
+// Calculate Max. value:
+			   	var maxTemperatur	 = parseFloat($('#maxValue').val());
+				var lastTemperatur	 = parseFloat($($children[--length]).find('.input').text());
+				var lastValue		 = parseFloat($($children[length]).find('.output').text());
+
+				if(maxTemperatur > lastTemperatur){
+
+					var previousTemperatur	 = parseFloat($($children[--length]).find('.input').text());
+					var previousValue		 = parseFloat($($children[length]).find('.output').text());
+
+					var rangeTemperatur	 = Math.max(lastTemperatur, previousTemperatur) - Math.min(lastTemperatur, previousTemperatur);
+					var maxRangeTemperatur = Math.max(maxTemperatur, lastTemperatur) - Math.min(maxTemperatur, lastTemperatur);
+
+					var rangeValue		 = Math.max(lastValue, previousValue) - Math.min(lastValue, previousValue);
+
+					if(!rangeValue || !rangeTemperatur){
+						alert("The table has an error.");
+						return;
+					}
+
+					var oneDegreeValue	 = rangeValue/rangeTemperatur;
+					var toAdd			 = maxRangeTemperatur * oneDegreeValue;
+
+					var newValue;
+					if(lastValue>previousValue){
+						newValue = lastValue + toAdd;
+						if(newValue > 4095)
+							newValue = 4095;
+					}else{
+						newValue = lastValue - toAdd;
+						if(newValue < 0)
+							newValue = 0;
+					}
+
+					addRow(maxTemperatur, Math.round(newValue));
+				}
+
+				disableButtons();
+			});
+
+		    /*[# sec:authorize="hasAuthority('CALIBRATION_SETTINGS')"]*/
+				$('#dropdownSettingsButton').on('hidden.bs.dropdown', function () {
+					if(confirm('Do you want to save your changes to the database?')){
+
+						var pn = $('#partNumber').val();
+						var min = $('#minValue').val();
+						var max = $('#maxValue').val();
+
+						if(!(pn && min && max)){
+							alert('One of the values is missing.')
+							return;
+						}
+
+						$.post('/calibration/rest/gain', {partNumber: pn, startValue: min, stopValue:  max})
+    					.done(function(data){
+    						alert(data);
+						})
+						.fail(function(error) {
+							if(error.statusText!='abort'){
+								alert(error.responseText);
+							}
+						});
+					}
+				});
+			/*[/]*/
+
+		/*]]>*/
+		//# sourceURL=gain.js
+  		</script>
+	</th:block>
+	</div>
+
+    <script type="application/javascript" src="https://ajax.googleapis.com/ajax/libs/jquery/3.5.1/jquery.min.js"></script>
+    <script type="application/javascript" src="https://cdnjs.cloudflare.com/ajax/libs/popper.js/2.10.2/umd/popper.min.js"></script>
+    <script type="application/javascript" src="https://stackpath.bootstrapcdn.com/bootstrap/4.4.1/js/bootstrap.min.js"></script>
+	<script type="application/javascript" src="https://cdn.jsdelivr.net/npm/js-cookie@2/src/js.cookie.min.js"></script>
+	<script type="application/javascript" src="../../static/js/irt.js" th:src="@{/js/irt.js}"></script>
+</body>
+</html>

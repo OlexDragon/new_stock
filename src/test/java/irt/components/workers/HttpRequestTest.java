@@ -3,6 +3,7 @@ package irt.components.workers;
 import java.net.MalformedURLException;
 import java.net.URL;
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.List;
 import java.util.Set;
 import java.util.concurrent.ExecutionException;
@@ -69,21 +70,22 @@ public class HttpRequestTest {
 		}
 	}
 
-//	@Test
-//	public void test() throws ScriptException, JsonProcessingException {
-//
-//		final ScriptEngineManager scriptEngineManager = new ScriptEngineManager();
-//		ScriptEngine scriptEngine = scriptEngineManager.getEngineByName("JavaScript");
-//		scriptEngine.eval("devices = [{name: 'System',index: 1},{name: 'BM1',index: 1001},{name: 'FCM',index: 1005},{array: [1,2,3,4,5,6,7,8,9], emptyArray: []}];");
-//		scriptEngine.eval("test = JSON.stringify(devices);");
-//		final String json =  (String) scriptEngine.get("test");
-//
-//		final ObjectMapper mapper = new ObjectMapper();
-//		mapper.configure(DeserializationFeature.FAIL_ON_UNKNOWN_PROPERTIES, false);
+	@Test
+	public void dacTest() throws ScriptException, JsonProcessingException {
 
-//		final Info readValue = mapper.readValue(json, Info.class);
-//		logger.error("{}", readValue);
-//	}
+		try {
+
+			final URL url = new URL("http", "op-2123100", "/calibration.cgi");
+			List<NameValuePair> params = new ArrayList<>();
+			params.addAll(Arrays.asList(new BasicNameValuePair[]{new BasicNameValuePair("channel", "fcm_dac"), new BasicNameValuePair("index", "2"), new BasicNameValuePair("value", Integer.toString(1111))}));
+
+			Object o = HttpRequest.postForIrtObgect(url.toString(), Object.class, params).get(5, TimeUnit.SECONDS);
+			logger.info(o);
+
+		} catch (MalformedURLException | InterruptedException | ExecutionException | TimeoutException e) {
+			logger.catching(e);
+		}
+	}
 
 	@Test
 	public void test2() throws ScriptException, JsonProcessingException {

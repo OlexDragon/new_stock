@@ -91,7 +91,7 @@ function toPartNumber(){
 	if(pnSubtype2Code)
 		val += '-' + pnSubtype2Code;
 
-		val += '-#'
+	val += '-#'
 
 	var pnSubtype3Code = $('#pnSubtype3').val();
 	if(pnSubtype3Code)

@@ -40,8 +40,10 @@ import irt.components.beans.irt.calibration.CalibrationTable;
 import irt.components.beans.irt.calibration.NameIndexPair;
 import irt.components.beans.irt.calibration.PowerDetectorSource;
 import irt.components.beans.irt.calibration.ProfileTableDetails;
+import irt.components.beans.jpa.CalibrationGainSettings;
 import irt.components.beans.jpa.CalibrationOutputPowerSettings;
 import irt.components.beans.jpa.CalibrationPowerOffsetSettings;
+import irt.components.beans.jpa.repository.CalibrationGainSettingRepository;
 import irt.components.beans.jpa.repository.CalibrationOutputPowerSettingRepository;
 import irt.components.beans.jpa.repository.CalibrationPowerOffsetSettingRepository;
 import irt.components.workers.HttpRequest;
@@ -59,6 +61,7 @@ public class CalibrationController {
 	@Autowired private CalibrationOutputPowerSettingRepository calibrationOutputPowerSettingRepository;
 	@Autowired private CalibrationPowerOffsetSettingRepository calibrationPowerOffsetSettingRepository;
 	@Autowired private HttpSerialPortServersCollector httpSerialPortServersCollector;
+	@Autowired CalibrationGainSettingRepository calibrationGainSettingRepository;
 
 	@GetMapping
     String calibration(@RequestParam(required = false) String sn, Model model) {
@@ -221,8 +224,8 @@ public class CalibrationController {
 		return "calibration/power_offset :: modal";
     }
 
-	@GetMapping("temperature")
-    String temperature(@RequestParam String sn, Model model) {
+	@GetMapping("gain")
+    String gain(@RequestParam String sn, @RequestParam String pn, Model model) {
 //    	logger.error(sn);
 
 		Optional.ofNullable(sn)
@@ -272,6 +275,10 @@ public class CalibrationController {
     					Optional.ofNullable(calibrationInfo.getBiasBoard()).ifPresent(biasBoard->model.addAttribute("temperature", biasBoard.getTemperature()));
     					model.addAttribute("dac2", dacs.getDac2RowValue());
 
+    					// Get settings from DB
+    					final CalibrationGainSettings settings = calibrationGainSettingRepository.findById(pn).orElseGet(()->new CalibrationGainSettings(pn, -40, 85));
+    					model.addAttribute("settings", settings);
+
 						ftProfile.get(10, TimeUnit.SECONDS);
 
     				} catch (MalformedURLException | InterruptedException | ExecutionException | TimeoutException e) {
@@ -279,7 +286,7 @@ public class CalibrationController {
 					}
     			});
 
-    	return "calibration/temperature :: modal";
+    	return "calibration/gain :: modal";
     }
 
 	public static <T> FutureTask<T> getHttpUpdate(String ipAddress, Class<T> toClass, BasicNameValuePair...basicNameValuePairs) throws MalformedURLException {

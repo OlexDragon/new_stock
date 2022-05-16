@@ -180,8 +180,8 @@
 
 			function sortModalBody(){
 			    var items = $('#modal-body').children().sort(function(a, b) {
-			        var vA = $(a).find('.input').text();
-			        var vB = $(b).find('.input').text();
+			        var vA = parseFloat($(a).find('.output').text());
+			        var vB = parseFloat($(b).find('.output').text());
 			        return (vA < vB) ? -1 : (vA > vB) ? 1 : 0;
 			    });
 			    $('#modal-body').append(items);

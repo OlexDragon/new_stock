@@ -127,7 +127,7 @@ public class HttpRequest {
 		final FutureTask<T> ft = new FutureTask<T>(
 				()->{
 
-					logger.traceEntry("postForIrtObgect - classToReturn: {}; url: {}, params: {}", classToReturn, url, params);
+					logger.traceEntry("\n\tpostForIrtObgect - classToReturn: {}; \n\turl: {}, params: {}\n", classToReturn, url, params);
 
 					final HttpPost httpPost = new HttpPost(url);
 					Optional.ofNullable(params).map(
@@ -179,7 +179,8 @@ public class HttpRequest {
 
 		}catch(JsonParseException e) {
 			logger.catching(new Throwable("\n\tclass to return: " + classToReturn + "\n\tfrom:\n" + json, e));
-		}catch (ConnectException e) {
+
+		}catch(ConnectException e) {
 			logger.catching(Level.DEBUG, e);
 		}
 
@@ -198,7 +199,7 @@ public class HttpRequest {
 	}
 
 	private static String textToJSON(String text) {
-		logger.traceEntry(text);
+		logger.traceEntry("'{}'", text);
 		
 		StringBuffer sb = new StringBuffer("{");
 
@@ -243,7 +244,7 @@ public class HttpRequest {
 				mapper.configure(DeserializationFeature.FAIL_ON_UNKNOWN_PROPERTIES, false);
 
 				final T readValue = mapper.readValue(json, classToReturn);
-				logger.error("{}", readValue);
+				logger.debug("{}", readValue);
 
 				return readValue;
 			}

@@ -36,7 +36,7 @@ import org.apache.logging.log4j.Logger;
 public class RmaController {
 	private final static Logger logger = LogManager.getLogger();
 
-	private static final int SIZE = 40;
+	private static final int SIZE = 60;
 
 	@Value("${irt.profile.path}")
 	private String profileFolder;

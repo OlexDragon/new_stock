@@ -11,6 +11,13 @@ if(cookie){
 }
 
 $('#spServers').change(function(){
+
+	var spServers = $(this).val();
+
+	if(!spServers)
+		return;
+
+	Cookies.set("spServers", spServers, { expires: 7 });
 	gerSerialPorts();
 });
 
@@ -34,14 +41,15 @@ function gerSerialPorts(){
 		$.each($comPorts, function(index, select){
 			var value = Cookies.get(select.id)
 			if(value){
-				$(select).val(value);
+				var $option = $(select).children('[value=' + value + ']');
+				$option.prop('selected', true);
 				comPortSelected(select);
 			}
 		});
 	})
 	.fail(function(error) {
 		if(error.statusText!='abort'){
-		var responseText = error.responseText;
+			var responseText = error.responseText;
 			if(responseText)
 				alert(error.responseText);
 			else
@@ -57,11 +65,21 @@ $('.com-ports').on('change', function(){
 });
 
 function comPortSelected(select){
+
 	var messageId = select.dataset.infoMessage;
 	var $message = $('#' + messageId);
+	var value = select.value;
+
+	if(!value || value.startsWith('Select')){
+		$message.text(' Serial Port is not selected');
+		$message.addClass('text-danger');
+		$(select).parent().find('.to-disable').addClass('disabled');
+		return;
+	}
+
 	$message.text(select.value);
 	$message.removeClass('text-danger');
-	$(select).parent().find('.disabled').removeClass('disabled');
+	$(select).parent().find('.to-disable').removeClass('disabled');
 }
 
 if(!$('#serialNumber').text())
@@ -95,7 +113,7 @@ $('#upload').click(function(e){
 	})
 	.fail(function(error) {
 		if(error.statusText!='abort'){
-		var responseText = error.responseText;
+			var responseText = error.responseText;
 			if(responseText)
 				alert(error.responseText);
 			else
@@ -106,13 +124,14 @@ $('#upload').click(function(e){
 
 // Login to the unit
 $('.unitLogin').click(function(e){
-	login(e, this);
+	e.preventDefault();
+	login();
 });
 
-function login(e, _this){
-	e.preventDefault();
+function login(){
 
-	$.post(_this.href)
+	var href = $('#unitLogin').prop('href');
+	$.post(href)
 	.done(function(data){
 		alert(data);
 	})
@@ -221,12 +240,6 @@ $('#scan').click(function(e){
 	});
 });
 
-$('#spServers').change(function(){
-	var spServers = $(this).val();
-	if(spServers)
-		Cookies.set("spServers", spServers, { expires: 7 });
-});
-
 function getHostName(){
 
 	var spServers = $('#spServers').val();
@@ -237,3 +250,66 @@ function getHostName(){
 
 	return null;
 }
+
+$('#dropdownCalibrateButton').on('show.bs.dropdown', function(){
+
+	var serialNumber = $('#serialNumber').text();
+
+	if(!serialNumber)
+		return;
+
+	$.post('/calibration/rest/calibration_mode', { ip: serialNumber })
+	.done(function(calMode){
+
+		var status = calMode["Calibration mode"];
+		var $calMode = $('#calMode').removeClass('text-primary text-success');
+		var text;
+
+		switch(status){
+
+		case 'OFF':
+			$calMode.addClass('text-primary').text('Calibration Mode: ' + status);
+			$('#gain').addClass('disabled list-group-item-light');
+			break;
+
+		case 'ON':
+			$calMode.addClass('text-success').text('Calibration Mode: ' + status);
+			$('#gain').removeClass('disabled list-group-item-light');
+			break;
+
+		default:
+			$calMode.text('Calibration Mode');
+			$('#gain').addClass('disabled list-group-item-light');
+		}
+	})
+	.fail(function(error) {
+
+		if(error.statusText!='abort'){
+			var responseText = error.responseText;
+			if(responseText)
+				alert(error.responseText);
+			else
+				alert("Server error. Status = " + error.status)
+
+			$('#calMode').removeClass('text-primary text-success').text('Calibration Mode');
+		}
+	});
+});
+
+$('#calMode').click(function(e){
+	e.preventDefault();
+
+	var serialNumber = $('#serialNumber').text();
+
+	$.post('/calibration/rest/calibration_mode_toggle', { ip: serialNumber })
+	.fail(function(error) {
+		if(error.statusText!='abort'){
+
+			var responseText = error.responseText;
+			if(responseText)
+				alert(error.responseText);
+			else
+				alert("Server error. Status = " + error.status)
+		}
+	});
+});
