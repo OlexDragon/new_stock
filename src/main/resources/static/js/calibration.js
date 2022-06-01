@@ -230,7 +230,7 @@ $('#scan').click(function(e){
 			clearInterval(scanIpInterval);
 
 			var tooltipTriggerList = [].slice.call(document.querySelectorAll('[data-bs-toggle="tooltip"]'));
-			var tooltipList = tooltipTriggerList.map(function (tooltipTriggerEl) { return new bootstrap.Tooltip(tooltipTriggerEl)});
+			tooltipTriggerList.map(function (tooltipTriggerEl) { return new bootstrap.Tooltip(tooltipTriggerEl)});
 			$('#modal-header').text('Scan completed.');
 		}
 	}, 200);
@@ -313,3 +313,22 @@ $('#calMode').click(function(e){
 		}
 	});
 });
+
+
+function hasValue(inputs){
+
+	for(let s of inputs){
+		if(s.value){
+			return true;
+			break;
+						}
+	}
+
+	return false;
+}
+
+function toArray($inputs){
+	var values = [];
+	$inputs.map((i, v)=>v.value).filter((i, v)=>v).map((i, v)=>parseFloat(v)).sort().each((i, v)=>values.push(v));
+	return values;
+}

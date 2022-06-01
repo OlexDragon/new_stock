@@ -36,16 +36,19 @@ import org.springframework.web.bind.annotation.RestController;
 
 import irt.components.beans.irt.CalibrationInfo;
 import irt.components.beans.irt.Info;
+import irt.components.beans.irt.MonitorInfo;
 import irt.components.beans.irt.calibration.CalibrationMode;
 import irt.components.beans.irt.calibration.ProfileTableTypes;
 import irt.components.beans.irt.update.Profile;
 import irt.components.beans.irt.update.Table;
-import irt.components.beans.jpa.CalibrationGainSettings;
-import irt.components.beans.jpa.CalibrationOutputPowerSettings;
-import irt.components.beans.jpa.CalibrationPowerOffsetSettings;
-import irt.components.beans.jpa.repository.CalibrationGainSettingRepository;
-import irt.components.beans.jpa.repository.CalibrationOutputPowerSettingRepository;
-import irt.components.beans.jpa.repository.CalibrationPowerOffsetSettingRepository;
+import irt.components.beans.jpa.calibration.CalibrationBtrSetting;
+import irt.components.beans.jpa.calibration.CalibrationGainSettings;
+import irt.components.beans.jpa.calibration.CalibrationOutputPowerSettings;
+import irt.components.beans.jpa.calibration.CalibrationPowerOffsetSettings;
+import irt.components.beans.jpa.repository.calibration.CalibrationBtrSettingRepository;
+import irt.components.beans.jpa.repository.calibration.CalibrationGainSettingRepository;
+import irt.components.beans.jpa.repository.calibration.CalibrationOutputPowerSettingRepository;
+import irt.components.beans.jpa.repository.calibration.CalibrationPowerOffsetSettingRepository;
 import irt.components.workers.HttpRequest;
 import irt.components.workers.ProfileWorker;
 
@@ -57,9 +60,32 @@ public class CalibrationRestController {
 	@Value("${irt.profile.path}")
 	private String profileFolder;
 
-	@Autowired CalibrationOutputPowerSettingRepository calibrationOutputPowerSettingRepository;
-	@Autowired CalibrationPowerOffsetSettingRepository calibrationPowerOffsetSettingRepository;
-	@Autowired CalibrationGainSettingRepository calibrationGainSettingRepository;
+	@Autowired private CalibrationOutputPowerSettingRepository calibrationOutputPowerSettingRepository;
+	@Autowired private CalibrationPowerOffsetSettingRepository calibrationPowerOffsetSettingRepository;
+	@Autowired private CalibrationGainSettingRepository calibrationGainSettingRepository;
+	@Autowired private CalibrationBtrSettingRepository calibrationBtrSettingRepository;
+
+	@PostMapping(path="monitorInfo", produces = "application/json;charset=utf-8")
+    MonitorInfo monitorInfo(@RequestParam(required = false) String sn) {
+//    	logger.error(sn);
+    	return Optional.ofNullable(sn)
+
+    			.map(
+    					s->{
+    						try {
+
+    							return CalibrationController.getHttpUpdate(s, MonitorInfo.class, new BasicNameValuePair("exec", "mon_info")).get(5, TimeUnit.SECONDS);
+
+    						} catch (MalformedURLException | InterruptedException | ExecutionException e) {
+    							logger.catching(new Throwable(sn, e));
+    						} catch (TimeoutException e) {
+    							logger.catching(Level.DEBUG, new Throwable(sn, e));
+							}
+
+    						return null;
+    					})
+    			.orElse(null);
+    }
 
 	@PostMapping(path="calibrationInfo", produces = "application/json;charset=utf-8")
     CalibrationInfo calibrationInfo(@RequestParam(required = false) String sn) {
@@ -224,6 +250,8 @@ public class CalibrationRestController {
 					logger.debug(line);
 				
 			}
+		}catch(UnknownHostException e) {
+			logger.catching(Level.DEBUG, e);
 		}
 
 		connection.disconnect();
@@ -267,12 +295,31 @@ public class CalibrationRestController {
     }
 
     @PostMapping("dac")
-    void setDac(@RequestParam String sn, int value, String channel) throws InterruptedException, ExecutionException, TimeoutException, MalformedURLException {
+    void setDac(@RequestParam String sn, int value, String channel) throws MalformedURLException, InterruptedException, ExecutionException, TimeoutException {
 
 		final URL url = new URL("http", sn, "/calibration.cgi");
 		List<NameValuePair> params = new ArrayList<>();
 		params.addAll(Arrays.asList(new BasicNameValuePair[]{new BasicNameValuePair("channel", channel), new BasicNameValuePair("index", "2"), new BasicNameValuePair("value", Integer.toString(value))}));
 
 		HttpRequest.postForIrtObgect(url.toString(), Object.class, params).get(5, TimeUnit.SECONDS);
+    }
+
+    @PostMapping("btr/setting")
+    void saveBtrSetting(@RequestBody CalibrationBtrSetting btrSetting) {
+    	logger.traceEntry("{}", btrSetting);
+
+    	final Optional<CalibrationBtrSetting> oBtrSetting = calibrationBtrSettingRepository.findById(btrSetting.getPartNumber());
+    	CalibrationBtrSetting calibrationBtrSetting;
+
+    	if(oBtrSetting.isPresent())
+    		calibrationBtrSetting = oBtrSetting.get();
+ 
+    	else {
+    		calibrationBtrSetting = new CalibrationBtrSetting();
+    		calibrationBtrSetting.setPartNumber(btrSetting.getPartNumber());
+    	}
+
+    	calibrationBtrSetting.set(btrSetting);
+		calibrationBtrSettingRepository.save(calibrationBtrSetting);
     }
 }

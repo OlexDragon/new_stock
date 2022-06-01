@@ -48,7 +48,7 @@
  <!-- RMA Unit Description search -->
   			<div class="input-group ml-1 col">
       			<label for="rmaDescription" class="input-group-text">Description</label>
-      			<input id="rmaDescription" type="text" class="form-control searchRma" placeholder="Description" aria-label="Description" aria-describedby="descriptionLbl" th:value="${description}">
+      			<input id="rmaDescription" type="text" class="form-control searchRma" placeholder="Description" aria-label="Description" aria-describedby="descriptionLbl">
     		</div>
 
   			<div sec:authorize="hasAuthority('ADD_RMA')" class="ml-1 col-auto">
@@ -113,11 +113,13 @@
 						<div class="col-2 date" th:text="${#dates.format( rmaContent.date, 'dd MMM yyyy hh:mm' )}">Date </div>
 					</div>
 					<script th:if="${shipped}" th:inline="javascript">
+					/*<![CDATA[*/
 						var rmaId = /*[[${rmaId}]]*/ 0;
 						var $rma = $('#' + rmaId);
 						var $bg_shipped = $rma.find('.bg-shipped');
 						$bg_shipped.addClass('bg-secondary text-white bg-opacity-75');
-						//# sourceURL=addBackground.js
+					/*]]>*/
+					//# sourceURL=addBackground.js
 					</script>
 				</th:block>
 				</div>
@@ -125,6 +127,7 @@
 		</div>
 <!-- 		 sec:authorize="hasAuthority('ADD_RMA_COMMENT')" -->
 		<script th:inline="javascript" sec:authorize="hasAuthority('ADD_RMA_COMMENT')" th:if="${ rmas != null ? rmas.size() > 0 : false }">
+		/*<![CDATA[*/
 
 			function ondblclick(){
 
@@ -146,6 +149,7 @@
 			// Add RMA Unit to the existing RMA Number
 			$('.add-to-rma').click(function(){addToRma(this.dataset.rmaNumber);});
 
+			/*]]>*/
 			//# sourceURL=rmaComments.js
 		</script>
 	</th:block>

@@ -1,0 +1,304 @@
+<!DOCTYPE html>
+<html 	xmlns="http://www.w3.org/1999/xhtml"
+		xmlns:th="https://www.thymeleaf.org"
+      	xmlns:sec="https://www.thymeleaf.org/thymeleaf-extras-springsecurity5"
+      	lang="en">
+<head>
+    <title>IRT BTRs.</title>
+    <link rel="shortcut icon" href="http://irttechnologies.com/favicon.ico">
+<th:block th:replace="components :: bootstrapLink">
+    <link rel="stylesheet" href="https://stackpath.bootstrapcdn.com/bootstrap/4.4.1/css/bootstrap.min.css">
+</th:block>
+    <link rel="stylesheet" href="../static/css/components.css" th:href="@{/css/components.css}">
+    <link rel="stylesheet" href="../static/css/btr.css" th:href="@{/css/btr.css}">
+</head>
+<body>
+
+	<nav class="navbar fixed-top navbar-light bg-light row">
+ 
+<!-- Navigation Dropdown Menu from components.html -->
+		<div class="dropdown" th:replace="components :: dropdownMenu">
+  			<button class="btn btn-secondary dropdown-toggle" type="button" id="dropdownMenuButton" data-bs-toggle="dropdown" aria-expanded="false"></button>
+  			<div class="dropdown-menu" aria-labelledby="dropdownMenuButton">
+    			<a class="dropdown-item" href="components.html" th:href="@{/}">Components</a>
+    			<a class="dropdown-item" href="bom.html" th:href="@{/bom}">BOMs</a>
+  			</div>
+		</div>
+
+		<div class="nav-item col">
+  		<form class="row">
+
+<!-- Remove modules -->
+  			<button id="removeModueles" type="button" class="btn btn-outline-secondary col-auto" title="Click to remove the modules.">Top</button>
+ 
+<!-- WO Number search-->
+  			<div class="input-group col">
+      			<label for="btrWoNumber" class="input-group-text">WO</label>
+      			<input id="btrWoNumber" type="text" class="form-control searchBTR" placeholder="WO Number" aria-label="WO Number">
+    		</div>
+
+<!-- RMA Unit Serial Number search-->
+  			<div class="input-group col">
+      			<label for="btrSerialNumber" class="input-group-text">SN</label>
+      			<input id="btrSerialNumber" type="text" class="form-control searchBTR" placeholder="Serial Number" aria-label="Serial Number">
+    		</div>
+
+ <!-- RMA Unit Description search -->
+  			<div class="input-group ml-1 col">
+      			<label for="btrDescription" class="input-group-text">Description</label>
+      			<input id="btrDescription" type="text" class="form-control searchBTR" placeholder="Description" aria-label="Description" aria-describedby="descriptionLbl">
+    		</div>
+
+  			<div sec:authorize="hasAuthority('ADD_RMA')" class="ml-1 col-auto">
+ <!-- Add Serial Number Button -->
+      			<button id="addBTR" type="button" class="form-control btn btn-outline-primary disabled">Add</button>
+    		</div>
+
+  		</form>
+  		</div>
+	</nav>
+
+<!-- Accordion -->
+	<div id="accordion" class="mt-5 accordion">
+
+	<div><strong>To get information about Units, enter some information into one of the search fields.</strong></div>
+<!-- Accordion:	Cards -->
+	<th:block th:fragment="btrCards">
+	<th:block th:each="wo, woStatus : ${workOrders}">
+
+		<div class="accordion-item" th:each="sn, snStatus : ${wo.btrSerialNumbers}" th:with="index = '_' + ${ woStatus.index } + '_' + ${ snStatus.index }" th:id="${ sn.id }" th:classappend="${sn.parentId}==null ? '' : 'module'">
+
+<!-- Accordion:	Card Header -->
+			<h5 th:id="heading + ${ index }" class="accordion-header">
+				<button type="button" class="btn accordion-button" data-bs-toggle="collapse" data-bs-target="#btr0" aria-expanded="true" aria-controls="btr0" th:attr="aria-controls ='btr'+ ${ index }, data-bs-target='#btr'+ ${ index }" style="width:100%" th:classappend="${sn.parentId}==null ? 'bg-info bg-gradient bg-opacity-25' : ''">
+          			<div class="row" style="width:100%">
+           				<div class="col-auto">
+          					<strong th:text="${ wo.number }"> WO Number </strong>
+          				</div>
+          				<div class="col-auto">
+          					<strong class="text-nowrap serialNumber" th:text="${ #strings.toUpperCase( sn.serialNumber ) }"> Serial Number </strong>
+          				</div>
+          				<div class="col text-secondary">
+          					<strong th:text="${ sn.description }">Description</strong>
+          				</div>
+           			</div>
+        		</button>
+			</h5>
+
+<!-- Accordion:	Card Body -->
+			<div id="rma0" th:id="btr + ${ index }" class="accordion-collapse collapse" aria-labelledby="heading0" th:attr="aria-labelledby ='heading'+${index}" data-bs-parent="#accordion">
+				<div id="accordion-body" class="accordion-body">
+
+<!-- Card Measurements -->
+				<th:block th:each="measurement, measStatis : ${sn.measurements}">
+				</th:block>
+
+<!-- Card comments -->
+				<th:block th:replace="btr_fragments :: comments(${sn.comments})"></th:block>
+
+<!-- Card Modules -->
+				<div class="row bg-warning bg-opacity-10 mt-3" th:if="${sn.children!=null and sn.children.size>0}"><h4>Modules:</h4></div>
+				<th:block th:each="child, childStatus : ${sn.children}">
+					<div class="row">
+						<div class="col-1" th:text="${childStatus.count}">#</div>
+						<div class="col">
+							<div class="row">
+								<div class="col-auto"><h5 th:text="${child.workOrder.number}"></h5></div>
+								<div class="col-auto"><h5 th:text="${child.serialNumber}"></h5></div>
+								<div class="col" th:text="${child.description}"></div>
+							</div>
+<!-- Module comments -->
+							<th:block th:replace="btr_fragments :: comments(${child.comments})"></th:block>
+						</div>
+					</div>
+				</th:block>
+				</div>
+			</div>
+		</div>
+	</th:block>
+<!-- 		 sec:authorize="hasAuthority('ADD_RMA_COMMENT')" -->
+		<script type="application/javascript" th:inline="javascript" sec:authorize="hasAuthority('ADD_RMA_COMMENT')">
+		/*<![CDATA[*/
+
+			function ondblclick(){
+
+				var $this = $(this);
+				var $serialNumber = $this.find(".serialNumber");
+				if($serialNumber){
+					var snId = $this[0].id;
+					$('.modal-content').load('/btr/comment', {snId: snId});
+					$('#modal').modal('show');
+				}
+			}
+
+			var moduleId;
+			var modulSN;
+			var items = document.getElementsByClassName('accordion-item');
+			for(const item of items){
+
+				var $rmsNumber = $(item).find('.bg-secondary');
+				if(!$rmsNumber.hasClass('bg-secondary'))
+					item.ondblclick = ondblclick;
+
+				item.addEventListener('contextmenu', function(ev) {
+				    ev.preventDefault();
+				    var id = this.id;
+				    var sn = $(this).find('.serialNumber').text();
+
+				    if(moduleId){
+				    	if(moduleId==id){
+				    		return;
+				    	}
+				    	if(confirm(sn + '\nTo link the ' + modulSN + ' to this unit as a module, click the "OK" button.')){
+				    		$.post('btr/rest/as_module', {parentId: id, moduleId: moduleId})
+				    		window.location.href = window.location.href;
+
+				    	}else if(confirm('To clear the ' + modulSN + ' modul, click the "OK" button.')){
+					    	moduleId = undefined;
+				    	}
+				    }else if(confirm('To link the ' + sn + ' unit as a module, click the "OK" button.')){
+				    	moduleId = id;
+				    	modulSN = sn;
+					    alert('Now right click on the top unit.');
+				    }
+				    return false;
+				}, false);
+			}
+			/*]]>*/
+			//# sourceURL=btrAccordionCards.js
+		</script>
+	</th:block>
+	</div>
+<!-- Accordion:	And -->
+
+<!-- Modal Message -->
+	<div id="modal" class="modal fade" tabindex="-1">
+  		<div class="modal-dialog">
+    		<div class="modal-content" th:remove="body">
+ 
+<!-- Block: Add Serial Number -->
+    		<th:block th:fragment="modalSN">
+<!-- Modal Header -->
+      			<div class="modal-header">
+        			<h5 class="modal-title ml-3 text-primary">To add a serial number, enter the work order number.</h5>
+        			<button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+      			</div>
+<!-- Modal Body -->
+      			<div id="modal-body" class="modal-body form-floating">
+      				<div class="input-group mb-3">
+      					<span class="input-group-text">SN:</span>
+      					<input id="btrSN" type="text" class="form-control" aria-label="Serial Number" placeholder="Serial Number" disabled="disabled" th:value="${serialNumber}==null ? 'Exists' : ${serialNumber}">
+      				</div>
+      				<div class="input-group mb-3">
+      					<span class="input-group-text">WO:</span>
+      					<input id="btrWO" type="text" class="form-control" aria-label="Work Order Number" placeholder="Work Order Number" th:disabled="${serialNumber}==null">
+      				</div>
+      			</div>
+<!-- Modal footer -->
+      			<div class="modal-footer">
+	        		<button id="addSN" type="button" class="btn btn-outline-primary disabled">Add Serial Number</button>
+	        		<button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Close</button>
+	    		</div>
+	    		<script type="application/javascript">
+	    		/*<![CDATA[*/
+	    			$('#btrWO').on('input', function(){
+
+	    				var sn = $('#btrSN').val();
+	    				var wo = $.trim($('#btrWO').val());
+
+	    				var $addSN = $('#addSN');
+	    				if(sn!= 'Exists' && wo && wo.length==9){
+	    					if($addSN.hasClass('disabled')){
+	    						$addSN.removeClass('btn-secondary disabled');
+	    						$addSN.addClass('btn-outline-primary');
+	    					}
+	    				}else{
+	    					if(!$addSN.hasClass('disabled')){
+	    						$addSN.addClass('btn-secondary disabled');
+	    						$addSN.removeClass('btn-outline-primary');
+	    					}
+	    				}
+	    			});
+					$('#addSN').click(function(){
+						$(this).addClass('disabled');
+						var wo = $.trim($('#btrWO').prop('disabled', true).val()).toUpperCase();
+						var sn = $('#btrSN').val().toUpperCase();
+						$('#accordion').load('/btr/add_sn', { sn: sn, wo: wo}, function (responseText, textStatus, req) {
+					        if (textStatus == "error") {
+					          alert('An error has occurred.\nTry refreshing this page and entering the information again.');
+					        }
+						});
+						$('#modal').modal('hide');
+					});
+	    		/*]]>*/
+				//# sourceURL=btrAddSN.js
+	    		</script>
+    		</th:block>
+
+<!-- Add Serial Number -->
+    		<th:block th:fragment="modalComment">
+<!-- Modal Header -->
+      			<div class="modal-header">
+        			<h5 id="modal_title" class="modal-title ml-3 text-primary" th:inline="text">[[${serialNumber.serialNumber}]] - Enter the information about this Unit.</h5>
+        			<button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+      			</div>
+<!-- Modal Body -->
+      			<div id="modal-body" class="modal-body form-floating">
+        			<textarea class="form-control" placeholder="Leave a comment here" id="btrTextarea" style="height: 100px"></textarea>
+        			<label for="btrTextarea"> Leave a comment here</label>
+      			</div>
+<!-- Modal footer -->
+      			<div class="modal-footer">
+	        		<button id="saveComment" type="button" class="btn btn-outline-primary disabled">Save Comment</button>
+	        		<button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Close</button>
+	    		</div>
+	    		<script type="application/javascript" th:inline="javascript">
+	    		/*<![CDATA[*/
+
+	    			// Disable/Enable 'Save' button
+	    			$('#btrTextarea').on('input', function(){
+	    				var $btnSave = $('#saveComment');
+	    				if($(this).val()){
+	    					if($btnSave.hasClass('disabled'))
+	    						$btnSave.removeClass('disabled');
+	    				}else{
+	    					if(!$btnSave.hasClass('disabled'))
+	    						$btnSave.addClass('disabled');
+	    				}
+	    			});
+
+	    			// Sve comment
+	    			$('#saveComment').click(function(){
+
+	    				var snId = /*[[${serialNumber.id}]]*/ 1;
+	    				var comment = $('#btrTextarea').val();
+	    				$.post('btr/rest/save_comment', {snId: snId, comment: comment})
+						.done(function(saved){
+
+							if(saved)
+								alert('The comment has been saved.');
+
+							window.location.href = window.location.href;
+						})
+	    				.fail(function(error) {
+	    					if(error.statusText!='abort')
+	    						alert(error.responseText);
+	    				});
+	    			});
+	    		/*]]>*/
+				//# sourceURL=btrSaveComment.js
+	    		</script>
+			</th:block>
+    		</div>
+  		</div>
+	</div>
+
+<th:block th:replace="components :: scripts">
+    <script type="application/javascript" src="https://ajax.googleapis.com/ajax/libs/jquery/3.6.0/jquery.min.js"></script>
+    <script type="application/javascript" src="https://cdnjs.cloudflare.com/ajax/libs/popper.js/2.9.2/umd/popper.min.js"></script>
+    <script type="application/javascript" src="https://stackpath.bootstrapcdn.com/bootstrap/4.4.1/js/bootstrap.min.js"></script>
+	<script type="application/javascript" src="https://cdn.jsdelivr.net/npm/js-cookie@2/src/js.cookie.min.js"></script>
+</th:block>
+	<script type="application/javascript" src="../static/js/btr.js" th:src="@{/js/btr.js}"></script>
+</body>
+</html>

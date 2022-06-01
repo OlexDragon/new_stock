@@ -41,7 +41,8 @@ public class WebSecurityConfig extends WebSecurityConfigurerAdapter {
 										"/rma/search",
 										"/inventory",
 										"/files/**",
-										"/images/**")
+										"/images/**",
+										"/btr/**")
 			.permitAll()
 
 			.antMatchers(HttpMethod.POST,
@@ -54,9 +55,10 @@ public class WebSecurityConfig extends WebSecurityConfigurerAdapter {
 											"/rma/comments",
 											"/rma/rest/**",
 											"/calibration/rest/**",
-											"/inventory"
-											,"/create/rest/**"
-											,"/serial_port/rest/**")
+											"/inventory",
+											"/create/rest/**",
+											"/serial_port/rest/**",
+											"/btr/**")
 			.permitAll()
 
 			.anyRequest().authenticated()

@@ -1,4 +1,4 @@
-package irt.components.beans.jpa;
+package irt.components.beans.jpa.calibration;
 
 import javax.persistence.Entity;
 import javax.persistence.Id;
@@ -13,7 +13,7 @@ import lombok.ToString;
 @Entity
 @Table
 @NoArgsConstructor @AllArgsConstructor @Getter @Setter @ToString
-public class CalibrationOutputPowerSettings {
+public class CalibrationGainSettings {
 
 	@Id private String partNumber;
 	private Integer startValue;

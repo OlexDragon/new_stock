@@ -10,6 +10,7 @@ import java.io.UnsupportedEncodingException;
 import java.net.ConnectException;
 import java.net.HttpURLConnection;
 import java.net.URL;
+import java.net.UnknownHostException;
 import java.util.List;
 import java.util.Optional;
 import java.util.Scanner;
@@ -180,7 +181,7 @@ public class HttpRequest {
 		}catch(JsonParseException e) {
 			logger.catching(new Throwable("\n\tclass to return: " + classToReturn + "\n\tfrom:\n" + json, e));
 
-		}catch(ConnectException e) {
+		}catch( ConnectException | UnknownHostException e) {
 			logger.catching(Level.DEBUG, e);
 		}
 

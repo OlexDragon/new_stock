@@ -1,0 +1,474 @@
+<!DOCTYPE html>
+<html 	xmlns="http://www.w3.org/1999/xhtml"
+		xmlns:th="https://www.thymeleaf.org"
+      	xmlns:sec="https://www.thymeleaf.org/thymeleaf-extras-springsecurity5"
+      	lang="en">
+<head>
+    <meta charset="UTF-8" />
+    <title>IRT Bom.</title>
+    <link rel="shortcut icon" href="http://irttechnologies.com/favicon.ico">
+    <link rel="stylesheet" href="https://stackpath.bootstrapcdn.com/bootstrap/4.4.1/css/bootstrap.min.css" data-integrity="sha384-Vkoo8x4CGsO3+Hhxv8T/Q5PaXtkKtu6ug5TOeNV6gBiFeWPGFN9MuhOf23Q9Ifjh" data-crossorigin="anonymous">
+    <link rel="stylesheet" href="../../static/css/components.css" th:href="@{/css/components.css}">
+</head>
+
+<body>
+
+<!-- Modal Message -->
+	<div id="modal" class="modal" tabindex="-1" role="dialog">
+	<th:block th:fragment="modal">
+ 		<th:block th:if="${settings}!=null and ${showSetting}==null">
+  		<div class="modal-dialog modal-lg">
+    		<div class="modal-content">
+<!-- Modal Header -->
+      			<div class="modal-header row">
+        			<h5 class="modal-title ml-3 text-primary col-auto" th:text="'Gain: ' + ${gain} + ' dB;'">Gain: 74 dB</h5>
+        			<h5 id="temperature" class="modal-title ml-3 text-primary col-auto" th:text="${monitor.temperature}">Temperature</h5><h5 class="modal-title text-primary col-auto">&#x2103;;</h5>
+        			<h5 id="unitPower" class="modal-title ml-3 text-primary col-auto" th:text="${monitor.outpower}">Temperature</h5><h5 class="modal-title text-primary col-auto">dBm;</h5>
+        			<h5 id="lo" class="modal-title ml-3 text-primary col-auto" th:text="'LO: ' + ${monitor.lo} + ';'">LO</h5>
+ 					<div class="col input-group">
+						<input id="btn-scan" type="checkbox" class="btn-check" autocomplete="off">
+						<label id="lbl-scan" class="btn form-label" for="btn-scan" data-bs-toggle="tooltip">Scan</label>
+					</div>
+ <!-- BTR settings -->
+  					<div class="dropdown col-auto">
+  						<button class="btn dropdown-toggle" type="button" id="dropdownSettingsButton" data-bs-toggle="dropdown" aria-expanded="false"></button>
+  						<div class="dropdown-menu" aria-labelledby="dropdownSettingsButton">
+  							<div class="form-group row">
+    							<label class="col-sm-6 col-form-label text-end" for="minValue">Gain Offset:</label>
+    							<div class="col-sm-6">
+    								<input type="number" class="form-control" id="gainOffset" placeholder="Gain Offset" value="40">
+    							</div>
+  							</div>
+   						</div>
+					</div>
+ <!-- X Button -->
+        			<button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+      			</div>
+ <!-- Modal Body -->
+     			<div id="modal-body" class="modal-body">
+
+				<!--  Gein -->
+       				<div class="row">
+      					<div class="col text-center text-success"><strong>GAIN:</strong></div><div class="col" th:each="fr : ${settings.frequencies}"><strong class="btr-frequency" th:text="${fr} + ' GHz'"></strong></div>
+      				</div>
+      				<div class="row btr-row btr-row-gain" th:each="tm : ${settings.temperatures}">
+      					<div class="col text-end btr-temperature"><strong th:text="${tm} + ' &#x2103;'"></strong></div><div class="col" th:each="fr : ${settings.frequencies}"><input type="number" step="0.1" class="form-control btr-gain" placeholder="dB" disabled></div>
+      				</div>
+    				<div><hr class="dropdown-divider"></div>
+
+				<!-- Saturated Power -->
+      				<div class="row">
+      					<div class="col text-center text-success"><strong>SAT. POWER:</strong></div><div class="col" th:each="fr : ${settings.frequencies}"><strong th:text="${fr} + ' GHz'"></strong></div>
+      				</div>
+      				<div class="row btr-row btr-row-saturation" th:each="tm : ${settings.temperatures}">
+      					<div class="col text-end btr-temperature"><strong th:text="${tm} + ' &#x2103;'"></strong></div><div class="col" th:each="fr : ${settings.frequencies}"><input type="number" step="0.1" class="form-control" placeholder="dBm" disabled></div>
+      				</div>
+    				<div><hr class="dropdown-divider"></div>
+
+				<!-- P1dB Power -->
+				<th:block th:if="${settings.hasP1db}">
+      				<div class="row">
+      					<div class="col text-center text-success"><strong>P1dB POWER:</strong></div><div class="col" th:each="fr : ${settings.frequencies}"><strong th:text="${fr} + ' GHz'"></strong></div>
+      				</div>
+      				<div class="row btr-row btr-row-p1db" th:each="tm : ${settings.temperatures}">
+      					<div class="col text-end btr-temperature"><strong th:text="${tm} + ' &#x2103;'"></strong></div><div class="col" th:each="fr : ${settings.frequencies}"><input type="number" step="0.1" class="form-control" placeholder="dBm" disabled></div>
+      				</div>
+    				<div><hr class="dropdown-divider"></div>
+    			</th:block>
+
+				<!-- Power Detector -->
+      				<div class="row">
+      					<div class="col text-center text-success"><strong>DETECTOR:</strong></div><div class="col" th:each="fr : ${settings.frequencies}"><strong th:text="${fr} + ' GHz'"></strong></div>
+      				</div>
+      				<div class="row btr-row btr-row-detector" th:each="power : ${settings.detectors}">
+      					<div class="col text-end btr-power"><strong th:text="${power} + ' dBm;'"></strong></div><div class="col" th:each="fr : ${settings.frequencies}"><input type="text" class="form-control btr-detector" placeholder="dBm"></div>
+      				</div>
+       			</div>
+ <!-- Modal Footer -->
+      			<div class="modal-footer">
+	        		<button type="button" id="save" class="btn btn-primary">Save</button>
+	        		<button sec:authorize="hasAuthority('CALIBRATION_SETTINGS')" type="button" id="show-settings" class="btn btn-secondary">Show Settings.</button>
+	        		<button type="button" class="btn btn-outline-secondary" data-bs-dismiss="modal">Close</button>
+	    		</div>
+    		</div>
+  		</div>
+  		<script th:inline="javascript">
+			/*<![CDATA[*/
+
+				var cookies = Cookies.get("gainOffset")
+				if(cookies)
+					$('#gainOffset').val(cookies);
+				$('#gainOffset').focusout(function(){
+					var val = $(this).val();
+					Cookies.set("gainOffset", val, { expires: 999 });
+				})
+
+				var unitSerialNumber =  /*[[${serialNumber}]]*/ 'IRT-2121021';
+				var hasP1db			 =  /*[[${settings.hasP1db}]]*/ true;
+
+				var $inputNode;
+				$('.btr-row').find('input').focus(function(){
+
+					if($inputNode)
+						$inputNode.removeClass('bg-warning bg-opacity-10')
+
+					$inputNode=$(this);
+					$inputNode.addClass('bg-warning bg-opacity-10')
+				});
+				$('#btn-scan').change(function(){
+					if(!this.checked){
+
+						if($inputNode)
+							$inputNode.removeClass('bg-warning bg-opacity-10')
+
+							$inputNode=null;
+					}
+				});
+
+				var err;
+				var intervalMonitor;
+				var intervalPower;
+				function btrUpdate(){
+
+					if(intervalMonitor || intervalPower){
+						clearInterval(intervalMonitor);
+						clearInterval(intervalPower);
+					}
+
+					//get value from unit
+					intervalMonitor = setInterval(function() {
+
+						if(err)
+							return;
+
+						$.post('/calibration/rest/monitorInfo', {sn : unitSerialNumber})
+						.done(function(monitorInfo){
+
+							if(monitorInfo && monitorInfo.data){
+
+								if(monitorInfo.data.temperature){
+
+									var temperature = monitorInfo.data.temperature;
+									$('#temperature').text(monitorInfo.data.temperature);
+
+									var dataRows = $('.btr-row').filter((i,v)=>$(v).children('.btr-temperature').length);
+									var toFindMax = dataRows.map((i,v)=>parseFloat($(v).children('.btr-temperature').children('strong').text().split(/(\s+)/)[0])).filter((i,v)=>v<temperature);
+									var max = Math.max(...toFindMax);
+									var $toEnable = dataRows.filter((i,v)=>$(v).children('.btr-temperature').children('strong').text().startsWith(max.toString())).find('input');
+
+									if($toEnable.prop('disabled')){
+										dataRows.find('input').prop('disabled', true);
+										$toEnable.prop('disabled', false);
+									}
+
+								}
+
+								if(monitorInfo.data.outpower){
+									$('#unitPower').text(monitorInfo.data.outpower);
+
+									if($inputNode && $inputNode.hasClass('btr-detector') && $('#btn-scan').is(':checked')){
+										$inputNode.val(monitorInfo.data.outpower);
+									}
+								}
+							}
+						})
+						.fail(function(error) {
+
+							if(err)
+								return;
+
+							if(error.statusText!='abort'){
+								err = true;
+								alert(error.responseText);
+								err = false;
+							}
+				   		});
+					}, 2000);
+
+					//get value from Power Meter
+					intervalPower = setInterval(function() {
+
+
+						if(err || !$inputNode || $inputNode.hasClass('btr-detector') || !$('#btn-scan').is(':checked'))
+							return;
+
+						ouputGet(
+								data=>
+								$.each(data.commands, function(index, command){
+
+									if(!command.getAnswer || !command.answer)
+										return;
+
+									var answer = $.trim(String.fromCharCode.apply(String, command.answer));
+
+									var s = answer.split(/\s+/);
+									var a;
+									if(s.length>1)
+										a = parseFloat(s[1]);
+
+									else
+										a = parseFloat(answer);
+
+									if($inputNode.hasClass('btr-gain')){
+
+										var gainOffset = parseFloat($('#gainOffset').val());
+										var gain = a + gainOffset;
+										$inputNode.val(gain.toFixed(1));
+										return;
+									}
+
+									var val = parseFloat($inputNode.val());
+									a = parseFloat(a.toFixed(1));
+									if(!val || val<a)
+										$inputNode.val(a);
+								}));
+					}, 2000);
+				}
+
+				btrUpdate();
+
+				var $modal = $('#modal');
+				$modal.on('shown.bs.modal', function (e) {
+					btrUpdate();
+					enableButton();
+				});
+
+				$modal.on('hidden.bs.modal', function () {
+					clearInterval(intervalMonitor);
+					intervalMonitor = undefined;
+					err = null;
+				});
+
+				$('#show-settings').click(function(){
+					var partNumber = /*[[${partNumber}]]*/ 'IPB-CB00530-RMS11';
+					 $('#modal').load('/calibration/btr?sn=' + encodeURIComponent(serialNumber) + '&pn=' + encodeURIComponent(partNumber) + '&setting=true');
+				});
+
+				$('#outputComPorts').change(()=>enableButton());
+				$('#outputPowermeter').change(()=>enableButton());
+				$('#ouputAddress').change(()=>enableButton());
+				enableButton()
+
+				function enableButton(){
+
+					var outputComPorts 	= $('#outputComPorts').val();
+					var outputPowermeter= $('#outputPowermeter').val();
+					var ouputAddress 	= $('#ouputAddress').val();
+
+					var $lbl_p1dB = $('#lbl-scan');
+					if(!outputComPorts || !outputPowermeter || !ouputAddress){
+
+						$lbl_p1dB.addClass('btn-secondary disabled');
+						$lbl_p1dB.removeClass('btn-outline-primary');
+
+					}else{
+
+						$lbl_p1dB.removeClass('btn-secondary disabled');
+						$lbl_p1dB.addClass('btn-outline-primary');
+					}
+				}
+
+				$('#save').click(function(){
+
+					var frequencies = [];
+					$('.btr-frequency').map((i, v)=>$(v).text()).each((i, v)=>frequencies.push(v));
+
+					var btrData = {};
+					btrData.gain		 = rowToObject($('.btr-row-gain'), '.btr-temperature', frequencies);
+					btrData.saturation	 = rowToObject($('.btr-row-saturation'), '.btr-temperature', frequencies);
+					if(hasP1db)
+						btrData.p1db	 = rowToObject($('.btr-row-p1db'), '.btr-temperature', frequencies);
+					
+					btrData.detector	 = rowToObject($('.btr-row-detector'), '.btr-power', frequencies);
+
+					var json = JSON.stringify(btrData);
+				})
+
+				function rowToObject($rows, keyClass, frequencies){
+
+					var rows = []
+
+					$rows.each((i,v)=>{
+
+						var row = {};
+						row.key = $(v).find(keyClass).text();
+						row.values = [];
+
+						$(v).find('input').map((i, v)=>v.value)
+						.each((i, v)=>row.values.push({frequency: frequencies[i], value: v}));
+
+						rows.push(row);
+					});
+
+					return rows;
+				}
+
+			/*]]>*/
+			//# sourceURL=btr.js
+  		</script>
+	</th:block>
+	<th:block th:if="${settings}==null or ${showSetting}">
+  		<div class="modal-dialog modal-lg">
+    		<div class="modal-content">
+<!-- Modal Header -->
+      			<div class="modal-header row">
+        			<h5 class="modal-title ml-3 text-primary col-auto">BTR Setting.</h5>
+<!-- X Button -->
+        			<button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+      			</div>
+ <!-- Modal Body -->
+      			<div id="modal-body" class="modal-body">
+					<div class="row input-group mb-2">
+							<span class="input-group-text col">Frequencies</span>
+							<input name="frequency" type="number" class="form-control col setting" placeholder="GHz">
+							<input name="frequency" type="number" class="form-control col setting" placeholder="GHz">
+							<input name="frequency" type="number" class="form-control col setting" placeholder="GHz">
+							<input name="frequency" type="number" class="form-control col setting" placeholder="GHz">
+							<input name="frequency" type="number" class="form-control col setting" placeholder="GHz">
+					</div>
+					<div class="row input-group mb-3">
+							<span class="input-group-text col">Temperatures</span>
+							<input name="temperature" type="number" class="form-control col setting" placeholder="&#x2103;">
+							<input name="temperature" type="number" class="form-control col setting" placeholder="&#x2103;">
+							<input name="temperature" type="number" class="form-control col setting" placeholder="&#x2103;">
+							<input name="temperature" type="number" class="form-control col setting" placeholder="&#x2103;">
+							<input name="temperature" type="number" class="form-control col setting" placeholder="&#x2103;">
+					</div>
+					<div class="row input-group mb-3">
+							<span class="input-group-text col">Power Detector</span>
+							<input name="detector" type="number" class="form-control col setting" placeholder="dBm">
+							<input name="detector" type="number" class="form-control col setting" placeholder="dBm">
+							<input name="detector" type="number" class="form-control col setting" placeholder="dBm">
+							<input name="detector" type="number" class="form-control col setting" placeholder="dBm">
+							<input name="detector" type="number" class="form-control col setting" placeholder="dBm">
+							<input name="detector" type="number" class="form-control col setting" placeholder="dBm">
+							<input name="detector" type="number" class="form-control col setting" placeholder="dBm">
+					</div>
+					<div class="row input-group">
+						<input id="btn-p1dB" type="checkbox" class="btn-check" autocomplete="off">
+						<label id="lbl-p1dB" class="btn btn-outline-primary form-label" for="btn-p1dB" title="Click to add P1dB to the BTR." data-bs-toggle="tooltip">Measure P1dB</label>
+					</div>
+      			</div>
+ <!-- Modal Footer -->
+      			<div class="modal-footer">
+	        		<button type="button" id="save" class="btn btn-primary disabled">Save</button>
+	        		<button type="button" id="clear" class="btn btn-secondary disabled">Clear</button>
+	        		<button type="button" class="btn btn-outline-secondary" data-bs-dismiss="modal">Close</button>
+	    		</div>
+    		</div>
+  		</div>
+  		<script th:inline="javascript">
+			/*<![CDATA[*/
+
+				$('.setting').on('input', function(){
+					enableButtons();
+				});
+
+				function enableButtons(){
+
+					var isFreq		 = hasValue($('input[name=frequency]'));
+					var isTemp		 = hasValue($('input[name=temperature]'));
+					var isDetector	 = hasValue($('input[name=detector]'));
+
+					//Enable/Disable 'Clear' button
+					if(isFreq || isTemp || isDetector)
+						$('#clear').removeClass('disabled');
+					else
+						$('#clear').addClass('disabled');
+
+					//Enable/Disable 'Save' button
+					if(isFreq && isTemp && isDetector)
+						$('#save').removeClass('disabled');
+					else
+						$('#save').addClass('disabled');
+				}
+
+				$('#clear').click(function(){
+					$('.setting').val('');
+				});
+
+				$('#btn-p1dB').change(function(){
+
+					if($(this).prop('checked'))
+						$('#lbl-p1dB').prop('title', 'Click to remove P1dB from the BTR.');
+					else
+						$('#lbl-p1dB').prop('title', 'Click to add P1dB to the BTR.');
+
+					enableButtons();
+				});
+
+				$('#save').click(function(){
+					var calSetting = {}
+					calSetting.partNumber = /*[[${partNumber}]]*/ 'IPB-CB00530-RMS11';
+					calSetting.frequencies = toArray($('input[name=frequency]'));
+					calSetting.temperatures = toArray($('input[name=temperature]'));
+					calSetting.detectors = toArray($('input[name=detector]'));
+					calSetting.hasP1db = $('#btn-p1dB').prop('checked');
+
+					var json = JSON.stringify(calSetting);
+
+					$.ajax({
+						url: '/calibration/rest/btr/setting',
+						type: 'POST',
+						contentType: "application/json",
+						data: json,
+				        dataType: 'json'
+				    })
+					.fail(function(error) {
+						if(error.statusText!='abort'){
+						var responseText = error.responseText;
+							if(responseText)
+								alert(error.responseText);
+							else{
+								if(error.status==200)
+									$('#btr')[0].click();
+								else
+									alert("Server error. Status = " + error.status);
+							}
+						}
+					});
+				});
+
+				// Setting from DB
+				/*[# th:if="${settings}!=null"]*/
+
+					var fr = $('input[name=frequency]');
+					var settings =  /*[[${settings}]]*/ {};
+
+					if(settings.frequencies.length || settings.temperatures.length || settings.detectors.length)
+						$('#clear').removeClass('disabled');
+
+					settings.frequencies.forEach(function(v, i){
+						fr[i].value = v;
+					});
+
+					var tm = $('input[name=temperature]');
+					settings.temperatures.forEach(function(v, i){
+						tm[i].value = v;
+					});
+
+					var tm = $('input[name=detector]');
+					settings.detectors.forEach(function(v, i){
+						tm[i].value = v;
+					});
+
+					if(settings.hasP1db)
+						$('#btn-p1dB').prop('checked', true).trigger("change");
+
+					[].slice.call(document.querySelectorAll('[data-bs-toggle="tooltip"]')).map(function (tooltipTriggerEl) { return new bootstrap.Tooltip(tooltipTriggerEl)});
+
+				/*[/]*/
+			/*]]>*/
+			//# sourceURL=btr-setting.js
+  		</script>
+	</th:block>
+	</th:block>
+	</div>
+
+    <script type="application/javascript" src="https://ajax.googleapis.com/ajax/libs/jquery/3.5.1/jquery.min.js"></script>
+    <script type="application/javascript" src="https://cdnjs.cloudflare.com/ajax/libs/popper.js/2.10.2/umd/popper.min.js"></script>
+    <script type="application/javascript" src="https://stackpath.bootstrapcdn.com/bootstrap/4.4.1/js/bootstrap.min.js"></script>
+	<script type="application/javascript" src="https://cdn.jsdelivr.net/npm/js-cookie@2/src/js.cookie.min.js"></script>
+	<script type="application/javascript" src="../../static/js/irt.js" th:src="@{/js/irt.js}"></script>
+</body>
+</html>

@@ -20,7 +20,7 @@ import com.mysql.cj.exceptions.WrongArgumentException;
 import irt.components.beans.jpa.old.OldComponent;
 import irt.components.beans.jpa.old.PnRevision;
 import irt.components.beans.jpa.repository.OldComponentRepository;
-import irt.components.beans.jpa.repository.PnRevisionRepository;
+import irt.components.beans.jpa.repository.pn.PnRevisionRepository;
 import irt.components.beans.jpa.repository.pn.PnTypeRepository;
 
 //import org.apache.logging.log4j.LogManager;

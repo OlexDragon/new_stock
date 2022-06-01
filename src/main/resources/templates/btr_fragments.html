@@ -1,0 +1,22 @@
+<!DOCTYPE html>
+<html 	xmlns="http://www.w3.org/1999/xhtml"
+		xmlns:th="https://www.thymeleaf.org"
+      	xmlns:sec="https://www.thymeleaf.org/thymeleaf-extras-springsecurity5"
+      	lang="en">
+
+<th:block th:fragment="comments(comments)">
+	<div class="row">
+		<div class="col-1"> # </div>
+		<div class="col"><strong>	  Comments </strong></div>
+		<div class="col-1"><strong>	  User </strong></div>
+		<div class="col-2"><strong>Date </strong></div>
+	</div>
+	<div class="row hover-light" th:id="${ comment }!=null ? ${ comment.id } : null" th:each="comment, commentStatus : ${comments }" th:with="user = ${ comment.user }" th:classappend="${commentStatus.odd ? 'odd' : ''}">
+		<div class="col-1" th:text="${ commentStatus.count }">	#</div>
+		<div class="col comment pre-line" th:text="${ comment.comment }">Comment </div>
+		<div class="col-1 username" th:text="${ user.username }" th:title="${ user.firstname + ' ' + user.lastname}">User name </div>
+		<div class="col-2 date" th:text="${#dates.format( comment.date, 'dd MMM yyyy hh:mm' )}">Date </div>
+	</div>
+</th:block>
+
+</html>

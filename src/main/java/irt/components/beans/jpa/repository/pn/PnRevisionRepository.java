@@ -1,4 +1,4 @@
-package irt.components.beans.jpa.repository;
+package irt.components.beans.jpa.repository.pn;
 
 import org.springframework.data.repository.CrudRepository;
 

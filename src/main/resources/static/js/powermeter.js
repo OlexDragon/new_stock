@@ -10,7 +10,9 @@ $('#outputPowermeter').change(function(){
 	Cookies.set("outputPowermeter", text, { expires: 999 })
 });
 
-$('#ouputGet').click(function(){
+$('#ouputGet').click(()=>ouputGet(action));
+
+function ouputGet(action){
 
 	var outputComPorts = $('#outputComPorts').val();
 	if(!outputComPorts) return;
@@ -52,25 +54,7 @@ $('#ouputGet').click(function(){
 		data: json,
         dataType: 'json'
     })
-	.done(function(data){
-
-		$.each(data.commands, function(index, command){
-
-			if(!command.getAnswer || !command.answer)
-				return;
-
-			var answer = $.trim(String.fromCharCode.apply(String, command.answer));
-
-			var s = answer.split(/\s+/);
-			var a;
-			if(s.length>1)
-				a = parseFloat(s[1]);
-			else
-				a = parseFloat(answer);
-
-			$outputValue.text(a);
-		});
-	})
+	.done(data=>action(data))
 	.fail(function(error) {
 		if(error.statusText!='abort'){
 		var responseText = error.responseText;
@@ -80,4 +64,25 @@ $('#ouputGet').click(function(){
 				alert("Server error. Status = " + error.status)
 		}
 	});
-});
+}
+
+function action(data){
+
+	$.each(data.commands, function(index, command){
+
+		if(!command.getAnswer || !command.answer)
+			return;
+
+		var answer = $.trim(String.fromCharCode.apply(String, command.answer));
+
+		var s = answer.split(/\s+/);
+		var a;
+		if(s.length>1)
+			a = parseFloat(s[1]);
+
+		else
+			a = parseFloat(answer);
+
+		$('#outputValue').text(a);
+	});
+}

@@ -36,16 +36,18 @@ import irt.components.beans.irt.Dacs;
 import irt.components.beans.irt.Info;
 import irt.components.beans.irt.IrtFrequency;
 import irt.components.beans.irt.IrtValue;
+import irt.components.beans.irt.MonitorInfo;
 import irt.components.beans.irt.calibration.CalibrationTable;
 import irt.components.beans.irt.calibration.NameIndexPair;
 import irt.components.beans.irt.calibration.PowerDetectorSource;
 import irt.components.beans.irt.calibration.ProfileTableDetails;
-import irt.components.beans.jpa.CalibrationGainSettings;
-import irt.components.beans.jpa.CalibrationOutputPowerSettings;
-import irt.components.beans.jpa.CalibrationPowerOffsetSettings;
-import irt.components.beans.jpa.repository.CalibrationGainSettingRepository;
-import irt.components.beans.jpa.repository.CalibrationOutputPowerSettingRepository;
-import irt.components.beans.jpa.repository.CalibrationPowerOffsetSettingRepository;
+import irt.components.beans.jpa.calibration.CalibrationGainSettings;
+import irt.components.beans.jpa.calibration.CalibrationOutputPowerSettings;
+import irt.components.beans.jpa.calibration.CalibrationPowerOffsetSettings;
+import irt.components.beans.jpa.repository.calibration.CalibrationBtrSettingRepository;
+import irt.components.beans.jpa.repository.calibration.CalibrationGainSettingRepository;
+import irt.components.beans.jpa.repository.calibration.CalibrationOutputPowerSettingRepository;
+import irt.components.beans.jpa.repository.calibration.CalibrationPowerOffsetSettingRepository;
 import irt.components.workers.HttpRequest;
 import irt.components.workers.ProfileWorker;
 import irt.components.workers.ThreadRunner;
@@ -58,10 +60,11 @@ public class CalibrationController {
 	@Value("${irt.profile.path}")
 	private String profileFolder;
 
+	@Autowired private HttpSerialPortServersCollector httpSerialPortServersCollector;
 	@Autowired private CalibrationOutputPowerSettingRepository calibrationOutputPowerSettingRepository;
 	@Autowired private CalibrationPowerOffsetSettingRepository calibrationPowerOffsetSettingRepository;
-	@Autowired private HttpSerialPortServersCollector httpSerialPortServersCollector;
-	@Autowired CalibrationGainSettingRepository calibrationGainSettingRepository;
+	@Autowired private CalibrationGainSettingRepository calibrationGainSettingRepository;
+	@Autowired private CalibrationBtrSettingRepository calibrationBtrSettingRepository;
 
 	@GetMapping
     String calibration(@RequestParam(required = false) String sn, Model model) {
@@ -105,7 +108,7 @@ public class CalibrationController {
     					model.addAttribute("settings", settings);
 
     					final CalibrationInfo calibrationInfo = httpUpdate.get(10, TimeUnit.SECONDS);
-    					final IrtValue power = Optional.ofNullable(calibrationInfo.getBiasBoard()).map(BiasBoard::getPower).orElseGet(()->new IrtValue());
+    					final IrtValue power = Optional.ofNullable(calibrationInfo).map(CalibrationInfo::getBiasBoard).map(BiasBoard::getPower).orElseGet(()->new IrtValue());
 						model.addAttribute("power", power);
 
     				} catch (MalformedURLException | InterruptedException | ExecutionException | TimeoutException e) {
@@ -202,7 +205,7 @@ public class CalibrationController {
     					model.addAttribute("settings", settings);
 
     					final CalibrationInfo calibrationInfo = httpUpdate.get(10, TimeUnit.SECONDS);
-    					final IrtValue power = Optional.ofNullable(calibrationInfo.getBiasBoard()).map(BiasBoard::getPower).orElseGet(()->new IrtValue());
+    					final IrtValue power = Optional.ofNullable(calibrationInfo).map(CalibrationInfo::getBiasBoard).map(BiasBoard::getPower).orElseGet(()->new IrtValue());
 						model.addAttribute("power", power);
 
 						ftProfile.get(10, TimeUnit.SECONDS);
@@ -235,32 +238,9 @@ public class CalibrationController {
 
 					model.addAttribute("serialNumber", s);
 
-					FutureTask<Void> ftProfile = new FutureTask<>(()->null);
+					FutureTask<Void> ftProfile = gainFromProfile(sn, model);
 
-    				ThreadRunner.runThread(
-							()->{
-
-			    				// Get Power table from the profile
-						    	ProfileWorker profileWorker = new ProfileWorker(profileFolder, sn);
-						    	try {
-									if(!profileWorker.exists()) {
-				    					model.addAttribute("message", "The profile could not be found.");
-										ThreadRunner.runThread(ftProfile);
-										return;
-									}
-
-									profileWorker.getGain().ifPresent(gain->model.addAttribute("gain", gain));
-
-							    	ThreadRunner.runThread(ftProfile);
-
-						    	} catch (Exception e) {
-									logger.catching(e);
-			    					model.addAttribute("message", e.getLocalizedMessage());
-									ThreadRunner.runThread(ftProfile);
-									return;
-								}
-							});
-    				try {
+					try {
 
     					final FutureTask<CalibrationInfo> httpUpdate = getHttpUpdate(s, CalibrationInfo.class, new BasicNameValuePair("exec", "calib_ro_info"));
     					final FutureTask<Dacs> httpDeviceDebug = getHttpDeviceDebug(s, Dacs.class,
@@ -288,6 +268,79 @@ public class CalibrationController {
 
     	return "calibration/gain :: modal";
     }
+
+	@GetMapping("btr")
+    String btrGain(@RequestParam String sn, @RequestParam String pn, @RequestParam(required = false) Boolean setting, Model model) {
+    	logger.traceEntry("sn: {}; pn: {}", sn, pn);
+
+		model.addAttribute("partNumber", pn);
+
+		// Get settings from DB
+		calibrationBtrSettingRepository.findById(pn).ifPresent(
+				btrSetting->{
+
+					logger.debug(btrSetting);
+					model.addAttribute("settings", btrSetting);
+
+					final Optional<Boolean> oSetting = Optional.ofNullable(setting).filter(s->s);
+					oSetting.ifPresent(s->model.addAttribute("showSetting", s));
+
+					if(oSetting.isPresent())
+						return;
+
+					Optional.ofNullable(sn)
+			    	.filter(s->!s.isEmpty())
+			    	.ifPresent(
+			    			s->{
+
+								model.addAttribute("serialNumber", s);
+
+								FutureTask<Void> ftProfile = gainFromProfile(sn, model);
+
+								try {
+
+									final MonitorInfo calibrationInfo = getHttpUpdate(s, MonitorInfo.class, new BasicNameValuePair("exec", "mon_info")).get(5, TimeUnit.SECONDS);
+									model.addAttribute("monitor", calibrationInfo.getData());
+			 
+									ftProfile.get(10, TimeUnit.SECONDS);
+
+			    				} catch (MalformedURLException | InterruptedException | ExecutionException | TimeoutException e) {
+									logger.catching(e);
+								}
+			    			});
+				});
+
+    	return "calibration/btr :: modal";
+    }
+
+	public FutureTask<Void> gainFromProfile(String sn, Model model) {
+		FutureTask<Void> ftProfile = new FutureTask<>(()->null);
+
+		ThreadRunner.runThread(
+				()->{
+
+					// Get Power table from the profile
+			    	ProfileWorker profileWorker = new ProfileWorker(profileFolder, sn);
+			    	try {
+						if(!profileWorker.exists()) {
+							model.addAttribute("message", "The profile could not be found.");
+							ThreadRunner.runThread(ftProfile);
+							return;
+						}
+
+						profileWorker.getGain().ifPresent(gain->model.addAttribute("gain", gain));
+
+				    	ThreadRunner.runThread(ftProfile);
+
+			    	} catch (Exception e) {
+						logger.catching(e);
+						model.addAttribute("message", e.getLocalizedMessage());
+						ThreadRunner.runThread(ftProfile);
+						return;
+					}
+				});
+		return ftProfile;
+	}
 
 	public static <T> FutureTask<T> getHttpUpdate(String ipAddress, Class<T> toClass, BasicNameValuePair...basicNameValuePairs) throws MalformedURLException {
 

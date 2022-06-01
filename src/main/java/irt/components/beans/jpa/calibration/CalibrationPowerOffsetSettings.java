@@ -1,4 +1,4 @@
-package irt.components.beans.jpa;
+package irt.components.beans.jpa.calibration;
 
 import java.math.BigDecimal;
 

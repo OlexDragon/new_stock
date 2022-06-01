@@ -1,3 +1,6 @@
+
+$('#miRMAs').addClass('active');
+
 // Get RMA filter text from the cookies
 var filterCookie = Cookies.get("rmafilter")
 if(filterCookie){
@@ -9,8 +12,6 @@ var rmaSorting = Cookies.get("rmaSorting")
 if(rmaSorting){
 	$('#' + rmaSorting).prop('checked', true);
 }
-
-$('#miRMAs').addClass('active');
 
 // Input listener
 timer = 0;
@@ -30,9 +31,23 @@ function search($this){
 		$addRMA.addClass('disabled btn-secondary');
 	}
 
-	var val = $.trim($this.val());
-	if(!val)
+	var tmp = $.trim($this.val());
+	if(!tmp)
 		return;
+
+	var val;
+	var id = $this.prop('id');
+
+// Remove extra whitespaces
+	if(id=='rmaDescription')
+		val = tmp.replace(/\s+/g, ' ');
+
+	else
+		val = tmp.replace(/\s+/g, '');
+
+
+	if(val.length!=tmp.length)
+		$this.val(val);
 
 // Save Cookies
 	var attrId = $this.prop('id');
@@ -137,7 +152,8 @@ if(cookie){
 	var bomSearch = JSON.parse(cookie);
 	var $input = $("#" + bomSearch[0]).val(bomSearch[1]);
 	search($input);
-}
+}else
+	search($('#rmaNumber').val('RMA'));
 
 // Filter RMA units by shipping status
 $('#rmaFilter').click(function(){
