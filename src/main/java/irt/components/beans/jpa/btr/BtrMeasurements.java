@@ -3,6 +3,7 @@ package irt.components.beans.jpa.btr;
 import java.util.Date;
 
 import javax.persistence.Column;
+import javax.persistence.Convert;
 import javax.persistence.Entity;
 import javax.persistence.FetchType;
 import javax.persistence.GeneratedValue;
@@ -16,7 +17,9 @@ import javax.persistence.TemporalType;
 
 import com.fasterxml.jackson.annotation.JsonFormat;
 
+import irt.components.beans.irt.calibration.measurement.Measurement;
 import irt.components.beans.jpa.User;
+import irt.components.services.JSonMeasurementConverter;
 import lombok.AllArgsConstructor;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
@@ -32,14 +35,14 @@ public class BtrMeasurements {
 	private Long id;
 
 	private Long	 serialNumberId;
-	private String	 measurement;
+	@Convert(converter = JSonMeasurementConverter.class)
+	private Measurement	 measurement;
 	private Long	 userId;
 
 	@Temporal(TemporalType.TIMESTAMP)
 	@JsonFormat(pattern="dd MMM yyyy hh:mm")
 	@Column(insertable = false, updatable= false)
 	private Date date;
-
 
 	@ManyToOne(fetch = FetchType.EAGER)
 	@JoinColumn(name = "userId", referencedColumnName = "id", insertable = false, updatable = false)

@@ -73,7 +73,7 @@
 			<h5 th:id="heading + ${ index }" class="accordion-header">
 				<button type="button" class="btn accordion-button" data-bs-toggle="collapse" data-bs-target="#rma0" aria-expanded="true" aria-controls="rma0" th:attr="aria-controls ='rma'+${ index }, data-bs-target='#rma'+${ index }" style="width:100%">
           			<div class="row" style="width:100%">
-           				<div class="col-auto bg-shipped" th:classappend="${ rma.shipped ? 'bg-secondary text-white bg-opacity-75' : ''}">
+           				<div class="col-auto rma-status" th:classappend="${rma.status == T(irt.components.beans.jpa.rma.Rma.Status).SHIPPED ? 'bg-secondary text-white bg-opacity-75' : rma.status == T(irt.components.beans.jpa.rma.Rma.Status).READY ? 'bg-info' : ''}">
           					<strong th:text="${ rma.rmaNumber }"> RMA Number </strong>
           				</div>
           				<div class="col-auto">
@@ -88,7 +88,7 @@
           				<div class="col-auto text-secondary">
           					<strong th:text="${rma.user.username}" th:title="${ rma.user.firstname + ' ' + rma.user.lastname}">User Name</strong>
           				</div>
-  						<div class="col-auto" th:unless="${ rma.shipped }" sec:authorize="hasAuthority('ADD_RMA')">
+  						<div class="col-auto" th:unless="${rma.status == T(irt.components.beans.jpa.rma.Rma.Status).SHIPPED}" sec:authorize="hasAuthority('ADD_RMA')">
 <!-- Button to Add RMA unit -->
       						<div class="btn btn-outline-primary add-to-rma" th:data-rma-number="${ rma.rmaNumber }">Add</div>
     					</div>
@@ -112,36 +112,33 @@
 						<div class="col-1 username" th:text="${ user.username }" th:title="${ user.firstname + ' ' + user.lastname}">User name </div>
 						<div class="col-2 date" th:text="${#dates.format( rmaContent.date, 'dd MMM yyyy hh:mm' )}">Date </div>
 					</div>
-					<script th:if="${shipped}" th:inline="javascript">
-					/*<![CDATA[*/
-						var rmaId = /*[[${rmaId}]]*/ 0;
-						var $rma = $('#' + rmaId);
-						var $bg_shipped = $rma.find('.bg-shipped');
-						$bg_shipped.addClass('bg-secondary text-white bg-opacity-75');
-					/*]]>*/
-					//# sourceURL=addBackground.js
-					</script>
 				</th:block>
 				</div>
 			</div>
 		</div>
 <!-- 		 sec:authorize="hasAuthority('ADD_RMA_COMMENT')" -->
-		<script th:inline="javascript" sec:authorize="hasAuthority('ADD_RMA_COMMENT')" th:if="${ rmas != null ? rmas.size() > 0 : false }">
+		<script type="application/javascript" sec:authorize="hasAuthority('ADD_RMA_COMMENT')" th:if="${ rmas != null ? rmas.size() > 0 : false }" th:inline="javascript">
 		/*<![CDATA[*/
 
 			function ondblclick(){
 
 				var $this = $(this);
 				var $serialNumber = $this.find(".serialNumber");
+				var readyToShip = $this.find(".rma-status").hasClass('bg-info');
+				if(readyToShip)
+					$('#readyToShip').addClass('disabled rma-ready');
+				else
+					$('#readyToShip').removeClass('disabled rma-ready');
+
 				if($serialNumber){
-					var id = $this[0].id;
+					var id = $this.prop('id');
 					showModal(id, $serialNumber.text());
 				}
 			}
 			var items = document.getElementsByClassName('accordion-item');
 			for(const item of items){
 
-				var $rmsNumber = $(item).find('.bg-secondary');
+				var $rmsNumber = $(item).find('.rma-status');
 				if(!$rmsNumber.hasClass('bg-secondary'))
 					item.ondblclick = ondblclick;	//	 for not shipped RMAs
 			}
@@ -162,7 +159,7 @@
     		<div class="modal-content">
 <!-- Modal Header -->
       			<div class="modal-header">
-      				<div class="btn-group" role="group" aria-label="Basic checkbox toggle button group">
+      				<div sec:authorize="hasAuthority('SHIPPING')" class="btn-group" role="group" aria-label="Basic checkbox toggle button group">
       					<input id="shipping" type="checkbox" class="btn-check" title="Shippong">
       					<label class="btn btn-outline-primary" for="shipping">Ship</label>
       				</div>
@@ -174,6 +171,7 @@
         			<label for="rmaTextarea"> Leave a comment here</label>
       			</div>
       			<div class="modal-footer">
+	        		<button id="readyToShip" type="button" class="btn btn-outline-info">Ready to Ship</button>
 	        		<button id="saveComment" type="button" class="btn btn-outline-primary">Save Comment</button>
 	        		<button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Close</button>
 	    		</div>

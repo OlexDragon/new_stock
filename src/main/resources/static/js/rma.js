@@ -85,6 +85,30 @@ function search($this){
 				alert(error.responseText);
 		});
 	});
+
+// Draw attention to the filter button. ('All', 'WOR_king', 'SHI_pped')
+	var $rmaFilter = $('#rmaFilter').removeClass('btn-outline-primary');
+
+	(function pointToFilter(times){
+		setTimeout(function(){
+
+			if(!times){
+				$rmaFilter.removeClass('btn-outline-danger btn-danger').addClass('btn-outline-primary');
+				return;
+			}
+
+			if($rmaFilter.hasClass('btn-danger')){
+				$rmaFilter.addClass('btn-outline-danger');
+				$rmaFilter.removeClass('btn-danger');
+			}else{
+				$rmaFilter.addClass('btn-danger');
+				$rmaFilter.removeClass('btn-outline-danger');
+			}
+
+			pointToFilter(--times);
+
+		}, 500);
+	})(6);
 }
 
 function showModal(rmaId, serialNumber){
@@ -132,7 +156,17 @@ $('#saveComment').click(function(e){
 //	$('#modal').modal('hide');
 	 location.reload();
 });
+$('#rmaTextarea').on('input', function(){
 
+	let $readyToShip = $('#readyToShip');
+	if($readyToShip.hasClass('rma-ready'))
+	return;
+
+	if($(this).val())
+		$readyToShip.addClass('disabled')
+	else
+		$readyToShip.removeClass('disabled')
+});
 $('#accordion').on('shown.bs.collapse', function () {
 
 	var $accordionItem = $(this).children().filter(function(index,a){return !$(this).find('button').hasClass('collapsed');});
@@ -156,7 +190,7 @@ if(cookie){
 	search($('#rmaNumber').val('RMA'));
 
 // Filter RMA units by shipping status
-$('#rmaFilter').click(function(){
+$('#rmaFilter').click(function(e){
 
 	var $this = $(this);
 	var text = $this.text();
@@ -164,18 +198,43 @@ $('#rmaFilter').click(function(){
 	switch(text){
 
 	case 'ALL':
-		text = 'WOR';
-		$this.prop('title', 'Press to show SHIPPED units.')
+		if(e.ctrlKey){
+			text = 'SHI';
+			$this.prop('title', 'Shipped\nPress to show All units.')
+		}else{
+			text = 'WOR';
+			$this.prop('title', 'In Work\nPress to show READY to ship units.')
+		}
 		break;
 
 	case 'WOR':
-		text = 'SHI';
-		$this.prop('title', 'Press to show All units.')
+		if(e.ctrlKey){
+			text = 'ALL';
+			$this.prop('title', 'Press to show RMA units in work.')
+		}else{
+			text = 'REA';
+			$this.prop('title', 'Ready to ship\nPress to show SHIPPED units.')
+		}
+		break;
+
+	case 'REA':
+		if(e.ctrlKey){
+			text = 'WOR';
+			$this.prop('title', 'In Work\nPress to show READY to ship units.')
+		}else{
+			text = 'SHI';
+			$this.prop('title', 'Shipped\nPress to show All units.')
+		}
 		break;
 
 	default:
-		text = 'ALL';
-		$this.prop('title', 'Press to show RMA units in work.')
+		if(e.ctrlKey){
+			text = 'REA';
+			$this.prop('title', 'Ready to ship\nPress to show SHIPPED units.')
+		}else{
+			text = 'ALL';
+			$this.prop('title', 'Press to show RMA units in work.')
+	}
 	}
 
 	Cookies.set("rmafilter", text, { expires: 999 });
@@ -185,9 +244,13 @@ $('#rmaFilter').click(function(){
 	if(cookie){
 		var bomSearch = JSON.parse(cookie);
 		var $input = $("#" + bomSearch[0]);
-		search($input);
 	}
+
+    clearTimeout(timer);
+    timer = setTimeout(search, 500, $input);
+
 });
+var timer;
 
 $('#shipping').change(function(){
 
@@ -230,4 +293,17 @@ $('input[name=sort_by]').change(function(){
 		var $input = $("#" + bomSearch[0]);
 		search($input);
 	}
+});
+
+$('#readyToShip').click(function(e){
+	e.preventDefault();
+
+	let rmaId = $('#saveComment').val();
+
+	$.post('/rma/rest/ready_to_ship', { rmaId: rmaId})
+	.fail(function(error) {
+		if(error.statusText!='abort')
+			alert(error.responseText);
+	});
+	location.reload();
 });

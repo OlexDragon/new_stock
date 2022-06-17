@@ -41,9 +41,11 @@ import irt.components.beans.irt.calibration.CalibrationTable;
 import irt.components.beans.irt.calibration.NameIndexPair;
 import irt.components.beans.irt.calibration.PowerDetectorSource;
 import irt.components.beans.irt.calibration.ProfileTableDetails;
+import irt.components.beans.jpa.btr.BtrSerialNumber;
 import irt.components.beans.jpa.calibration.CalibrationGainSettings;
 import irt.components.beans.jpa.calibration.CalibrationOutputPowerSettings;
 import irt.components.beans.jpa.calibration.CalibrationPowerOffsetSettings;
+import irt.components.beans.jpa.repository.btr.BtrSerialNumberRepository;
 import irt.components.beans.jpa.repository.calibration.CalibrationBtrSettingRepository;
 import irt.components.beans.jpa.repository.calibration.CalibrationGainSettingRepository;
 import irt.components.beans.jpa.repository.calibration.CalibrationOutputPowerSettingRepository;
@@ -60,11 +62,12 @@ public class CalibrationController {
 	@Value("${irt.profile.path}")
 	private String profileFolder;
 
-	@Autowired private HttpSerialPortServersCollector httpSerialPortServersCollector;
-	@Autowired private CalibrationOutputPowerSettingRepository calibrationOutputPowerSettingRepository;
-	@Autowired private CalibrationPowerOffsetSettingRepository calibrationPowerOffsetSettingRepository;
-	@Autowired private CalibrationGainSettingRepository calibrationGainSettingRepository;
-	@Autowired private CalibrationBtrSettingRepository calibrationBtrSettingRepository;
+	@Autowired private HttpSerialPortServersCollector			 httpSerialPortServersCollector;
+	@Autowired private CalibrationOutputPowerSettingRepository	 calibrationOutputPowerSettingRepository;
+	@Autowired private CalibrationPowerOffsetSettingRepository	 calibrationPowerOffsetSettingRepository;
+	@Autowired private CalibrationGainSettingRepository			 calibrationGainSettingRepository;
+	@Autowired private CalibrationBtrSettingRepository			 calibrationBtrSettingRepository;
+	@Autowired private BtrSerialNumberRepository				 serialNumberRepository;
 
 	@GetMapping
     String calibration(@RequestParam(required = false) String sn, Model model) {
@@ -270,10 +273,18 @@ public class CalibrationController {
     }
 
 	@GetMapping("btr")
-    String btrGain(@RequestParam String sn, @RequestParam String pn, @RequestParam(required = false) Boolean setting, Model model) {
+    String measurement(@RequestParam String sn, @RequestParam String pn, @RequestParam(required = false) Boolean setting, Model model) {
     	logger.traceEntry("sn: {}; pn: {}", sn, pn);
 
-		model.addAttribute("partNumber", pn);
+		model.addAttribute("serialNumber", sn);
+
+		final Optional<BtrSerialNumber> oSerialNumber = serialNumberRepository.findBySerialNumber(sn);
+		//The DB serial number does not exist. Redirect to adding a serial number to the database.
+    	if(!oSerialNumber.isPresent()) 
+        	return "calibration/btr_table :: modal";
+ 
+    	model.addAttribute("dbSerialNumber", oSerialNumber.get());
+    	model.addAttribute("partNumber", pn);
 
 		// Get settings from DB
 		calibrationBtrSettingRepository.findById(pn).ifPresent(
@@ -293,15 +304,14 @@ public class CalibrationController {
 			    	.ifPresent(
 			    			s->{
 
-								model.addAttribute("serialNumber", s);
-
 								FutureTask<Void> ftProfile = gainFromProfile(sn, model);
 
 								try {
 
-									final MonitorInfo calibrationInfo = getHttpUpdate(s, MonitorInfo.class, new BasicNameValuePair("exec", "mon_info")).get(5, TimeUnit.SECONDS);
-									model.addAttribute("monitor", calibrationInfo.getData());
-			 
+									Optional.ofNullable(getHttpUpdate(s, MonitorInfo.class, new BasicNameValuePair("exec", "mon_info")).get(5, TimeUnit.SECONDS))
+									.map(MonitorInfo::getData)
+									.ifPresent(data->model.addAttribute("monitor", data));
+
 									ftProfile.get(10, TimeUnit.SECONDS);
 
 			    				} catch (MalformedURLException | InterruptedException | ExecutionException | TimeoutException e) {
@@ -310,7 +320,7 @@ public class CalibrationController {
 			    			});
 				});
 
-    	return "calibration/btr :: modal";
+    	return "calibration/btr_table :: modal";
     }
 
 	public FutureTask<Void> gainFromProfile(String sn, Model model) {

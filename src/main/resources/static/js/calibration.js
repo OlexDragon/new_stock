@@ -94,7 +94,7 @@ $('.calibrate').click(function(e){
 	var id = e.target.id;
 	var $modal = $('#modal');
 
-// Load for first time or when changed the serial number 
+// Load for first time or when the serial number is changed 
 	if(typeof unitSerialNumber==='undefined' || !$('#serialNumber').text().match('^' + unitSerialNumber) || calibrateId!=id){
 		calibrateId = id;
 		$modal.load(this.href);
@@ -269,12 +269,12 @@ $('#dropdownCalibrateButton').on('show.bs.dropdown', function(){
 
 		case 'OFF':
 			$calMode.addClass('text-primary').text('Calibration Mode: ' + status);
-			$('#gain').addClass('disabled list-group-item-light');
+			$('#gain').addClass('disabled list-group-item-light').text('Gain - Cal.Mode must be ON');
 			break;
 
 		case 'ON':
 			$calMode.addClass('text-success').text('Calibration Mode: ' + status);
-			$('#gain').removeClass('disabled list-group-item-light');
+			$('#gain').removeClass('disabled list-group-item-light').text('Gain');
 			break;
 
 		default:

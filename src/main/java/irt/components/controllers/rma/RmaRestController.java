@@ -36,7 +36,7 @@ public class RmaRestController {
 //		logger.error(serialNumber);
 
     	final ProfileWorker profileWorker = new ProfileWorker(profileFolder, serialNumber);
-		final Optional<Rma> oRma = rmaRepository.findBySerialNumberAndShipped(serialNumber, false);
+		final Optional<Rma> oRma = rmaRepository.findBySerialNumberAndStatusNot(serialNumber, Rma.Status.SHIPPED);
 
 		return profileWorker.exists() && !oRma.isPresent();
 	}
@@ -51,7 +51,7 @@ public class RmaRestController {
 		if(!exists)
 			return "The Profile with sn:'" + serialNumber + "' was not found.";
 
-		final Optional<Rma> oRma = rmaRepository.findBySerialNumberAndShipped(serialNumber, false);
+		final Optional<Rma> oRma = rmaRepository.findBySerialNumberAndStatusNot(serialNumber, Rma.Status.SHIPPED);
 //		logger.error(oRma);
 		if(oRma.isPresent())
 			return "The Unit with Serial Number '" + serialNumber + "' exists in the production.";
@@ -76,5 +76,15 @@ public class RmaRestController {
 						})
 
 				.orElse("Profile scan error.");
+	}
+
+	@PostMapping("ready_to_ship")
+	public void readyToShip(@RequestParam Long rmaId){
+
+		rmaRepository.findById(rmaId)
+		.ifPresent(rma->{
+			rma.setStatus(Rma.Status.READY);
+			rmaRepository.save(rma);
+		});
 	}
 }

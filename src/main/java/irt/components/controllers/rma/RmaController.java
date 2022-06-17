@@ -8,6 +8,8 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.Optional;
 
+import org.apache.logging.log4j.LogManager;
+import org.apache.logging.log4j.Logger;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.data.domain.PageRequest;
@@ -28,8 +30,6 @@ import irt.components.beans.jpa.rma.Rma;
 import irt.components.beans.jpa.rma.RmaComment;
 import irt.components.services.UserPrincipal;
 import irt.components.workers.ProfileWorker;
-import org.apache.logging.log4j.LogManager;
-import org.apache.logging.log4j.Logger;
 
 @Controller
 @RequestMapping("rma")
@@ -69,17 +69,17 @@ public class RmaController {
 		switch(id) {
 
 		case "rmaNumber":
-			if(rmaFilter.shipped==null)
+			if(rmaFilter.status==null)
 				rmas = rmaRepository.findByRmaNumberContaining(value, PageRequest.of(0, SIZE, sort));
 			else
-				rmas = rmaRepository.findByRmaNumberContainingAndShipped(value, rmaFilter.shipped, PageRequest.of(0, SIZE, sort));
+				rmas = rmaRepository.findByRmaNumberContainingAndStatus(value, rmaFilter.status, PageRequest.of(0, SIZE, sort));
 			break;
 
 		case "rmaSerialNumber":
-			if(rmaFilter.shipped==null)
+			if(rmaFilter.status==null)
 				rmas = rmaRepository.findBySerialNumberContaining(value, PageRequest.of(0, SIZE, sort));
 			else
-				rmas = rmaRepository.findBySerialNumberContainingAndShipped(value, rmaFilter.shipped, PageRequest.of(0, SIZE, sort));
+				rmas = rmaRepository.findBySerialNumberContainingAndStatus(value, rmaFilter.status, PageRequest.of(0, SIZE, sort));
 			break;
 
 		case "rmaDescription":
@@ -100,7 +100,7 @@ public class RmaController {
 		if(!(principal instanceof UsernamePasswordAuthenticationToken) || !profileWorker.exists())
 			return null;
 
-		final Optional<Rma> oRma = rmaRepository.findBySerialNumberAndShipped(serialNumber, false);
+		final Optional<Rma> oRma = rmaRepository.findBySerialNumberAndStatusNot(serialNumber, Rma.Status.SHIPPED);
 //		logger.error(oRma);
 		if(oRma.isPresent())
 			return null;
@@ -153,13 +153,18 @@ public class RmaController {
 		List<RmaComment> comments = rmaCommentsRepository.findByRmaId(rmaId);
 		model.addAttribute("comments", comments);
 
-		Optional.of(shipped).filter(sh->sh).flatMap(sh->rmaRepository.findById(rmaId))
+		Optional.of(shipped).filter(s->s)
 		.ifPresent(
-				rma->{
-					rma.setShipped(true);
-					rmaRepository.save(rma);
-					model.addAttribute("shipped", true);
-					model.addAttribute("rmaId", rmaId);
+				s->{
+					rmaRepository.findById(rmaId)
+					.ifPresent(
+							rma->{
+
+								model.addAttribute("rmaId", rmaId);
+								rma.setStatus(Rma.Status.SHIPPED);
+								model.addAttribute("status", Rma.Status.SHIPPED);
+								rmaRepository.save(rma);
+							});
 				});
 
 		return "rma :: rmaBody";
@@ -168,6 +173,8 @@ public class RmaController {
 	@PostMapping(path = "comments")
 	public String getComments(@RequestParam Long rmaId, Model model) throws IOException {
 //		logger.error("rmaId: {} ", rmaId );
+
+		rmaRepository.findById(rmaId).ifPresent(rma->model.addAttribute("status", rma.getStatus()));
 
 		final List<RmaComment> comments = rmaCommentsRepository.findByRmaId(rmaId);
 		model.addAttribute("comments", comments);
@@ -178,12 +185,13 @@ public class RmaController {
 
 	public enum RmaFilter{
 		ALL(null),	// Show all RMAs
-		SHI(true),	// Show shipped RMAs
-		WOR(false);	// Show RMAs in work
+		SHI(Rma.Status.SHIPPED),	// Show shipped RMAs
+		REA(Rma.Status.READY),		// Show RMAs ready to ship
+		WOR(Rma.Status.IN_WORK);	// Show RMAs in work
 
-		private Boolean shipped;
-		RmaFilter(Boolean shipped){
-			this.shipped = shipped;
+		private Rma.Status status;
+		RmaFilter(Rma.Status status){
+			this.status = status;
 		}
 	}
 }

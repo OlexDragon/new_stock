@@ -2,7 +2,6 @@ package irt.components.controllers.btr;
 
 import java.io.IOException;
 import java.security.Principal;
-import java.util.ArrayList;
 import java.util.Collections;
 import java.util.HashSet;
 import java.util.List;
@@ -31,8 +30,8 @@ import irt.components.beans.jpa.repository.btr.BtrWorkOrderRepository;
 import irt.components.workers.ProfileWorker;
 
 @Controller
-@RequestMapping("btr")
-public class BtrController {
+@RequestMapping("/wo")
+public class WorkOrderController {
 	private final static Logger logger = LogManager.getLogger();
 
 	@Value("${irt.profile.path}")
@@ -42,8 +41,9 @@ public class BtrController {
 	@Autowired private BtrSerialNumberRepository serialNumberRepository;
 
     @GetMapping
-    String btrs() {
-       return "btr";
+    String wos(@RequestParam(value = "sn", required = false) String serialnumber, Model model) {
+    	model.addAttribute("serialNumber", serialnumber);
+    	return "wo";
     }
 
     @PostMapping("search")
@@ -67,7 +67,7 @@ public class BtrController {
 
 		model.addAttribute("workOrders", workOrders);
 
-    	return "btr :: btrCards";
+    	return "wo :: btrCards";
     }
 
     @PostMapping("modal_add")
@@ -76,7 +76,7 @@ public class BtrController {
 
     	serialNumberRepository.findBySerialNumber(sn).orElseGet(()->{model.addAttribute("serialNumber", sn); return null;});
 
-    	return "btr :: modalSN";
+    	return "wo :: modalSN";
     }
 
     @PostMapping("comment")
@@ -84,7 +84,7 @@ public class BtrController {
 
     	serialNumberRepository.findById(snId).ifPresent(sn->model.addAttribute("serialNumber", sn));
 
-    	return "btr :: modalComment";
+    	return "wo :: modalComment";
     }
 
     @PostMapping("add_sn")
@@ -92,7 +92,7 @@ public class BtrController {
     String addSerialNumber(@RequestParam String sn, @RequestParam String wo, Principal principal, Model model) throws IOException {
 
     	if(!(principal instanceof UsernamePasswordAuthenticationToken))
-			return "btr :: btrCards";
+			return "wo :: btrCards";
 
 		final BtrSerialNumber btrSerialNumber = serialNumberRepository.findBySerialNumber(sn)
 
@@ -130,6 +130,6 @@ public class BtrController {
 
 		Optional.ofNullable(btrSerialNumber).ifPresent(s->model.addAttribute("workOrders", Collections.singletonList(s.getWorkOrder())));
 
-		return "btr :: btrCards";
+		return "wo :: btrCards";
     }
 }

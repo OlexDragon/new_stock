@@ -110,6 +110,8 @@
 								if(err)
 									return;
 
+								$('#modal').hide();
+
 								err = error;
 								if(error.statusText!='abort'){
 									alert(error.responseText);

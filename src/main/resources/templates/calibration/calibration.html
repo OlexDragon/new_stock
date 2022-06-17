@@ -55,10 +55,18 @@
 		<div class="nav-item dropstart col-auto">
   			<button id="dropdownCalibrateButton" class="btn dropdown-toggle" type="button" data-bs-toggle="dropdown" aria-haspopup="true" aria-expanded="false">Calibrate</button>
   			<div id="calMenu" class="dropdown-menu" aria-labelledby="dropdownCalibrateButton">
-    			<a id="outputPower" class="dropdown-item calibrate" th:classappend="${info==null ? 'disabled list-group-item-light' : ''}" th:href="@{${info==null} ? '#' : '/calibration/output_power?sn=' + ${info.serialNumber} + '&pn=' + ${info.partNumber}}">Output Power</a>
-    			<a id="powerOffset" class="dropdown-item calibrate" th:classappend="${info==null ? 'disabled list-group-item-light' : ''}" th:href="@{${info==null} ? '#' : '/calibration/power_offset?sn=' + ${info.serialNumber} + '&pn=' + ${info.partNumber} + '&deviceId=' + ${#strings.substring(info.deviceId, 1, info.deviceId.length()-1)}}">Power Offset</a>
+<!-- Output Power -->
+    			<a class="dropdown-item calibrate" th:classappend="${info==null ? 'disabled list-group-item-light' : ''}" th:href="@{${info==null} ? '#' : '/calibration/output_power?sn=' + ${info.serialNumber} + '&pn=' + ${info.partNumber}}">Output Power</a>
+<!-- Power Offset -->
+    			<a class="dropdown-item calibrate" th:classappend="${info==null ? 'disabled list-group-item-light' : ''}" th:href="@{${info==null} ? '#' : '/calibration/power_offset?sn=' + ${info.serialNumber} + '&pn=' + ${info.partNumber} + '&deviceId=' + ${#strings.substring(info.deviceId, 1, info.deviceId.length()-1)}}">Power Offset</a>
+<!-- Gain -->
     			<a id="gain" class="dropdown-item calibrate" th:classappend="${info==null ? 'disabled list-group-item-light' : ''}" th:href="@{${info==null} ? '#' : '/calibration/gain?sn=' + ${info.serialNumber} + '&pn=' + ${info.partNumber}}">Gain</a>
-    			<a id="btr" class="dropdown-item calibrate" th:href="@{${info==null} ? '#' : '/calibration/btr?sn=' + ${info.serialNumber} + '&pn=' + ${info.partNumber}}">BTR</a>
+<!-- BTR Measurement -->
+    			<a id="btr" 
+    				class="dropdown-item calibrate" 
+    				th:href="@{${info==null} ? '#' : '/calibration/btr?sn=' + ${info.serialNumber} + '&pn=' + ${info.partNumber}}" 
+    				th:classappend="${#authentication.principal=='anonymousUser' or info==null} ? 'disabled' : null" 
+    				th:text="${#authentication.principal=='anonymousUser'} ? 'Measurement - Login required' : 'Measurement'">Measurement</a>
     			<div><hr class="dropdown-divider"></div>
     			<a class="dropdown-item" id="calMode" th:classappend="${info==null ? 'disabled list-group-item-light' : ''}" href="#">Calibration Mode</a>
     			<a class="dropdown-item" id="upload" th:classappend="${info==null ? 'disabled list-group-item-light' : ''}" th:href="@{${info==null} ? '#' : '/calibration/rest/upload?sn=' + ${info.serialNumber}}">Upload Profile</a>

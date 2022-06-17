@@ -131,9 +131,10 @@
 
 				$.post('/calibration/rest/dac', {sn : unitSerialNumber, devid: '1', value: newValue, channel: channel})
 				.fail(function(error) {
-
 					if(err)
 						return;
+
+					$('#modal').hide();
 
 					err = error;
 					if(error.statusText!='abort'){
@@ -191,10 +192,10 @@
 									if(err)
 										return;
 
+									$('#modal').hide();
+
 									err = error;
 									if(error.statusText!='abort'){
-
-										$('#modal').hide();
 
 										alert(error.responseText);
 										err = null;

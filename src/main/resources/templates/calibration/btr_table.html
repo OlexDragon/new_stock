@@ -16,7 +16,13 @@
 <!-- Modal Message -->
 	<div id="modal" class="modal" tabindex="-1" role="dialog">
 	<th:block th:fragment="modal">
- 		<th:block th:if="${settings}!=null and ${showSetting}==null">
+ 		<th:block th:if="${monitor==null}">
+ 			<script type="application/javascript">
+ 				alert('This device is not suported.');
+ 				$('#btr').addClass('disabled');
+ 			</script>
+ 		</th:block>
+ 		<th:block th:if="${monitor!=null} and ${settings}!=null and ${showSetting}==null">
   		<div class="modal-dialog modal-lg">
     		<div class="modal-content">
 <!-- Modal Header -->
@@ -26,8 +32,8 @@
         			<h5 id="unitPower" class="modal-title ml-3 text-primary col-auto" th:text="${monitor.outpower}">Temperature</h5><h5 class="modal-title text-primary col-auto">dBm;</h5>
         			<h5 id="lo" class="modal-title ml-3 text-primary col-auto" th:text="'LO: ' + ${monitor.lo} + ';'">LO</h5>
  					<div class="col input-group">
-						<input id="btn-scan" type="checkbox" class="btn-check" autocomplete="off">
-						<label id="lbl-scan" class="btn form-label" for="btn-scan" data-bs-toggle="tooltip">Scan</label>
+						<input id="btr-scan" type="checkbox" class="btn-check" autocomplete="off">
+						<label id="lbl_scan" class="btn form-label" for="btr-scan" data-bs-toggle="tooltip">Scan</label>
 					</div>
  <!-- BTR settings -->
   					<div class="dropdown col-auto">
@@ -39,6 +45,7 @@
     								<input type="number" class="form-control" id="gainOffset" placeholder="Gain Offset" value="40">
     							</div>
   							</div>
+  							<button id="enableAll" type="button" class="btn btn-outline-secondary form-control">Enable All Fields</button>
    						</div>
 					</div>
  <!-- X Button -->
@@ -51,8 +58,13 @@
        				<div class="row">
       					<div class="col text-center text-success"><strong>GAIN:</strong></div><div class="col" th:each="fr : ${settings.frequencies}"><strong class="btr-frequency" th:text="${fr} + ' GHz'"></strong></div>
       				</div>
-      				<div class="row btr-row btr-row-gain" th:each="tm : ${settings.temperatures}">
-      					<div class="col text-end btr-temperature"><strong th:text="${tm} + ' &#x2103;'"></strong></div><div class="col" th:each="fr : ${settings.frequencies}"><input type="number" step="0.1" class="form-control btr-gain" placeholder="dB" disabled></div>
+      				<div class="row btr-row btr-row-gain" th:each="tm : ${settings.temperatures}" th:data-key="${tm}">
+      					<div class="col text-end btr-temperature">
+      						<strong th:text="${tm} + ' &#x2103;'"></strong>
+      					</div>
+      					<div class="col" th:each="fr : ${settings.frequencies}">
+      						<input type="number" step="0.1" class="form-control btr-gain" placeholder="dB" disabled th:data-key="${fr}">
+      					</div>
       				</div>
     				<div><hr class="dropdown-divider"></div>
 
@@ -60,8 +72,13 @@
       				<div class="row">
       					<div class="col text-center text-success"><strong>SAT. POWER:</strong></div><div class="col" th:each="fr : ${settings.frequencies}"><strong th:text="${fr} + ' GHz'"></strong></div>
       				</div>
-      				<div class="row btr-row btr-row-saturation" th:each="tm : ${settings.temperatures}">
-      					<div class="col text-end btr-temperature"><strong th:text="${tm} + ' &#x2103;'"></strong></div><div class="col" th:each="fr : ${settings.frequencies}"><input type="number" step="0.1" class="form-control" placeholder="dBm" disabled></div>
+      				<div class="row btr-row btr-row-saturation" th:each="tm : ${settings.temperatures}" th:data-key="${tm}">
+      					<div class="col text-end btr-temperature">
+      						<strong th:text="${tm} + ' &#x2103;'"></strong>
+      					</div>
+      					<div class="col" th:each="fr : ${settings.frequencies}">
+      						<input type="number" step="0.1" class="form-control" placeholder="dBm" disabled th:data-key="${fr}">
+      					</div>
       				</div>
     				<div><hr class="dropdown-divider"></div>
 
@@ -70,8 +87,13 @@
       				<div class="row">
       					<div class="col text-center text-success"><strong>P1dB POWER:</strong></div><div class="col" th:each="fr : ${settings.frequencies}"><strong th:text="${fr} + ' GHz'"></strong></div>
       				</div>
-      				<div class="row btr-row btr-row-p1db" th:each="tm : ${settings.temperatures}">
-      					<div class="col text-end btr-temperature"><strong th:text="${tm} + ' &#x2103;'"></strong></div><div class="col" th:each="fr : ${settings.frequencies}"><input type="number" step="0.1" class="form-control" placeholder="dBm" disabled></div>
+      				<div class="row btr-row btr-row-p1db" th:each="tm : ${settings.temperatures}" th:data-key="${tm}">
+      					<div class="col text-end btr-temperature">
+      						<strong th:text="${tm} + ' &#x2103;'"></strong>
+      					</div>
+      					<div class="col" th:each="fr : ${settings.frequencies}">
+      						<input type="number" step="0.1" class="form-control" placeholder="dBm" disabled th:data-key="${fr}">
+      					</div>
       				</div>
     				<div><hr class="dropdown-divider"></div>
     			</th:block>
@@ -80,8 +102,12 @@
       				<div class="row">
       					<div class="col text-center text-success"><strong>DETECTOR:</strong></div><div class="col" th:each="fr : ${settings.frequencies}"><strong th:text="${fr} + ' GHz'"></strong></div>
       				</div>
-      				<div class="row btr-row btr-row-detector" th:each="power : ${settings.detectors}">
-      					<div class="col text-end btr-power"><strong th:text="${power} + ' dBm;'"></strong></div><div class="col" th:each="fr : ${settings.frequencies}"><input type="text" class="form-control btr-detector" placeholder="dBm"></div>
+      				<div class="row btr-row btr-row-detector" th:each="power : ${settings.detectors}" th:data-key="${power}">
+      					<div class="col text-end">
+      						<strong th:text="${power} + ' dBm;'"></strong>
+      					</div><div class="col" th:each="fr : ${settings.frequencies}">
+      						<input type="text" class="form-control btr-detector" placeholder="dBm" th:data-key="${fr}">
+      					</div>
       				</div>
        			</div>
  <!-- Modal Footer -->
@@ -92,7 +118,7 @@
 	    		</div>
     		</div>
   		</div>
-  		<script th:inline="javascript">
+  		<script type="application/javascript" th:inline="javascript">
 			/*<![CDATA[*/
 
 				var cookies = Cookies.get("gainOffset")
@@ -105,6 +131,7 @@
 
 				var unitSerialNumber =  /*[[${serialNumber}]]*/ 'IRT-2121021';
 				var hasP1db			 =  /*[[${settings.hasP1db}]]*/ true;
+				var measurementId; 		// To be determined later.
 
 				var $inputNode;
 				$('.btr-row').find('input').focus(function(){
@@ -115,7 +142,7 @@
 					$inputNode=$(this);
 					$inputNode.addClass('bg-warning bg-opacity-10')
 				});
-				$('#btn-scan').change(function(){
+				$('#btr-scan').change(function(){
 					if(!this.checked){
 
 						if($inputNode)
@@ -151,13 +178,13 @@
 									var temperature = monitorInfo.data.temperature;
 									$('#temperature').text(monitorInfo.data.temperature);
 
-									var dataRows = $('.btr-row').filter((i,v)=>$(v).children('.btr-temperature').length);
-									var toFindMax = dataRows.map((i,v)=>parseFloat($(v).children('.btr-temperature').children('strong').text().split(/(\s+)/)[0])).filter((i,v)=>v<temperature);
+									var $dataRows = $('.btr-row').filter((i,v)=>$(v).children('.btr-temperature').length);
+									var toFindMax = $dataRows.map((i,v)=>parseFloat(v.dataset.key)).filter((i,v)=>v<temperature);
 									var max = Math.max(...toFindMax);
-									var $toEnable = dataRows.filter((i,v)=>$(v).children('.btr-temperature').children('strong').text().startsWith(max.toString())).find('input');
+									var $toEnable = $dataRows.filter((i,v)=>parseFloat(v.dataset.key)==max).find('input');
 
 									if($toEnable.prop('disabled')){
-										dataRows.find('input').prop('disabled', true);
+										$dataRows.find('input').prop('disabled', true);
 										$toEnable.prop('disabled', false);
 									}
 
@@ -166,16 +193,17 @@
 								if(monitorInfo.data.outpower){
 									$('#unitPower').text(monitorInfo.data.outpower);
 
-									if($inputNode && $inputNode.hasClass('btr-detector') && $('#btn-scan').is(':checked')){
+									if($inputNode && $inputNode.hasClass('btr-detector') && $('#btr-scan').is(':checked')){
 										$inputNode.val(monitorInfo.data.outpower);
 									}
 								}
 							}
 						})
 						.fail(function(error) {
-
 							if(err)
 								return;
+
+							$('#modal').hide();
 
 							if(error.statusText!='abort'){
 								err = true;
@@ -189,7 +217,7 @@
 					intervalPower = setInterval(function() {
 
 
-						if(err || !$inputNode || $inputNode.hasClass('btr-detector') || !$('#btn-scan').is(':checked'))
+						if(err || !$inputNode || $inputNode.hasClass('btr-detector') || !$('#btr-scan').is(':checked'))
 							return;
 
 						ouputGet(
@@ -255,16 +283,16 @@
 					var outputPowermeter= $('#outputPowermeter').val();
 					var ouputAddress 	= $('#ouputAddress').val();
 
-					var $lbl_p1dB = $('#lbl-scan');
+					var $lbl_scan = $('#lbl_scan');
 					if(!outputComPorts || !outputPowermeter || !ouputAddress){
 
-						$lbl_p1dB.addClass('btn-secondary disabled');
-						$lbl_p1dB.removeClass('btn-outline-primary');
+						$lbl_scan.addClass('btn-secondary disabled');
+						$lbl_scan.removeClass('btn-outline-primary');
 
 					}else{
 
-						$lbl_p1dB.removeClass('btn-secondary disabled');
-						$lbl_p1dB.addClass('btn-outline-primary');
+						$lbl_scan.removeClass('btn-secondary disabled');
+						$lbl_scan.addClass('btn-outline-primary');
 					}
 				}
 
@@ -274,40 +302,158 @@
 					$('.btr-frequency').map((i, v)=>$(v).text()).each((i, v)=>frequencies.push(v));
 
 					var btrData = {};
-					btrData.gain		 = rowToObject($('.btr-row-gain'), '.btr-temperature', frequencies);
-					btrData.saturation	 = rowToObject($('.btr-row-saturation'), '.btr-temperature', frequencies);
+					btrData.serialNumberId = /*[[${dbSerialNumber.id}]]*/ 1;
+					btrData.measurement = {};
+
+					btrData.measurement.gain = rowToObject($('.btr-row-gain'));
+					btrData.measurement.saturation	 = rowToObject($('.btr-row-saturation'));
 					if(hasP1db)
-						btrData.p1db	 = rowToObject($('.btr-row-p1db'), '.btr-temperature', frequencies);
-					
-					btrData.detector	 = rowToObject($('.btr-row-detector'), '.btr-power', frequencies);
+						btrData.measurement.p1db	 = rowToObject($('.btr-row-p1db'));
+					btrData.measurement.detector	 = rowToObject($('.btr-row-detector'));
+
+					$('#modal').find('input').prop('disabled', true);
+					$('#save').addClass('disabled');
+					$('#btr-scan').prop('checked', false)
 
 					var json = JSON.stringify(btrData);
+					$.ajax({
+						url: '/wo/rest/save_measurement',
+						type: 'POST',
+						contentType: "application/json",
+						data: json,
+				        dataType: 'json'
+				    })
+					.fail(function(error) {
+						if(error.statusText!='abort'){
+							var responseText = error.responseText;
+							if(responseText)
+								alert(error.responseText);
+							else{
+								if(error.status==200)
+									$('#btr')[0].click();
+								else
+									alert("Server error. Status = " + error.status);
+							}
+						}
+					});
 				})
 
-				function rowToObject($rows, keyClass, frequencies){
+				function rowToObject($rows){
 
-					var rows = []
+					var btrRows = []
 
-					$rows.each((i,v)=>{
+					$rows.each((i,r)=>{
 
-						var row = {};
-						row.key = $(v).find(keyClass).text();
-						row.values = [];
+						var btrRow = {};
+						btrRow.key = r.dataset.key;
+						btrRow.values = [];
 
-						$(v).find('input').map((i, v)=>v.value)
-						.each((i, v)=>row.values.push({frequency: frequencies[i], value: v}));
+						$(r).find('input').map((i, v)=>{
+							btrRow.values.push({key: v.dataset.key, value: v.value})
+						});
 
-						rows.push(row);
+						btrRows.push(btrRow);
 					});
 
-					return rows;
+					return btrRows;
 				}
 
-			/*]]>*/
-			//# sourceURL=btr.js
+				$('#enableAll').click(function(){
+					$('input:disabled').prop('disabled', false);
+				});
+
+				$('#modal-body').find('input').dblclick(function(){
+
+					if($('#lbl_scan').hasClass('disabled'))
+						return;
+
+					var $btr_scan = $("#btr-scan");
+			        $btr_scan.prop("checked", !$btr_scan.prop("checked"));
+				});
+
+				// On madal close
+				$('#modal').on('hide.bs.modal', function(e){
+
+					if($('#save').hasClass('disabled') || !$('#modal-body').find('input').filter(((i,v)=>v.value)).length || confirm('To close the table without saving the data, click OK.'))
+						return;
+
+	                e.preventDefault();
+				});
+
+				var measurements = /*[[${dbSerialNumber.measurements}]]*/ [];
+				if(measurements.length){
+					if(confirm('The device already has test data. To use them, click OK.')){
+
+						var m = measurements.sort((a,b)=> new Date(b.date) - new Date(a.date))[0];
+						measurementId = m.id;
+
+						dataToRow('.btr-row-gain'		, m.measurement.gain);
+						dataToRow('.btr-row-saturation'	, m.measurement.saturation);
+						dataToRow('.btr-row-p1db'		, m.measurement.p1db);
+						dataToRow('.btr-row-detector'	, m.measurement.detector);
+					}
+				}
+
+				function dataToRow(rowClass, data){
+
+					if(!data)
+						return;
+
+					let $rows = $(rowClass);
+					var difference = data.length - $rows.length;
+
+					if(difference>0){
+						addRow($(rowClass), difference);
+						$rows = $(rowClass);
+					}else if(difference<0){
+						removeRow($(rowClass), difference);
+						$rows = $(rowClass);
+					}
+
+					data.forEach((v,i)=>{
+
+						if(i>=$rows.length)
+							return;
+
+						let $row = $($rows[i]);
+						let $rowChildren = $row.children();
+						// Row Key ( Temperature or Power )
+						let $rowKey = $($rowChildren[0]);
+						let post = $rowKey.hasClass('btr-temperature') ? '℃' : ' dBm'
+						$rowKey.children('strong').text(v.key + post)
+						$row.prop('data-key', v.key);
+
+						// Row value
+						v.values.forEach((m,i)=>{
+							let $input = $($rowChildren[++i]).children();
+							$input.val(m.value);
+							$input.prop('data-key', m.key);
+						});
+						
+
+					});
+				}
+
+				function addRow($rows, difference){
+					var row = $rows[0];
+					for(let i = 0; i<difference; i++){
+						let clone = row.cloneNode(true);
+						row.after(clone);
+					}
+				}
+
+				function removeRow($rows, difference){
+					let length = $rows.length;
+					let stop = length-Math.abs(difference);
+					for(let i = --length; i>=stop; i--){
+						$rows[i].remove();
+					}
+				}
+				/*]]>*/
+			//# sourceURL=btr_table.js
   		</script>
 	</th:block>
-	<th:block th:if="${settings}==null or ${showSetting}">
+	<th:block th:if="${monitor!=null}  and (${settings}==null or ${showSetting})">
   		<div class="modal-dialog modal-lg">
     		<div class="modal-content">
 <!-- Modal Header -->
@@ -357,8 +503,15 @@
 	    		</div>
     		</div>
   		</div>
-  		<script th:inline="javascript">
+  		<script type="application/javascript" th:inline="javascript">
 			/*<![CDATA[*/
+
+				var partNumber = /*[[${partNumber}]]*/ 'IPB-CB00530-RMS11';
+				if(!partNumber){
+					var serialNumber =  /*[[${serialNumber}]]*/ 'IRT-2121021';
+					alert('Have to add the ' + serialNumber + ' to the database');
+					window.location.href = "/wo?sn=" + serialNumber;
+				}
 
 				$('.setting').on('input', function(){
 					enableButtons();

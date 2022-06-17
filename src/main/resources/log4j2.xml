@@ -35,7 +35,8 @@
 <!-- 		<logger name="irt.components.controllers.calibration.CalibrationController" level="all" /> -->
 <!-- 		<logger name="irt.components.controllers.calibration.CalibrationRestController" level="all" /> -->
 <!-- 		<logger name="irt.components.controllers.calibration.HttpSerialPortRestController" level="all" /> -->
-		<logger name="irt.components.controllers.btr.BtrController" level="all" />
+<!-- 		<logger name="irt.components.controllers.btr.WorkOrderController" level="all" /> -->
+<!-- 		<logger name="irt.components.controllers.btr.WorkOrderRestController" level="all" /> -->
 
 <!-- 		<logger name="irt.components.workers.HttpRequest" level="all" /> -->
 

@@ -4,6 +4,8 @@ import java.util.Date;
 
 import javax.persistence.Column;
 import javax.persistence.Entity;
+import javax.persistence.EnumType;
+import javax.persistence.Enumerated;
 import javax.persistence.FetchType;
 import javax.persistence.GeneratedValue;
 import javax.persistence.GenerationType;
@@ -34,7 +36,8 @@ public class Rma {
 	private String	 serialNumber;
 	private String	 description;
 	private Long	 userId;
-	private boolean	 shipped;
+	@Enumerated(EnumType.ORDINAL)
+	private Status	 status;
 
 	@Temporal(TemporalType.TIMESTAMP)
 	@JsonFormat(pattern="dd MMM yyyy hh:mm")
@@ -44,4 +47,10 @@ public class Rma {
 	@ManyToOne(fetch = FetchType.EAGER)
 	@JoinColumn(name = "userId", referencedColumnName = "id", insertable = false, updatable = false)
 	private User user;
+
+	public enum Status{
+		IN_WORK,
+		SHIPPED,
+		READY;
+	}
 }

@@ -10,7 +10,7 @@
     <link rel="stylesheet" href="https://stackpath.bootstrapcdn.com/bootstrap/4.4.1/css/bootstrap.min.css">
 </th:block>
     <link rel="stylesheet" href="../static/css/components.css" th:href="@{/css/components.css}">
-    <link rel="stylesheet" href="../static/css/btr.css" th:href="@{/css/btr.css}">
+    <link rel="stylesheet" href="../static/css/wo.css" th:href="@{/css/wo.css}">
 </head>
 <body>
 
@@ -40,7 +40,7 @@
 <!-- RMA Unit Serial Number search-->
   			<div class="input-group col">
       			<label for="btrSerialNumber" class="input-group-text">SN</label>
-      			<input id="btrSerialNumber" type="text" class="form-control searchBTR" placeholder="Serial Number" aria-label="Serial Number">
+      			<input id="btrSerialNumber" type="text" class="form-control searchBTR" placeholder="Serial Number" aria-label="Serial Number" th:value="${serialNumber}">
     		</div>
 
  <!-- RMA Unit Description search -->
@@ -51,7 +51,7 @@
 
   			<div sec:authorize="hasAuthority('ADD_RMA')" class="ml-1 col-auto">
  <!-- Add Serial Number Button -->
-      			<button id="addBTR" type="button" class="form-control btn btn-outline-primary disabled">Add</button>
+      			<button id="addSerialNumber" type="button" class="form-control btn btn-outline-primary disabled">Add</button>
     		</div>
 
   		</form>
@@ -126,7 +126,7 @@
 				var $serialNumber = $this.find(".serialNumber");
 				if($serialNumber){
 					var snId = $this[0].id;
-					$('.modal-content').load('/btr/comment', {snId: snId});
+					$('.modal-content').load('/wo/comment', {snId: snId});
 					$('#modal').modal('show');
 				}
 			}
@@ -223,7 +223,7 @@
 						$(this).addClass('disabled');
 						var wo = $.trim($('#btrWO').prop('disabled', true).val()).toUpperCase();
 						var sn = $('#btrSN').val().toUpperCase();
-						$('#accordion').load('/btr/add_sn', { sn: sn, wo: wo}, function (responseText, textStatus, req) {
+						$('#accordion').load('/wo/add_sn', { sn: sn, wo: wo}, function (responseText, textStatus, req) {
 					        if (textStatus == "error") {
 					          alert('An error has occurred.\nTry refreshing this page and entering the information again.');
 					        }
@@ -299,6 +299,6 @@
     <script type="application/javascript" src="https://stackpath.bootstrapcdn.com/bootstrap/4.4.1/js/bootstrap.min.js"></script>
 	<script type="application/javascript" src="https://cdn.jsdelivr.net/npm/js-cookie@2/src/js.cookie.min.js"></script>
 </th:block>
-	<script type="application/javascript" src="../static/js/btr.js" th:src="@{/js/btr.js}"></script>
+	<script type="application/javascript" src="../static/js/wo.js" th:src="@{/js/wo.js}"></script>
 </body>
 </html>

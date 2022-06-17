@@ -6,7 +6,7 @@ import javax.persistence.Entity;
 import javax.persistence.Id;
 import javax.persistence.Table;
 
-import irt.components.services.JSonConverter;
+import irt.components.services.JSonDoubleArrayConverter;
 import lombok.AllArgsConstructor;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
@@ -20,13 +20,13 @@ public class CalibrationBtrSetting {
 
 	@Id private String partNumber;
 
-	@Convert(converter = JSonConverter.class)
+	@Convert(converter = JSonDoubleArrayConverter.class)
 	private Double[] frequencies;
 
-	@Convert(converter = JSonConverter.class)
+	@Convert(converter = JSonDoubleArrayConverter.class)
 	private Double[] temperatures;
 
-	@Convert(converter = JSonConverter.class)
+	@Convert(converter = JSonDoubleArrayConverter.class)
 	private Double[] detectors;
 
 	@Column(name = "has_p1db")

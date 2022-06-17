@@ -84,6 +84,8 @@
 								if(err)
 									return;
 
+								$('#modal').hide();
+
 								err = error;
 								if(error.statusText!='abort'){
 									alert(error.responseText);
@@ -354,6 +356,7 @@
 							})
 							.fail(function(error) {
 								if(error.statusText!='abort'){
+									$('#modal').hide();
 									alert(error.responseText);
 								}
 							});

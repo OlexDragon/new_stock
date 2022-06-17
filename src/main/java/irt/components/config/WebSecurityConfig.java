@@ -1,6 +1,7 @@
 package irt.components.config;
 
 import java.util.Base64;
+import java.util.concurrent.TimeUnit;
 
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.context.annotation.Bean;
@@ -15,7 +16,6 @@ import org.springframework.security.web.authentication.AuthenticationSuccessHand
 
 import irt.components.services.IrtUrlAuthenticationSuccessHandler;
 import irt.components.services.UserService;
-
 
 @Configuration
 public class WebSecurityConfig extends WebSecurityConfigurerAdapter {
@@ -42,7 +42,7 @@ public class WebSecurityConfig extends WebSecurityConfigurerAdapter {
 										"/inventory",
 										"/files/**",
 										"/images/**",
-										"/btr/**")
+										"/wo/**")
 			.permitAll()
 
 			.antMatchers(HttpMethod.POST,
@@ -58,7 +58,7 @@ public class WebSecurityConfig extends WebSecurityConfigurerAdapter {
 											"/inventory",
 											"/create/rest/**",
 											"/serial_port/rest/**",
-											"/btr/**")
+											"/wo/**")
 			.permitAll()
 
 			.anyRequest().authenticated()
@@ -77,7 +77,7 @@ public class WebSecurityConfig extends WebSecurityConfigurerAdapter {
 				.frameOptions().sameOrigin()
 				.httpStrictTransportSecurity().disable()
 			.and()
-            	.rememberMe().userDetailsService(userService);
+            	.rememberMe().userDetailsService(userService).tokenValiditySeconds((int) TimeUnit.DAYS.toSeconds(21));
 	}
 
     @Bean

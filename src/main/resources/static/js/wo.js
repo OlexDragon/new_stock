@@ -1,14 +1,14 @@
 // Show active menu item
-$('#miBTRs').addClass('active');
+$('#miWOs').addClass('active');
 
 // Input listener
 timer = 0;
-$('.searchBTR').on('input', function(){
+$('.searchWO').on('input', function(){
 
-	var $addBTR = $('#addBTR');	// Button "Add" RMA Unit
-	if($addBTR.length){
-		$addBTR.removeClass('btn-outline-primary');
-		$addBTR.addClass('disabled btn-secondary');
+	var $addSerialNumber = $('#addSerialNumber');	// Button "Add" RMA Unit
+	if($addSerialNumber.length){
+		$addSerialNumber.removeClass('btn-outline-primary');
+		$addSerialNumber.addClass('disabled btn-secondary');
 	}
 
     if (timer) 
@@ -42,21 +42,21 @@ function search($this){
 	Cookies.set("btrSearch", JSON.stringify([attrId, val]), { expires: 7 });
 
 // Crear other input filds
-	$('.searchBTR').filter(':not(#' + attrId + ')').val('');
+	$('.searchWO').filter(':not(#' + attrId + ')').val('');
 
 // Load BTRs
-		$('#accordion').load('/btr/search', {id : attrId, value : val}, function(){
+		$('#accordion').load('/wo/search', {id : attrId, value : val}, function(){
 
-			var $addBTR = $('#addBTR');	// Button "Add" RMA Unit
-			if(!$addBTR.length || attrId != "btrSerialNumber" || !$addBTR.length)
+			var $addSerialNumber = $('#addSerialNumber');	// Button "Add" RMA Unit
+			if(!$addSerialNumber.length || attrId != "btrSerialNumber" || !$addSerialNumber.length)
 				return;
 
 			$.post('/rma/rest/has_prifile', { serialNumber: val})
 			.done(function(hasProfile){
 
 				if(hasProfile){
-					$addBTR.removeClass('disabled btn-secondary');
-					$addBTR.addClass('btn-outline-primary');
+					$addSerialNumber.removeClass('disabled btn-secondary');
+					$addSerialNumber.addClass('btn-outline-primary');
 				}
 			})
 			.fail(function(error) {
@@ -66,7 +66,7 @@ function search($this){
 		});
 }
 
-$('#addBTR').click(function(e){
+$('#addSerialNumber').click(function(e){
 	e.preventDefault();
 
 	var val = $.trim($('#btrSerialNumber').val());
@@ -76,7 +76,7 @@ $('#addBTR').click(function(e){
 		return;
 	}
 
-	$('.modal-content').load('/btr/modal_add', {sn: val});
+	$('.modal-content').load('/wo/modal_add', {sn: val});
 
 	$('#modal').modal('show');
 });
@@ -86,10 +86,15 @@ $('#removeModueles').click(function(){
 });
 
 // Get Part Number, Mfr PN or Description from the cookies
-var cookie = Cookies.get("btrSearch")
-if(cookie){
-	var bomSearch = JSON.parse(cookie);
-	var $input = $("#" + bomSearch[0]).val(bomSearch[1]);
-	search($input);
-}else
-	search($('#btrSerialNumber').val('IRT'));
+var $btrSerialNumber = $('#btrSerialNumber');
+if(!$btrSerialNumber.val()){
+	var cookie = Cookies.get("btrSearch")
+	if(cookie){
+		var bomSearch = JSON.parse(cookie);
+		var $input = $("#" + bomSearch[0]).val(bomSearch[1]);
+		search($input);
+	}else
+		search($('#btrSerialNumber').val('IRT'));
+}else{
+	search($btrSerialNumber);
+}
