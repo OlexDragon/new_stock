@@ -104,6 +104,11 @@ public class ComponentsRestController {
 		}
     }
 
+	@PostMapping("test-login")
+	public boolean testLogin() {
+		return true;
+	}
+
 	// Quantities
 	private String createComponentQtyUrl(String key) throws UnsupportedEncodingException {
 		return new StringBuilder(protocol).append(login).append(url)

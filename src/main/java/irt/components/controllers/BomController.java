@@ -58,6 +58,7 @@ public class BomController {
 
     @GetMapping
     String getBoms(@RequestParam(name="key", required=false) String bomKey, Model model) {
+		logger.traceEntry(bomKey);
 
     	Optional.ofNullable(bomKey).filter(key->!key.isEmpty())
     	.ifPresent(
@@ -93,7 +94,7 @@ public class BomController {
 
     @PostMapping("components")
     String getBomComponents(@RequestParam String bomKey, Model model) {
-//		logger.error(bomKey);
+		logger.traceEntry(bomKey);
 
     	Optional.ofNullable(bomKey).filter(key->!key.isEmpty())
     	.ifPresent(
@@ -110,7 +111,7 @@ public class BomController {
 //     			    	logger.error(bomContentResponse);
  
     					final BomContent[] bomContents = bomContentResponse.getBomContents();
-//     			    	logger.error("{}: {}", bomContents.length, (Object[])bomContents);
+     			    	logger.debug("{}: {}", bomContents.length, (Object[])bomContents);
 						model.addAttribute("bomContents", bomContents);
     					
 //    					final String ownerUrl = createSingleComponentUrl(bom.getOwnerKey());
@@ -135,7 +136,7 @@ public class BomController {
 			@RequestParam(required=false) String value,
 			Model model) throws IOException {
 
-//		logger.error("{} : {}", id, value);
+		logger.traceEntry("{} : {}", id, value);
 		final String url = createSearchByBomUrl(id, value);
 
 		final FutureTask<BomsResponse> futureTask = HttpRequest.getForObgect(url, BomsResponse.class);

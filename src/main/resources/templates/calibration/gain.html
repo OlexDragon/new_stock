@@ -76,7 +76,7 @@
 				return;
 			/*[/]*/
 
-			var unitSerialNumber =  /*[[${serialNumber}]]*/ 'IRT-2121021';
+			var unitSerialNumber = /*[[${serialNumber}]]*/ 'IRT-2121021';
 
 // Step
 			var step = Cookies.get("dacStep");
@@ -107,17 +107,20 @@
 
 				var newValue = this.valueAsNumber;
 				var defaultValue = this.defaultValue;
+				var doPost = false;
 				
 				if(defaultValue<newValue){
 					if((newValue - defaultValue) == 1){
 						var step = parseInt($('#step').val());
 						newValue = parseInt(defaultValue) + step;
+						doPost = true;
 					}
 
 				}else{
 					if((defaultValue - newValue) == 1){
 						var step = parseInt($('#step').val());
 						newValue = parseInt(defaultValue) - step;
+						doPost = true;
 					}
 				}
 
@@ -128,6 +131,12 @@
 
 				this.defaultValue = newValue;
 				$(this).val(newValue);
+
+				if(doPost)
+					postNewValue(newValue);
+			});
+
+			function postNewValue(newValue){
 
 				$.post('/calibration/rest/dac', {sn : unitSerialNumber, devid: '1', value: newValue, channel: channel})
 				.fail(function(error) {
@@ -145,14 +154,13 @@
 						err = null;
 					};
 	   			});
-			});
+			}
 
 			var err;
 			var interval;
 			function update(){
 
-				if(interval)
-					clearInterval(interval);
+				clearInterval(interval);
 
 				//get value from unit
 				interval = setInterval(function() {
@@ -241,8 +249,13 @@
 
 			$('#addRow').click(onAddRow);
 			$('#setDacValue').on('keypress', function (e) {
-				 if(e.which === 13)
-					 onAddRow();
+				 if(e.which === 13){	// Enter key
+					 var newValue = $(this).val();
+					 if($('#dacValue').text()==newValue)
+					 	onAddRow();
+					 else
+						 postNewValue(newValue);
+				 }
 			});
 
 			var gainTable = Cookies.get(unitSerialNumber + "_gainTable");
@@ -512,6 +525,8 @@
 					}
 				});
 			/*[/]*/
+
+		$modal.modal('show');
 
 		/*]]>*/
 		//# sourceURL=gain.js

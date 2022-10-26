@@ -16,7 +16,7 @@
 <!-- Modal Message -->
 	<div id="modal" class="modal" tabindex="-1" role="dialog">
 	<th:block th:fragment="modal">
- 		<th:block th:if="${monitor==null}">
+ 		<th:block th:if="${monitor==null} and ${showSetting}==null">
  			<script type="application/javascript">
  				alert('This device is not suported.');
  				$('#btr').addClass('disabled');
@@ -29,7 +29,7 @@
       			<div class="modal-header row">
         			<h5 class="modal-title ml-3 text-primary col-auto" th:text="'Gain: ' + ${gain} + ' dB;'">Gain: 74 dB</h5>
         			<h5 id="temperature" class="modal-title ml-3 text-primary col-auto" th:text="${monitor.temperature}">Temperature</h5><h5 class="modal-title text-primary col-auto">&#x2103;;</h5>
-        			<h5 id="unitPower" class="modal-title ml-3 text-primary col-auto" th:text="${monitor.outpower}">Temperature</h5><h5 class="modal-title text-primary col-auto">dBm;</h5>
+        			<h5 id="unitPower" class="modal-title ml-3 text-primary col-auto" th:text="${monitor.outpower}">Output Power</h5><h5 class="modal-title text-primary col-auto">dBm;</h5>
         			<h5 id="lo" class="modal-title ml-3 text-primary col-auto" th:text="'LO: ' + ${monitor.lo} + ';'">LO</h5>
  					<div class="col input-group">
 						<input id="btr-scan" type="checkbox" class="btn-check" autocomplete="off">
@@ -449,11 +449,12 @@
 						$rows[i].remove();
 					}
 				}
+				$modal.modal('show');
 				/*]]>*/
 			//# sourceURL=btr_table.js
   		</script>
 	</th:block>
-	<th:block th:if="${monitor!=null}  and (${settings}==null or ${showSetting})">
+	<th:block th:if="${settings}==null or ${showSetting}">
   		<div class="modal-dialog modal-lg">
     		<div class="modal-content">
 <!-- Modal Header -->
@@ -509,7 +510,7 @@
 				var partNumber = /*[[${partNumber}]]*/ 'IPB-CB00530-RMS11';
 				if(!partNumber){
 					var serialNumber =  /*[[${serialNumber}]]*/ 'IRT-2121021';
-					alert('Have to add the ' + serialNumber + ' to the database');
+					alert('This unit is not in the database.\nHave to add the ' + serialNumber + ' to the database.\nTo add it to the database,\nyou will be redirected to the "IRT Work Orders" page.');
 					window.location.href = "/wo?sn=" + serialNumber;
 				}
 

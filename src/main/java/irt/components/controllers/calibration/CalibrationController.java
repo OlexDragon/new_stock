@@ -55,7 +55,7 @@ import irt.components.workers.ProfileWorker;
 import irt.components.workers.ThreadRunner;
 
 @Controller
-@RequestMapping("/calibration")
+@RequestMapping("calibration")
 public class CalibrationController {
 	private final static Logger logger = LogManager.getLogger();
 
@@ -280,8 +280,10 @@ public class CalibrationController {
 
 		final Optional<BtrSerialNumber> oSerialNumber = serialNumberRepository.findBySerialNumber(sn);
 		//The DB serial number does not exist. Redirect to adding a serial number to the database.
-    	if(!oSerialNumber.isPresent()) 
-        	return "calibration/btr_table :: modal";
+    	if(!oSerialNumber.isPresent()) {
+    		model.addAttribute("showSetting", true);
+    		return "calibration/btr_table :: modal";
+    	}
  
     	model.addAttribute("dbSerialNumber", oSerialNumber.get());
     	model.addAttribute("partNumber", pn);
@@ -322,6 +324,14 @@ public class CalibrationController {
 
     	return "calibration/btr_table :: modal";
     }
+
+	@GetMapping("currents")
+    String currents(@RequestParam String sn, Model model) {
+
+		model.addAttribute("serialNumber", sn);
+
+		return "calibration/currents :: modal";
+	}
 
 	public FutureTask<Void> gainFromProfile(String sn, Model model) {
 		FutureTask<Void> ftProfile = new FutureTask<>(()->null);

@@ -12,11 +12,14 @@ import java.net.MalformedURLException;
 import java.net.URL;
 import java.net.UnknownHostException;
 import java.nio.file.Path;
+import java.util.AbstractMap;
+import java.util.AbstractMap.SimpleEntry;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
 import java.util.Optional;
 import java.util.concurrent.ExecutionException;
+import java.util.concurrent.FutureTask;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.TimeoutException;
 
@@ -38,6 +41,7 @@ import irt.components.beans.irt.CalibrationInfo;
 import irt.components.beans.irt.Info;
 import irt.components.beans.irt.MonitorInfo;
 import irt.components.beans.irt.calibration.CalibrationMode;
+import irt.components.beans.irt.calibration.HPBMRegister;
 import irt.components.beans.irt.calibration.ProfileTableTypes;
 import irt.components.beans.irt.update.Profile;
 import irt.components.beans.irt.update.Table;
@@ -113,15 +117,20 @@ public class CalibrationRestController {
     Object deviceDebug(@RequestParam String sn, @RequestParam String devid, @RequestParam String command, @RequestParam String groupindex, @RequestParam String className) throws MalformedURLException, ClassNotFoundException, InterruptedException, ExecutionException, TimeoutException {
 //    	logger.error(sn);
 
-			return CalibrationController.getHttpDeviceDebug(
+			try {
+				return CalibrationController.getHttpDeviceDebug(
 
-					sn,
-					Class.forName(className),
-					new BasicNameValuePair("devid", devid),
-					new BasicNameValuePair("command", command),
-					new BasicNameValuePair("groupindex", groupindex))
+						sn,
+						Class.forName(className),
+						new BasicNameValuePair("devid", devid),
+						new BasicNameValuePair("command", command),
+						new BasicNameValuePair("groupindex", groupindex))
 
-					.get(10, TimeUnit.SECONDS);
+						.get(10, TimeUnit.SECONDS);
+			} catch (TimeoutException e) {
+				logger.catching(Level.DEBUG, e);
+			}
+			return null;
     }
 
     @PostMapping(path="outputpower", consumes = MediaType.APPLICATION_JSON_VALUE)
@@ -321,5 +330,31 @@ public class CalibrationRestController {
 
     	calibrationBtrSetting.set(btrSetting);
 		calibrationBtrSettingRepository.save(calibrationBtrSetting);
+    }
+
+    @PostMapping("hpbm_register")
+    SimpleEntry<String, HPBMRegister> hpbmRegister(@RequestParam String sn, @RequestParam String devid) throws MalformedURLException, InterruptedException, ExecutionException{
+
+		final URL url = new URL("http", sn, "/device_debug_read.cgi");
+		List<NameValuePair> params = new ArrayList<>();
+		final BasicNameValuePair deviceId = new BasicNameValuePair("devid", devid);
+
+		params.addAll(Arrays.asList(new BasicNameValuePair[]{new BasicNameValuePair("command", "regs"), deviceId, new BasicNameValuePair("groupindex", "20")}));
+
+		final FutureTask<HPBMRegister> postForIrtObgect1 = HttpRequest.postForIrtYaml(url.toString(), HPBMRegister.class, params);
+
+		SimpleEntry<String, HPBMRegister> entry = null;
+		try {
+
+			HPBMRegister object1 = postForIrtObgect1.get(2, TimeUnit.SECONDS);
+			entry = new AbstractMap.SimpleEntry<>(devid, object1);
+
+		} catch (TimeoutException e) {
+			logger.catching(Level.DEBUG, e);
+		}
+
+//		logger.error(entry);
+
+		return entry;
     }
 }

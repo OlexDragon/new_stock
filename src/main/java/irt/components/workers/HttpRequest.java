@@ -40,6 +40,7 @@ import com.fasterxml.jackson.core.JsonParseException;
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.DeserializationFeature;
 import com.fasterxml.jackson.databind.ObjectMapper;
+import com.fasterxml.jackson.dataformat.yaml.YAMLFactory;
 
 import irt.components.beans.irt.update.Profile;
 
@@ -179,7 +180,7 @@ public class HttpRequest {
 			}
 
 		}catch(JsonParseException e) {
-			logger.catching(new Throwable("\n\tclass to return: " + classToReturn + "\n\tfrom:\n" + json, e));
+			logger.catching(new Throwable("\n\tclass to return: " + classToReturn + "\n\turl: " + uriRequest + "\n\tfrom:\n" + json, e));
 
 		}catch( ConnectException | UnknownHostException e) {
 			logger.catching(Level.DEBUG, e);
@@ -293,5 +294,77 @@ public class HttpRequest {
 		}
 
 		connection.disconnect();
+	}
+
+	// Send post request and parse text like YAML file
+	public static <T> FutureTask<T> postForIrtYaml(String url, Class<T> classToReturn, List<NameValuePair> params) {
+
+		final FutureTask<T> ft = new FutureTask<T>(
+				()->{
+
+					logger.traceEntry("\n\tpostForIrtObgect - classToReturn: {}; \n\turl: {}, params: {}\n", classToReturn, url, params);
+
+					final HttpPost httpPost = new HttpPost(url);
+					Optional.ofNullable(params).map(
+							p -> {
+								try {
+
+									return new UrlEncodedFormEntity(p);
+
+								} catch (UnsupportedEncodingException e) {
+									logger.catching(e);
+								}
+								return null;
+							})
+					.ifPresent(httpPost::setEntity);
+
+					return httpForIrtYaml(classToReturn, httpPost);
+				});
+		ThreadRunner.runThread(ft);
+
+		return ft;
+	}
+
+	private static <T> T httpForIrtYaml(Class<T> classToReturn, HttpPost uriRequest) throws IOException, ScriptException {
+
+		uriRequest.addHeader("Accept", "text/html,application/json;metadata=full;charset=utf-8;");
+
+		String json = null;
+		//Execute and get the response.
+		try(	final CloseableHttpClient httpclient = HttpClients.createDefault();
+				final CloseableHttpResponse response = httpclient.execute(uriRequest);){
+
+			HttpEntity entity = response.getEntity();
+
+			if (entity != null) {
+
+				final String text = EntityUtils.toString(entity);
+
+				if(classToReturn==null || text.isEmpty() || text.matches(".*\\<[^>]+>.*"))	// If HTML page
+					return null;
+
+				StringBuilder sb = new StringBuilder();
+				try(Scanner scanner = new Scanner(text);){
+					while(scanner.hasNextLine()){
+						final String nextLine = scanner.nextLine().replaceAll("\\s{2,}", " ");
+						sb.append(nextLine).append("\n");
+					}
+				}
+//				logger.error(sb);
+
+				final ObjectMapper mapper = new ObjectMapper(new YAMLFactory());
+				mapper.configure(DeserializationFeature.FAIL_ON_UNKNOWN_PROPERTIES, false);
+
+				return mapper.readValue(sb.toString(), classToReturn);
+			}
+
+		}catch(JsonParseException e) {
+			logger.catching(new Throwable("\n\tclass to return: " + classToReturn + "\n\tfrom:\n" + json, e));
+
+		}catch( ConnectException | UnknownHostException e) {
+			logger.catching(Level.DEBUG, e);
+		}
+
+		return null;
 	}
 }

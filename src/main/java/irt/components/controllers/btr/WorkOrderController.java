@@ -25,6 +25,7 @@ import org.springframework.web.bind.annotation.RequestParam;
 
 import irt.components.beans.jpa.btr.BtrSerialNumber;
 import irt.components.beans.jpa.btr.BtrWorkOrder;
+import irt.components.beans.jpa.repository.btr.BtrMeasurementsRepository;
 import irt.components.beans.jpa.repository.btr.BtrSerialNumberRepository;
 import irt.components.beans.jpa.repository.btr.BtrWorkOrderRepository;
 import irt.components.workers.ProfileWorker;
@@ -39,6 +40,7 @@ public class WorkOrderController {
 
 	@Autowired private BtrWorkOrderRepository workOrderRepository;
 	@Autowired private BtrSerialNumberRepository serialNumberRepository;
+	@Autowired private BtrMeasurementsRepository measurementsRepository;
 
     @GetMapping
     String wos(@RequestParam(value = "sn", required = false) String serialnumber, Model model) {
@@ -131,5 +133,21 @@ public class WorkOrderController {
 		Optional.ofNullable(btrSerialNumber).ifPresent(s->model.addAttribute("workOrders", Collections.singletonList(s.getWorkOrder())));
 
 		return "wo :: btrCards";
+    }
+
+    @PostMapping("show_measurement")
+    String showMeasutrement(@RequestParam Long snId, Model model) {
+    	serialNumberRepository.findById(snId)
+    	.ifPresent(sn->model.addAttribute("sn", sn));
+    	
+		return "wo :: modalMeasurement";
+    }
+
+    @PostMapping("load_measurement")
+    String loadMeasutrement(@RequestParam Long measurementId, Model model) {
+    	measurementsRepository.findById(measurementId)
+    	.ifPresent(m->model.addAttribute("measurement", m.getMeasurement()));
+    	
+		return "wo :: measurementData";
     }
 }

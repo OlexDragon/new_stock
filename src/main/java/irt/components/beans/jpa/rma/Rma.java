@@ -40,7 +40,7 @@ public class Rma {
 	private Status	 status;
 
 	@Temporal(TemporalType.TIMESTAMP)
-	@JsonFormat(pattern="dd MMM yyyy hh:mm")
+	@JsonFormat(pattern="dd MMM yyyy kk:mm")
 	@Column(insertable = false, updatable= false)
 	private Date date;
 
@@ -51,6 +51,7 @@ public class Rma {
 	public enum Status{
 		IN_WORK,
 		SHIPPED,
-		READY;
+		READY,
+		CREATED;
 	}
 }

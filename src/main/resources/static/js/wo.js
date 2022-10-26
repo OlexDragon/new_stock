@@ -98,3 +98,23 @@ if(!$btrSerialNumber.val()){
 }else{
 	search($btrSerialNumber);
 }
+var showBtrMouseType;
+function showBtrMouse(e){
+	showBtrMouseType = e.type
+}
+$('#accordion')
+.on('show.bs.collapse', function(e){
+	if(showBtrMouseType=='mouseenter'){
+		e.preventDefault();
+	}
+})
+.on('hide.bs.collapse', function(e){
+	if(showBtrMouseType=='mouseenter'){
+		e.preventDefault();
+	}
+});
+function showMeasurement(serialNumberId){
+	$('.modal-content').load('/wo/show_measurement', {snId: serialNumberId}, function(){
+		$('#modal').modal('show');
+	});
+}

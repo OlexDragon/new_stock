@@ -16,3 +16,20 @@
 .pre-line{
 	white-space: pre-line;
 }
+.bg_alarm{
+	background-color: red;
+}
+.dotted_border{
+	border-left-style: double;
+}
+.border_blue{
+ 	border-color: blue;
+}
+.border_white{
+ 	border-color: white;
+}
+.bg_tropo{
+	background-image: url("/images/tropo_rf.png");
+	background-repeat: no-repeat;
+	background-size: auto;
+}

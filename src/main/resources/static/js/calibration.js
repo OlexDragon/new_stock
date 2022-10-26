@@ -99,8 +99,6 @@ $('.calibrate').click(function(e){
 		calibrateId = id;
 		$modal.load(this.href);
 	}
-
-	$modal.modal('show');
 });
 
 // Uplode the profile
@@ -125,11 +123,21 @@ $('#upload').click(function(e){
 // Login to the unit
 $('.unitLogin').click(function(e){
 	e.preventDefault();
-	login();
+	loginWhithHref();
 });
 
 function login(){
+	var href = $('#unitLogin').prop('href');
+	loginWhithHref(href);
+}
 
+function loginFromScan(e, t){
+	e.preventDefault();
+	var href = $(t).prop('href');
+	loginWhithHref(href);
+}
+
+function loginWhithHref(href){
 	var href = $('#unitLogin').prop('href');
 	$.post(href)
 	.done(function(data){
@@ -177,11 +185,13 @@ $('#scan').click(function(e){
 	if(typeof scanIpInterval !=='undefined')
 		clearInterval(scanIpInterval);
 
+	var $modalHeader = $('#modal-header');
 	var ip = 10;
 	var index = 0;
 	scanIpInterval = setInterval(function() {
 
-		var ipAddress = '192.168.2.' + ip;
+		var ipAddress = '192.168.30.' + ip;
+		$modalHeader.text('Send Request for ' + ipAddress);
 
 		$.post('/calibration/rest/scan', {ip : ipAddress})
 		.done(function(hostname){
@@ -218,7 +228,7 @@ $('#scan').click(function(e){
 					$('<div>', {class: 'col-auto'}).append($('<a>', { class: 'btn btn-sm btn-outline-dark', target: "_blank", href: '/calibration?sn=' + info["Serial number"]}).text('Calibrate'))
 				)
 				.append(
-					$('<div>', {class: 'col-auto'}).append($('<a>', { class: 'btn btn-sm btn-outline-info', onclick: 'login(event, this)', target: "_blank", href: '/calibration/rest/login?sn=' + info["Serial number"]}).text('Login'))
+					$('<div>', {class: 'col-auto'}).append($('<a>', { class: 'btn btn-sm btn-outline-info', onclick: 'loginFromScan(event, this)', target: "_blank", href: '/calibration/rest/login?sn=' + info["Serial number"]}).text('Login'))
 				);
 				$row.attr('data-bs-toggle','tooltip').attr('data-bs-placement','top').attr('title', info["Product name"]);
 			});
@@ -231,9 +241,9 @@ $('#scan').click(function(e){
 
 			var tooltipTriggerList = [].slice.call(document.querySelectorAll('[data-bs-toggle="tooltip"]'));
 			tooltipTriggerList.map(function (tooltipTriggerEl) { return new bootstrap.Tooltip(tooltipTriggerEl)});
-			$('#modal-header').text('Scan completed.');
+			$modalHeader.text('Scan completed.');
 		}
-	}, 200);
+	}, 700);
 
 	$modal.on('hidden.bs.modal', function () {
 		clearInterval(scanIpInterval);
@@ -269,17 +279,17 @@ $('#dropdownCalibrateButton').on('show.bs.dropdown', function(){
 
 		case 'OFF':
 			$calMode.addClass('text-primary').text('Calibration Mode: ' + status);
-			$('#gain').addClass('disabled list-group-item-light').text('Gain - Cal.Mode must be ON');
+			$('#menuGain').addClass('disabled list-group-item-light').text('Gain - Cal.Mode must be ON');
 			break;
 
 		case 'ON':
 			$calMode.addClass('text-success').text('Calibration Mode: ' + status);
-			$('#gain').removeClass('disabled list-group-item-light').text('Gain');
+			$('#menuGain').removeClass('disabled list-group-item-light').text('Gain');
 			break;
 
 		default:
 			$calMode.text('Calibration Mode');
-			$('#gain').addClass('disabled list-group-item-light');
+			$('#menuGain').addClass('disabled list-group-item-light');
 		}
 	})
 	.fail(function(error) {
@@ -332,3 +342,12 @@ function toArray($inputs){
 	$inputs.map((i, v)=>v.value).filter((i, v)=>v).map((i, v)=>parseFloat(v)).sort().each((i, v)=>values.push(v));
 	return values;
 }
+
+//Created for TROPOSCAT to see currents of output devices
+$('#currents').click(function(e){
+	e.preventDefault();
+
+	let serialNumber = $('#serialNumber').text();
+	let href = '/calibration/currents?sn=' + serialNumber;
+	let modal = $('#modal').load(href);
+})

@@ -1,0 +1,241 @@
+<!DOCTYPE html>
+<html 	xmlns="http://www.w3.org/1999/xhtml"
+		xmlns:th="https://www.thymeleaf.org"
+      	xmlns:sec="https://www.thymeleaf.org/thymeleaf-extras-springsecurity5"
+      	lang="en">
+<head>
+    <meta charset="UTF-8" />
+    <title>IRT Bom.</title>
+    <link rel="shortcut icon" href="http://irttechnologies.com/favicon.ico">
+    <link rel="stylesheet" href="https://stackpath.bootstrapcdn.com/bootstrap/4.4.1/css/bootstrap.min.css" data-integrity="sha384-Vkoo8x4CGsO3+Hhxv8T/Q5PaXtkKtu6ug5TOeNV6gBiFeWPGFN9MuhOf23Q9Ifjh" data-crossorigin="anonymous">
+    <link rel="stylesheet" href="../../static/css/test.css">
+    <script type="application/javascript" src="https://ajax.googleapis.com/ajax/libs/jquery/3.5.1/jquery.min.js"></script>
+    <script type="application/javascript" src="https://cdnjs.cloudflare.com/ajax/libs/popper.js/2.9.2/umd/popper.min.js"></script>
+    <script type="application/javascript" src="https://stackpath.bootstrapcdn.com/bootstrap/4.4.1/js/bootstrap.min.js"></script>
+	<script type="application/javascript" src="https://cdn.jsdelivr.net/npm/js-cookie@2/src/js.cookie.min.js"></script>
+</head>
+<body>
+
+<!-- Modal Message -->
+	<div id="modal" class="modal" tabindex="-1" role="dialog">
+	<th:block th:fragment="modal">
+  		<div class="modal-dialog modal-lg">
+    		<div class="modal-content">
+<!-- Modal Header -->
+      			<div class="modal-header row">
+        			<h5 class="modal-title ml-3 text-primary col-auto" th:text="'The currents of ' + ${serialNumber}">The currents of IRT-2234005</h5>
+<!-- X Button -->
+        			<button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+      			</div>
+ <!-- Modal Body -->
+      			<div id="modal-body" class="modal-body">
+      			<div class="row bg_tropo">
+      				<div class="col">
+       					<div class="row mt-5">
+      						<div class="col-6 epsu_1 text-right mt-3"><strong id="current2" class="txt_blue bg_white" th:text="''">2.0 A</strong></div>
+      						<div class="col-auto mt-3"><strong class="bg_white">1G2</strong></div>
+      						<div class="col"></div>
+      					</div>
+        				<div class="row mt-5" >
+     						<div class="col-6 epsu_1 text-right mt-4"><strong id="current1" class="txt_blue bg_white " th:text="''">1.0 A</strong></div>
+      						<div class="col-auto mt-4"><strong class="bg_white">1G1</strong></div>
+     						<div class="col"></div>
+      					</div>
+ 	   					<div class="row mt-2" ></div>
+      					<div class="row mt-5" >
+       						<div class="col-6 epsu_2 text-right mt-5"><strong id="current8" class="txt_blue bg_white " th:text="''">8.0 A</strong></div>
+      						<div class="col-auto mt-5"><strong class="bg_white">2G2</strong></div>
+       						<div class="col"></div>
+       					</div>
+	   					<div class="row mt-5" >
+      						<div class="col-6 epsu_2 text-right mt-4"><strong id="current7" class="txt_blue bg_white " th:text="''">7.0 A</strong></div>
+      						<div class="col-auto mt-4"><strong class="bg_white">2G1</strong></div>
+      						<div class="col"></div>
+      					</div>
+	   					<div class="row mt-5" ></div>
+      				</div>
+      				<div class="col">
+       					<div class="row mt-5">
+      						<div class="col"></div>
+      						<div class="col-auto mt-3"><strong class="bg_white">2G1</strong></div>
+      						<div class="col-6 epsu_1 mt-3"><strong id="current3" class="txt_blue bg_white " th:text="''">3.0 A</strong></div>
+      					</div>
+        				<div class="row mt-5" >
+     						<div class="col"></div>
+      						<div class="col-auto mt-4"><strong class="bg_white">2G2</strong></div>
+     						<div class="col-6 epsu_1 mt-4"><strong id="current4" class="txt_blue bg_white " th:text="''">4.0 A</strong></div>
+       					</div>
+ 	   					<div class="row mt-2" ></div>
+      					<div class="row mt-5" >
+       						<div class="col"></div>
+      						<div class="col-auto mt-5"><strong class="bg_white">1G1</strong></div>
+       						<div class="col-6 epsu_2 mt-5"><strong id="current5" class="txt_blue bg_white " th:text="''">5.0 A</strong></div>
+       					</div>
+	   					<div class="row mt-5" >
+      						<div class="col"></div>
+      						<div class="col-auto mt-4"><strong class="bg_white">1G2</strong></div>
+      						<div class="col-6 epsu_2 mt-4"><strong id="current6" class="txt_blue bg_white " th:text="''">6.0 A</strong></div>
+      					</div>
+	   					<div class="row mt-5" ></div>
+      				</div>
+      			</div>
+    			<div class="row mt-3" >
+     				<div id="currentDelay" class="col"></div>
+      				<div class="col-auto">
+      					<button id="resetBtn" class="btn btn-outline-secondary">Reset</button>
+      				</div>
+   				</div>
+    		</div>
+<!-- Modal Footer -->
+      			<div class="modal-footer">
+	        		<button type="button" class="btn btn-outline-secondary" data-bs-dismiss="modal">Close</button>
+	    		</div>
+  		</div>
+  		<script type="application/javascript" th:inline="javascript">
+		/*<![CDATA[*/
+
+// 			$.ajaxSetup({
+//  				timeout: 2000
+// 			});
+
+			var delay = 200;
+			$('#resetBtn').click(function(){delay = 200; })
+
+			var err = false;
+			var $currentDelay = $('#currentDelay').text('Delay: ' + delay + ' ms');
+
+			var intervalCurrent = setInterval(getCurrents, delay);
+			var $modal = $('#modal');
+			$modal.on('hidden.bs.modal', function () {
+				clearInterval(intervalCurrent);
+				intervalCurrent = undefined;
+			});
+
+			var devid = 1001
+			function getCurrents(){
+
+				let mShow = $('#modal.show');
+				if(!mShow) return;
+
+				if(devid==1001)
+					devid = 1002;
+				else
+					devid = 1001;
+				let = unitSerialNumber = /*[[${serialNumber}]]*/ 'IRT-2121021';
+/*[+
+				$.post('/calibration/rest/hpbm_register', {sn: unitSerialNumber, devid: devid})
+				.done(function(properties, t){
+
++]*/
+	// First properties
+/*[+
+					let devid_1001 = properties['1001'];
+					if(devid_1001)
+						showCurrent('#current1', '#current2', '#current3', '#current4', devid_1001);
+						
+
++]*/
+	// Second properties
+/*[+
+					let devid_1002 = properties['1002'];
+					if(devid_1002)
+						showCurrent('#current5', '#current6', '#current7', '#current8', devid_1002);
+
+					if(intervalCurrent && !devid_1001 && !devid_1002){
+
+						if(!properties){
+							clearInterval(intervalCurrent);
+							intervalCurrent = setInterval(getCurrents, ++delay);
+							$currentDelay.text('Delay: ' + delay + ' ms');
+							return;
+						}
+					}
+				})
+				.fail(function(error) {
+
+					if(err) return;
+
+					if(error.statusText!='abort'){
+
+						err = true;
+						$modal.modal('hide');
+
+						var responseText = error.responseText;
+						if(responseText)
+							alert(error.responseText);
+						else
+							alert("Server error. Status = " + error.status)
+
+						err = false;
+					}
+				});
++]*/
+			}
+
+			function showCurrent(id1, id2, id3, id4, properties){
+
+				//ePSU_2_42V 
+				let ePSU_2_42V = properties['epsu_2_42V'];
+
+				let c1 = ePSU_2_42V['I_HS1 (0x03)']
+				let $c1 = $(id1);
+				checkCurrent($c1, c1)
+				blinkParentBorder($c1)
+
+				let c2 = ePSU_2_42V['I_HS2 (0x05)']
+				let $c2 = $(id2);
+				checkCurrent($c2, c2)
+
+				//ePSU_3_42V
+				let ePSU_3_42V = properties['epsu_3_42V'];
+
+				let c3 = ePSU_3_42V['I_HS1 (0x03)']
+				let $c3 = $(id3);
+				checkCurrent($c3, c3)
+				blinkParentBorder($c3)
+
+				let c4 = ePSU_3_42V['I_HS2 (0x05)']
+				let $c4 = $(id4);
+				checkCurrent($c4, c4)
+			}
+
+			var maxCurrent = 6.0;
+			function checkCurrent($c, c){
+
+				$c.text(c);
+				let hasClass = $c.hasClass('bg_alarm');
+				let v = c.split(" ")[0];
+
+				if(!v)
+					return;
+
+				if(parseFloat(v)>=maxCurrent && !hasClass){
+					$c.addClass('bg_alarm');
+					return;
+				}
+
+				if(parseFloat(v)<maxCurrent && hasClass){
+					$c.removeClass('bg_alarm');
+				}
+			}
+
+			function blinkParentBorder($c){
+				let $parent = $c.parent().addClass('border_blue').removeClass('border_white');
+				setTimeout(function(){ $parent.removeClass('border_blue').addClass('border_white'); }, 100);
+			}
+		/*]]>*/
+
+		$modal.modal('show');
+
+		//# sourceURL=currents.js
+  		</script>
+	</th:block>
+	</div>
+
+    <script type="application/javascript" src="https://ajax.googleapis.com/ajax/libs/jquery/3.5.1/jquery.min.js"></script>
+    <script type="application/javascript" src="https://cdnjs.cloudflare.com/ajax/libs/popper.js/2.10.2/umd/popper.min.js"></script>
+    <script type="application/javascript" src="https://stackpath.bootstrapcdn.com/bootstrap/4.4.1/js/bootstrap.min.js"></script>
+	<script type="application/javascript" src="https://cdn.jsdelivr.net/npm/js-cookie@2/src/js.cookie.min.js"></script>
+	<script type="application/javascript" src="../../static/js/irt.js" th:src="@{/js/irt.js}"></script>
+</body>
+</html>

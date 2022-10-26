@@ -5,7 +5,7 @@
       	lang="en">
 <head>
 	<meta charset="utf-8">
-    <title>IRT Calibration.</title>
+    <title th:inline="text">[[${info==null ? 'IRT' : info.serialNumber + ' -'}]] Calibration.</title>
     <link rel="shortcut icon" href="http://irttechnologies.com/favicon.ico">
 <th:block th:replace="components :: bootstrapLink">
     <link rel="stylesheet" href="https://stackpath.bootstrapcdn.com/bootstrap/4.4.1/css/bootstrap.min.css">
@@ -47,6 +47,8 @@
   			<div class="dropdown-menu" aria-labelledby="dropdownUnitButton">
     			<a class="dropdown-item" th:classappend="${info==null ? 'disabled list-group-item-light' : ''}" th:href="@{${info==null} ? '#' : 'http://' + ${info.serialNumber}}" target="_blank">Open Unit Web</a>
     			<a id="unitLogin" class="dropdown-item unitLogin" th:classappend="${info==null ? 'disabled list-group-item-light' : ''}" th:href="@{${info==null} ? '#' : '/calibration/rest/login?sn=' + ${info.serialNumber}}">Unit Login</a>
+    			<a id="currents" class="dropdown-item" th:classappend="${info==null ? 'disabled list-group-item-light' : ''}" href="#">Unit's Currents</a>
+    			<div><hr class="dropdown-divider"></div>
     			<a id="scan" class="dropdown-item" href="#">Network scan</a>
   			</div>
 		</div>
@@ -56,11 +58,11 @@
   			<button id="dropdownCalibrateButton" class="btn dropdown-toggle" type="button" data-bs-toggle="dropdown" aria-haspopup="true" aria-expanded="false">Calibrate</button>
   			<div id="calMenu" class="dropdown-menu" aria-labelledby="dropdownCalibrateButton">
 <!-- Output Power -->
-    			<a class="dropdown-item calibrate" th:classappend="${info==null ? 'disabled list-group-item-light' : ''}" th:href="@{${info==null} ? '#' : '/calibration/output_power?sn=' + ${info.serialNumber} + '&pn=' + ${info.partNumber}}">Output Power</a>
+    			<a id="menuOutputPower" class="dropdown-item calibrate" th:classappend="${info==null ? 'disabled list-group-item-light' : ''}" th:href="@{${info==null} ? '#' : '/calibration/output_power?sn=' + ${info.serialNumber} + '&pn=' + ${info.partNumber}}">Output Power</a>
 <!-- Power Offset -->
-    			<a class="dropdown-item calibrate" th:classappend="${info==null ? 'disabled list-group-item-light' : ''}" th:href="@{${info==null} ? '#' : '/calibration/power_offset?sn=' + ${info.serialNumber} + '&pn=' + ${info.partNumber} + '&deviceId=' + ${#strings.substring(info.deviceId, 1, info.deviceId.length()-1)}}">Power Offset</a>
+    			<a id="menuPowerOffset" class="dropdown-item calibrate" th:classappend="${info==null ? 'disabled list-group-item-light' : ''}" th:href="@{${info==null} ? '#' : '/calibration/power_offset?sn=' + ${info.serialNumber} + '&pn=' + ${info.partNumber} + '&deviceId=' + ${#strings.substring(info.deviceId, 1, info.deviceId.length()-1)}}">Power Offset</a>
 <!-- Gain -->
-    			<a id="gain" class="dropdown-item calibrate" th:classappend="${info==null ? 'disabled list-group-item-light' : ''}" th:href="@{${info==null} ? '#' : '/calibration/gain?sn=' + ${info.serialNumber} + '&pn=' + ${info.partNumber}}">Gain</a>
+    			<a id="menuGain" class="dropdown-item calibrate" th:classappend="${info==null ? 'disabled list-group-item-light' : ''}" th:href="@{${info==null} ? '#' : '/calibration/gain?sn=' + ${info.serialNumber} + '&pn=' + ${info.partNumber}}">Gain</a>
 <!-- BTR Measurement -->
     			<a id="btr" 
     				class="dropdown-item calibrate" 

@@ -80,7 +80,13 @@
 				<div class="col-sm-2"><strong>Mfr PN</strong></div>
 				<div class="col-sm"><strong>Description</strong></div>
 			</div>
-			<div class="row hover mr clickable" th:if="${ components }!=null" th:each=" component, stat : ${ components }" th:id="${ component.key }" th:classappend="${stat.odd}? 'odd'">
+			<div class="row hover mr clickable"
+					 	th:if="${ components }!=null"
+					 	th:each=" component, stat : ${ components }"
+					 	th:id="${ component.key }"
+					 	th:with="obsolete = ${component.obsolete!=null ? component.obsolete : false }"
+					 	th:title="${obsolete}?'Obsolete'"
+					 	th:classappend="${stat.odd?'odd ':''} + ${obsolete?'text-danger':''}">
 				<div class="col-sm-2 partNumber" th:text="${ component.partNumber }"><strong>Part Number</strong></div>
 				<div class="col-sm-2 mfrPN" th:text="${ component.mfrPN }"><strong>Mfr PN</strong></div>
 				<div class="col-sm description" th:text="${ component.description }"><strong>Description</strong></div>
@@ -133,6 +139,26 @@
     <script type="application/javascript" src="https://ajax.googleapis.com/ajax/libs/jquery/3.6.0/jquery.min.js"></script>
 	<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.1.3/dist/js/bootstrap.bundle.min.js" integrity="sha384-ka7Sk0Gln4gmtz2MlQnikT1wXgYsOg+OMhuP+IlRH9sENBO0LRn5q+8nbTov4+1p" crossorigin="anonymous"></script>
 	<script type="application/javascript" src="https://cdn.jsdelivr.net/npm/js-cookie@2/src/js.cookie.min.js"></script>
+	<script type="application/javascript" sec:authorize="isAuthenticated()">
+	/*<![CDATA[*/
+		function testLogin(){
+
+			$.post('/components/test-login')
+			.done(function(loggedIn){
+				if(loggedIn === true){
+					setTimeout(testLogin, 10*60*1000);
+					return;
+				}
+				alert('Your login has expired.\nRefresh this page and log in again.');
+			})
+			.fail(function(error) {
+				alert('Connection error.\nTry to refresh this page.');
+			});
+		}
+		setTimeout(testLogin, 1000);
+	/*]]>*/
+	//# sourceURL=testLogin.js
+	</script>
 </th:block>
 	<script type="application/javascript" src="../static/js/irt.js" th:src="@{/js/irt.js}"></script>
 	<script type="application/javascript" src="../static/js/components.js" th:src="@{/js/components.js}"></script>

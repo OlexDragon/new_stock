@@ -34,6 +34,8 @@ import irt.components.workers.ProfileWorker;
 @Controller
 @RequestMapping("rma")
 public class RmaController {
+	private static final long MARINA_ID = 10L;
+
 	private final static Logger logger = LogManager.getLogger();
 
 	private static final int SIZE = 60;
@@ -44,48 +46,79 @@ public class RmaController {
 	@Autowired private RmaRepository rmaRepository;
 	@Autowired private RmaCommentsRepository rmaCommentsRepository;
 
-    @GetMapping
+	@GetMapping
     String getRmas() {
        return "rma";
     }
 
 	@PostMapping(path = "search")
-	public String searchBom(
+	public String searchRma(
 			@RequestParam(required=false) 	String id,
 			@RequestParam(required=false) 	String value,
 			@RequestParam				 	String sortBy,
 			@RequestParam					RmaFilter rmaFilter,
 											Model model) throws IOException {
 
-//		logger.error("id: {}; value: {}; serchBy: {}; rmaFilter:{}", id, value, sortBy, rmaFilter);
+		logger.traceEntry("id: {}; value: {}; sortBy: {}; rmaFilter:{}", id, value, sortBy, rmaFilter);
 
 		String name = sortBy.replace("rmaOrderBy", "");
 		name = name.substring(0, 1).toLowerCase() + name.substring(1);
 
 		final Direction direction = name.equals("rmaNumber") ? Sort.Direction.DESC : Sort.Direction.ASC;
-//		logger.error("name: {}; direction: {}", name, direction);
+		logger.debug("name: {}; direction: {}", name, direction);
 		Sort sort = Sort.by(direction, name);
 		List<Rma> rmas = null;
 		switch(id) {
 
 		case "rmaNumber":
-			if(rmaFilter.status==null)
-				rmas = rmaRepository.findByRmaNumberContaining(value, PageRequest.of(0, SIZE, sort));
-			else
-				rmas = rmaRepository.findByRmaNumberContainingAndStatus(value, rmaFilter.status, PageRequest.of(0, SIZE, sort));
+			rmas = rmaFilter.oStatus
+						.map(
+								status->{
+									switch(status) {
+
+									case IN_WORK:
+										return rmaRepository.findByRmaNumberContainingAndStatusNot(value, Rma.Status.SHIPPED, PageRequest.of(0, SIZE, sort));
+
+									default:
+										return rmaRepository.findByRmaNumberContainingAndStatus(value, status, PageRequest.of(0, SIZE, sort));
+									}
+								})
+						.orElseGet(()->rmaRepository.findByRmaNumberContaining(value, PageRequest.of(0, SIZE, sort)));
 			break;
 
 		case "rmaSerialNumber":
-			if(rmaFilter.status==null)
-				rmas = rmaRepository.findBySerialNumberContaining(value, PageRequest.of(0, SIZE, sort));
-			else
-				rmas = rmaRepository.findBySerialNumberContainingAndStatus(value, rmaFilter.status, PageRequest.of(0, SIZE, sort));
+			rmas = rmaFilter.oStatus
+						.map(
+								status->{
+									switch(status) {
+
+									case IN_WORK:
+										return rmaRepository.findBySerialNumberContainingAndStatusNot(value, Rma.Status.SHIPPED, PageRequest.of(0, SIZE, sort));
+
+									default:
+										return rmaRepository.findBySerialNumberContainingAndStatus(value, status, PageRequest.of(0, SIZE, sort));
+									}
+								})
+						.orElseGet(()->rmaRepository.findBySerialNumberContaining(value, PageRequest.of(0, SIZE, sort)));
 			break;
 
 		case "rmaDescription":
-			rmas = rmaRepository.findByDescriptionContainingOrderBySerialNumber(value, PageRequest.of(0, SIZE));
+			rmas = rmaFilter.oStatus
+						.map(
+								status->{
+									switch(status) {
+
+									case IN_WORK:
+										return rmaRepository.findByDescriptionContainingAndStatusNot(value, Rma.Status.SHIPPED, PageRequest.of(0, SIZE, sort));
+
+									default:
+										return rmaRepository.findByDescriptionContainingAndStatus(value, status, PageRequest.of(0, SIZE, sort));
+									}
+								})
+						.orElseGet(()->rmaRepository.findByDescriptionContaining(value, PageRequest.of(0, SIZE, sort)));
 		}
-		
+
+		logger.debug("RMA list size: {}", rmas.size());
 		model.addAttribute("rmas", rmas);
 
 		return "rma :: rmaCards";
@@ -123,6 +156,8 @@ public class RmaController {
 					final User user = ((UserPrincipal)pr).getUser();
 					rma.setUser(user);
 					rma.setUserId(user.getId());
+
+					rma.setStatus(Rma.Status.CREATED);
 //					logger.error(rma);
 
 					final Rma savedRma = rmaRepository.save(rma);
@@ -135,7 +170,7 @@ public class RmaController {
 	}
 
 	@PostMapping(path = "add_comment")
-	public String addComment(@RequestParam Long rmaId, @RequestParam String comment, @RequestParam Boolean shipped, Principal principal, Model model) throws IOException {
+	public String addComment(@RequestParam Long rmaId, @RequestParam String comment, @RequestParam(required = false) Boolean shipped, Principal principal, Model model) throws IOException {
 		logger.traceEntry("rmaId: {}; comment: {}; shipped: {}; principal: {};", rmaId, comment, shipped, principal);
 
 		if(!(principal instanceof UsernamePasswordAuthenticationToken) || rmaId==null || comment.isEmpty())
@@ -153,19 +188,22 @@ public class RmaController {
 		List<RmaComment> comments = rmaCommentsRepository.findByRmaId(rmaId);
 		model.addAttribute("comments", comments);
 
-		Optional.of(shipped).filter(s->s)
-		.ifPresent(
-				s->{
-					rmaRepository.findById(rmaId)
-					.ifPresent(
-							rma->{
+		final Rma rma = rmaRepository.findById(rmaId).get();
+		if(user.getId()!=MARINA_ID) {
 
-								model.addAttribute("rmaId", rmaId);
-								rma.setStatus(Rma.Status.SHIPPED);
-								model.addAttribute("status", Rma.Status.SHIPPED);
-								rmaRepository.save(rma);
-							});
-				});
+			final Optional<Boolean> oShipped = Optional.ofNullable(shipped).filter(s->s);
+			if(oShipped.isPresent()){
+
+				model.addAttribute("rmaId", rmaId);
+				rma.setStatus(Rma.Status.SHIPPED);
+				model.addAttribute("status", Rma.Status.SHIPPED);
+				rmaRepository.save(rma);
+			}else if(rma.getStatus()==Rma.Status.CREATED){
+
+				rma.setStatus(Rma.Status.IN_WORK);
+				rmaRepository.save(rma);
+			}
+		}
 
 		return "rma :: rmaBody";
 	}
@@ -189,9 +227,10 @@ public class RmaController {
 		REA(Rma.Status.READY),		// Show RMAs ready to ship
 		WOR(Rma.Status.IN_WORK);	// Show RMAs in work
 
-		private Rma.Status status;
+		private Optional<Rma.Status> oStatus;
+
 		RmaFilter(Rma.Status status){
-			this.status = status;
+			this.oStatus = Optional.ofNullable(status);
 		}
 	}
 }

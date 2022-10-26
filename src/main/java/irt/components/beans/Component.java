@@ -22,4 +22,7 @@ public class Component {
 
 	@JsonProperty("Description")
 	private String description;
+
+	@JsonProperty("IRT_Obsolete")
+	private Boolean obsolete;
 }

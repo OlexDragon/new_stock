@@ -12,6 +12,7 @@ import org.apache.http.client.ClientProtocolException;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.web.bind.annotation.ExceptionHandler;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
@@ -66,4 +67,9 @@ public class HttpSerialPortRestController {
 
     	return HttpRequest.postForObgect(url, CommandRequest.class, commandRequest).get(5, TimeUnit.SECONDS);
 	}
+
+	@ExceptionHandler(TimeoutException.class)
+	  public void conflict(Exception e) {
+		logger.catching(e);
+	  }
 }

@@ -45,16 +45,17 @@ public class RmaRestController {
 	public String addToRma(@RequestParam String rmaNumber, @RequestParam String serialNumber, Principal principal) throws IOException {
 //		logger.error("rmaNumber: {}; serialNumber: {};", rmaNumber, serialNumber);
 
+		String sn = serialNumber.toUpperCase();
 		final ProfileWorker profileWorker = new ProfileWorker(profileFolder, serialNumber);
 		final boolean exists = profileWorker.exists();
 
 		if(!exists)
-			return "The Profile with sn:'" + serialNumber + "' was not found.";
+			return "The Profile with sn:'" + sn + "' was not found.";
 
-		final Optional<Rma> oRma = rmaRepository.findBySerialNumberAndStatusNot(serialNumber, Rma.Status.SHIPPED);
+		final Optional<Rma> oRma = rmaRepository.findBySerialNumberAndStatusNot(sn, Rma.Status.SHIPPED);
 //		logger.error(oRma);
 		if(oRma.isPresent())
-			return "The Unit with Serial Number '" + serialNumber + "' exists in the production.";
+			return "The Unit with Serial Number '" + sn + "' exists in the production.";
 
 		return profileWorker.getDescription()
 				.map(
@@ -62,7 +63,7 @@ public class RmaRestController {
 
 							final Rma rma = new Rma();
 							rma.setRmaNumber(rmaNumber);
-							rma.setSerialNumber(serialNumber);
+							rma.setSerialNumber(sn);
 							rma.setDescription(description);
 
 							final Object pr = ((UsernamePasswordAuthenticationToken)principal).getPrincipal();
@@ -70,6 +71,7 @@ public class RmaRestController {
 							rma.setUser(user);
 							rma.setUserId(user.getId());
 //							logger.error(rma);
+							rma.setStatus(Rma.Status.CREATED);
 
 							rmaRepository.save(rma);
 							return "";

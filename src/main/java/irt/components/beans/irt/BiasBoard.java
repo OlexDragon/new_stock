@@ -18,10 +18,11 @@ public class BiasBoard {
 	private String className;
 
 	@JsonProperty("power")
-	@JsonAlias({"det1"})
+	@JsonAlias("det1")
 	private IrtValue power;
 
 	@JsonProperty("refl_power")
+	@JsonAlias("det2")
 	private IrtValue reflPower;
 
 	private BigDecimal temperature;

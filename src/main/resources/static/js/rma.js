@@ -64,7 +64,7 @@ function search($this){
 
 // Load RMAs
 	var $accordion = $('#accordion');
-	$accordion.load('/rma/search', {id : attrId, value : val, sortBy: sortBy, rmaFilter: rmaFilter}, function(){
+	$accordion.load('/rma/search', {id : attrId, value : val, sortBy: sortBy, rmaFilter: rmaFilter}, function(responseText, textStatus, req){
 
 		if(!$addRMA.length || attrId != "rmaSerialNumber")
 			return;
@@ -200,40 +200,40 @@ $('#rmaFilter').click(function(e){
 	case 'ALL':
 		if(e.ctrlKey){
 			text = 'SHI';
-			$this.prop('title', 'Shipped\nPress to show All units.')
+			$this.prop('title', 'Shipped\nClick to show All units.\nPress CTRL to change direction.')
 		}else{
 			text = 'WOR';
-			$this.prop('title', 'In Work\nPress to show READY to ship units.')
+			$this.prop('title', 'In Work\nClick to show READY to ship units.\nPress CTRL to change direction. ')
 		}
 		break;
 
 	case 'WOR':
 		if(e.ctrlKey){
 			text = 'ALL';
-			$this.prop('title', 'Press to show RMA units in work.')
+			$this.prop('title', 'Click to show RMA units in work.\nPress CTRL to change direction.')
 		}else{
 			text = 'REA';
-			$this.prop('title', 'Ready to ship\nPress to show SHIPPED units.')
+			$this.prop('title', 'Ready to ship\nClick to show SHIPPED units.\nPress CTRL to change direction.')
 		}
 		break;
 
 	case 'REA':
 		if(e.ctrlKey){
 			text = 'WOR';
-			$this.prop('title', 'In Work\nPress to show READY to ship units.')
+			$this.prop('title', 'In Work\nClick to show READY to ship units.\nPress CTRL to change direction.')
 		}else{
 			text = 'SHI';
-			$this.prop('title', 'Shipped\nPress to show All units.')
+			$this.prop('title', 'Shipped\nClick to show All units.\nPress CTRL to change direction.')
 		}
 		break;
 
 	default:
 		if(e.ctrlKey){
 			text = 'REA';
-			$this.prop('title', 'Ready to ship\nPress to show SHIPPED units.')
+			$this.prop('title', 'Ready to ship\nClick to show SHIPPED units.\nPress CTRL to change direction.')
 		}else{
 			text = 'ALL';
-			$this.prop('title', 'Press to show RMA units in work.')
+			$this.prop('title', 'Click to show RMA units in work.\nPress CTRL to change direction.')
 	}
 	}
 

@@ -4,7 +4,7 @@
       	xmlns:sec="https://www.thymeleaf.org/thymeleaf-extras-springsecurity5"
       	lang="en">
 <head>
-    <title>IRT BTRs.</title>
+    <title>IRT Work Orders.</title>
     <link rel="shortcut icon" href="http://irttechnologies.com/favicon.ico">
 <th:block th:replace="components :: bootstrapLink">
     <link rel="stylesheet" href="https://stackpath.bootstrapcdn.com/bootstrap/4.4.1/css/bootstrap.min.css">
@@ -34,19 +34,19 @@
 <!-- WO Number search-->
   			<div class="input-group col">
       			<label for="btrWoNumber" class="input-group-text">WO</label>
-      			<input id="btrWoNumber" type="text" class="form-control searchBTR" placeholder="WO Number" aria-label="WO Number">
+      			<input id="btrWoNumber" type="text" class="form-control searchWO" placeholder="WO Number" aria-label="WO Number">
     		</div>
 
 <!-- RMA Unit Serial Number search-->
   			<div class="input-group col">
       			<label for="btrSerialNumber" class="input-group-text">SN</label>
-      			<input id="btrSerialNumber" type="text" class="form-control searchBTR" placeholder="Serial Number" aria-label="Serial Number" th:value="${serialNumber}">
+      			<input id="btrSerialNumber" type="text" class="form-control searchWO" placeholder="Serial Number" aria-label="Serial Number" th:value="${serialNumber}">
     		</div>
 
  <!-- RMA Unit Description search -->
   			<div class="input-group ml-1 col">
       			<label for="btrDescription" class="input-group-text">Description</label>
-      			<input id="btrDescription" type="text" class="form-control searchBTR" placeholder="Description" aria-label="Description" aria-describedby="descriptionLbl">
+      			<input id="btrDescription" type="text" class="form-control searchWO" placeholder="Description" aria-label="Description" aria-describedby="descriptionLbl">
     		</div>
 
   			<div sec:authorize="hasAuthority('ADD_RMA')" class="ml-1 col-auto">
@@ -66,11 +66,15 @@
 	<th:block th:fragment="btrCards">
 	<th:block th:each="wo, woStatus : ${workOrders}">
 
-		<div class="accordion-item" th:each="sn, snStatus : ${wo.btrSerialNumbers}" th:with="index = '_' + ${ woStatus.index } + '_' + ${ snStatus.index }" th:id="${ sn.id }" th:classappend="${sn.parentId}==null ? '' : 'module'">
+		<div class="accordion-item"
+					th:each="sn, snStatus : ${wo.btrSerialNumbers}"
+					th:with="index = '_' + ${ woStatus.index } + '_' + ${ snStatus.index }, module = ${sn.parentId}!=null"
+					th:id="${ sn.id }"
+					th:classappend="${module} ? 'module'">
 
 <!-- Accordion:	Card Header -->
 			<h5 th:id="heading + ${ index }" class="accordion-header">
-				<button type="button" class="btn accordion-button" data-bs-toggle="collapse" data-bs-target="#btr0" aria-expanded="true" aria-controls="btr0" th:attr="aria-controls ='btr'+ ${ index }, data-bs-target='#btr'+ ${ index }" style="width:100%" th:classappend="${sn.parentId}==null ? 'bg-info bg-gradient bg-opacity-25' : ''">
+				<button type="button" class="btn accordion-button" data-bs-toggle="collapse" data-bs-target="#btr0" aria-expanded="true" aria-controls="btr0" th:attr="aria-controls ='btr'+ ${ index }, data-bs-target='#btr'+ ${ index }" style="width:100%" th:classappend="${sn.parentId}==null ? 'bg-info bg-gradient bg-opacity-25'">
           			<div class="row" style="width:100%">
            				<div class="col-auto">
           					<strong th:text="${ wo.number }"> WO Number </strong>
@@ -81,17 +85,27 @@
           				<div class="col text-secondary">
           					<strong th:text="${ sn.description }">Description</strong>
           				</div>
-           			</div>
+ 						<div class="col-auto">
+<!-- Button to Show BTR -->
+							<th:block th:if="${sn.measurements!=null} and ${sn.measurements.size()}>0">
+      							<div th:id="btrBtn + ${sn.id}" class="btn btn-outline-primary show-btr" >BTR</div>
+      							<script type="application/javascript" th:inline="javascript" >
+      							/*<![CDATA[*/
+       								let id = /*[[${sn.id}]]*/ 0;
+      								$('#btrBtn' + id).click(e=>{
+          								showMeasurement(id);
+      								});
+      							/*]]>*/
+      							</script>
+      						</th:block>
+    					</div>
+            		</div>
         		</button>
 			</h5>
 
 <!-- Accordion:	Card Body -->
 			<div id="rma0" th:id="btr + ${ index }" class="accordion-collapse collapse" aria-labelledby="heading0" th:attr="aria-labelledby ='heading'+${index}" data-bs-parent="#accordion">
 				<div id="accordion-body" class="accordion-body">
-
-<!-- Card Measurements -->
-				<th:block th:each="measurement, measStatis : ${sn.measurements}">
-				</th:block>
 
 <!-- Card comments -->
 				<th:block th:replace="btr_fragments :: comments(${sn.comments})"></th:block>
@@ -116,6 +130,15 @@
 			</div>
 		</div>
 	</th:block>
+		<script type="application/javascript" th:inline="javascript">
+		/*<![CDATA[*/
+			document.querySelectorAll('.show-btr')
+			.forEach(item=>{
+				item.addEventListener('mouseenter', showBtrMouse)
+				item.addEventListener('mouseout', showBtrMouse)
+			});
+		/*]]>*/
+		</script>
 <!-- 		 sec:authorize="hasAuthority('ADD_RMA_COMMENT')" -->
 		<script type="application/javascript" th:inline="javascript" sec:authorize="hasAuthority('ADD_RMA_COMMENT')">
 		/*<![CDATA[*/
@@ -133,8 +156,7 @@
 
 			var moduleId;
 			var modulSN;
-			var items = document.getElementsByClassName('accordion-item');
-			for(const item of items){
+			for(const item of document.getElementsByClassName('accordion-item')){
 
 				var $rmsNumber = $(item).find('.bg-secondary');
 				if(!$rmsNumber.hasClass('bg-secondary'))
@@ -173,7 +195,7 @@
 
 <!-- Modal Message -->
 	<div id="modal" class="modal fade" tabindex="-1">
-  		<div class="modal-dialog">
+  		<div class="modal-dialog modal-xl">
     		<div class="modal-content" th:remove="body">
  
 <!-- Block: Add Serial Number -->
@@ -235,6 +257,78 @@
 	    		</script>
     		</th:block>
 
+<!-- Block: Serial Number Measurement -->
+    		<th:block th:fragment="modalMeasurement">
+<!-- Modal Header -->
+      			<div class="modal-header">
+        			<h5 class="modal-title ml-3 text-primary" th:inline="text">[[${sn.serialNumber}]] - [[${sn.workOrder.number}]]. Measurement Result. </h5>
+        			<button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+      			</div>
+<!-- Modal Body -->
+      			<div id="modal-body" class="modal-body">
+
+				<!--  Measurement Selection -->
+      				<select id="selectMeasurement" class="form-select">
+      					<option th:each="measurement : ${sn.measurements}" th:value="${measurement.id}" th:text="${#dates.format( measurement.date, 'dd MMM yyyy kk:mm' )}" th:selected="${measurementStat.last}">Date</option>
+      				</select>
+    				<div><hr class="dropdown-divider"></div>
+    				<div id="measurement" th:remove="body">
+    					<th:block th:fragment="measurementData">
+ 
+						<!--  Gein -->
+       						<div class="row">
+      							<div class="col text-center text-success"><strong>GAIN:</strong></div><div class="col btr-frequency" th:each="value : ${measurement.gain.get(0).values}" th:text="${value.key} + ' GHz'"></div>
+      						</div>
+      						<div class="row btr-row btr-row-gain" th:each="gain : ${measurement.gain}" th:classappend="${gainStat.odd} ? 'odd'">
+      							<div class="col text-end btr-temperature" th:text="${gain.key} + ' &#x2103;'"></div>
+      							<div class="col" th:each="v : ${gain.values}"><strong th:data-key="${v.key}" th:text="${v.value}"></strong></div>
+      						</div>
+    						<div><hr class="dropdown-divider"></div>
+
+						<!-- Saturated Power -->
+       						<div class="row">
+      							<div class="col text-center text-success"><strong>SATURATION:</strong></div><div class="col btr-frequency" th:each="value : ${measurement.saturation.get(0).values}" th:text="${value.key} + ' GHz'"></div>
+      						</div>
+      						<div class="row btr-row btr-row-gain" th:each="value : ${measurement.saturation}" th:classappend="${valueStat.odd} ? 'odd'">
+      							<div class="col text-end btr-temperature" th:text="${value.key} + ' &#x2103;'"></div>
+      							<div class="col" th:each="v : ${value.values}"><strong th:data-key="${v.key}" th:text="${v.value}"></strong></div>
+      						</div>
+    						<div><hr class="dropdown-divider"></div>
+
+						<!-- P1dB Power -->
+      						<div class="row">
+      							<div class="col text-center text-success"><strong>P1dD:</strong></div><div class="col btr-frequency" th:each="value : ${measurement.p1db.get(0).values}" th:text="${value.key} + ' GHz'"></div>
+      						</div>
+      						<div class="row btr-row btr-row-gain" th:each="value : ${measurement.p1db}" th:classappend="${valueStat.odd} ? 'odd'">
+      							<div class="col text-end btr-temperature" th:text="${value.key} + ' &#x2103;'"></div>
+      							<div class="col" th:each="v : ${value.values}"><strong th:data-key="${v.key}" th:text="${v.value}"></strong></div>
+      						</div>
+    						<div><hr class="dropdown-divider"></div>
+
+						<!-- Power Detector -->
+       						<div class="row">
+      							<div class="col text-center text-success"><strong>Power Detector:</strong></div><div class="col btr-frequency" th:each="value : ${measurement.p1db.get(0).values}" th:text="${value.key} + ' GHz'"></div>
+      						</div>
+      						<div class="row btr-row btr-row-gain" th:each="value : ${measurement.p1db}" th:classappend="${valueStat.odd} ? 'odd'">
+      							<div class="col text-end btr-temperature" th:text="${value.key} + ' &#x2103;'"></div>
+      							<div class="col" th:each="v : ${value.values}"><strong th:data-key="${v.key}" th:text="${v.value}"></strong></div>
+      						</div>
+    					</th:block>
+    				</div>
+      			</div>
+<!-- Modal footer -->
+      			<div class="modal-footer">
+	        		<button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Close</button>
+	    		</div>
+	    		<script type="application/javascript">
+	    		/*<![CDATA[*/
+	    			let selected = $('#selectMeasurement').val();
+	    			$('#measurement').load('wo/load_measurement', {measurementId: selected});
+	    		/*]]>*/
+				//# sourceURL=btrMeasurement.js
+	    		</script>
+    		</th:block>
+
 <!-- Add Serial Number -->
     		<th:block th:fragment="modalComment">
 <!-- Modal Header -->
@@ -272,7 +366,7 @@
 
 	    				var snId = /*[[${serialNumber.id}]]*/ 1;
 	    				var comment = $('#btrTextarea').val();
-	    				$.post('btr/rest/save_comment', {snId: snId, comment: comment})
+	    				$.post('wo/rest/save_comment', {snId: snId, comment: comment})
 						.done(function(saved){
 
 							if(saved)

@@ -28,7 +28,7 @@ public class BtrWorkOrder implements Comparable<BtrWorkOrder>, Serializable {
 	private Long id;
 	private String number;
 
-	@OneToMany(mappedBy = "workOrderId", fetch = FetchType.EAGER, cascade = CascadeType.ALL)
+	@OneToMany(mappedBy = "workOrderId", fetch = FetchType.LAZY, cascade = CascadeType.ALL)
 	private Set<BtrSerialNumber> btrSerialNumbers;
 
 	@Override

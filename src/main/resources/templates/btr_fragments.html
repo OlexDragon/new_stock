@@ -15,7 +15,7 @@
 		<div class="col-1" th:text="${ commentStatus.count }">	#</div>
 		<div class="col comment pre-line" th:text="${ comment.comment }">Comment </div>
 		<div class="col-1 username" th:text="${ user.username }" th:title="${ user.firstname + ' ' + user.lastname}">User name </div>
-		<div class="col-2 date" th:text="${#dates.format( comment.date, 'dd MMM yyyy hh:mm' )}">Date </div>
+		<div class="col-2 date" th:text="${#dates.format( comment.date, 'dd MMM yyyy kk:mm' )}">Date </div>
 	</div>
 </th:block>
 

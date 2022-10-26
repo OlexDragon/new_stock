@@ -28,10 +28,11 @@ function search($this){
 
 $('#accordion').on('shown.bs.collapse', function () {
 
-	var accordionItem = $(this).children().filter(function(index,a){return $(this).find('button').hasClass('collapsed');});
+	var accordionItem = $(this).children().filter(function(index,a){return !$(this).find('button').hasClass('collapsed');});
   	var $cardBody = accordionItem.find('.accordion-body');
+  	let childrenLength = $cardBody.children().length;
 
-	if($cardBody.children().length)
+	if(childrenLength)
  		return;
 
 	var bomKey = accordionItem.attr('data-bom-key');

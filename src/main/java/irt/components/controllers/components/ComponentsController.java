@@ -80,7 +80,7 @@ public class ComponentsController {
 		List<NameValuePair> params = new ArrayList<NameValuePair>();
 //		params.add(new BasicNameValuePair("$format", "json"));
 		params.add(new BasicNameValuePair("$top", "" + SIZE));
-		params.add(new BasicNameValuePair("$orderby", "SKU"));
+		params.add(new BasicNameValuePair("$orderby", "IRT_Obsolete,SKU"));
 		Optional.ofNullable(page).map(p->p*SIZE).ifPresent(skip->params.add(new BasicNameValuePair("$skip", skip.toString())));
 
 		// Filter

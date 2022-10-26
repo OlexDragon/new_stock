@@ -29,7 +29,7 @@
   		<form class="row">
 
 <!-- Filter RMA unit by shipped or not -->
- 			<div id="rmaFilter" class="btn btn-outline-primary ml-1 col-auto" title="Press to show RMA units in work.">ALL</div>
+ 			<div id="rmaFilter" class="btn btn-outline-primary ml-1 col-auto" title="Click to show RMA units in work.\nPress CTRL to change direction.">ALL</div>
  
 <!-- RMA Number search-->
   			<div class="input-group col">
@@ -73,7 +73,16 @@
 			<h5 th:id="heading + ${ index }" class="accordion-header">
 				<button type="button" class="btn accordion-button" data-bs-toggle="collapse" data-bs-target="#rma0" aria-expanded="true" aria-controls="rma0" th:attr="aria-controls ='rma'+${ index }, data-bs-target='#rma'+${ index }" style="width:100%">
           			<div class="row" style="width:100%">
-           				<div class="col-auto rma-status" th:classappend="${rma.status == T(irt.components.beans.jpa.rma.Rma.Status).SHIPPED ? 'bg-secondary text-white bg-opacity-75' : rma.status == T(irt.components.beans.jpa.rma.Rma.Status).READY ? 'bg-info' : ''}">
+           				<div class="col-auto rma-status"
+           					th:title="${rma.status}"
+           					th:classappend="${rma.status ==
+           										 T(irt.components.beans.jpa.rma.Rma.Status).SHIPPED ?
+           										 		'bg-secondary text-white bg-opacity-75' :
+           										 				rma.status == T(irt.components.beans.jpa.rma.Rma.Status).READY ?
+           										 						'bg-info' :
+           										 							rma.status == T(irt.components.beans.jpa.rma.Rma.Status).CREATED ? 'bg-warning' :
+           										 								''}">
+
           					<strong th:text="${ rma.rmaNumber }"> RMA Number </strong>
           				</div>
           				<div class="col-auto">
@@ -88,7 +97,7 @@
           				<div class="col-auto text-secondary">
           					<strong th:text="${rma.user.username}" th:title="${ rma.user.firstname + ' ' + rma.user.lastname}">User Name</strong>
           				</div>
-  						<div class="col-auto" th:unless="${rma.status == T(irt.components.beans.jpa.rma.Rma.Status).SHIPPED}" sec:authorize="hasAuthority('ADD_RMA')">
+  						<div class="col-auto" th:if="${rma.status == T(irt.components.beans.jpa.rma.Rma.Status).CREATED}" sec:authorize="hasAuthority('ADD_RMA')">
 <!-- Button to Add RMA unit -->
       						<div class="btn btn-outline-primary add-to-rma" th:data-rma-number="${ rma.rmaNumber }">Add</div>
     					</div>
@@ -110,7 +119,7 @@
 						<div class="col-1" th:text="${ status.count }">	#</div>
 						<div class="col comment pre-line" th:text="${ rmaContent.comment }">Comment </div>
 						<div class="col-1 username" th:text="${ user.username }" th:title="${ user.firstname + ' ' + user.lastname}">User name </div>
-						<div class="col-2 date" th:text="${#dates.format( rmaContent.date, 'dd MMM yyyy hh:mm' )}">Date </div>
+						<div class="col-2 date" th:text="${#dates.format( rmaContent.date, 'dd MMM yyyy kk:mm' )}">Date </div>
 					</div>
 				</th:block>
 				</div>

@@ -36,7 +36,7 @@ public class BtrComment {
 	private Long	 userId;
 
 	@Temporal(TemporalType.TIMESTAMP)
-	@JsonFormat(pattern="dd MMM yyyy hh:mm")
+	@JsonFormat(pattern="dd MMM yyyy kk:mm")
 	@Column(insertable = false, updatable= false)
 	private Date date;
 
