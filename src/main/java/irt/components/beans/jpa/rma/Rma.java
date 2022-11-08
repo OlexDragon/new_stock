@@ -34,6 +34,7 @@ public class Rma {
 	private Long	 id;
 	private String	 rmaNumber;
 	private String	 serialNumber;
+	private String	 partNumber;
 	private String	 description;
 	private Long	 userId;
 	@Enumerated(EnumType.ORDINAL)

@@ -2,7 +2,7 @@
 $('#miCalibration').addClass('active');
 
 // Get HTTP Serial Port from the cookies
-var cookie = Cookies.get("spServers")
+var cookie = Cookies.get("spServers");
 if(cookie){
 	try {
 		$('option[value=' + cookie + ']').prop('selected', true);
@@ -169,12 +169,14 @@ $('#scan').click(function(e){
 			$('<div>', {class:'modal-content'})
 			.append(
 				$('<div>', {class:'modal-header'})
-				.append($('<h5>', {id:'modal-header', class: 'modal-title ml-3 text-primary'}).text('Scaning for online units.'))
+				.append($('<h5>', {id:'modal-header', class: 'modal-title ml-3 text-primary col'}).text('Scaning for online units.'))
+				.append($('<input>', {type:'number', id: 'start-from', class: 'col-1', title: 'Start scan from this value.'}))
 				.append($('<button>', {type:'button', class: 'btn-close', 'data-bs-dismiss': 'modal', 'aria-label': 'Close'}))
 			)
 			.append($modalBody)
 			.append(
 				$('<div>', {class:'modal-footer'})
+				.append($('<button>', {id: 'scanBtn', type:'button', class: 'btn btn-primary'}).text('Stop'))
 				.append($('<button>', {type:'button', class: 'btn btn-secondary', 'data-bs-dismiss': 'modal'}).text('Close'))
 			)
 		)
@@ -186,8 +188,27 @@ $('#scan').click(function(e){
 		clearInterval(scanIpInterval);
 
 	var $modalHeader = $('#modal-header');
-	var ip = 10;
+	let $startFrom = $('#start-from');
+	$startFrom.focusout(function(){
+		let val = $startFrom.val();
+		if(val)
+			Cookies.set("startFrom",  val);
+		else
+			Cookies.set("startFrom",  '');
+	});
+
+	let ip = Cookies.get("startFrom")
+	if(ip)
+		$startFrom.val(ip);
+	else{
+		ip = $startFrom.val();
+		if(!ip){
+			ip = 10;
+			$startFrom.val(ip);
+		}
+	}
 	var index = 0;
+
 	scanIpInterval = setInterval(function() {
 
 		var ipAddress = '192.168.30.' + ip;
@@ -242,12 +263,18 @@ $('#scan').click(function(e){
 			var tooltipTriggerList = [].slice.call(document.querySelectorAll('[data-bs-toggle="tooltip"]'));
 			tooltipTriggerList.map(function (tooltipTriggerEl) { return new bootstrap.Tooltip(tooltipTriggerEl)});
 			$modalHeader.text('Scan completed.');
+			$('#scanBtn').removeClass('btn-primary').addClass('btn-success').text('Restart');
 		}
-	}, 700);
+	}, 800);
 
 	$modal.on('hidden.bs.modal', function () {
 		clearInterval(scanIpInterval);
 	});
+});
+
+$('#scanBtn').click(function(e){
+	e.preventDefault();
+	alert('eyy');
 });
 
 function getHostName(){

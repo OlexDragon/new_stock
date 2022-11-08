@@ -317,6 +317,17 @@ public class ProfileWorker {
 
 	public Optional<String> getDescription() {
 
+		final String startWith = "product-description";
+		return getProperty(startWith);
+	}
+
+	public Optional<String> getPartNumber() {
+
+		final String startWith = "device-part-number";
+		return getProperty(startWith);
+	}
+
+	public Optional<String> getProperty(final String startWith) {
 		if(!oPath.isPresent())
 			throw new RuntimeException("The profile does not exist.");
 
@@ -327,11 +338,11 @@ public class ProfileWorker {
 			while(scanner.hasNextLine()) {
 				final String line = scanner.nextLine();
 
-				if(line.startsWith("product-description")) {
+				if(line.startsWith(startWith)) {
 
-					final String split = line.split("\\s+", 2)[1].split("#",2)[0].trim();
+					final String value = line.split("\\s+", 2)[1].split("#",2)[0].trim();
 
-					return Optional.of(split);
+					return Optional.of(value);
 				}
 			}
 		} catch (Exception e) {

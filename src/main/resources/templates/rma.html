@@ -88,6 +88,9 @@
           				<div class="col-auto">
           					<strong class="text-nowrap serialNumber" th:text="${ #strings.toUpperCase( rma.serialNumber ) }"> Serial Number </strong>
           				</div>
+          				<div class="col-auto">
+          					<strong class="text-nowrap serialNumber" th:text="${ #strings.toUpperCase( rma.partNumber ) }"> Serial Number </strong>
+          				</div>
           				<div class="col text-secondary">
           					<strong th:text="${ rma.description }">Description</strong>
           				</div>

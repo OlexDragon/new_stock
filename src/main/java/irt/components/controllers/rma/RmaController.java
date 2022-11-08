@@ -38,7 +38,7 @@ public class RmaController {
 
 	private final static Logger logger = LogManager.getLogger();
 
-	private static final int SIZE = 60;
+	private static final int SIZE = 1000;
 
 	@Value("${irt.profile.path}")
 	private String profileFolder;
@@ -159,6 +159,9 @@ public class RmaController {
 
 					rma.setStatus(Rma.Status.CREATED);
 //					logger.error(rma);
+
+					// Part Number
+					profileWorker.getPartNumber().ifPresent(rma::setPartNumber);
 
 					final Rma savedRma = rmaRepository.save(rma);
 

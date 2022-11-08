@@ -5,7 +5,8 @@ body {
 	background-size: cover;
 	background-color: rgba(255,255,255,0.9);
 	background-blend-mode: lighten;
-}.hover:hover {
+}
+.hover:hover {
 	 background-color: yellow;
 	 cursor:pointer;
 }
@@ -26,20 +27,19 @@ body {
 .bg_alarm{
 	background-color: red;
 }
-.dotted_border{
-	  border-bottom:2px dashed;
+.dashed_border{
+	  border-left:1px dashed;
 }
-.border_blue{
- 	border-color: blue;
+.border_gray{
+ 	border-color: gray;
 }
 .border_white{
  	border-color: white;
 }
 .bg_tropo{
 	background-image: url("/images/tropo_rf.png");
-	width: 100%;
 	background-repeat: no-repeat;
-	background-size: cover;
+	background-size: 100% 100%;
 	background-color: rgba(255,255,255,0.7);
 	background-blend-mode: lighten;
 }
@@ -48,4 +48,8 @@ body {
 }
 .bg_white{
 	background-color: white;
+}
+.w100{
+	height: 100%;
+	width: 100%;
 }
