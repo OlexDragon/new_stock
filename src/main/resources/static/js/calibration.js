@@ -123,7 +123,8 @@ $('#upload').click(function(e){
 // Login to the unit
 $('.unitLogin').click(function(e){
 	e.preventDefault();
-	loginWhithHref();
+	var href = $(this).prop('href');
+	loginWhithHref(href);
 });
 
 function login(){
@@ -138,7 +139,6 @@ function loginFromScan(e, t){
 }
 
 function loginWhithHref(href){
-	var href = $('#unitLogin').prop('href');
 	$.post(href)
 	.done(function(data){
 		alert(data);
@@ -156,7 +156,8 @@ function loginWhithHref(href){
 
 // Scan IP Addresses
 var scanIpInterval;
-$('#scan').click(function(e){
+var $scan = $('#scan');
+$scan.click(function(e){
 	e.preventDefault();
 
 	var $modalBody = $('<div>', {class:'modal-body'});
@@ -182,6 +183,21 @@ $('#scan').click(function(e){
 		)
 	);
 
+	$('#scanBtn').click(function(e){
+		e.preventDefault();
+
+		let $this = $(this);
+		let text = $this.text();
+
+		switch(text){
+
+			case 'Stop':	ip = 250;break;
+
+			case 'Restart':	$('#modal').modal('hide');
+							setTimeout(()=>$scan.click(), 500);
+		}
+	});
+
 	new bootstrap.Modal('#modal').show();
 
 	if(typeof scanIpInterval !=='undefined')
@@ -197,7 +213,8 @@ $('#scan').click(function(e){
 			Cookies.set("startFrom",  '');
 	});
 
-	let ip = Cookies.get("startFrom")
+
+	var ip = Cookies.get("startFrom")
 	if(ip)
 		$startFrom.val(ip);
 	else{
@@ -208,8 +225,20 @@ $('#scan').click(function(e){
 		}
 	}
 	var index = 0;
+	var maxIP = 240;
 
 	scanIpInterval = setInterval(function() {
+
+		if(ip>maxIP){
+			// Stop IP scan
+			clearInterval(scanIpInterval);
+
+			var tooltipTriggerList = [].slice.call(document.querySelectorAll('[data-bs-toggle="tooltip"]'));
+			tooltipTriggerList.map(function (tooltipTriggerEl) { return new bootstrap.Tooltip(tooltipTriggerEl)});
+			$modalHeader.text('Scan completed.');
+			$('#scanBtn').removeClass('btn-primary').addClass('btn-success').text('Restart');
+			return;
+		}
 
 		var ipAddress = '192.168.30.' + ip;
 		$modalHeader.text('Send Request for ' + ipAddress);
@@ -218,7 +247,7 @@ $('#scan').click(function(e){
 		.done(function(hostname){
 
 			if(hostname!=ipAddress)
-			return;
+				return;
 
 			var $text = $('<div>', {class: 'col-sm'});
 			var $row = $('<div>', {class: 'row'})
@@ -256,25 +285,11 @@ $('#scan').click(function(e){
 		});
 
 		++ip;
-		if(ip>240){
-			// Stop IP scan
-			clearInterval(scanIpInterval);
-
-			var tooltipTriggerList = [].slice.call(document.querySelectorAll('[data-bs-toggle="tooltip"]'));
-			tooltipTriggerList.map(function (tooltipTriggerEl) { return new bootstrap.Tooltip(tooltipTriggerEl)});
-			$modalHeader.text('Scan completed.');
-			$('#scanBtn').removeClass('btn-primary').addClass('btn-success').text('Restart');
-		}
-	}, 800);
+	}, 400);
 
 	$modal.on('hidden.bs.modal', function () {
 		clearInterval(scanIpInterval);
 	});
-});
-
-$('#scanBtn').click(function(e){
-	e.preventDefault();
-	alert('eyy');
 });
 
 function getHostName(){

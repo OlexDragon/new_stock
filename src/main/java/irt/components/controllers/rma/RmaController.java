@@ -70,6 +70,7 @@ public class RmaController {
 		List<Rma> rmas = null;
 		switch(id) {
 
+// RMA Number
 		case "rmaNumber":
 			rmas = rmaFilter.oStatus
 						.map(
@@ -86,6 +87,7 @@ public class RmaController {
 						.orElseGet(()->rmaRepository.findByRmaNumberContaining(value, PageRequest.of(0, SIZE, sort)));
 			break;
 
+// Serial Number
 		case "rmaSerialNumber":
 			rmas = rmaFilter.oStatus
 						.map(
@@ -102,6 +104,7 @@ public class RmaController {
 						.orElseGet(()->rmaRepository.findBySerialNumberContaining(value, PageRequest.of(0, SIZE, sort)));
 			break;
 
+// Description Number
 		case "rmaDescription":
 			rmas = rmaFilter.oStatus
 						.map(
@@ -116,6 +119,25 @@ public class RmaController {
 									}
 								})
 						.orElseGet(()->rmaRepository.findByDescriptionContaining(value, PageRequest.of(0, SIZE, sort)));
+			break;
+
+		case "rmaComments":
+			rmas = rmaFilter.oStatus
+						.map(
+								status->{
+									switch(status) {
+
+									case IN_WORK:
+										return rmaRepository.findDistinctByRmaComments_CommentContainingAndStatusNot(value, Rma.Status.SHIPPED, PageRequest.of(0, SIZE, sort));
+
+									default:
+										return rmaRepository.findDistinctByRmaComments_CommentContainingAndStatus(value, status, PageRequest.of(0, SIZE, sort));
+									}
+								})
+						.orElseGet(
+								()->{
+									return rmaRepository.findDistinctByRmaComments_CommentContaining(value, PageRequest.of(0, SIZE, sort));
+								});
 		}
 
 		logger.debug("RMA list size: {}", rmas.size());

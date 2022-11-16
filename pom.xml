@@ -4,7 +4,7 @@
 
 	<groupId>irt</groupId>
 	<artifactId>components</artifactId>
-	<version>0.0.8</version>
+	<version>0.0.9</version>
 	<packaging>jar</packaging>
 
 	<name>Spring Boot Blank Project (from https://github.com/making/spring-boot-blank)</name>
@@ -93,7 +93,7 @@
 		<dependency>
 			<groupId>org.apache.commons</groupId>
 			<artifactId>commons-compress</artifactId>
-			<version>1.21</version>
+			<version>1.22</version>
 		</dependency>
 		<dependency>
 			<groupId>com.fasterxml.jackson.dataformat</groupId>

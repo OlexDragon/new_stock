@@ -270,7 +270,7 @@ public class CalibrationRestController {
     @PostMapping("scan")
     String scanIP(@RequestParam String ip) throws UnknownHostException, IOException {
     	final InetAddress byName = InetAddress.getByName(ip);
-		return Optional.of(byName.isReachable(1000)).filter(b->b).map(b->byName.getCanonicalHostName()).orElse("");
+		return Optional.of(byName.isReachable(400)).filter(b->b).map(b->byName.getCanonicalHostName()).orElse("");
     }
 
     @PostMapping("info")
@@ -280,7 +280,7 @@ public class CalibrationRestController {
 		List<NameValuePair> params = new ArrayList<>();
 		params.addAll(Arrays.asList(new BasicNameValuePair[]{new BasicNameValuePair("devid", "1"), new BasicNameValuePair("command", "info")}));
 
-		return HttpRequest.postForIrtObgect(url.toString(), Info.class, params).get(5, TimeUnit.SECONDS);
+		return HttpRequest.postForIrtObgect(url.toString(), Info.class, params).get(1, TimeUnit.SECONDS);
     }
 
     @PostMapping("calibration_mode")

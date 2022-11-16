@@ -38,17 +38,23 @@
       			<input id="rmaNumber" type="text" class="form-control searchRma" placeholder="RMA Number" aria-label="RMA Number">
     		</div>
 
-<!-- RMA Unit Serial Number search-->
+<!-- Serial Number search-->
   			<div class="input-group col">
 				<input type="radio" class="btn-check" name="sort_by" id="rmaOrderBySerialNumber" autocomplete="off">
-      			<label for="rmaOrderBySerialNumber" class="input-group-text btn btn-outline-secondary">SN</label>
+      			<label for="rmaOrderBySerialNumber" class="input-group-text btn btn-outline-secondary" title="Serial Number">SN</label>
       			<input id="rmaSerialNumber" type="text" class="form-control searchRma" placeholder="RMA Serial Number" aria-label="RMA Serial Number">
     		</div>
 
- <!-- RMA Unit Description search -->
+ <!--  Description search -->
   			<div class="input-group ml-1 col">
-      			<label for="rmaDescription" class="input-group-text">Description</label>
+      			<label for="rmaDescription" class="input-group-text" title="Description">D</label>
       			<input id="rmaDescription" type="text" class="form-control searchRma" placeholder="Description" aria-label="Description" aria-describedby="descriptionLbl">
+    		</div>
+
+ <!--  Comment search -->
+  			<div class="input-group ml-1 col">
+      			<label for="rmaDescription" class="input-group-text" title="Comments">C</label>
+      			<input id="rmaComments" type="text" class="form-control searchRma" placeholder="Comments" aria-label="Comments" aria-describedby="commentsLbl">
     		</div>
 
   			<div sec:authorize="hasAuthority('ADD_RMA')" class="ml-1 col-auto">
