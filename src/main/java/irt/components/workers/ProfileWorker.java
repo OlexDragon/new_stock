@@ -43,7 +43,7 @@ public class ProfileWorker {
 		return oPath.isPresent();
 	}
 
-	private Optional<Path> getPath() throws IOException {
+	public Optional<Path> getPath() throws IOException {
 
 		if(oPath.isPresent())
 			return oPath;
@@ -69,8 +69,7 @@ public class ProfileWorker {
 		};
 		Files.walkFileTree(Paths.get(profileRootFolder), visitor);
 
-		oPath = Optional.ofNullable(arPath.get());
-		return oPath;
+		return oPath = Optional.ofNullable(arPath.get());
 	}
 
 	public void reset() {

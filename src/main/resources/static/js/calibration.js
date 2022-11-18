@@ -285,7 +285,7 @@ $scan.click(function(e){
 		});
 
 		++ip;
-	}, 400);
+	}, 700);
 
 	$modal.on('hidden.bs.modal', function () {
 		clearInterval(scanIpInterval);
@@ -393,3 +393,54 @@ $('#currents').click(function(e){
 	let href = '/calibration/currents?sn=' + serialNumber;
 	let modal = $('#modal').load(href);
 })
+
+$('#profilePath').click(function(e){
+	e.preventDefault();
+
+	$.get(this.href)
+	.done(function(path){
+		$('body')
+		.append(
+			$('<div>', { class: "alert alert-warning alert-dismissible fade show row", role: "alert"})
+			.append($('<strong>', {class: 'col'}).text(path))			
+			.append($('<button>', {type: 'button', class: 'btn col-auto copy', title: 'Copy to clipboard', 'aria-label': 'Copy to clipboard'}).text('Copy'))
+			.append($('<button>', {type: 'button', class: 'btn-close col-auto', 'data-bs-dismiss': 'alert', 'aria-label': 'Close'}))
+		);
+
+		$('.copy').click(function(){
+			var strong = $(this).parent().children('strong')[0];
+			selectAndCopy(strong);
+		});
+	})
+	.fail(function(error) {
+
+		if(error.statusText!='abort'){
+			var responseText = error.responseText;
+			if(responseText)
+				alert(error.responseText);
+			else
+				alert("Server error. Status = " + error.status)
+
+			$('#calMode').removeClass('text-primary text-success').text('Calibration Mode');
+		}
+	});
+ });
+ 
+function selectAndCopy(element) {
+    if (document.body.createTextRange) {
+        var range = document.body.createTextRange();
+        range.moveToElementText(element);
+        range.select();
+    } else if (window.getSelection) {
+        var selection = window.getSelection();
+        var range = document.createRange();
+        range.selectNodeContents(element);
+        selection.removeAllRanges();
+        selection.addRange(range);
+    } else {
+        alert("Could not select text in node: Unsupported browser.");
+        return;
+    }
+	document.execCommand("copy");
+}
+ 

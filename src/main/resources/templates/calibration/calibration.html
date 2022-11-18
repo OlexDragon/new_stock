@@ -71,6 +71,7 @@
     				th:text="${#authentication.principal=='anonymousUser'} ? 'Measurement - Login required' : 'Measurement'">Measurement</a>
     			<div><hr class="dropdown-divider"></div>
     			<a class="dropdown-item" id="calMode" th:classappend="${info==null ? 'disabled list-group-item-light' : ''}" href="#">Calibration Mode</a>
+    			<a class="dropdown-item" id="profilePath" th:classappend="${info==null ? 'disabled list-group-item-light' : ''}" th:href="@{${info==null} ? '#' : '/calibration/rest/profile_path?sn=' + ${info.serialNumber}}" target="_blank">Profile Path</a>
     			<a class="dropdown-item" id="upload" th:classappend="${info==null ? 'disabled list-group-item-light' : ''}" th:href="@{${info==null} ? '#' : '/calibration/rest/upload?sn=' + ${info.serialNumber}}">Upload Profile</a>
     			<div><hr class="dropdown-divider"></div>
     			<a class="dropdown-item" href="../static/files/http.serial_port.jar" th:href="@{/files/http.serial_port.jar}">Dounload HTTP Serial Port App.</a>

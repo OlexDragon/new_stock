@@ -23,6 +23,8 @@ import java.util.concurrent.FutureTask;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.TimeoutException;
 
+import javax.servlet.http.HttpServletResponse;
+
 import org.apache.http.NameValuePair;
 import org.apache.http.message.BasicNameValuePair;
 import org.apache.logging.log4j.Level;
@@ -30,7 +32,9 @@ import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
+import org.springframework.core.io.FileSystemResource;
 import org.springframework.http.MediaType;
+import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
@@ -219,7 +223,7 @@ public class CalibrationRestController {
 
 	}
 
-    @PostMapping("upload")
+    @GetMapping("upload")
     String uploadProfile(@RequestParam String sn) throws IOException {
 
     	final ProfileWorker profileWorker = new ProfileWorker(profileFolder, sn);
@@ -234,6 +238,31 @@ public class CalibrationRestController {
 		HttpRequest.upload(sn, profile);
 
 		return "Wait for the profile to load.";
+	}
+
+    @GetMapping("profile_path")
+    String profilePath(@RequestParam String sn) throws IOException {
+
+    	final ProfileWorker profileWorker = new ProfileWorker(profileFolder, sn);
+
+		if(!profileWorker.exists())
+			return "Profile does not exists.";
+
+    	return profileWorker.getOPath().get().toString();
+	}
+
+    @GetMapping(path = "download", produces = MediaType.APPLICATION_OCTET_STREAM_VALUE)
+    FileSystemResource downloadProfile(@RequestParam String sn, HttpServletResponse response) throws IOException {
+
+    	final ProfileWorker profileWorker = new ProfileWorker(profileFolder, sn);
+
+		if(!profileWorker.exists())
+			return null;
+
+		final Path path = profileWorker.getOPath().get();
+		response.setHeader("Content-Disposition", "attachment; filename=" + path.getFileName());
+
+    	return new FileSystemResource(path);
 	}
 
     @PostMapping("login")

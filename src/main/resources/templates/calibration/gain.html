@@ -404,6 +404,7 @@
 				})
 				.done(function(data){
 					alert(data);
+					$('#modal').modal('hide');
 				})
 				.fail(function(error) {
 					if(error.statusText!='abort'){
