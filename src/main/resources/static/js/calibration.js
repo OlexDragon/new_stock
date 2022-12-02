@@ -47,15 +47,7 @@ function gerSerialPorts(){
 			}
 		});
 	})
-	.fail(function(error) {
-		if(error.statusText!='abort'){
-			var responseText = error.responseText;
-			if(responseText)
-				alert(error.responseText);
-			else
-				alert("Server error. Status = " + error.status)
-		}
-	});
+	.fail(conectionFail);
 }
 
 $('.com-ports').on('change', function(){
@@ -109,15 +101,7 @@ $('#upload').click(function(e){
 	.done(function(data){
 		alert(data);
 	})
-	.fail(function(error) {
-		if(error.statusText!='abort'){
-			var responseText = error.responseText;
-			if(responseText)
-				alert(error.responseText);
-			else
-				alert("Server error. Status = " + error.status)
-		}
-	});
+	.fail(conectionFail);
 });
 
 // Login to the unit
@@ -143,15 +127,7 @@ function loginWhithHref(href){
 	.done(function(data){
 		alert(data);
 	})
-	.fail(function(error) {
-		if(error.statusText!='abort'){
-		var responseText = error.responseText;
-			if(responseText)
-				alert(error.responseText);
-			else
-				alert("Server error. Status = " + error.status)
-		}
-	});
+	.fail(conectionFail);
 }
 
 // Scan IP Addresses
@@ -220,7 +196,7 @@ $scan.click(function(e){
 	else{
 		ip = $startFrom.val();
 		if(!ip){
-			ip = 10;
+			ip = 2;
 			$startFrom.val(ip);
 		}
 	}
@@ -336,15 +312,8 @@ $('#dropdownCalibrateButton').on('show.bs.dropdown', function(){
 	})
 	.fail(function(error) {
 
-		if(error.statusText!='abort'){
-			var responseText = error.responseText;
-			if(responseText)
-				alert(error.responseText);
-			else
-				alert("Server error. Status = " + error.status)
-
+		if(conectionFail(error))
 			$('#calMode').removeClass('text-primary text-success').text('Calibration Mode');
-		}
 	});
 });
 
@@ -354,16 +323,7 @@ $('#calMode').click(function(e){
 	var serialNumber = $('#serialNumber').text();
 
 	$.post('/calibration/rest/calibration_mode_toggle', { ip: serialNumber })
-	.fail(function(error) {
-		if(error.statusText!='abort'){
-
-			var responseText = error.responseText;
-			if(responseText)
-				alert(error.responseText);
-			else
-				alert("Server error. Status = " + error.status)
-		}
-	});
+	.fail(conectionFail);
 });
 
 
@@ -413,16 +373,8 @@ $('#profilePath').click(function(e){
 		});
 	})
 	.fail(function(error) {
-
-		if(error.statusText!='abort'){
-			var responseText = error.responseText;
-			if(responseText)
-				alert(error.responseText);
-			else
-				alert("Server error. Status = " + error.status)
-
+		if(conectionFail(error))
 			$('#calMode').removeClass('text-primary text-success').text('Calibration Mode');
-		}
 	});
  });
  
@@ -444,3 +396,21 @@ function selectAndCopy(element) {
 	document.execCommand("copy");
 }
  
+ function conectionFail(error) {
+		if(error.statusText!='abort'){
+			let responseText = error.responseText;
+			if(responseText)
+				alert(error.responseText);
+			else{
+				let status;
+				switch(error.status){
+				case 0: status = 'Connection Refused.';
+						break;
+				default: status = error.status;
+				}
+				alert("Server error. Status = " + status);
+			}
+			return true;
+		}
+		return false;
+	}

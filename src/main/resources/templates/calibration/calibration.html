@@ -45,11 +45,11 @@
 		<div class="nav-item dropstart col-auto">
   			<button class="btn dropdown-toggle" type="button" id="dropdownUnitButton" data-bs-toggle="dropdown" aria-haspopup="true" aria-expanded="false">Unit</button>
   			<div class="dropdown-menu" aria-labelledby="dropdownUnitButton">
-    			<a class="dropdown-item" th:classappend="${info==null ? 'disabled list-group-item-light' : ''}" th:href="@{${info==null} ? '#' : 'http://' + ${info.serialNumber}}" target="_blank">Open Unit Web</a>
-    			<a id="unitLogin" class="dropdown-item unitLogin" th:classappend="${info==null ? 'disabled list-group-item-light' : ''}" th:href="@{${info==null} ? '#' : '/calibration/rest/login?sn=' + ${info.serialNumber}}">Unit Login</a>
-    			<a id="currents" class="dropdown-item" th:classappend="${info==null ? 'disabled list-group-item-light' : ''}" href="#">Unit's Currents</a>
+    			<a class="dropdown-item" th:classappend="${info==null ? 'disabled list-group-item-light' : ''}" th:href="@{${info==null} ? '#' : 'http://' + ${info.serialNumber}}" target="_blank">Web</a>
+    			<a id="unitLogin" class="dropdown-item unitLogin" th:classappend="${info==null ? 'disabled list-group-item-light' : ''}" th:href="@{${info==null} ? '#' : '/calibration/rest/login?sn=' + ${info.serialNumber}}">Login</a>
+    			<a id="currents" class="dropdown-item" th:classappend="${info==null ? 'disabled list-group-item-light' : ''}" href="#">Currents</a>
     			<div><hr class="dropdown-divider"></div>
-    			<a id="scan" class="dropdown-item" href="#">Network scan</a>
+    			<a id="scan" class="dropdown-item" href="#">Network Scan</a>
   			</div>
 		</div>
 

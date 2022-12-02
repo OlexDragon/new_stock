@@ -33,6 +33,7 @@ public class WebSecurityConfig {
 										"/",
 										"/bom",
 										"/files",
+										"/files/**",
 										"/css/**",
 										"/js/**",
 										"/calibration/**",
@@ -41,7 +42,6 @@ public class WebSecurityConfig {
 										"/rma",
 										"/rma/search",
 										"/inventory",
-										"/files/**",
 										"/images/**",
 										"/wo/**")
 			.permitAll()
@@ -55,6 +55,7 @@ public class WebSecurityConfig {
 											"/rma/search",
 											"/rma/comments",
 											"/rma/rest/**",
+											"/rma/get_files",
 											"/calibration/rest/**",
 											"/inventory",
 											"/create/rest/**",

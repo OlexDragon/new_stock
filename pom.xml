@@ -4,7 +4,7 @@
 
 	<groupId>irt</groupId>
 	<artifactId>components</artifactId>
-	<version>0.0.10</version>
+	<version>0.0.11</version>
 	<packaging>jar</packaging>
 
 	<name>Spring Boot Blank Project (from https://github.com/making/spring-boot-blank)</name>
@@ -98,6 +98,11 @@
 		<dependency>
 			<groupId>com.fasterxml.jackson.dataformat</groupId>
 			<artifactId>jackson-dataformat-yaml</artifactId>
+		</dependency>
+		<dependency>
+			<groupId>net.coobird</groupId>
+			<artifactId>thumbnailator</artifactId>
+			<version>[0.4, 0.5)</version>
 		</dependency>
 
 		<dependency>

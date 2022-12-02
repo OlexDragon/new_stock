@@ -137,35 +137,60 @@ $('#addRMA').click(function(e){
 $('#saveComment').click(function(e){
 	e.preventDefault();
 
-	var $rmaTextarea = $('#rmaTextarea').select();
-	document.execCommand("copy");
+	// return if file size is to large.
+	let $maxSize = $('#maxSize');
+	if($maxSize.length){
+		alert($maxSize.text());
+		return;
+	}
+
+	let fd = new FormData();
+
+	let files = $('#attachFiles').prop('files');
+	for(const f of files)
+		fd.append("fileToAttach[]", f);
+
+	var $rmaTextarea = $('#rmaTextarea');
 	var comment = $.trim($rmaTextarea.val());
 
-	if(!comment)
+	if(comment){
+		fd.append("comment", comment);
+		$rmaTextarea.select();
+		document.execCommand("copy");
+	}
+
+	let shipped = $('#shipping').prop('checked');
+	if(shipped)
+		fd.append("shipped", true);
+	else{
+		let ready = $('#ready').prop('checked');
+		if(ready)
+			fd.append("ready", true);
+	}
+
+// Return if values are not set.
+	if(fd.keys().next().done)
 		return;
 
-	var $shipping = $('#shipping');
-	var shipped;
-	if($shipping)
-		shipped = $shipping.prop('checked')
-	else
-		shipped = false;
+	fd.append('rmaId', this.value);
 
-	var rmaId = this.value;
-	$('#accordion-body').load("/rma/add_comment", {rmaId: rmaId, comment: comment, shipped: shipped});
-//	$('#modal').modal('hide');
-	 location.reload();
-});
-$('#rmaTextarea').on('input', function(){
-
-	let $readyToShip = $('#readyToShip');
-	if($readyToShip.hasClass('rma-ready'))
-	return;
-
-	if($(this).val())
-		$readyToShip.addClass('disabled')
-	else
-		$readyToShip.removeClass('disabled')
+	$.ajax({
+    	url: '/rma/rest/add_comment',
+    	data: fd,
+    	cache: false,
+    	contentType: false,
+    	processData: false,
+    	method: 'POST',
+    	type: 'POST', // For jQuery < 1.9
+    	success: function(data){
+    		console.log(data);
+ 	 		location.reload();
+    	},
+        error: function(error) {
+			if(error.statusText!='abort')
+				alert(error.responseText);
+        }
+	});
 });
 $('#accordion').on('shown.bs.collapse', function () {
 
@@ -254,10 +279,34 @@ var timer;
 
 $('#shipping').change(function(){
 
-	if(this.checked)
+	let $ready = $('#ready').prop('disabled', this.checked);
+
+	if(this.checked){
 		$('#rmaTextarea').val('Shipped');
-	else
+		$ready.prop('checked', false);
+	}else
 		$('#rmaTextarea').val('');
+});
+
+$('#ready').change(function(){
+
+	const readyToShip = 'Ready to Ship.';
+	let $rmaTextarea = $('#rmaTextarea');
+	let text = $.trim($rmaTextarea.val());
+	let includs = text.includes(readyToShip);
+
+	if(this.checked){
+		if(!includs)
+			if(text.length)
+				$rmaTextarea.val(text + '\n\n' + readyToShip);
+			else
+				$rmaTextarea.val(text + readyToShip);
+	}else{
+		if(includs){
+			let t = text.split('\n').filter(l=>l != readyToShip).join("\n");
+			$rmaTextarea.val(t);
+		}
+	}
 });
 
 function addToRma(rmaNumber){
@@ -306,4 +355,48 @@ $('#readyToShip').click(function(e){
 			alert(error.responseText);
 	});
 	location.reload();
+});
+
+/*
+$(window)
+.on('dragenter',function(e) {
+	e.preventDefault();
+	e.stopPropagation();
+})
+.on('dragleave',function(e) {
+	e.preventDefault();
+	e.stopPropagation();
+})
+.on('dragover',function(e) {
+	e.preventDefault();
+	e.stopPropagation();
+})
+.on('drop',function(e){
+	e.preventDefault();
+	e.stopPropagation();
+});
+$('#accordion')
+.on('dragenter',function(e) {
+	alert('You must be logged in to add files.');
+});
+*/
+
+$('#attachFiles').on('input', function(){
+
+	const maxFilesSize = 104857600;
+	let $fileNames = $('#fileNames').empty();
+	let files = $(this).prop('files');
+	let totalSize = 0;
+
+	for(const f of files){
+		let name = f.name;
+		$fileNames.append($('<div><strong>' + name + '<\strong></div>'));
+		totalSize += f.size;
+	};
+
+	if(totalSize)
+		$fileNames.append($('<div>Total size: ' + new Intl.NumberFormat().format(totalSize) + ' bytes.</div>'));
+
+	if(totalSize>maxFilesSize)
+		$fileNames.append($('<div id="maxSize">The maximum allowed file size is <strong style="color:red;">' + new Intl.NumberFormat().format(maxFilesSize) + '<\strong> bytes.</div>'));
 });

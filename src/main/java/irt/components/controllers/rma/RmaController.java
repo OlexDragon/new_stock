@@ -1,12 +1,20 @@
 package irt.components.controllers.rma;
 
+import java.io.File;
 import java.io.IOException;
+import java.net.InetAddress;
+import java.net.UnknownHostException;
+import java.nio.file.Paths;
 import java.security.Principal;
 import java.time.LocalDate;
 import java.time.format.DateTimeFormatter;
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.List;
 import java.util.Optional;
+import java.util.stream.Collectors;
+
+import javax.annotation.PostConstruct;
 
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
@@ -34,17 +42,33 @@ import irt.components.workers.ProfileWorker;
 @Controller
 @RequestMapping("rma")
 public class RmaController {
-	private static final long MARINA_ID = 10L;
-
 	private final static Logger logger = LogManager.getLogger();
+
+	public static final String TEST_PATH_TO_RMA_FILES = "c:\\irt\\rma\\files";
 
 	private static final int SIZE = 1000;
 
-	@Value("${irt.profile.path}")
-	private String profileFolder;
+	@Value("${irt.profile.path}") 	private String profileFolder;
+	@Value("${irt.rma.files.path}") private String rmaFilesPath;
 
 	@Autowired private RmaRepository rmaRepository;
 	@Autowired private RmaCommentsRepository rmaCommentsRepository;
+
+	@PostConstruct
+	public void postConstruct() {
+        try {
+
+    		// get system name
+        	String sName = InetAddress.getLocalHost().getHostName();
+
+        	// Change the directory if server runs on my computer
+        	if(sName.equals("oleksandr"))
+        		rmaFilesPath = TEST_PATH_TO_RMA_FILES;
+
+        } catch (UnknownHostException e) {
+			logger.catching(e);
+		}
+	}
 
 	@GetMapping
     String getRmas() {
@@ -194,45 +218,6 @@ public class RmaController {
 		return "rma :: rmaCards";
 	}
 
-	@PostMapping(path = "add_comment")
-	public String addComment(@RequestParam Long rmaId, @RequestParam String comment, @RequestParam(required = false) Boolean shipped, Principal principal, Model model) throws IOException {
-		logger.traceEntry("rmaId: {}; comment: {}; shipped: {}; principal: {};", rmaId, comment, shipped, principal);
-
-		if(!(principal instanceof UsernamePasswordAuthenticationToken) || rmaId==null || comment.isEmpty())
-			return "rma :: rmaBody";
-
-		final RmaComment rmaComment = new RmaComment();
-		rmaComment.setRmaId(rmaId);
-		rmaComment.setComment(comment.trim());
-
-		final Object pr = ((UsernamePasswordAuthenticationToken)principal).getPrincipal();
-		final User user = ((UserPrincipal)pr).getUser();
-		rmaComment.setUserId(user.getId());
-
-		rmaCommentsRepository.save(rmaComment);
-		List<RmaComment> comments = rmaCommentsRepository.findByRmaId(rmaId);
-		model.addAttribute("comments", comments);
-
-		final Rma rma = rmaRepository.findById(rmaId).get();
-		if(user.getId()!=MARINA_ID) {
-
-			final Optional<Boolean> oShipped = Optional.ofNullable(shipped).filter(s->s);
-			if(oShipped.isPresent()){
-
-				model.addAttribute("rmaId", rmaId);
-				rma.setStatus(Rma.Status.SHIPPED);
-				model.addAttribute("status", Rma.Status.SHIPPED);
-				rmaRepository.save(rma);
-			}else if(rma.getStatus()==Rma.Status.CREATED){
-
-				rma.setStatus(Rma.Status.IN_WORK);
-				rmaRepository.save(rma);
-			}
-		}
-
-		return "rma :: rmaBody";
-	}
-
 	@PostMapping(path = "comments")
 	public String getComments(@RequestParam Long rmaId, Model model) throws IOException {
 //		logger.error("rmaId: {} ", rmaId );
@@ -244,6 +229,17 @@ public class RmaController {
 //		logger.error("comments: {} ", comments );
 
 		return "rma :: rmaBody";
+	}
+
+	@PostMapping(path = "get_files")
+	public String getFiles(@RequestParam Long commentID, Model model) throws IOException {
+
+		model.addAttribute("commentID", commentID);
+
+		final List<String> fileNames = Arrays.stream(Paths.get(rmaFilesPath, commentID.toString()).toFile().listFiles()).map(File::getName).collect(Collectors.toList());
+		model.addAttribute("fileNames", fileNames);
+
+		return "rma :: comment_files";
 	}
 
 	public enum RmaFilter{

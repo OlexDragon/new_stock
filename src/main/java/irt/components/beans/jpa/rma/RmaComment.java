@@ -34,6 +34,7 @@ public class RmaComment {
 	private Long	 rmaId;
 	private String	 comment;
 	private Long	 userId;
+	private Boolean hasFiles;
 
 	@Temporal(TemporalType.TIMESTAMP)
 	@JsonFormat(pattern="dd MMM yyyy kk:mm")
