@@ -120,6 +120,9 @@ public class FileRestController {
 	}
 
 	private boolean isImage(File file) {
-		return new MimetypesFileTypeMap().getContentType(file).startsWith("image");
+		
+		final String contentType = new MimetypesFileTypeMap().getContentType(file);
+		logger.debug(contentType);
+		return contentType.startsWith("image") || file.getName().toLowerCase().endsWith("png");
 	}
 }

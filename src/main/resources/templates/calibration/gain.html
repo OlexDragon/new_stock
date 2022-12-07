@@ -259,7 +259,7 @@
 			});
 
 			var gainTable = Cookies.get(unitSerialNumber + "_gainTable");
-			if(gainTable && gainTable != 'undefined'){
+			if(gainTable && gainTable !== undefined){
 				var array = JSON.parse(gainTable);
 				array.forEach( row => {
 					addRow(row.input, row.output);

@@ -75,6 +75,7 @@ public class CalibrationController {
 
 		final Map<String, String> httpSerialPortServers = httpSerialPortServersCollector.getHttpSerialPortServers();
 		model.addAttribute("serialPortServers", httpSerialPortServers);
+		model.addAttribute("serialNumber", sn);
 
 		Optional.ofNullable(sn)
     	.filter(s->!s.isEmpty())

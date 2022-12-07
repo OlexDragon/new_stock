@@ -136,9 +136,10 @@ var $scan = $('#scan');
 $scan.click(function(e){
 	e.preventDefault();
 
-	var $modalBody = $('<div>', {class:'modal-body'});
 	$modal = $('#modal');
 	$modal.empty();
+	var $modalBody = $('<div>', {class:'modal-body'});
+	let $scanBtn = $('<button>', {id: 'scanBtn', type:'button', class: 'btn btn-primary'}).text('Stop');
 	$modal
 	.append(
 		$('<div>', {class:'modal-dialog modal-lg'})
@@ -153,13 +154,13 @@ $scan.click(function(e){
 			.append($modalBody)
 			.append(
 				$('<div>', {class:'modal-footer'})
-				.append($('<button>', {id: 'scanBtn', type:'button', class: 'btn btn-primary'}).text('Stop'))
+				.append($scanBtn)
 				.append($('<button>', {type:'button', class: 'btn btn-secondary', 'data-bs-dismiss': 'modal'}).text('Close'))
 			)
 		)
 	);
 
-	$('#scanBtn').click(function(e){
+	$scanBtn.click(function(e){
 		e.preventDefault();
 
 		let $this = $(this);
@@ -393,24 +394,68 @@ function selectAndCopy(element) {
         alert("Could not select text in node: Unsupported browser.");
         return;
     }
-	document.execCommand("copy");
+	document.execCommand('copy');
 }
  
  function conectionFail(error) {
-		if(error.statusText!='abort'){
-			let responseText = error.responseText;
-			if(responseText)
-				alert(error.responseText);
-			else{
-				let status;
-				switch(error.status){
-				case 0: status = 'Connection Refused.';
-						break;
-				default: status = error.status;
-				}
-				alert("Server error. Status = " + status);
-			}
-			return true;
+	if(error.statusText!='abort'){
+		let responseText = error.responseText;
+		if(responseText)
+			alert(error.responseText);
+		else{
+			let status;
+			switch(error.status){
+			case 0: status = 'Connection Refused.';
+					break;
+			default: status = error.status;
 		}
-		return false;
+		alert("Server error. Status = " + status);
+		}
+		return true;
 	}
+	return false;
+}
+$('#gain_from_cookies').click(function(){
+
+	let cName = this.dataset.sn;
+	let gainTable = Cookies.get(cName);
+	if(!gainTable || gainTable === undefined){
+		alert('There are no gain tables saved on this computer.');
+		return;
+	}
+
+	var $modal = $('#modal');
+	$modal.empty();
+	var $tbody = $('<tbody>');
+	let $copyBtn = $('<button>', {type:'button', class: 'btn btn-primary'}).text('Copy').click(function(){selectAndCopy($tbody[0]);});
+	$modal
+	.append(
+		$('<div>', {class:'modal-dialog'})
+		.append(
+			$('<div>', {class:'modal-content'})
+			.append(
+				$('<div>', {class:'modal-header'})
+				.append($('<h5>', {id:'modal-header', class: 'modal-title ml-3 text-primary col'}).text('Table stored on this computer.'))
+				.append($('<button>', {type:'button', class: 'btn-close', 'data-bs-dismiss': 'modal', 'aria-label': 'Close'}))
+			)
+			.append($('<div>', {class:'modal-body'}).append($('<table>', {class:'table table-striped'}).append($tbody)))
+			.append(
+				$('<div>', {class:'modal-footer'})
+				.append($copyBtn)
+				.append($('<button>', {type:'button', class: 'btn btn-secondary', 'data-bs-dismiss': 'modal'}).text('Close'))
+			)
+		)
+	);
+
+	var array = JSON.parse(gainTable);
+	array.forEach( row => {
+
+		$tbody
+		.append(
+			$('<tr>')
+			.append($('<td>').text(row.input))
+			.append($('<td>').text(row.output))
+		);
+	});
+	$modal.modal('show');
+});

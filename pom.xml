@@ -4,7 +4,7 @@
 
 	<groupId>irt</groupId>
 	<artifactId>components</artifactId>
-	<version>0.0.11</version>
+	<version>0.0.13</version>
 	<packaging>jar</packaging>
 
 	<name>Spring Boot Blank Project (from https://github.com/making/spring-boot-blank)</name>
