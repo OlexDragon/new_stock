@@ -220,7 +220,7 @@
 						if(err || !$inputNode || $inputNode.hasClass('btr-detector') || !$('#btr-scan').is(':checked'))
 							return;
 
-						ouputGet(
+						outputGet(
 								data=>
 								$.each(data.commands, function(index, command){
 
@@ -273,18 +273,18 @@
 				});
 
 				$('#outputComPorts').change(()=>enableButton());
-				$('#outputPowermeter').change(()=>enableButton());
+				$('#outputTool').change(()=>enableButton());
 				$('#ouputAddress').change(()=>enableButton());
 				enableButton()
 
 				function enableButton(){
 
 					var outputComPorts 	= $('#outputComPorts').val();
-					var outputPowermeter= $('#outputPowermeter').val();
+					var outputTool= $('#outputTool').val();
 					var ouputAddress 	= $('#ouputAddress').val();
 
 					var $lbl_scan = $('#lbl_scan');
-					if(!outputComPorts || !outputPowermeter || !ouputAddress){
+					if(!outputComPorts || !outputTool || !ouputAddress){
 
 						$lbl_scan.addClass('btn-secondary disabled');
 						$lbl_scan.removeClass('btn-outline-primary');

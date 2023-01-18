@@ -1,0 +1,37 @@
+<!DOCTYPE html>
+<html 	xmlns="http://www.w3.org/1999/xhtml"
+		xmlns:th="https://www.thymeleaf.org"
+      	xmlns:sec="https://www.thymeleaf.org/thymeleaf-extras-springsecurity5"
+      	lang="en">
+<head>
+    <meta charset="UTF-8" />
+    <title>IRT Bom.</title>
+    <link rel="shortcut icon" href="http://irttechnologies.com/favicon.ico">
+    <link rel="stylesheet" href="https://stackpath.bootstrapcdn.com/bootstrap/4.4.1/css/bootstrap.min.css" data-integrity="sha384-Vkoo8x4CGsO3+Hhxv8T/Q5PaXtkKtu6ug5TOeNV6gBiFeWPGFN9MuhOf23Q9Ifjh" data-crossorigin="anonymous">
+    <link rel="stylesheet" href="../../static/css/components.css" th:href="@{/css/components.css}">
+</head>
+<body>
+
+<!-- Modal Message -->
+	<div id="modal" class="modal" tabindex="-1" role="dialog">
+
+<!-- Auto calibration by Unit Gain -->
+	<th:block th:fragment="byGain">
+		<th:block th:replace="calibration/output_power :: outputPower">
+		</th:block>
+	</th:block>
+
+<!-- Auto calibration by Input Power -->
+	<th:block th:fragment="byInput">
+		<th:block th:replace="calibration/output_power :: outputPower">
+		</th:block>
+	</th:block>
+	</div>
+
+    <script type="application/javascript" src="https://ajax.googleapis.com/ajax/libs/jquery/3.5.1/jquery.min.js"></script>
+    <script type="application/javascript" src="https://cdnjs.cloudflare.com/ajax/libs/popper.js/2.10.2/umd/popper.min.js"></script>
+    <script type="application/javascript" src="https://stackpath.bootstrapcdn.com/bootstrap/4.4.1/js/bootstrap.min.js"></script>
+	<script type="application/javascript" src="https://cdn.jsdelivr.net/npm/js-cookie@2/src/js.cookie.min.js"></script>
+	<script type="application/javascript" src="../../static/js/irt.js" th:src="@{/js/irt.js}"></script>
+</body>
+</html>

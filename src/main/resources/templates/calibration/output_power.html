@@ -19,7 +19,7 @@
     		<div class="modal-content">
 <!-- Modal Header -->
       			<div class="modal-header">
-        			<h5 id="inputValue" class="modal-title ml-3 text-primary" th:text="${power.value}">2125</h5>
+        			<h5 id="opInputValue" class="modal-title ml-3 text-primary" th:text="${power.value}">2125</h5>
         			<h5 class="modal-title text-primary">-</h5>
         			<input type="number" id="op_outputValue" placeholder="Output Power" value="30" th:value="${settings.startValue}">
         			<button type="button" id="addRow">Add Row</button>
@@ -77,8 +77,10 @@
 				interval = setInterval(function() {
 							$.post('/calibration/rest/calibrationInfo', {sn : unitSerialNumber})
 							.done(function(calInfo){
-								if(calInfo && calInfo.bias && calInfo.bias.power)
-									$('#inputValue').text(calInfo.bias.power.value);
+								if(calInfo && calInfo.bias && calInfo.bias.power){
+									let value = calInfo.bias.power.value;
+									$('#opInputValue').text(value);
+								}
 							})
 							.fail(function(error) {
 								if(err)
@@ -127,7 +129,7 @@
 
 			function onAddRow(){
 
-				var inputValue = $('#inputValue').text();
+				var inputValue = $('#opInputValue').text();
 				var $out = $('#op_outputValue');
 				var outputValue = $out.val();
 

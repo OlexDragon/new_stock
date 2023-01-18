@@ -1,11 +1,6 @@
 package irt.components.beans.calibration.update;
 
-import static org.junit.Assert.*;
-
 import org.junit.Test;
-
-import irt.components.beans.irt.update.Md5;
-import irt.components.beans.irt.update.SetupInfo;
 
 public class SetupInfoTest {
 

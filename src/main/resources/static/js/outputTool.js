@@ -1,38 +1,28 @@
 
-var cookie = Cookies.get("outputPowermeter")
-if(cookie){
-	try {
-		$('#outputPowermeter option').filter(function () { return $(this).text() == cookie; }).prop('selected', true);
-	}catch(err) {}
-}
-$('#outputPowermeter').change(function(){
-	var text = $('#outputPowermeter option:selected').text();
-	Cookies.set("outputPowermeter", text, { expires: 999 })
-});
+$('#outputGet').click(()=>outputGet(outputAction));
 
-$('#ouputGet').click(()=>ouputGet(action));
+function outputGet(action){
 
-function ouputGet(action){
+	let outputComPorts = $('#outputComPorts').val();
+	if(!outputComPorts)
+		return;
 
-	var outputComPorts = $('#outputComPorts').val();
-	if(!outputComPorts) return;
-
-	var hostName = getHostName();
+	let hostName = getHostName();
 	if(!hostName) return;
 
-	var copPort = $('#outputComPorts').val();
-	var commands = $('#outputPowermeter').val();
-	var address = $('#ouputAddress').val();
+	let commands = $('#outputTool').val();
+	let address = $('#ouputAddress').val();
 
-	if(!(copPort && commands && address)){
-		alert('Fill all the fields.');
+	if(!(commands && address)){
+		alert('Type the Tool Address.');
 		return;
 	}
 
-	var toSend = {}
+	let toSend = {}
 	toSend.hostName = hostName;
 	toSend.spName = outputComPorts;
 	toSend.commands = [];
+	toSend.commands.push({command: '++addr ' + address, getAnswer: false})
 
 	$.each(commands.split(','), function(index, command){
 
@@ -44,8 +34,8 @@ function ouputGet(action){
 		toSend.commands.push(c);
 	});
 
-	var json = JSON.stringify(toSend);
-	var $outputValue = $('#outputValue').text('');
+	let json = JSON.stringify(toSend);
+	let $outputValue = $('#outputValue').text('');
 
 	$.ajax({
 		url: '/serial_port/rest/send',
@@ -54,7 +44,7 @@ function ouputGet(action){
 		data: json,
         dataType: 'json'
     })
-	.done(data=>action(data))
+	.done(data=>outputAction(data))
 	.fail(function(error) {
 		if(error.statusText!='abort'){
 		var responseText = error.responseText;
@@ -66,7 +56,7 @@ function ouputGet(action){
 	});
 }
 
-function action(data){
+function outputAction(data){
 
 	$.each(data.commands, function(index, command){
 

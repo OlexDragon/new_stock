@@ -1,7 +1,7 @@
 
 $('#miCalibration').addClass('active');
 
-// Get HTTP Serial Port from the cookies
+// Get HTTP Serial Port Server from the cookies
 var cookie = Cookies.get("spServers");
 if(cookie){
 	try {
@@ -19,6 +19,28 @@ $('#spServers').change(function(){
 
 	Cookies.set("spServers", spServers, { expires: 7 });
 	gerSerialPorts();
+});
+
+$.each($('.save-to-cookies'), function(index, tool){
+	let cookie = Cookies.get(tool.id)
+	if(cookie)
+		$(tool).children().filter(function () { return $(this).text() == cookie; }).prop('selected', true);
+});
+$('.save-to-cookies').change(function(){
+	Cookies.set(this.id, $(this).find('option:selected').text());
+});
+$('.tool').change(function(){
+	let $parent = $(this).parent();
+	setAccordionHeaderText($parent);
+});
+$.each($('.address'), function(index, addr){
+	let cookie = Cookies.get(addr.id)
+	if(cookie)
+		$(addr).val(cookie);
+});
+$('.address').focusout(function(){
+	if(this.value)
+		Cookies.set(this.id, this.value);
 });
 
 function gerSerialPorts(){
@@ -44,6 +66,7 @@ function gerSerialPorts(){
 				var $option = $(select).children('[value=' + value + ']');
 				$option.prop('selected', true);
 				comPortSelected(select);
+				disableMenuItens();
 			}
 		});
 	})
@@ -54,26 +77,69 @@ $('.com-ports').on('change', function(){
 
 	comPortSelected(this);
 	Cookies.set(this.id, this.value, { expires: 999 });
+
+	disableMenuItens();
 });
+
+function disableMenuItens(){
+
+	let inputComPortValue = $('#inputComPorts').val();
+	let isinputSelected = inputComPortValue && !inputComPortValue.startsWith('Select');
+
+	let outputComPortValue = $('#outputComPorts').val();
+	let outputIsSelected = outputComPortValue && !outputComPortValue.startsWith('Select');
+
+	if(outputIsSelected)
+		$('#menuAutoByInput').removeClass('disabled')
+	else
+		$('#menuAutoByInput').addClass('disabled')
+
+	if(isinputSelected && outputIsSelected)
+		$('#nemuAutoByGain').removeClass('disabled')
+	else
+		$('#nemuAutoByGain').addClass('disabled')
+}
 
 function comPortSelected(select){
 
-	var messageId = select.dataset.infoMessage;
-	var $message = $('#' + messageId);
-	var value = select.value;
+	let $parent = $(select).parent();
+	setAccordionHeaderText($parent)
+}
 
-	if(!value || value.startsWith('Select')){
+function setAccordionHeaderText($parent){
+
+	let $port = $parent.children('.com-ports');
+	let messageId = $port.attr('data-info-message');
+	let $message = $('#' + messageId);
+
+	let port = '';
+	if($port.length && $port.val() && !$port.val().startsWith('Select'))
+		port = $port.val();
+	else{
 		$message.text(' Serial Port is not selected');
 		$message.addClass('text-danger');
-		$(select).parent().find('.to-disable').addClass('disabled');
+		$parent.find('.to-disable').addClass('disabled');
 		return;
 	}
 
-	$message.text(select.value);
 	$message.removeClass('text-danger');
-	$(select).parent().find('.to-disable').removeClass('disabled');
-}
 
+	let $tool = $parent.children('.tool');
+	let toolMessage = '';
+
+	if(!$tool.length || $tool.val()){
+		$parent.find('.to-disable').removeClass('disabled');
+		if($tool.length) toolMessage = ', ' + $tool.find('option:selected').text();
+	}else
+		$parent.find('.to-disable').addClass('disabled');
+
+	let $address = $parent.children('.address');
+	let toolAdderss = '';
+	if($address.length && $address.val())
+		toolAdderss = ', Tool Address: ' + $address.val()
+
+	$message.text(port + toolMessage + toolAdderss);
+}
 if(!$('#serialNumber').text())
 	new bootstrap.Modal('#modal').show();
 
@@ -83,14 +149,19 @@ var calibrateId = undefined;
 $('.calibrate').click(function(e){
 	e.preventDefault();
 
-	var id = e.target.id;
-	var $modal = $('#modal');
+	let id = e.target.id;
+	let $modal = $('#modal');
+	let s2 = typeof unitSerialNumber==='undefined';
 
 // Load for first time or when the serial number is changed 
 	if(typeof unitSerialNumber==='undefined' || !$('#serialNumber').text().match('^' + unitSerialNumber) || calibrateId!=id){
-		calibrateId = id;
-		$modal.load(this.href);
-	}
+			calibrateId = id;
+			$modal.load(this.href, function(body,error,c){
+				if(error=='error')
+					alert('Unable to connect to Unit.');
+			});
+	}else
+		$modal.modal('show');
 });
 
 // Uplode the profile
@@ -313,8 +384,8 @@ $('#dropdownCalibrateButton').on('show.bs.dropdown', function(){
 	})
 	.fail(function(error) {
 
-		if(conectionFail(error))
-			$('#calMode').removeClass('text-primary text-success').text('Calibration Mode');
+		$('#calMode').removeClass('text-primary text-success').text('Calibration Mode');
+		alert('Unable to connect to Unit.');
 	});
 });
 
@@ -458,4 +529,18 @@ $('#gain_from_cookies').click(function(){
 		);
 	});
 	$modal.modal('show');
+});
+
+$('.submenu').click(function(e){
+	e.preventDefault();
+	e.stopPropagation();
+});
+
+// Control Input 
+$('.input-value').on('input', function(){
+	let btnID = this.dataset.for;
+	if(this.value)
+		$(btnID).text('Set');
+	else
+		$(btnID).text('Get');
 });

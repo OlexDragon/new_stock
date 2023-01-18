@@ -58,9 +58,39 @@
   			<button id="dropdownCalibrateButton" class="btn dropdown-toggle" type="button" data-bs-toggle="dropdown" aria-haspopup="true" aria-expanded="false">Calibrate</button>
   			<div id="calMenu" class="dropdown-menu" aria-labelledby="dropdownCalibrateButton">
 <!-- Output Power -->
-    			<a id="menuOutputPower" class="dropdown-item calibrate" th:classappend="${info==null ? 'disabled list-group-item-light' : ''}" th:href="@{${info==null} ? '#' : '/calibration/output_power?sn=' + ${info.serialNumber} + '&pn=' + ${info.partNumber}}">Output Power</a>
+				<div class="btn-group" style="width:100%;">
+					<div class="btn-group dropstart" role="group">
+ 						<button id="menuOutputPowerAuto"
+ 								type="button"
+ 								class="btn dropdown-toggle dropdown-toggle-split submenu"
+ 								th:classappend="${info==null ? 'disabled list-group-item-light' : ''}"
+ 								data-bs-toggle="dropdown"
+ 								aria-expanded="false">
+    						<span class="visually-hidden">Toggle Dropdown</span>
+  						</button>
+   						<div class="dropdown-menu" aria-labelledby="menuOutputPowerAuto">
+
+    						<a id="menuAutoByInput"
+    							class="dropdown-item calibrate disabled"
+    							th:classappend="${info==null ? 'disabled list-group-item-light' : ''}"
+    							th:href="@{${info==null} ? '#' : '/calibration/output_power/by_input?sn=' + ${info.serialNumber} + '&pn=' + ${info.partNumber}}">Auto by Input</a>
+
+    						<a id="nemuAutoByGain"
+    							class="dropdown-item calibrate disabled"
+    							th:classappend="${info==null ? 'disabled list-group-item-light' : ''}"
+    							th:href="@{${info==null} ? '#' : '/calibration/output_power/by_gain?sn=' + ${info.serialNumber} + '&pn=' + ${info.partNumber}}">Auto by Gain</a>
+    					</div>
+					</div>
+    				<a	id="menuOutputPower"
+    					class="dropdown-item calibrate"
+    					th:classappend="${info==null ? 'disabled list-group-item-light' : ''}"
+    					th:href="@{${info==null} ? '#' : '/calibration/output_power?sn=' + ${info.serialNumber} + '&pn=' + ${info.partNumber}}">Output Power</a>
+ 				</div>
 <!-- Power Offset -->
-    			<a id="menuPowerOffset" class="dropdown-item calibrate" th:classappend="${info==null ? 'disabled list-group-item-light' : ''}" th:href="@{${info==null} ? '#' : '/calibration/power_offset?sn=' + ${info.serialNumber} + '&pn=' + ${info.partNumber} + '&deviceId=' + ${#strings.substring(info.deviceId, 1, info.deviceId.length()-1)}}">Power Offset</a>
+    			<a	id="menuPowerOffset"
+    				class="dropdown-item calibrate"
+    				th:classappend="${info==null ? 'disabled list-group-item-light' : ''}"
+    				th:href="@{${info==null} ? '#' : '/calibration/power_offset?sn=' + ${info.serialNumber} + '&pn=' + ${info.partNumber} + '&deviceId=' + ${#strings.substring(info.deviceId, 1, info.deviceId.length()-1)}}">Power Offset</a>
 <!-- Gain -->
     			<a id="menuGain" class="dropdown-item calibrate" th:classappend="${info==null ? 'disabled list-group-item-light' : ''}" th:href="@{${info==null} ? '#' : '/calibration/gain?sn=' + ${info.serialNumber} + '&pn=' + ${info.partNumber}}">Gain</a>
 <!-- BTR Measurement -->
@@ -69,10 +99,10 @@
     				th:href="@{${info==null} ? '#' : '/calibration/btr?sn=' + ${info.serialNumber} + '&pn=' + ${info.partNumber}}" 
     				th:classappend="${#authentication.principal=='anonymousUser' or info==null} ? 'disabled' : null" 
     				th:text="${#authentication.principal=='anonymousUser'} ? 'Measurement - Login required' : 'Measurement'">Measurement</a>
-    			<div>
-    			<hr class="dropdown-divider"></div>
-    			<a class="dropdown-item" id="gain_from_cookies" th:classappend="${serialNumber==null ? 'disabled list-group-item-light' : ''}" href="#" data-th-data-sn="${serialNumber} + '_gainTable'">Gain from Cookies</a>
+    			<div><hr class="dropdown-divider"></div>
     			<a class="dropdown-item" id="calMode" th:classappend="${info==null ? 'disabled list-group-item-light' : ''}" href="#">Calibration Mode</a>
+    			<div><hr class="dropdown-divider"></div>
+    			<a class="dropdown-item" id="gain_from_cookies" th:classappend="${serialNumber==null ? 'disabled list-group-item-light' : ''}" href="#" data-th-data-sn="${serialNumber} + '_gainTable'">Gain from Cookies</a>
     			<a class="dropdown-item" id="profilePath" th:classappend="${info==null ? 'disabled list-group-item-light' : ''}" th:href="@{${info==null} ? '#' : '/calibration/rest/profile_path?sn=' + ${info.serialNumber}}" target="_blank">Profile Path</a>
     			<a class="dropdown-item" id="upload" th:classappend="${info==null ? 'disabled list-group-item-light' : ''}" th:href="@{${info==null} ? '#' : '/calibration/rest/upload?sn=' + ${info.serialNumber}}">Upload Profile</a>
     			<div><hr class="dropdown-divider"></div>
@@ -90,7 +120,7 @@
 <!-- Output -->
 			<div class="accordion-item">
 				<h2 class="accordion-header" id="headingOutput">
-					<button class="accordion-button" type="button" data-bs-toggle="collapse" data-bs-target="#collapseOutput" aria-expanded="true" aria-controls="collapseOutput">Output :<strong id="outputInfo" class="text-danger"> Serial Port is not selected</strong></button>
+					<button class="accordion-button" type="button" data-bs-toggle="collapse" data-bs-target="#collapseOutput" aria-expanded="true" aria-controls="collapseOutput">Unit Output :<strong id="outputInfo" class="text-danger"> Serial Port is not selected</strong></button>
 				</h2>
 				<div id="collapseOutput" class="accordion-collapse collapse" aria-labelledby="headingOutput" data-bs-parent="#accordion">
 					<div class="accordion-body">
@@ -98,12 +128,12 @@
 	        				<select id="outputComPorts" class="form-control col com-ports" data-info-message="outputInfo">
 								<option selected="selected" disabled="disabled" hidden="hidden" value="">Select a Serial Port</option>
 	        				</select>
-	        				<select id="outputPowermeter" class="form-control col">
+	        				<select id="outputTool" class="form-control col save-to-cookies">
 								<option selected="selected" disabled="disabled" hidden="hidden" value="">Select a Power Meter</option>
 								<option value="HP438A" th:each="outputTool, stat : ${T(irt.components.beans.irt.calibration.tools.OutputTools).values()}" th:text="${outputTool.name}" th:value="${outputTool.commands}">HP438A</option>
 	        				</select>
-	        				<input id="ouputAddress" type="number" class="col" title="Tool Address" placeholder="Tool Address" value="13">
-							<button id="ouputGet" class="form-control col btn btn-outline-secondary output-buton to-disable disabled">Get</button>
+	        				<input id="ouputAddress" type="number" class="col address" title="Tool Address" placeholder="Tool Address" value="13">
+							<button id="outputGet" class="form-control col btn btn-secondary output-buton to-disable disabled">Get</button>
 							<div class="col"><strong id="outputValue" class="fs-4"></strong></div>
 <!-- 							<button id="ouputZero" class="form-control col btn btn-outline-secondary output-buton to-disable disabled">Zero</button> -->
       					</div>
@@ -114,7 +144,7 @@
 <!-- Input -->
 			<div class="accordion-item">
 				<h2 class="accordion-header" id="headingInput">
-					<button class="accordion-button" type="button" data-bs-toggle="collapse" data-bs-target="#collapseInput" aria-expanded="true" aria-controls="collapseInput">Input :<strong id="inputInfo" class="text-danger"> Serial Port is not selected</strong></button>
+					<button class="accordion-button" type="button" data-bs-toggle="collapse" data-bs-target="#collapseInput" aria-expanded="true" aria-controls="collapseInput">Unit Input :<strong id="inputInfo" class="text-danger"> Serial Port is not selected</strong></button>
 				</h2>
 				<div id="collapseInput" class="accordion-collapse collapse" aria-labelledby="headingInput" data-bs-parent="#accordion">
 					<div class="accordion-body">
@@ -122,6 +152,26 @@
 	        				<select id="inputComPorts" class="form-control col com-ports" data-info-message="inputInfo">
 								<option selected="selected" disabled="disabled" hidden="hidden" title="Serial Port Server" value="">Select a Serial Port</option>
 	        				</select>
+	        				<select id="inputTool" class="form-control col save-to-cookies">
+								<option selected="selected" disabled="disabled" hidden="hidden" title="Input Tool" value="">Input</option>
+								<option value="HP438A" th:each="inputTool, stat : ${T(irt.components.beans.irt.calibration.tools.InputTools).values()}" th:text="${inputTool.name}" th:value="${inputTool.commands}">HP438A</option>
+	        				</select>
+	        				<input id="inputAddress" type="number" class="col address" title="Tool Address" placeholder="Address" value="19">
+	        				<select id="inputOutput" class="form-control col input-value" data-for="#inputOutputBtn">
+	        					<option selected="selected" disabled="disabled" hidden="hidden" title="Tool Output (ON or OFF)" value="">Output</option>
+	        					<option value="0">Off</option>
+	        					<option Value="1">On</option>
+	        				</select>
+							<button id="inputOutputBtn" class="form-control col btn btn-secondary input-buton to-disable disabled" value="0">Get</button>
+	        				<input id="inputFrequency" type="number" class="col input-value" title="Frequency" placeholder="Frequency" data-for="#inputFrequencyBtn">
+	        				<select id="inputFrequencyUnit" class="form-control col save-to-cookies">
+	        					<option value="GHZ" data-divider="1000000000">GHz</option>
+	        					<option value="MHZ" data-divider="1000000">MHz</option>
+	        					<option value="KHZ" data-divider="1000">kHz</option>
+	        				</select>
+							<button id="inputFrequencyBtn" class="form-control col btn btn-secondary input-buton to-disable disabled" value="1">Get</button>
+	        				<input id="inputPower" type="number" class="col input-value" title="Power" placeholder="Power" data-for="#inputPowerBtn">
+							<button id="inputPowerBtn" class="form-control col btn btn-secondary input-buton to-disable disabled" value="2">Get</button>
 						</div>
       				</div>
 				</div>
@@ -240,6 +290,7 @@
 </th:block>
 	<script type="application/javascript" src="../../static/js/calibration.js" th:src="@{/js/calibration.js}"></script>
 	<script type="application/javascript" src="../../static/js/prologix.js" th:src="@{/js/prologix.js}"></script>
-	<script type="application/javascript" src="../../static/js/powermeter.js" th:src="@{/js/powermeter.js}"></script>
+	<script type="application/javascript" src="../../static/js/inputTool.js" th:src="@{/js/inputTool.js}"></script>
+	<script type="application/javascript" src="../../static/js/outputTool.js" th:src="@{/js/outputTool.js}"></script>
 </body>
 </html>

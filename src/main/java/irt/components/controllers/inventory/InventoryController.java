@@ -38,7 +38,6 @@ import com.fasterxml.jackson.annotation.JsonInclude.Include;
 import com.fasterxml.jackson.databind.DeserializationFeature;
 import com.fasterxml.jackson.databind.ObjectMapper;
 
-import irt.components.beans.ComponentsResponse;
 import irt.components.beans.inventory.InventiryTransferResponse;
 import irt.components.beans.inventory.InventoryTransfer;
 import irt.components.controllers.components.ComponentsRestController;

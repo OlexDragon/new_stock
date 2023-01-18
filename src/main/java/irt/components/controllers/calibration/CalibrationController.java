@@ -96,7 +96,8 @@ public class CalibrationController {
 
     @GetMapping("output_power")
     String outputPower(@RequestParam String sn, @RequestParam String pn, Model model) {
-//    	logger.error(sn);
+    	logger.traceEntry(sn);
+
     	Optional.ofNullable(sn)
     	.filter(s->!s.isEmpty())
     	.ifPresent(
@@ -116,10 +117,26 @@ public class CalibrationController {
 						model.addAttribute("power", power);
 
     				} catch (MalformedURLException | InterruptedException | ExecutionException | TimeoutException e) {
-						logger.catching(e);
+						throw new RuntimeException("Unable to connect to Unit.", e);
 					}
     			});
         return "calibration/output_power :: outputPower";
+    }
+
+    @GetMapping("output_power/by_gain")
+    String outputPowerByGain(@RequestParam String sn, @RequestParam String pn, Model model) {
+    	logger.error(sn);
+
+    	outputPower(sn, pn, model);
+    	return "calibration/output_power_auto :: byGain";
+    }
+
+    @GetMapping("output_power/by_input")
+    String outputPowerByInput(@RequestParam String sn, @RequestParam String pn, Model model) {
+    	logger.error(sn);
+
+    	outputPower(sn, pn, model);
+    	return "calibration/output_power_auto :: byInput";
     }
 
     @GetMapping("power_offset")

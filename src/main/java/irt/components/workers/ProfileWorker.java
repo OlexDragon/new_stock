@@ -120,6 +120,7 @@ public class ProfileWorker {
 	}
 
 	public boolean saveToProfile(ProfileTable profileTable, List<TableValue> values) {
+		logger.traceEntry();
 
 		if(!oPath.isPresent())
 			throw new RuntimeException("The profile does not exist.");
