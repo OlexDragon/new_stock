@@ -16,6 +16,12 @@ $('.input-buton').click(function(){
 
 // Get Command
 	let commands = $('#inputTool').val();
+
+	if(!commands){
+		alert('Tool not selected.');
+		return;
+	}
+
 	let command = commands.split(' ')[this.value];
 	let valueID = this.id.replace('Btn', '')
 	let $valueField = $('#' + valueID);

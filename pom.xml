@@ -4,7 +4,7 @@
 
 	<groupId>irt</groupId>
 	<artifactId>components</artifactId>
-	<version>0.0.15</version>
+	<version>0.0.16</version>
 	<packaging>jar</packaging>
 
 	<name>ITR Components, RMAs, Calibration, ext.</name>

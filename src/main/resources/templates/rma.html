@@ -150,6 +150,12 @@
 				</div>
 			</div>
 		</div>
+		<div class="alert alert-success" role="alert">
+			<h5 class="alert-heading">RMA Summary</h5>
+			<p th:inline="text">[[${sum}]] RMAs in total</p>
+			<hr>
+			<p th:inline="text">[[${ready}]] RMAs is ready<br>[[${todo}]] RMAs in work or awaiting decision<br>[[${waiting}]] RMAs not delivered yet</p>
+		</div>
 <!--  sec:authorize="hasAuthority('ADD_RMA_COMMENT')" -->
 		<script type="application/javascript" sec:authorize="hasAuthority('ADD_RMA_COMMENT')" th:if="${ rmas != null ? rmas.size() > 0 : false }" th:inline="javascript">
 		/*<![CDATA[*/

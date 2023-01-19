@@ -13,7 +13,12 @@ function outputGet(action){
 	let commands = $('#outputTool').val();
 	let address = $('#ouputAddress').val();
 
-	if(!(commands && address)){
+	if(!commands){
+		alert('Tool not selected.');
+		return;
+	}
+
+	if(!address){
 		alert('Type the Tool Address.');
 		return;
 	}

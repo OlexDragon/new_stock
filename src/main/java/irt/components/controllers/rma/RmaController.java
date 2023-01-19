@@ -35,7 +35,9 @@ import irt.components.beans.jpa.User;
 import irt.components.beans.jpa.repository.rma.RmaCommentsRepository;
 import irt.components.beans.jpa.repository.rma.RmaRepository;
 import irt.components.beans.jpa.rma.Rma;
+import irt.components.beans.jpa.rma.Rma.Status;
 import irt.components.beans.jpa.rma.RmaComment;
+import irt.components.beans.jpa.rma.RmaCountByStatus;
 import irt.components.services.UserPrincipal;
 import irt.components.workers.ProfileWorker;
 
@@ -166,6 +168,16 @@ public class RmaController {
 
 		logger.debug("RMA list size: {}", rmas.size());
 		model.addAttribute("rmas", rmas);
+
+		final List<RmaCountByStatus> countByStatus = rmaRepository.countByStatus();
+		final Long sum = countByStatus.parallelStream().map(RmaCountByStatus::getCount).reduce(0L, Long::sum);
+		model.addAttribute("sum", sum);
+		final Long ready = countByStatus.parallelStream().filter(r->r.getStatus()==Status.READY).map(RmaCountByStatus::getCount).findAny().orElse(0l);
+		model.addAttribute("ready", ready);
+		final Long todo = countByStatus.parallelStream().filter(r->r.getStatus()==Status.IN_WORK).map(RmaCountByStatus::getCount).findAny().orElse(0l);
+		model.addAttribute("todo", todo);
+		final Long waiting = countByStatus.parallelStream().filter(r->r.getStatus()==Status.CREATED).map(RmaCountByStatus::getCount).findAny().orElse(0l);
+		model.addAttribute("waiting", waiting);
 
 		return "rma :: rmaCards";
 	}

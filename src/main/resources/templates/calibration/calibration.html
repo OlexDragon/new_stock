@@ -32,7 +32,7 @@
 
 		<div class="nav-item input-group col" title="Serial Port Servers">
    			<label for="spServers" class="input-group-text">SP Server: </label>
-			<select id="spServers" class="form-select" aria-label="Serial Port Servers">
+			<select id="spServers" class="form-select" aria-label="Serial Port Servers" title="Serial Port">
 				<option selected="selected" disabled="disabled" hidden="hidden" title="Serial Port Server" value="">Select a Serial Port Server</option>
 				<option
 					 th:each="serialPortServer : ${ serialPortServers.entrySet() }"
@@ -125,10 +125,10 @@
 				<div id="collapseOutput" class="accordion-collapse collapse" aria-labelledby="headingOutput" data-bs-parent="#accordion">
 					<div class="accordion-body">
 						<div class="row">
-	        				<select id="outputComPorts" class="form-control col com-ports" data-info-message="outputInfo">
+	        				<select id="outputComPorts" class="form-control col com-ports" data-info-message="outputInfo" title="Serial Port">
 								<option selected="selected" disabled="disabled" hidden="hidden" value="">Select a Serial Port</option>
 	        				</select>
-	        				<select id="outputTool" class="form-control col save-to-cookies">
+	        				<select id="outputTool" class="form-control col save-to-cookies" title="Outpu Tool">
 								<option selected="selected" disabled="disabled" hidden="hidden" value="">Select a Power Meter</option>
 								<option value="HP438A" th:each="outputTool, stat : ${T(irt.components.beans.irt.calibration.tools.OutputTools).values()}" th:text="${outputTool.name}" th:value="${outputTool.commands}">HP438A</option>
 	        				</select>
@@ -149,22 +149,22 @@
 				<div id="collapseInput" class="accordion-collapse collapse" aria-labelledby="headingInput" data-bs-parent="#accordion">
 					<div class="accordion-body">
 						<div class="row">
-	        				<select id="inputComPorts" class="form-control col com-ports" data-info-message="inputInfo">
+	        				<select id="inputComPorts" class="form-control col com-ports" data-info-message="inputInfo" title="Serial Port">
 								<option selected="selected" disabled="disabled" hidden="hidden" title="Serial Port Server" value="">Select a Serial Port</option>
 	        				</select>
-	        				<select id="inputTool" class="form-control col save-to-cookies">
+	        				<select id="inputTool" class="form-control col save-to-cookies" title="Input Tool">
 								<option selected="selected" disabled="disabled" hidden="hidden" title="Input Tool" value="">Input</option>
 								<option value="HP438A" th:each="inputTool, stat : ${T(irt.components.beans.irt.calibration.tools.InputTools).values()}" th:text="${inputTool.name}" th:value="${inputTool.commands}">HP438A</option>
 	        				</select>
 	        				<input id="inputAddress" type="number" class="col address" title="Tool Address" placeholder="Address" value="19">
-	        				<select id="inputOutput" class="form-control col input-value" data-for="#inputOutputBtn">
-	        					<option selected="selected" disabled="disabled" hidden="hidden" title="Tool Output (ON or OFF)" value="">Output</option>
+	        				<select id="inputOutput" class="form-control col input-value" data-for="#inputOutputBtn" title="Tool Output Satatus">
+	        					<option selected="selected" title="Tool Output (ON or OFF)" value="">Output</option>
 	        					<option value="0">Off</option>
 	        					<option Value="1">On</option>
 	        				</select>
 							<button id="inputOutputBtn" class="form-control col btn btn-secondary input-buton to-disable disabled" value="0">Get</button>
 	        				<input id="inputFrequency" type="number" class="col input-value" title="Frequency" placeholder="Frequency" data-for="#inputFrequencyBtn">
-	        				<select id="inputFrequencyUnit" class="form-control col save-to-cookies">
+	        				<select id="inputFrequencyUnit" class="form-control col save-to-cookies" title="Frequensy Unit">
 	        					<option value="GHZ" data-divider="1000000000">GHz</option>
 	        					<option value="MHZ" data-divider="1000000">MHz</option>
 	        					<option value="KHZ" data-divider="1000">kHz</option>
@@ -185,7 +185,7 @@
 				<div id="collapseFurnace" class="accordion-collapse collapse" aria-labelledby="headingFurnace" data-bs-parent="#accordion">
 					<div class="accordion-body">
 						<div class="row">
-	        				<select id="furnaceComPorts" class="form-control col com-ports" data-info-message="furnaceInfo">
+	        				<select id="furnaceComPorts" class="form-control col com-ports" data-info-message="furnaceInfo" title="Serial Port">
 								<option selected="selected" disabled="disabled" hidden="hidden" title="Serial Port Server" value="">Select a Serial Port</option>
 	        				</select>
 						</div>
@@ -201,7 +201,7 @@
 				<div id="collapsePrologix" class="accordion-collapse collapse" aria-labelledby="headingPrologix" data-bs-parent="#accordion">
 					<div class="accordion-body">
 						<div class="row">
-	        				<select id="prologixComPorts" class="form-control col com-ports" data-info-message="prologixInfo">
+	        				<select id="prologixComPorts" class="form-control col com-ports" data-info-message="prologixInfo" title="Serial Port">
 								<option selected="selected" disabled="disabled" hidden="hidden" title="Serial Port Server" value="">Select a Serial Port</option>
 	        				</select>
 

@@ -5,9 +5,11 @@ import java.util.Optional;
 
 import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
+import org.springframework.data.jpa.repository.Query;
 import org.springframework.data.repository.CrudRepository;
 
 import irt.components.beans.jpa.rma.Rma;
+import irt.components.beans.jpa.rma.RmaCountByStatus;
 
 public interface RmaRepository extends CrudRepository<Rma, Long> {
 
@@ -31,4 +33,7 @@ public interface RmaRepository extends CrudRepository<Rma, Long> {
 
 	Optional<Rma> findBySerialNumberAndStatus					(String serialNumber, Rma.Status status);
 	Optional<Rma> findBySerialNumberAndStatusNot				(String serialNumber, Rma.Status status);
+
+	@Query("SELECT new irt.components.beans.jpa.rma.RmaCountByStatus(status, COUNT(*)) FROM Rma r WHERE r.status != 1 GROUP By r.status")
+	List<RmaCountByStatus> countByStatus();
 }
