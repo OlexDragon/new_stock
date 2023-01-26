@@ -23,8 +23,17 @@
 
 <!-- Auto calibration by Input Power -->
 	<th:block th:fragment="byInput">
-		<th:block th:replace="calibration/output_power :: outputPower">
-		</th:block>
+		<th:block th:replace="calibration/output_power :: outputPower"></th:block>
+  		<script th:inline="javascript">
+			/*<![CDATA[*/
+				let minValue = $('#minValue').val();
+				let maxValue = $('#maxValue').val();
+				let step = $('#step').val();
+
+				let $btnOutputGet = $('#outputGet');
+			/*]]>*/
+			//# sourceURL=outputPowerByInput.js
+  		</script>
 	</th:block>
 	</div>
 

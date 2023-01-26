@@ -138,8 +138,8 @@
 							<th:block th:remove="all">
 
 								<div th:fragment="comment_files">
-									<a href="#" th:each="name : ${fileNames}" th:href="@{'/files/rma/' + ${commentID}} + '/' + ${name}" target="_blank">
-										<img src="/" class="img-thumbnail" alt="..." th:src="@{'/files/rma/thumbnails/' + ${commentID}} + '/' + ${name}" th:alt="${name}">
+									<a class="thumbnails" href="#" th:each="name, stat : ${fileNames}" th:href="@{'/files/rma/' + ${commentID} + '/' + ${name}}" target="_blank" th:onclick="'thumbnailsClick(event,' + ${stat.index} + ',' + ${commentID} + ')'">
+										<img src="/" class="img-thumbnail hover-shadow" alt="..." th:src="@{'/files/rma/thumbnails/' + ${commentID}} + '/' + ${name}" th:alt="${name}" th:title="${name} + '&#010;Doble Click to Download'">
 									</a>
 								</div>
 
@@ -214,7 +214,7 @@
 <!-- Accordion:	And -->
 
 <!-- Modal Message -->
-	<div id="modal" class="modal fade" tabindex="-1" sec:authorize="hasAuthority('ADD_RMA_COMMENT')">
+	<div id="modal" class="modal fade" aria-hidden="true" tabindex="-1" sec:authorize="hasAuthority('ADD_RMA_COMMENT')">
   		<div class="modal-dialog">
     		<div class="modal-content">
 <!-- Modal Header -->
@@ -226,6 +226,7 @@
         			<h5 id="modal_title" class="modal-title ml-3 text-primary">Enter the information about this RMA.</h5>
         			<button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
       			</div>
+<!-- Modal Body -->
       			<div id="modal-body" class="modal-body form-floating">
         			<textarea class="form-control" placeholder="Leave a comment here" id="rmaTextarea" style="height: 100px"></textarea>
         			<label for="rmaTextarea"> Leave a comment here</label>
@@ -236,6 +237,7 @@
 					<div id="fileNames">
 					</div>
       			</div>
+<!-- Modal Footer -->
       			<div class="modal-footer">
       				<div class="btn-group" role="group" aria-label="Basic checkbox toggle button group">
       					<input id="ready" type="checkbox" class="btn-check" title="Ready to Ship">
@@ -249,6 +251,46 @@
   		</div>
 	</div>
 
+<!-- Modal Image -->
+	<div id="imgModal" class="modal" tabindex="-1" aria-hidden="true" th:remove="body">
+	<th:block th:fragment="imgModal">
+ 		<div class="modal-dialog  modal-lg">
+     	 	<div class="modal-header">
+				<button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal" aria-label="Close"></button>
+        	</div>
+	 		<div class="modal-body modal-content">
+ 				<a href="#" th:href="@{'/files/rma/' + ${commentID} + '/' + ${imgName}}" target="_blank">
+		    		<img id="fullImage" src="/" alt="..." style="width:100%" th:src="@{'/files/rma/' + ${commentID} + '/' + ${imgName}}" th:alt="${imgName}" th:title="${imgName} + '&#010;Click to Download'">
+  				</a>
+   			</div>
+
+			<!-- Thumbnail image controls -->
+			<div class="modal-footer" style="pointer-events: auto;">
+				<img class="thumbImg img-thumbnail" src="img1.jpg" alt="..." th:each="name : ${fileNames}" th:src="@{'/files/rma/thumbnails/' + ${commentID}} + '/' + ${name}" th:alt="${name}" th:title="${name}">
+			</div>
+		</div>
+		<script type="application/javascript">
+		/*<![CDATA[*/
+			$('.thumbImg').click(function(e){
+				e.preventDefault();
+				e.stopPropagation();
+
+				$fullImage = $('#fullImage');
+
+				let v = $(this).attr('src').replace('thumbnails/', '');
+				$fullImage.attr('src',v);
+
+				v = $(this).attr('title') + '\nClick to Download';
+				$fullImage.attr('title',v);
+
+				v = $(this).attr('alt');
+				$fullImage.attr('alt',v);
+			});
+			/*]]>*/
+			//# sourceURL=modalImage.js
+		</script>
+	</th:block>
+	</div>
 <th:block th:replace="components :: scripts">
     <script type="application/javascript" src="https://ajax.googleapis.com/ajax/libs/jquery/3.6.0/jquery.min.js"></script>
     <script type="application/javascript" src="https://cdnjs.cloudflare.com/ajax/libs/popper.js/2.9.2/umd/popper.min.js"></script>

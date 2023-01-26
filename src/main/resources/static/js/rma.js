@@ -400,3 +400,17 @@ $('#attachFiles').on('input', function(){
 	if(totalSize>maxFilesSize)
 		$fileNames.append($('<div id="maxSize">The maximum allowed file size is <strong style="color:red;">' + new Intl.NumberFormat().format(maxFilesSize) + '<\strong> bytes.</div>'));
 });
+var thumbnailsTimeout;
+function thumbnailsClick(e, index, commentId){
+
+	if (e.detail === 1){
+		e.preventDefault();
+		thumbnailsTimeout = setTimeout(showThumbnails, 50, index, commentId);
+	}else
+		clearTimeout(thumbnailsTimeout);
+};
+
+function showThumbnails(index, commentId){
+	$imgModal = $('#imgModal');
+	$imgModal.load('/rma/show_img', {commentID: commentId, imgIndex: index}, function(){$imgModal.modal('show');})
+}

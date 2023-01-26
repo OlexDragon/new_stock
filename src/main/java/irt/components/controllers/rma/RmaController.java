@@ -254,6 +254,19 @@ public class RmaController {
 		return "rma :: comment_files";
 	}
 
+	@PostMapping(path = "show_img")
+	public String showImage(@RequestParam Long commentID, @RequestParam Integer imgIndex, Model model) throws IOException {
+
+		model.addAttribute("commentID", commentID);
+		model.addAttribute("imgIndex", imgIndex);
+
+		final List<String> fileNames = Arrays.stream(Paths.get(rmaFilesPath, commentID.toString()).toFile().listFiles()).map(File::getName).collect(Collectors.toList());
+		model.addAttribute("fileNames", fileNames);
+		model.addAttribute("imgName", fileNames.get(imgIndex));
+
+		return "rma :: imgModal";
+	}
+
 	public enum RmaFilter{
 		ALL(null),	// Show all RMAs
 		SHI(Rma.Status.SHIPPED),	// Show shipped RMAs

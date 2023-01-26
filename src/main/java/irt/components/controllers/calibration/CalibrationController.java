@@ -133,7 +133,6 @@ public class CalibrationController {
 
     @GetMapping("output_power/by_input")
     String outputPowerByInput(@RequestParam String sn, @RequestParam String pn, Model model) {
-    	logger.error(sn);
 
     	outputPower(sn, pn, model);
     	return "calibration/output_power_auto :: byInput";
