@@ -70,15 +70,17 @@
   						</button>
    						<div class="dropdown-menu" aria-labelledby="menuOutputPowerAuto">
 
+    						<a class="dropdown-item disabled">Auto:</a>
+
     						<a id="menuAutoByInput"
     							class="dropdown-item calibrate disabled"
     							th:classappend="${info==null ? 'disabled list-group-item-light' : ''}"
-    							th:href="@{${info==null} ? '#' : '/calibration/output_power/by_input?sn=' + ${info.serialNumber} + '&pn=' + ${info.partNumber}}">Auto by Input</a>
+    							th:href="@{${info==null} ? '#' : '/calibration/output_power/by_input?sn=' + ${info.serialNumber} + '&pn=' + ${info.partNumber}}">by Input</a>
 
     						<a id="nemuAutoByGain"
     							class="dropdown-item calibrate disabled"
     							th:classappend="${info==null ? 'disabled list-group-item-light' : ''}"
-    							th:href="@{${info==null} ? '#' : '/calibration/output_power/by_gain?sn=' + ${info.serialNumber} + '&pn=' + ${info.partNumber}}">Auto by Gain</a>
+    							th:href="@{${info==null} ? '#' : '/calibration/output_power/by_gain?sn=' + ${info.serialNumber} + '&pn=' + ${info.partNumber}}">by Gain</a>
     					</div>
 					</div>
     				<a	id="menuOutputPower"

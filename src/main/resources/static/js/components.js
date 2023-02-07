@@ -1,6 +1,4 @@
 
-$('#miComponents').addClass('active');
-
 // Input listener
 timer = 0;
 $('.searchInput').on('input', function(){
@@ -35,8 +33,12 @@ if(cookie){
 	search($input);
 }
 
-function inventory(row){
+function btnUseClick(row){
 
+	alert('Not Implememted.');
+	return;
+
+// The rest of the function section is not used.
 	var $row = $(row);
 	var partNumber = $row.find('.partNumber').text();
 	var description = $row.find('.description').text();

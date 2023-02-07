@@ -53,6 +53,10 @@ function gerSerialPorts(){
 	.done(function(ports){
 
 		var $comPorts = $('.com-ports').empty();
+		if(!ports){
+			alert('It looks like the Serial Port Server is down.');
+			return;
+		}
 
 		$('<option>', {selected: 'selected', disabled: 'disabled', hidden: 'hidden', title:'Remote Serial Port.'}).text('Select Remote Serial Port.').appendTo($comPorts);
 

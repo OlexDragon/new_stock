@@ -182,6 +182,7 @@ public class RmaController {
 		return "rma :: rmaCards";
 	}
 
+	private final DateTimeFormatter formatter = DateTimeFormatter.ofPattern("'RMA'yyMM");
 	@PostMapping("add_rma")
 	public String addRma(@RequestParam String serialNumber, Principal principal, Model model) throws IOException {
 //		logger.error("{} : {}", serialNumber, principal);
@@ -199,7 +200,6 @@ public class RmaController {
 		profileWorker.getDescription()
 		.ifPresent(
 				description->{
-					final DateTimeFormatter formatter = DateTimeFormatter.ofPattern("'RMA'yyMM");
 					final LocalDate currentdate = LocalDate.now();
 					final String format = currentdate.format(formatter);
 					final int count = rmaRepository.findByRmaNumberStartsWith(format).parallelStream().map(Rma::getRmaNumber).map(rmaNumber->rmaNumber.substring(7)).mapToInt(Integer::parseInt).max().orElse(0);
@@ -248,8 +248,7 @@ public class RmaController {
 
 		model.addAttribute("commentID", commentID);
 
-		final List<String> fileNames = Arrays.stream(Paths.get(rmaFilesPath, commentID.toString()).toFile().listFiles()).map(File::getName).collect(Collectors.toList());
-		model.addAttribute("fileNames", fileNames);
+		fileNames(commentID, model);
 
 		return "rma :: comment_files";
 	}
@@ -260,11 +259,23 @@ public class RmaController {
 		model.addAttribute("commentID", commentID);
 		model.addAttribute("imgIndex", imgIndex);
 
-		final List<String> fileNames = Arrays.stream(Paths.get(rmaFilesPath, commentID.toString()).toFile().listFiles()).map(File::getName).collect(Collectors.toList());
-		model.addAttribute("fileNames", fileNames);
+		final List<String> fileNames = fileNames(commentID, model);
 		model.addAttribute("imgName", fileNames.get(imgIndex));
 
 		return "rma :: imgModal";
+	}
+
+	private List<String> fileNames(Long commentID, Model model) {
+
+		final File file = Paths.get(rmaFilesPath, commentID.toString()).toFile();
+
+		if(!file.exists())
+			return new ArrayList<>();
+
+		final File[] listFiles = file.listFiles();
+		final List<String> fileNames = Arrays.stream(listFiles).filter(f->!f.isDirectory()).filter(f->!f.isHidden()).map(File::getName).collect(Collectors.toList());
+		model.addAttribute("fileNames", fileNames);
+		return fileNames;
 	}
 
 	public enum RmaFilter{

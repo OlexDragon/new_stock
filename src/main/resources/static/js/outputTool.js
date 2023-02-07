@@ -1,7 +1,7 @@
 
-$('#outputGet').click(()=>outputGet(outputAction));
+$('#outputGet').click(()=>outputGet());
 
-function outputGet(action){
+function outputGet(){
 
 	let outputComPorts = $('#outputComPorts').val();
 	if(!outputComPorts)
@@ -73,10 +73,10 @@ function outputAction(data){
 		var s = answer.split(/\s+/);
 		var a;
 		if(s.length>1)
-			a = parseFloat(s[1]);
+			a = parseFloat(s[1]).toFixed(1);
 
 		else
-			a = parseFloat(answer);
+			a = parseFloat(answer).toFixed(1);
 
 		$('#outputValue').text(a);
 	});

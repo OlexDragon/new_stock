@@ -18,8 +18,8 @@ import org.apache.logging.log4j.Logger;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Controller;
 import org.springframework.ui.Model;
+import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PostMapping;
-import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestParam;
 
 import irt.components.beans.Component;
@@ -44,7 +44,7 @@ public class ComponentsController {
 	@Value("${irt.url.components.catalog}")
 	private String componentsCatalog;
 
-    @RequestMapping("/")
+    @GetMapping("/")
     String componentSearch() {
         return "components";
     }
@@ -74,6 +74,11 @@ public class ComponentsController {
 
 	// Search Components URL
 	private String createComponentUrl(String key, String value, Integer page) throws UnsupportedEncodingException {
+
+		 return createComponentUrl(protocol, login, url, componentsCatalog, key, value, page);
+	}
+
+	public static String createComponentUrl(String protocol, String login, String url, String componentsCatalog, String key, String value, Integer page) throws UnsupportedEncodingException {
 
 		final StringBuilder sb = new StringBuilder(protocol).append(login).append(url).append(ComponentsRestController.encode(componentsCatalog)).append('?');
 

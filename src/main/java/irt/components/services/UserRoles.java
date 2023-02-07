@@ -17,7 +17,7 @@ public enum UserRoles implements GrantedAuthority{
     ADD_INVENTORY_TRANSFER	(16384		, "old role: 'EDIT_COST'; Can add Inventory Transfer"),
     CUSTOMER_ORDER		(32768		, "Can edit CUSTOMER ORDERs"),
     SCHEMATIC_PART		(65536		, "Can change schematic part(AutoCAD)."),
-    INVENTORY				(131072		, "old role: 'STOCK'; Move component to the Production"),
+    ECO					(131072		, "old role: 'STOCK'; The User can create ESOs"),
     EDIT_COMPANIES		(262144		, "Can add, edit, delete company"),
     USER				(524288		, "Can see all IRT workers"),
 	ADMIN				(1048576	, "Admin"),

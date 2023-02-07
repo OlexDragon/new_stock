@@ -4,6 +4,8 @@ import java.io.ByteArrayInputStream;
 import java.io.ByteArrayOutputStream;
 import java.io.File;
 import java.io.FileInputStream;
+import java.io.FileNotFoundException;
+import java.io.FileOutputStream;
 import java.io.IOException;
 import java.io.InputStream;
 import java.net.InetAddress;
@@ -31,7 +33,9 @@ import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
 
+import irt.components.controllers.eco.EcoController;
 import irt.components.controllers.rma.RmaController;
+import irt.components.workers.ThreadRunner;
 import net.coobird.thumbnailator.Thumbnails;
 
 @RestController
@@ -40,6 +44,7 @@ public class FileRestController {
 	private final static Logger logger = LogManager.getLogger();
 
 	@Value("${irt.rma.files.path}") private String rmaFilesPath;
+	@Value("${irt.eco.files.path}") private String ecoFilesPath;
 	@Value("${irt.host}") 			private String host;
 	@Autowired SmbSessionFactory smbSessionFactory;
 
@@ -51,8 +56,10 @@ public class FileRestController {
         	String sName = InetAddress.getLocalHost().getHostName();
 
         	// Change the directory if server runs on my computer
-        	if(sName.equals("oleksandr"))
+        	if(sName.equals("oleksandr")) {
         		rmaFilesPath = RmaController.TEST_PATH_TO_RMA_FILES;
+        		ecoFilesPath = EcoController.TEST_PATH_TO_ECO_FILES;
+        	}
 
         } catch (UnknownHostException e) {
 			logger.catching(e);
@@ -61,18 +68,19 @@ public class FileRestController {
 
 	@GetMapping
 	public ResponseEntity<Resource> download(@RequestParam String path) throws IOException{
+		logger.traceEntry(path);
 
-		try(	final SmbSession session = smbSessionFactory.getSession();
-				final InputStream is = session.readRaw(path)){
+		//Bad file descriptor exception when using auto close.
+		final SmbSession session = smbSessionFactory.getSession();
+		final InputStream is = session.readRaw(path);
+		final InputStreamResource body = new InputStreamResource(is);
+		final HttpHeaders headers = getHeader();
+		headers.add("Content-Disposition", "attachment; filename=\"" + new File(path).getName() + "\"");
 
-			HttpHeaders headers = getHeader();
-			headers.add("Content-Disposition", "attachment; filename=\"" + new File(path).getName() + "\"");
-
-			return ResponseEntity.ok()
+		return ResponseEntity.ok()
 				.headers(headers)
 				.contentType(MediaType.APPLICATION_OCTET_STREAM)
-				.body(new InputStreamResource(is));
-		}
+				.body(body);
 	}
 
 	private HttpHeaders getHeader() {
@@ -99,22 +107,81 @@ public class FileRestController {
 				.body(new InputStreamResource(is));
 	}
 
-	@GetMapping("/rma/thumbnails/{commentID}/{fileName}")
-	public ResponseEntity<Resource> rma(@PathVariable  String commentID, @PathVariable String fileName) throws IOException{
+	@GetMapping("/eco/{ecoID}/{fileName}")
+	public ResponseEntity<Resource> ecoFile(@PathVariable  String ecoID, @PathVariable String fileName) throws IOException{
 
-		final Path path = Paths.get(rmaFilesPath, commentID, fileName);
+		final Path path = Paths.get(ecoFilesPath, ecoID, fileName);
+		final File file = path.toFile();
+
+		HttpHeaders headers = getHeader();
+		headers.add("Content-Disposition", "attachment; filename=\"" + file.getName() + "\"");
+		final InputStream is = new FileInputStream(file);
+
+		return ResponseEntity.ok()
+				.headers(headers)
+				.contentType(MediaType.APPLICATION_OCTET_STREAM)
+				.body(new InputStreamResource(is));
+	}
+
+	@GetMapping("/rma/thumbnails/{commentID}/{fileName}")
+	public ResponseEntity<Resource> rmaThumbnails(@PathVariable  String commentID, @PathVariable String fileName) throws IOException{
+
+		return getThumbnails(rmaFilesPath, commentID, fileName);
+	}
+
+	@GetMapping("/eco/thumbnails/{ecoID}/{fileName}")
+	public ResponseEntity<Resource> ecoThumbnails(@PathVariable  String ecoID, @PathVariable String fileName) throws IOException{
+
+		return getThumbnails(ecoFilesPath, ecoID, fileName);
+	}
+
+	public ResponseEntity<Resource> getThumbnails(String filesPath, String id, String fileName) throws FileNotFoundException, IOException {
+		logger.traceEntry("filesPath: {}; id: {}; fileName:{}", filesPath, id, fileName);
+
+		final Path thPath = Paths.get(filesPath, id, "thumbnails", fileName);
+		final File thFile = thPath.toFile();
+
+		if(thFile.exists()) {
+			final FileInputStream inputStream = new FileInputStream(thFile);
+			return ResponseEntity.ok()
+					.headers(getHeader())
+					.contentType(MediaType.APPLICATION_OCTET_STREAM)
+					.body(new InputStreamResource(inputStream));
+		}
+
+		final Path path = Paths.get(filesPath, id, fileName);
 		final File file = path.toFile();
 
 		if(isImage(file))
 			try(final ByteArrayOutputStream os = new ByteArrayOutputStream();){
-				Thumbnails.of(file).size(200, 200).toOutputStream(os);
-				try(final ByteArrayInputStream inputStream = new ByteArrayInputStream(os.toByteArray());){
 
-					return ResponseEntity.ok()
+				Thumbnails.of(file)
+				.size(200, 200)
+				.toOutputStream(os);
+
+				final byte[] byteArray = os.toByteArray();
+
+				ThreadRunner.runThread(
+						()->{
+							final File parentFile = thFile.getParentFile();
+							if(!parentFile.exists())
+								parentFile.mkdir();
+
+							try (FileOutputStream fOutputStream = new FileOutputStream(thFile)) {
+
+								fOutputStream.write(byteArray);
+
+							} catch (IOException e) {
+								logger.catching(e);
+							}
+						});
+
+				final ByteArrayInputStream inputStream = new ByteArrayInputStream(byteArray);
+
+				return ResponseEntity.ok()
 							.headers(getHeader())
 							.contentType(MediaType.APPLICATION_OCTET_STREAM)
 							.body(new InputStreamResource(inputStream));
-				}
 			}
 		return null;
 	}

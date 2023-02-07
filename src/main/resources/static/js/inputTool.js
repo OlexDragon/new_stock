@@ -85,5 +85,6 @@ function inputAction(data, $valueField, divider, $button){
 	let ansver = String.fromCharCode.apply(null, commands[0].answer);
 	let fl = parseFloat(ansver);
 	$valueField.val(fl/divider);
-	$button.text('Set');
+	$valueField.trigger('change');
+ 	$button.text('Set');
 }

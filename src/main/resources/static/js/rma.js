@@ -1,5 +1,5 @@
-
-$('#miRMAs').addClass('active');
+var tooltipTriggerList = document.querySelectorAll('[data-bs-toggle="tooltip"]')
+var tooltipList = [...tooltipTriggerList].map(tooltipTriggerEl => new bootstrap.Tooltip(tooltipTriggerEl))
 
 // Get RMA filter text from the cookies
 var filterCookie = Cookies.get("rmafilter")
@@ -65,6 +65,9 @@ function search($this){
 // Load RMAs
 	var $accordion = $('#accordion');
 	$accordion.load('/rma/search', {id : attrId, value : val, sortBy: sortBy, rmaFilter: rmaFilter}, function(responseText, textStatus, req){
+
+		tooltipTriggerList = document.querySelectorAll('[data-bs-toggle="tooltip"]')
+		tooltipList = [...tooltipTriggerList].map(tooltipTriggerEl => new bootstrap.Tooltip(tooltipTriggerEl))
 
 		if(!$addRMA.length || attrId != "rmaSerialNumber")
 			return;
