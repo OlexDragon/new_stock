@@ -166,12 +166,32 @@
 	</div>
 
 <!-- Modal Message -->
-	<div id="modal" class="modal fade" aria-hidden="true" tabindex="-1" sec:authorize="hasAuthority('ECO')">
+	<div id="modal" class="modal fade" tabindex="-1" th:fragment="componentData">
+  		<div class="modal-dialog">
+    		<div class="modal-content">
+<!-- Modal Header -->
+      			<div class="modal-header">
+        			<h5 id="modal_title" class="modal-title ml-3 text-primary">Modal title</h5>
+        			<button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+      			</div>
+      			<div id="modal-body" class="modal-body">
+        			<p>Modal body text goes here.</p>
+      			</div>
+      			<div class="modal-footer">
+	        		<button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Close</button>
+	    		</div>
+    		</div>
+  		</div>
+	</div>
+
+
+<!-- Modal Message -->
+	<div id="ecoModal" class="modal fade" aria-hidden="true" tabindex="-1" sec:authorize="hasAuthority('ECO')">
    		<div class="modal-dialog">
     		<div class="modal-content">
 <!-- Modal Header -->
       			<div class="modal-header">
-        			<h5 id="modal_title" class="modal-title ml-3 text-primary">Enter the information about this RMA.</h5>
+        			<h5 id="eco_modal_title" class="modal-title ml-3 text-primary">Enter the information about this RMA.</h5>
         			<button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
       			</div>
 <!-- Modal Body -->

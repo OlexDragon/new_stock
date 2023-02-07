@@ -99,9 +99,9 @@ function btnUseClick(row){
 		return;
 	}
 	
-	$('#modal_title').text('Create ECO for p/n: ' + partNumber);
+	$('#eco_modal_title').text('Create ECO for p/n: ' + partNumber);
 	$('#saveECO').val(partNumber);
-	$('#modal').modal('show');
+	$('#ecoModal').modal('show');
 	
 }
 
