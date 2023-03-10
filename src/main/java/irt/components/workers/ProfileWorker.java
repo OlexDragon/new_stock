@@ -254,65 +254,28 @@ public class ProfileWorker {
 	}
 
 	public PowerDetectorSource scanForPowerDetectorSource() {
+		final String startWith = "power-detector-source";
+		return getProperty(startWith).map(s->s.split("\\s+", 3))
+				.map(
+						a->{
 
-		if(!oPath.isPresent())
-			throw new RuntimeException("The profile does not exist.");
+							if(a.length>1)
+								return PowerDetectorSource.ON_BOARD_SENSOR;
 
-		final Path path = oPath.get();
-		
-		try(final Scanner scanner = new Scanner(path);) {
+							final int index = Integer.parseInt(a[0]);
 
-			while(scanner.hasNextLine()) {
-				final String line = scanner.nextLine();
+							final PowerDetectorSource[] values = PowerDetectorSource.values();
 
-				if(line.startsWith("power-detector-source")) {
+							if(index>=values.length)
+								return PowerDetectorSource.UNDEFINED;
 
-					final String[] split = line.split("#", 2)[0].split("\\s+", 3);
-
-					if(split.length>2)
-						return PowerDetectorSource.ON_BOARD_SENSOR;
-
-					final int index = Integer.parseInt(split[1]);
-
-					final PowerDetectorSource[] values = PowerDetectorSource.values();
-
-					if(index>=values.length)
-						return PowerDetectorSource.UNDEFINED;
-
-					return values[index];
-				}
-			}
-		} catch (Exception e) {
-			logger.catching(e);
-		}
-
-		return PowerDetectorSource.UNDEFINED;
+							return values[index];
+						}).orElse(PowerDetectorSource.UNDEFINED);
 	}
 
 	public Optional<Double> getGain() {
-
-		if(!oPath.isPresent())
-			throw new RuntimeException("The profile does not exist.");
-
-		final Path path = oPath.get();
-		
-		try(final Scanner scanner = new Scanner(path);) {
-
-			while(scanner.hasNextLine()) {
-				final String line = scanner.nextLine();
-
-				if(line.startsWith("zero-attenuation-gain")) {
-
-					final String[] split = line.split("\\s+", 3);
-
-					return Optional.of(Double.parseDouble(split[1]));
-				}
-			}
-		} catch (Exception e) {
-			logger.catching(e);
-		}
-
-		return Optional.empty();
+		final String startWith = "zero-attenuation-gain";
+		return getProperty(startWith).map(Double::parseDouble);
 	}
 
 	public Optional<String> getDescription() {

@@ -50,9 +50,14 @@
   			</div>
 
 		<div class="nav-item col">
+<!-- Show All ECOs -->
   		<form class="row">
+      		<div class="btn-group col-auto" role="group" aria-label="Basic checkbox toggle button group">
+      			<input id="show_all_eco" type="checkbox" class="btn-check" data-bs-toggle="tooltip">
+      			<label class="btn btn-outline-primary" for="show_all_eco" title="Select to show all ECOs">All</label>
+      		</div>
 <!-- ECO Number search-->
-  			<div class="input-group col-sm">
+  			<div class="btn-group col-sm">
       			<label for="ecoNumber" class="input-group-text">ECO</label>
       			<input id="ecoNumber" type="text" class="form-control search searchEco" placeholder="ECO Number" aria-label="ECO Number">
     		</div>
@@ -107,14 +112,18 @@
            								th:title="${eco.status}"
            								data-bs-toggle="tooltip"
            								th:classappend="${eco.status == T(irt.components.beans.jpa.eco.Eco.Status).CLOSED ? 'bg-secondary text-white bg-opacity-75' : ''}">
-           							<strong th:text="${ eco.ecoNumber }"> ECO Number </strong>
+           							<strong class="eco_number" th:text="${ eco.ecoNumber }"> ECO Number </strong>
            						</div>
+          						<div class="col-auto" th:if="${showAll}">
+          							<strong th:text="${ eco.version }"> ECO Version </strong>
+          						</div>
           						<div class="col-auto">
           							<strong class="text-nowrap partNumber" th:text="${ eco.partNumber }"> Part Number </strong>
           						</div>
           						<div class="col">
           							<strong class="text-nowrap description" th:text="${ eco.description }"> ECO Description </strong>
           						</div>
+           						<div sec:authorize="hasAuthority('ECO')" class="col-auto btn btn-outline-secondary btn-sm edit_eco" title="Edit this ECO" onclick="editECO(this)">E</div>
           						<div class="col-auto text-secondary">
           							<strong th:text="${#dates.format( eco.date, 'dd MMM yyyy' )}" th:title="${eco.date}" data-bs-toggle="tooltip">Date</strong>
           						</div>
@@ -128,7 +137,7 @@
 					<div id="rma0" th:id="eco + ${ index }" class="accordion-collapse collapse" aria-labelledby="heading0" th:attr="aria-labelledby ='heading'+${index}" data-bs-parent="#accordion">
 						<div id="accordion-body" class="accordion-body">
 							<div>
-								<div class="pre-line" th:text="${ eco.body }">ECO Body </div>
+								<div class="pre-line eco_body" th:text="${ eco.body }">ECO Body </div>
 								<th:block th:if="${ eco.hasFiles }">
 								<div th:id="'filesFor' + ${ eco.id }">
 									<th:block th:remove="all">
@@ -158,11 +167,11 @@
 						</div>
 					</div>
 				</div>
-
 			</th:block>
 		</div>
 	</div>
 	<div id="content" class="container-fluid">
+		<div id="searchEnd"></div>
 	</div>
 
 <!-- Modal Message -->

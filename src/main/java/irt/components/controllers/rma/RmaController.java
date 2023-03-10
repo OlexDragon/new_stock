@@ -39,7 +39,9 @@ import irt.components.beans.jpa.rma.Rma.Status;
 import irt.components.beans.jpa.rma.RmaComment;
 import irt.components.beans.jpa.rma.RmaCountByStatus;
 import irt.components.services.UserPrincipal;
+import irt.components.workers.IrtPathEncoder;
 import irt.components.workers.ProfileWorker;
+import javafx.util.Pair;
 
 @Controller
 @RequestMapping("rma")
@@ -259,13 +261,13 @@ public class RmaController {
 		model.addAttribute("commentID", commentID);
 		model.addAttribute("imgIndex", imgIndex);
 
-		final List<String> fileNames = fileNames(commentID, model);
+		final List<Pair<String, String>> fileNames = fileNames(commentID, model);
 		model.addAttribute("imgName", fileNames.get(imgIndex));
 
 		return "rma :: imgModal";
 	}
 
-	private List<String> fileNames(Long commentID, Model model) {
+	private List<Pair<String, String>> fileNames(Long commentID, Model model) {
 
 		final File file = Paths.get(rmaFilesPath, commentID.toString()).toFile();
 
@@ -273,7 +275,7 @@ public class RmaController {
 			return new ArrayList<>();
 
 		final File[] listFiles = file.listFiles();
-		final List<String> fileNames = Arrays.stream(listFiles).filter(f->!f.isDirectory()).filter(f->!f.isHidden()).map(File::getName).collect(Collectors.toList());
+		final List<Pair<String, String>> fileNames = Arrays.stream(listFiles).filter(f->!f.isDirectory()).filter(f->!f.isHidden()).map(File::getName).map(n->new Pair<String, String>(n, IrtPathEncoder.encode(n))).collect(Collectors.toList());
 		model.addAttribute("fileNames", fileNames);
 		return fileNames;
 	}

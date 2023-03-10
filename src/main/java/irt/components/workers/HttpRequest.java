@@ -22,6 +22,7 @@ import javax.script.ScriptException;
 
 import org.apache.http.HttpEntity;
 import org.apache.http.NameValuePair;
+import org.apache.http.ParseException;
 import org.apache.http.client.entity.UrlEncodedFormEntity;
 import org.apache.http.client.methods.CloseableHttpResponse;
 import org.apache.http.client.methods.HttpGet;
@@ -323,6 +324,35 @@ public class HttpRequest {
 		ThreadRunner.runThread(ft);
 
 		return ft;
+	}
+
+	public static String getForString(String url) {
+
+		logger.traceEntry(url);
+
+		final HttpGet httpPost = new HttpGet(url);
+
+		try(	final CloseableHttpClient httpclient = HttpClients.createDefault();
+				final CloseableHttpResponse response = httpclient.execute(httpPost);){
+
+			return Optional.ofNullable(response.getEntity())
+					.map(
+							t -> {
+								try {
+
+									return EntityUtils.toString(t);
+
+								} catch (ParseException e) {} catch (IOException e) {
+									logger.catching(e);
+								}
+								return null;
+							}).orElse(null);
+
+		} catch (IOException e) {
+			logger.catching(e);
+		}
+
+		return null;
 	}
 
 	private static <T> T httpForIrtYaml(Class<T> classToReturn, HttpPost uriRequest) throws IOException, ScriptException {

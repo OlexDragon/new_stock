@@ -33,12 +33,13 @@ public class Eco {
 	@Id @GeneratedValue(strategy = GenerationType.IDENTITY)
 	private Long	 id;
 	private String	 ecoNumber;
+	private Integer	 version = 0;
 	private String	 partNumber;
 	private String	 description;
 	private String	 body;
 	private Long	 userId;
 	@Enumerated(EnumType.ORDINAL)
-	private Status	 status;
+	private Status	 status = Status.OPEN;
 	private Boolean hasFiles;
 
 	@Temporal(TemporalType.TIMESTAMP)

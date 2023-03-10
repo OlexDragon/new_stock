@@ -39,7 +39,7 @@ function search($this){
 	var id = $this.prop('id');
 
 // Remove extra whitespaces
-	if(id=='rmaDescription')
+	if(id=='rmaDescription' || id=='rmaComments')
 		val = tmp.replace(/\s+/g, ' ');
 
 	else
@@ -366,7 +366,7 @@ $(window)
 	e.preventDefault();
 	e.stopPropagation();
 })
-.on('dragleave',function(e) {
+.on('dragleave',function(e) {0
 	e.preventDefault();
 	e.stopPropagation();
 })
@@ -408,7 +408,7 @@ function thumbnailsClick(e, index, commentId){
 
 	if (e.detail === 1){
 		e.preventDefault();
-		thumbnailsTimeout = setTimeout(showThumbnails, 50, index, commentId);
+		thumbnailsTimeout = setTimeout(showThumbnails, 400, index, commentId);
 	}else
 		clearTimeout(thumbnailsTimeout);
 };

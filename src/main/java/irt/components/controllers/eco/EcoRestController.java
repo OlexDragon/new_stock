@@ -28,6 +28,7 @@ import org.springframework.web.multipart.MultipartFile;
 
 import irt.components.beans.jpa.User;
 import irt.components.beans.jpa.eco.Eco;
+import irt.components.beans.jpa.eco.Eco.Status;
 import irt.components.beans.jpa.repository.EcoRepository;
 import irt.components.services.UserPrincipal;
 
@@ -37,6 +38,10 @@ public class EcoRestController {
 	private final static Logger logger = LogManager.getLogger();
 
 	@Value("${irt.eco.files.path}") private String ecoFilesPath;
+
+	@Autowired private EcoRepository ecoRepository;
+
+	private final DateTimeFormatter formatter = DateTimeFormatter.ofPattern("'ECO'yyMM");
 
 	@PostConstruct
 	public void postConstruct() {
@@ -54,12 +59,8 @@ public class EcoRestController {
 		}
 	}
 
-	@Autowired private EcoRepository ecoRepository;
-
-	private final DateTimeFormatter formatter = DateTimeFormatter.ofPattern("'ECO'yyMM");
-
 	@PostMapping(path = "add_eco", consumes = {"multipart/form-data"})
-	public String addComment(
+	public String addEco(
 								@RequestParam String partNumber,
 								@RequestParam String ecoCause,
 								@RequestParam String ecoBody,
@@ -71,7 +72,6 @@ public class EcoRestController {
 
 		if(!(principal instanceof UsernamePasswordAuthenticationToken) && partNumber.trim().isEmpty() && ecoCause.trim().isEmpty() && ecoBody.trim().isEmpty())
 			return "Not all variables are present.";
-
 
 		final LocalDate currentdate = LocalDate.now();
 		final String format = currentdate.format(formatter);
@@ -91,6 +91,46 @@ public class EcoRestController {
 		oFiles.map(List::stream).orElse(Stream.empty()).forEach(saveFile(savedEco.getId()));
 
 		return "The " + savedEco.getEcoNumber() +  " has been saved.";
+	}
+
+	@PostMapping(path = "edit_eco", consumes = {"multipart/form-data"})
+	public String editEco(
+								@RequestParam Long ecoID,
+								@RequestParam String ecoCause,
+								@RequestParam String ecoBody,
+								@RequestParam(name = "fileToAttach[]", required = false) List<MultipartFile> files,
+								Principal principal) throws IOException {
+
+
+
+		if(!(principal instanceof UsernamePasswordAuthenticationToken)  && ecoCause.trim().isEmpty() && ecoBody.trim().isEmpty())
+			return "Not all variables are present.";
+
+		final Object pr = ((UsernamePasswordAuthenticationToken)principal).getPrincipal();
+		final User user = ((UserPrincipal)pr).getUser();
+
+		ecoRepository.findById(ecoID)
+		.ifPresent(
+				eco->{
+
+					final Eco newEco = new Eco(eco.getEcoNumber(), eco.getPartNumber(), ecoCause, ecoBody, user.getId());
+
+					final Optional<List<MultipartFile>> oFiles = Optional.ofNullable(files).filter(f->!f.isEmpty());
+					newEco.setHasFiles(oFiles.isPresent());
+
+					final Integer version = eco.getVersion();
+					newEco.setVersion(version+1);
+
+					final Eco savedEco = ecoRepository.save(newEco);
+
+					// Save files
+					oFiles.map(List::stream).orElse(Stream.empty()).forEach(saveFile(savedEco.getId()));
+
+					eco.setStatus(Status.CLOSED);
+					ecoRepository.save(eco);
+				});
+
+		return "The ECO has been saved.";
 	}
 
 	private Consumer<? super MultipartFile> saveFile(Long ecoID) {

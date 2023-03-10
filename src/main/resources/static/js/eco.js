@@ -24,10 +24,11 @@ function search($this){
 	if($this.hasClass('searchComponent'))
 		$("#content").load('/components', {id: attrId, value: val});
 	else
-		$("#content").empty().append("<div><strong class='c-blue'>To get information about ECOs, enter some information into one of the search fields.</strong></div>");
+		$("#content").empty().append('<div><strong class="c-blue">To get information about ECOs, enter some information into one of the search fields.</strong></div><div id="searchEnd"></div>');
 
 	if($this.hasClass('searchEco')){
-		$("#accordion").load('/eco', {id: attrId, value: val})
+		let showAll = $('#show_all_eco').prop('checked');
+		$("#accordion").load('/eco', {id: attrId, value: val, showAll: showAll})
 	}else
 		$("#accordion").empty();
 	
@@ -102,8 +103,7 @@ function btnUseClick(row){
 	$('#eco_modal_title').text('Create ECO for p/n: ' + partNumber);
 	$('#saveECO').val(partNumber);
 	$('#ecoModal').modal('show');
-	
-}
+	}
 
 $('#saveECO').click(function(e){
 	e.preventDefault();
@@ -143,10 +143,18 @@ $('#saveECO').click(function(e){
 		return;
 	}
 
-	fd.append('partNumber', this.value);
+	let url;
+	let title = $('#eco_modal_title').text();
+	if(title.startsWith('Edit')){
+		url = '/eco/rest/edit_eco'
+		fd.append('ecoID', this.value);
+	}else{
+		url = '/eco/rest/add_eco';
+		fd.append('partNumber', this.value);
+	}
 
 	$.ajax({
-    	url: '/eco/rest/add_eco',
+    	url: url,
     	data: fd,
     	cache: false,
     	contentType: false,
@@ -193,3 +201,24 @@ $('.eco-field').on('input', function(){
 	else
 		$("#saveECO").addClass('disabled');
 });
+$('#show_all_eco').click(function(){
+	let i = $('.search').filter((index, input)=>input.value);
+	if(i.length)
+		search(i);
+});
+function editECO(button){
+
+	let $accordionItem 	= $(button).closest('.accordion-item');
+	let $parent 		= $(button.parentNode);
+
+	let ecoID 		= $accordionItem.prop('id');
+	let ecoNumber 	= $parent.find('.eco_number').text();
+	let ecoDescr 	= $parent.find('.description').text();
+	let ecoBody 	= $accordionItem.find('.eco_body').text();
+	
+	$('#eco_modal_title').text('Edit ' + $parent.find('.eco_number').text());
+	$('#ecoCause').val(ecoDescr);
+	$('#ecoTextarea').val(ecoBody);
+	$('#saveECO').val(ecoID);
+	$('#ecoModal').modal('show');
+};

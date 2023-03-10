@@ -6,9 +6,11 @@ import java.io.InputStream;
 import java.io.InputStreamReader;
 import java.io.OutputStream;
 import java.io.OutputStreamWriter;
+import java.io.StringReader;
 import java.net.HttpURLConnection;
 import java.net.InetAddress;
 import java.net.MalformedURLException;
+import java.net.URISyntaxException;
 import java.net.URL;
 import java.net.UnknownHostException;
 import java.nio.file.Path;
@@ -24,8 +26,10 @@ import java.util.concurrent.TimeUnit;
 import java.util.concurrent.TimeoutException;
 
 import javax.servlet.http.HttpServletResponse;
+import javax.swing.text.html.parser.ParserDelegator;
 
 import org.apache.http.NameValuePair;
+import org.apache.http.client.utils.URIBuilder;
 import org.apache.http.message.BasicNameValuePair;
 import org.apache.logging.log4j.Level;
 import org.apache.logging.log4j.LogManager;
@@ -57,8 +61,10 @@ import irt.components.beans.jpa.repository.calibration.CalibrationBtrSettingRepo
 import irt.components.beans.jpa.repository.calibration.CalibrationGainSettingRepository;
 import irt.components.beans.jpa.repository.calibration.CalibrationOutputPowerSettingRepository;
 import irt.components.beans.jpa.repository.calibration.CalibrationPowerOffsetSettingRepository;
+import irt.components.workers.HtmlParsel;
 import irt.components.workers.HttpRequest;
 import irt.components.workers.ProfileWorker;
+import javafx.util.Pair;
 
 @RestController
 @RequestMapping("/calibration/rest")
@@ -238,6 +244,30 @@ public class CalibrationRestController {
 		HttpRequest.upload(sn, profile);
 
 		return "Wait for the profile to load.";
+	}
+
+    @GetMapping("profile")
+    String getProfile(@RequestParam String sn) throws IOException, URISyntaxException {
+
+    	final URL url = new URL("http", sn, "/diagnostics.asp");
+    	final URIBuilder builder = new URIBuilder(url.toString()).setParameter("profile", "1");
+
+    	String str = HttpRequest.getForString(builder.build().toString());
+
+        try(final StringReader reader = new StringReader(str);){
+ 
+        	final HtmlParsel htmlParsel = new HtmlParsel("textarea");
+        	new ParserDelegator().parse(reader, htmlParsel, true);
+        	if(htmlParsel.size()>0) {
+        		final Pair<Integer, Integer> positions = htmlParsel.getPositions(0);
+           		final Integer start = positions.getKey();
+           		final Integer stop = positions.getValue();
+           		String s = str.substring(start, stop);
+           		str = s.substring(s.indexOf('>') + 1).trim();
+         	}
+        }
+
+    	return str;
 	}
 
     @GetMapping("profile_path")

@@ -65,28 +65,38 @@ public class EcoController {
     }
 
     @PostMapping
-	public String search( @RequestParam(required=false) String id, @RequestParam(required=false) String value, Model model) throws IOException {
-		logger.traceEntry("id: {}; value: {}; page: {};", id, value);
+	public String search( @RequestParam String id, @RequestParam String value, @RequestParam Boolean showAll, Model model) throws IOException {
+		logger.traceEntry("id: {}; value: {}; page: {}; showAll: {}", id, value, showAll);
 
 		List<Eco> ecos = null;
 		switch(id) {
 		
 		case "ecoNumber":
-			ecos = ecoRepository.findByEcoNumberContainingOrderByEcoNumber(value, PageRequest.of(0, SIZE));
+			if(showAll)
+				ecos = ecoRepository.findByEcoNumberContainingOrderByEcoNumberDesc(value, PageRequest.of(0, SIZE));
+			else
+				ecos = ecoRepository.findByEcoNumberContainingAndStatusOrderByEcoNumberDesc(value, Eco.Status.OPEN, PageRequest.of(0, SIZE));
 			break;
 
 		case "ecoDescription":
-			ecos = ecoRepository.findByDescriptionContainingOrderByEcoNumber(value, PageRequest.of(0, SIZE));
+			if(showAll)
+				ecos = ecoRepository.findByDescriptionContainingOrderByEcoNumberDesc(value, PageRequest.of(0, SIZE));
+			else
+				ecos = ecoRepository.findByDescriptionContainingAndStatusOrderByEcoNumberDesc(value, Eco.Status.OPEN, PageRequest.of(0, SIZE));
 			break;
 
 		case "SKU":
-			ecos = ecoRepository.findByPartNumberContainingOrderByEcoNumber(value, PageRequest.of(0, SIZE));
+			if(showAll)
+				ecos = ecoRepository.findByPartNumberContainingOrderByEcoNumberDesc(value, PageRequest.of(0, SIZE));
+			else
+				ecos = ecoRepository.findByPartNumberContainingAndStatusOrderByEcoNumberDesc(value, Eco.Status.OPEN, PageRequest.of(0, SIZE));
 			break;
 
 		default:
 			return "eco/eco :: ecoCards";
 		}
 
+		model.addAttribute("showAll", showAll);
 		model.addAttribute("ecos", ecos);
 
 		return "eco/eco :: ecoCards";

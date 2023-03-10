@@ -13,7 +13,12 @@ public interface EcoRepository extends CrudRepository<Eco, Long> {
 
 	List<Eco> findByEcoNumberStartsWith (String desired);
 
-	List<Eco> findByEcoNumberContainingOrderByEcoNumber			(String desired, Pageable page);
-	List<Eco> findByPartNumberContainingOrderByEcoNumber		(String desired, Pageable page);
-	List<Eco> findByDescriptionContainingOrderByEcoNumber		(String desired, Pageable page);
+	List<Eco> findByEcoNumberContainingOrderByEcoNumberDesc				(String desired, Pageable page);
+	List<Eco> findByEcoNumberContainingAndStatusOrderByEcoNumberDesc	(String desired, Eco.Status status, Pageable page);
+
+	List<Eco> findByPartNumberContainingOrderByEcoNumberDesc			(String desired, Pageable page);
+	List<Eco> findByPartNumberContainingAndStatusOrderByEcoNumberDesc	(String desired, Eco.Status status, Pageable page);
+
+	List<Eco> findByDescriptionContainingOrderByEcoNumberDesc			(String desired, Pageable page);
+	List<Eco> findByDescriptionContainingAndStatusOrderByEcoNumberDesc	(String desired, Eco.Status status, Pageable page);
 }

@@ -289,6 +289,23 @@ public class CalibrationController {
     	return "calibration/gain :: modal";
     }
 
+	@GetMapping("current")
+    String currentOffset(@RequestParam String sn, Model model) {
+//    	logger.error(sn);
+
+		Optional.ofNullable(sn)
+    	.filter(s->!s.isEmpty())
+    	.ifPresent(
+    			s->{
+
+					model.addAttribute("serialNumber", s);
+
+					FutureTask<Void> ftProfile = gainFromProfile(sn, model);
+    			});
+
+    	return "calibration/current_off_set :: modal";
+    }
+
 	@GetMapping("btr")
     String measurement(@RequestParam String sn, @RequestParam String pn, @RequestParam(required = false) Boolean setting, Model model) {
     	logger.traceEntry("sn: {}; pn: {}", sn, pn);

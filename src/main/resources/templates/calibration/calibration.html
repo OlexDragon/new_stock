@@ -48,6 +48,8 @@
     			<a class="dropdown-item" th:classappend="${info==null ? 'disabled list-group-item-light' : ''}" th:href="@{${info==null} ? '#' : 'http://' + ${info.serialNumber}}" target="_blank">Web</a>
     			<a id="unitLogin" class="dropdown-item unitLogin" th:classappend="${info==null ? 'disabled list-group-item-light' : ''}" th:href="@{${info==null} ? '#' : '/calibration/rest/login?sn=' + ${info.serialNumber}}">Login</a>
     			<a id="currents" class="dropdown-item" th:classappend="${info==null ? 'disabled list-group-item-light' : ''}" href="#">Currents</a>
+    			<a id="profile" class="dropdown-item" th:classappend="${info==null ? 'disabled list-group-item-light' : ''}" th:href="@{${info==null} ? '#' : '/calibration/rest/profile?sn=' + ${info.serialNumber}}" target="_blank">Profile</a>
+   				<a id="profilePath" class="dropdown-item" th:classappend="${info==null ? 'disabled list-group-item-light' : ''}" th:href="@{${info==null} ? '#' : '/calibration/rest/profile_path?sn=' + ${info.serialNumber}}" target="_blank">Profile Path</a>
     			<div><hr class="dropdown-divider"></div>
     			<a id="scan" class="dropdown-item" href="#">Network Scan</a>
   			</div>
@@ -95,6 +97,8 @@
     				th:href="@{${info==null} ? '#' : '/calibration/power_offset?sn=' + ${info.serialNumber} + '&pn=' + ${info.partNumber} + '&deviceId=' + ${#strings.substring(info.deviceId, 1, info.deviceId.length()-1)}}">Power Offset</a>
 <!-- Gain -->
     			<a id="menuGain" class="dropdown-item calibrate" th:classappend="${info==null ? 'disabled list-group-item-light' : ''}" th:href="@{${info==null} ? '#' : '/calibration/gain?sn=' + ${info.serialNumber} + '&pn=' + ${info.partNumber}}">Gain</a>
+<!-- Current -->
+    			<a id="menuCurrent" class="dropdown-item calibrate" th:classappend="${info==null ? 'disabled list-group-item-light' : ''}" th:href="@{${info==null} ? '#' : '/calibration/current?sn=' + ${info.serialNumber}}">Current</a>
 <!-- BTR Measurement -->
     			<a id="btr" 
     				class="dropdown-item calibrate" 
@@ -105,7 +109,6 @@
     			<a class="dropdown-item" id="calMode" th:classappend="${info==null ? 'disabled list-group-item-light' : ''}" href="#">Calibration Mode</a>
     			<div><hr class="dropdown-divider"></div>
     			<a class="dropdown-item" id="gain_from_cookies" th:classappend="${serialNumber==null ? 'disabled list-group-item-light' : ''}" href="#" data-th-data-sn="${serialNumber} + '_gainTable'">Gain from Cookies</a>
-    			<a class="dropdown-item" id="profilePath" th:classappend="${info==null ? 'disabled list-group-item-light' : ''}" th:href="@{${info==null} ? '#' : '/calibration/rest/profile_path?sn=' + ${info.serialNumber}}" target="_blank">Profile Path</a>
     			<a class="dropdown-item" id="upload" th:classappend="${info==null ? 'disabled list-group-item-light' : ''}" th:href="@{${info==null} ? '#' : '/calibration/rest/upload?sn=' + ${info.serialNumber}}">Upload Profile</a>
     			<div><hr class="dropdown-divider"></div>
     			<a class="dropdown-item" href="../static/files/http.serial_port.jar" th:href="@{/files/http.serial_port.jar}">Dounload HTTP Serial Port App.</a>

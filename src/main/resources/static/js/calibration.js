@@ -430,6 +430,29 @@ $('#currents').click(function(e){
 	let modal = $('#modal').load(href);
 })
 
+$('#profile').click(function(e){
+	e.preventDefault();
+
+	$.get(this.href)
+	.done(function(profile){
+		$('body')
+		.append(
+			$('<div>', { class: "alert alert-warning alert-dismissible fade show row", role: "alert"})
+			.append($('<strong>', {class: 'col pre-line'}).text(profile))			
+			.append($('<button>', {type: 'button', class: 'btn-close col-auto', 'data-bs-dismiss': 'alert', 'aria-label': 'Close'}))
+		);
+
+		$('.copy').click(function(){
+			var strong = $(this).parent().children('strong')[0];
+			selectAndCopy(strong);
+		});
+	})
+	.fail(function(error) {
+		if(conectionFail(error))
+			$('#calMode').removeClass('text-primary text-success').text('Calibration Mode');
+	});
+ });
+
 $('#profilePath').click(function(e){
 	e.preventDefault();
 
