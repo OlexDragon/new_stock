@@ -291,11 +291,12 @@ public class ProfileWorker {
 	}
 
 	public Optional<String> getProperty(final String startWith) {
+
 		if(!oPath.isPresent())
 			throw new RuntimeException("The profile does not exist.");
 
 		final Path path = oPath.get();
-		
+
 		try(final Scanner scanner = new Scanner(path);) {
 
 			while(scanner.hasNextLine()) {
@@ -313,5 +314,32 @@ public class ProfileWorker {
 		}
 
 		return Optional.empty();
+	}
+
+	public List<String> getProperties(String propertyName) {
+
+		if(!oPath.isPresent())
+			throw new RuntimeException("The profile does not exist.");
+
+		final Path path = oPath.get();
+
+		List<String> properties = new ArrayList<>();
+
+		try(final Scanner scanner = new Scanner(path);) {
+
+			while(scanner.hasNextLine()) {
+				final String line = scanner.nextLine();
+
+				if(line.startsWith(propertyName)) {
+
+					final String[] split = line.split("\\s+", 2);
+					if(split[0].equals(propertyName))
+						properties.add(split[1].split("#",2)[0].trim());
+				}
+			}
+		} catch (Exception e) {
+			logger.catching(e);
+		}
+		return properties;
 	}
 }

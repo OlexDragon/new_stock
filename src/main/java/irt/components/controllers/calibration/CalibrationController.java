@@ -1,9 +1,11 @@
 package irt.components.controllers.calibration;
 
+import java.io.IOException;
 import java.math.BigDecimal;
 import java.math.MathContext;
 import java.net.MalformedURLException;
 import java.net.URL;
+import java.net.UnknownHostException;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
@@ -83,16 +85,25 @@ public class CalibrationController {
     			s->{
     				try {
 
-    					final Info info = getHttpDeviceDebug(sn, Info.class, new BasicNameValuePair("devid", "1"), new BasicNameValuePair("command", "info")).get(10, TimeUnit.SECONDS);
+    					final Integer devid = getSystemIndex(sn);
+    					final Info info = getHttpDeviceDebug(sn, Info.class, new BasicNameValuePair("devid", devid.toString()), new BasicNameValuePair("command", "info")).get(10, TimeUnit.SECONDS);
     					model.addAttribute("info", info);
 
-    				} catch (MalformedURLException | InterruptedException | ExecutionException | TimeoutException e) {
+					} catch (TimeoutException | UnknownHostException e) {
 						logger.catching(Level.DEBUG, e);
+					} catch (Exception e) {
+						logger.catching(e);
 					}
     			});
 
 		return "calibration/calibration";
     }
+
+	public static Integer getSystemIndex(String sn) throws IOException{
+
+		final Map<String, Integer> allDevices = HttpRequest.getAllDevices(sn);
+		return Optional.ofNullable(allDevices.get("System")).orElse(1);
+	}
 
     @GetMapping("output_power")
     String outputPower(@RequestParam String sn, @RequestParam String pn, Model model) {
@@ -191,29 +202,18 @@ public class CalibrationController {
    	    				ThreadRunner.runThread(
    								()->{
 
-   				    				// Get Power table from the profile
-   							    	ProfileWorker profileWorker = new ProfileWorker(profileFolder, sn);
-   							    	try {
-   										if(!profileWorker.exists()) {
-   					    					model.addAttribute("message", "The profile could not be found.");
-   											ThreadRunner.runThread(ftProfile);
-   											return;
-   										}
+   									// Get Power table from the profile
+   									Optional.of(getProfileWorker(sn, ftProfile, model))
+   							    	.ifPresent(
+   							    			pw->{
+   												pw.getTable(ProfileTableDetails.OUTPUT_POWER.getDescription()).map(CalibrationTable::getTable).ifPresent(table->model.addAttribute("table", table));//TODO
 
-   										profileWorker.getTable(ProfileTableDetails.OUTPUT_POWER.getDescription()).map(CalibrationTable::getTable).ifPresent(table->model.addAttribute("table", table));
+   			    						    	// Get Power detector source
+   			    						    	final PowerDetectorSource powerDetectorSource = pw.scanForPowerDetectorSource();
+   							    				model.addAttribute("jsFunction", powerDetectorSource.getJsFunction());
 
-   	    						    	// Get Power detector source
-   	    						    	final PowerDetectorSource powerDetectorSource = profileWorker.scanForPowerDetectorSource();
-   					    				model.addAttribute("jsFunction", powerDetectorSource.getJsFunction());
-
-   								    	ThreadRunner.runThread(ftProfile);
-
-   							    	} catch (Exception e) {
-   										logger.catching(e);
-   				    					model.addAttribute("message", e.getLocalizedMessage());
-   										ThreadRunner.runThread(ftProfile);
-   										return;
-   									}
+   										    	ThreadRunner.runThread(ftProfile);
+   							    			});
    								});
 
     					final FutureTask<CalibrationInfo> httpUpdate = getHttpUpdate(serialNumber, CalibrationInfo.class, new BasicNameValuePair("exec", "calib_ro_info"));
@@ -262,9 +262,11 @@ public class CalibrationController {
 
 					try {
 
+    					final Integer devid = getSystemIndex(sn);
+    					model.addAttribute("devid", devid);
     					final FutureTask<CalibrationInfo> httpUpdate = getHttpUpdate(s, CalibrationInfo.class, new BasicNameValuePair("exec", "calib_ro_info"));
     					final FutureTask<Dacs> httpDeviceDebug = getHttpDeviceDebug(s, Dacs.class,
-    							new BasicNameValuePair("devid", "1"),
+    							new BasicNameValuePair("devid", devid.toString()),
     							new BasicNameValuePair("command", "regs"),
     							new BasicNameValuePair("groupindex", "100"));
 
@@ -281,7 +283,7 @@ public class CalibrationController {
 
 						ftProfile.get(10, TimeUnit.SECONDS);
 
-    				} catch (MalformedURLException | InterruptedException | ExecutionException | TimeoutException e) {
+    				} catch (IOException | InterruptedException | ExecutionException | TimeoutException e) {
 						logger.catching(e);
 					}
     			});
@@ -289,7 +291,7 @@ public class CalibrationController {
     	return "calibration/gain :: modal";
     }
 
-	@GetMapping("current")
+	@GetMapping("current_offset")
     String currentOffset(@RequestParam String sn, Model model) {
 //    	logger.error(sn);
 
@@ -300,10 +302,12 @@ public class CalibrationController {
 
 					model.addAttribute("serialNumber", s);
 
-					FutureTask<Void> ftProfile = gainFromProfile(sn, model);
+					FutureTask<Void> ftProfile = new FutureTask<>(()->null);
+					final List<String> properties = getProfileWorker(sn, ftProfile, model).getProperties("pm-vmon-offset");
+					model.addAttribute("properties", properties);
     			});
 
-    	return "calibration/current_off_set :: modal";
+    	return "calibration/current_offset :: modal";
     }
 
 	@GetMapping("btr")
@@ -373,27 +377,33 @@ public class CalibrationController {
 		ThreadRunner.runThread(
 				()->{
 
-					// Get Power table from the profile
-			    	ProfileWorker profileWorker = new ProfileWorker(profileFolder, sn);
-			    	try {
-						if(!profileWorker.exists()) {
-							model.addAttribute("message", "The profile could not be found.");
-							ThreadRunner.runThread(ftProfile);
-							return;
-						}
-
-						profileWorker.getGain().ifPresent(gain->model.addAttribute("gain", gain));
-
-				    	ThreadRunner.runThread(ftProfile);
-
-			    	} catch (Exception e) {
-						logger.catching(e);
-						model.addAttribute("message", e.getLocalizedMessage());
-						ThreadRunner.runThread(ftProfile);
-						return;
-					}
+					// Get 'zero-attenuation-gain' from the profile
+					Optional.ofNullable(getProfileWorker(sn, ftProfile, model))
+					.ifPresent(
+							pw->{
+								pw.getGain().ifPresent(gain->model.addAttribute("gain", gain));
+						    	ThreadRunner.runThread(ftProfile);
+							});
 				});
 		return ftProfile;
+	}
+
+	private ProfileWorker getProfileWorker(String sn, FutureTask<Void> ftProfile, Model model) {
+		ProfileWorker profileWorker = new ProfileWorker(profileFolder, sn);
+		try {
+			if(!profileWorker.exists()) {
+				model.addAttribute("message", "The profile could not be found.");
+				ThreadRunner.runThread(ftProfile);
+				return null;
+			}
+
+		} catch (Exception e) {
+			logger.catching(e);
+			model.addAttribute("message", e.getLocalizedMessage());
+			ThreadRunner.runThread(ftProfile);
+			return null;
+		}
+		return profileWorker;
 	}
 
 	public static <T> FutureTask<T> getHttpUpdate(String ipAddress, Class<T> toClass, BasicNameValuePair...basicNameValuePairs) throws MalformedURLException {

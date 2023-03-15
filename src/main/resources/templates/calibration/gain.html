@@ -138,7 +138,8 @@
 
 			function postNewValue(newValue){
 
-				$.post('/calibration/rest/dac', {sn : unitSerialNumber, devid: '1', value: newValue, channel: channel})
+				let devid = /*[[${devid}]]*/ 1;
+				$.post('/calibration/rest/dac', {sn : unitSerialNumber, devid: devid, value: newValue, channel: channel})
 				.fail(function(error) {
 					if(err)
 						return;
@@ -164,7 +165,8 @@
 
 				//get value from unit
 				interval = setInterval(function() {
-							$.post('/calibration/rest/deviceDebug', {sn : unitSerialNumber, devid: '1', command: 'regs', groupindex: '100', className: 'irt.components.beans.irt.Dacs'})
+							let devid = /*[[${devid}]]*/ 1;
+							$.post('/calibration/rest/deviceDebug', {sn : unitSerialNumber, devid: devid, command: 'regs', groupindex: '100', className: 'irt.components.beans.irt.Dacs'})
 							.done(function(dacs){
 
 								var dac2 = dacs.DAC2;

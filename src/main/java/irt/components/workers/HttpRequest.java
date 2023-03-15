@@ -9,12 +9,17 @@ import java.io.OutputStream;
 import java.io.UnsupportedEncodingException;
 import java.net.ConnectException;
 import java.net.HttpURLConnection;
+import java.net.MalformedURLException;
 import java.net.URL;
 import java.net.UnknownHostException;
+import java.util.AbstractMap;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 import java.util.Optional;
 import java.util.Scanner;
 import java.util.concurrent.FutureTask;
+import java.util.stream.Collectors;
 
 import javax.script.ScriptEngine;
 import javax.script.ScriptEngineManager;
@@ -167,12 +172,13 @@ public class HttpRequest {
 			if (entity != null) {
 
 				final String text = EntityUtils.toString(entity);
+//				logger.error(text);
 
 				if(classToReturn==null || text.isEmpty() || text.matches(".*\\<[^>]+>.*"))	// If HTML page
 					return null;
 
 				json = text.contains("=") ? javaScriptToJSon(text) : textToJSON(text);
-				logger.debug("classToReturn: {}; json: {}", classToReturn, json);
+//				logger.error("classToReturn: {}; json: {}", classToReturn, json);
 
 				final ObjectMapper mapper = new ObjectMapper();
 				mapper.configure(DeserializationFeature.FAIL_ON_UNKNOWN_PROPERTIES, false);
@@ -193,9 +199,8 @@ public class HttpRequest {
 	private static String javaScriptToJSon(String javaScript) throws ScriptException, JsonProcessingException {
 		logger.traceEntry(javaScript);
 
-
 		final ScriptEngineManager scriptEngineManager = new ScriptEngineManager();
-		ScriptEngine scriptEngine = scriptEngineManager.getEngineByName("JavaScript");
+		final ScriptEngine scriptEngine = scriptEngineManager.getEngineByName("JavaScript");
 		scriptEngine.eval("variable = " + javaScript);
 	    scriptEngine.eval("json= JSON.stringify(variable);");
 	    return (String) scriptEngine.get("json");
@@ -218,7 +223,9 @@ public class HttpRequest {
 		}
 
 		// Remove extra comma
-		sb.setLength(sb.length()-1);
+		final int length = sb.length();
+		if(length>1)
+			sb.setLength(length-1);
 
 //		logger.error(sb);
 		return sb.append('}').toString();
@@ -326,7 +333,7 @@ public class HttpRequest {
 		return ft;
 	}
 
-	public static String getForString(String url) {
+	public static String getForString(String url) throws IOException {
 
 		logger.traceEntry(url);
 
@@ -348,11 +355,7 @@ public class HttpRequest {
 								return null;
 							}).orElse(null);
 
-		} catch (IOException e) {
-			logger.catching(e);
 		}
-
-		return null;
 	}
 
 	private static <T> T httpForIrtYaml(Class<T> classToReturn, HttpPost uriRequest) throws IOException, ScriptException {
@@ -396,5 +399,32 @@ public class HttpRequest {
 		}
 
 		return null;
+	}
+
+	public static Map<String, Integer> getAllDevices(String sn) throws IOException{
+		try {
+
+			final URL url = new URL("http", sn, "/diagnostics.asp?devices=1");
+			final String html = getForString(url.toString());
+			final String str = Optional.of(html.indexOf("devices = [")).filter(index->index>=0)
+								.flatMap(start->Optional.of(html.indexOf("]", start)).filter(index->index>=0)
+										.map(stop->html.substring(start, stop + 1))).orElse(null);
+
+			if(str!=null) {
+
+				final String json = javaScriptToJSon(str);
+				logger.debug(json);
+
+				final ObjectMapper mapper = new ObjectMapper();
+				mapper.configure(DeserializationFeature.FAIL_ON_UNKNOWN_PROPERTIES, false);
+			
+				final List<?> list = mapper.readValue(json, List.class);
+				return list.parallelStream().map(l->(Map<?,?>)l).filter(m->m.get("name")!=null).map(m->new AbstractMap.SimpleEntry<>((String)m.get("name"), (Integer)m.get("index"))).collect(Collectors.toMap(e->e.getKey(), e->e.getValue()));
+			}
+		} catch (JsonProcessingException | MalformedURLException | ScriptException e) {
+			logger.catching(e);
+		}
+
+		return new HashMap<>();
 	}
 }

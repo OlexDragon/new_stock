@@ -169,16 +169,19 @@ $('.calibrate').click(function(e){
 });
 
 // Uplode the profile
-$('#upload').click(function(e){
+$('.upload').click(function(e){
 	e.preventDefault();
+	upload(this);
+});
 
-	$.post(this.href)
+function upload(link){
+
+	$.post(link.href)
 	.done(function(data){
 		alert(data);
 	})
 	.fail(conectionFail);
-});
-
+}
 // Login to the unit
 $('.unitLogin').click(function(e){
 	e.preventDefault();
@@ -435,17 +438,18 @@ $('#profile').click(function(e){
 
 	$.get(this.href)
 	.done(function(profile){
-		$('body')
-		.append(
-			$('<div>', { class: "alert alert-warning alert-dismissible fade show row", role: "alert"})
-			.append($('<strong>', {class: 'col pre-line'}).text(profile))			
-			.append($('<button>', {type: 'button', class: 'btn-close col-auto', 'data-bs-dismiss': 'alert', 'aria-label': 'Close'}))
-		);
+		let $message = $('<div>', { class: "alert alert-light alert-dismissible fade show row", role: "alert"})
+						.append($('<strong>', {class: 'col pre-line'}).text(profile))			
+						.append($('<button>', {type: 'button', class: 'btn-close col-auto', 'data-bs-dismiss': 'alert', 'aria-label': 'Close'}));
+
+		$('body').append($message);
 
 		$('.copy').click(function(){
 			var strong = $(this).parent().children('strong')[0];
 			selectAndCopy(strong);
 		});
+
+		$message.get(0).scrollIntoView({behavior: 'smooth'});
 	})
 	.fail(function(error) {
 		if(conectionFail(error))
@@ -458,18 +462,19 @@ $('#profilePath').click(function(e){
 
 	$.get(this.href)
 	.done(function(path){
-		$('body')
-		.append(
-			$('<div>', { class: "alert alert-warning alert-dismissible fade show row", role: "alert"})
-			.append($('<strong>', {class: 'col'}).text(path))			
-			.append($('<button>', {type: 'button', class: 'btn col-auto copy', title: 'Copy to clipboard', 'aria-label': 'Copy to clipboard'}).text('Copy'))
-			.append($('<button>', {type: 'button', class: 'btn-close col-auto', 'data-bs-dismiss': 'alert', 'aria-label': 'Close'}))
-		);
+
+		let $message = $('<div>', { class: "alert alert-warning alert-dismissible fade show row", role: "alert"})
+						.append($('<strong>', {class: 'col'}).text(path))			
+						.append($('<button>', {type: 'button', class: 'btn col-auto copy', title: 'Copy to clipboard', 'aria-label': 'Copy to clipboard'}).text('Copy'))
+						.append($('<button>', {type: 'button', class: 'btn-close col-auto', 'data-bs-dismiss': 'alert', 'aria-label': 'Close'}));
+		$('body').append($message);
 
 		$('.copy').click(function(){
 			var strong = $(this).parent().children('strong')[0];
 			selectAndCopy(strong);
 		});
+
+		$message.get(0).scrollIntoView({behavior: 'smooth'});
 	})
 	.fail(function(error) {
 		if(conectionFail(error))

@@ -26,7 +26,6 @@ import java.util.concurrent.TimeUnit;
 import java.util.concurrent.TimeoutException;
 
 import javax.servlet.http.HttpServletResponse;
-import javax.swing.text.html.parser.ParserDelegator;
 
 import org.apache.http.NameValuePair;
 import org.apache.http.client.utils.URIBuilder;
@@ -64,7 +63,6 @@ import irt.components.beans.jpa.repository.calibration.CalibrationPowerOffsetSet
 import irt.components.workers.HtmlParsel;
 import irt.components.workers.HttpRequest;
 import irt.components.workers.ProfileWorker;
-import javafx.util.Pair;
 
 @RestController
 @RequestMapping("/calibration/rest")
@@ -229,7 +227,7 @@ public class CalibrationRestController {
 
 	}
 
-    @GetMapping("upload")
+    @PostMapping("upload")
     String uploadProfile(@RequestParam String sn) throws IOException {
 
     	final ProfileWorker profileWorker = new ProfileWorker(profileFolder, sn);
@@ -257,17 +255,8 @@ public class CalibrationRestController {
         try(final StringReader reader = new StringReader(str);){
  
         	final HtmlParsel htmlParsel = new HtmlParsel("textarea");
-        	new ParserDelegator().parse(reader, htmlParsel, true);
-        	if(htmlParsel.size()>0) {
-        		final Pair<Integer, Integer> positions = htmlParsel.getPositions(0);
-           		final Integer start = positions.getKey();
-           		final Integer stop = positions.getValue();
-           		String s = str.substring(start, stop);
-           		str = s.substring(s.indexOf('>') + 1).trim();
-         	}
+        	return Optional.ofNullable(htmlParsel.parseFirst(str)).map(s->s.substring(s.indexOf('>') + 1).trim()).orElse(str);
         }
-
-    	return str;
 	}
 
     @GetMapping("profile_path")
@@ -333,21 +322,28 @@ public class CalibrationRestController {
     }
 
     @PostMapping("info")
-    Info info(@RequestParam String ip) throws InterruptedException, ExecutionException, TimeoutException, MalformedURLException {
+    Info info(@RequestParam String ip) throws IOException {
 
+    	final Integer systemIndex = CalibrationController.getSystemIndex(ip);
 		final URL url = new URL("http", ip, "/device_debug_read.cgi");
 		List<NameValuePair> params = new ArrayList<>();
-		params.addAll(Arrays.asList(new BasicNameValuePair[]{new BasicNameValuePair("devid", "1"), new BasicNameValuePair("command", "info")}));
+		params.addAll(Arrays.asList(new BasicNameValuePair[]{new BasicNameValuePair("devid", systemIndex.toString()), new BasicNameValuePair("command", "info")}));
 
-		return HttpRequest.postForIrtObgect(url.toString(), Info.class, params).get(1, TimeUnit.SECONDS);
+		try {
+			return HttpRequest.postForIrtObgect(url.toString(), Info.class, params).get(1, TimeUnit.SECONDS);
+		} catch (InterruptedException | ExecutionException | TimeoutException e) {
+			logger.catching(Level.DEBUG, e);
+		}
+		return null;
     }
 
     @PostMapping("calibration_mode")
-    CalibrationMode getCalibrationMode(@RequestParam String ip) throws InterruptedException, ExecutionException, TimeoutException, MalformedURLException {
+    CalibrationMode getCalibrationMode(@RequestParam String ip) throws InterruptedException, ExecutionException, TimeoutException, IOException {
 
 		final URL url = new URL("http", ip, "/device_debug_read.cgi");
 		List<NameValuePair> params = new ArrayList<>();
-		params.addAll(Arrays.asList(new BasicNameValuePair[]{new BasicNameValuePair("devid", "1"), new BasicNameValuePair("command", "hwinfo"), new BasicNameValuePair("groupindex", "4")}));
+    	final Integer systemIndex = CalibrationController.getSystemIndex(ip);
+		params.addAll(Arrays.asList(new BasicNameValuePair[]{new BasicNameValuePair("devid", systemIndex.toString()), new BasicNameValuePair("command", "hwinfo"), new BasicNameValuePair("groupindex", "4")}));
 
 		return HttpRequest.postForIrtObgect(url.toString(), CalibrationMode.class, params).get(5, TimeUnit.SECONDS);
     }

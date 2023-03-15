@@ -1,0 +1,69 @@
+<!DOCTYPE html>
+<html 	xmlns="http://www.w3.org/1999/xhtml"
+		xmlns:th="https://www.thymeleaf.org"
+      	xmlns:sec="https://www.thymeleaf.org/thymeleaf-extras-springsecurity5"
+      	lang="en">
+<head>
+    <meta charset="UTF-8" />
+    <title>IRT Bom.</title>
+    <link rel="shortcut icon" href="http://irttechnologies.com/favicon.ico">
+    <link rel="stylesheet" href="https://stackpath.bootstrapcdn.com/bootstrap/4.4.1/css/bootstrap.min.css" data-integrity="sha384-Vkoo8x4CGsO3+Hhxv8T/Q5PaXtkKtu6ug5TOeNV6gBiFeWPGFN9MuhOf23Q9Ifjh" data-crossorigin="anonymous">
+    <link rel="stylesheet" href="../../static/css/components.css" th:href="@{/css/components.css}">
+</head>
+<body>
+
+<!-- Modal Message -->
+	<div id="modal" class="modal modal-lg" tabindex="-1" role="dialog">
+	<th:block th:fragment="modal">
+  		<div class="modal-dialog modal-lg">
+    		<div class="modal-content">
+<!-- Modal Header -->
+      			<div class="modal-header row">
+        			<h4 class="modal-title">Current Offset</h4>
+<!-- X Button -->
+        			<button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+      			</div>
+ <!-- Modal Body -->
+      			<div id="modal-body" class="modal-body">
+      				<h5 th:text="${properties.isEmpty()} ? 'The property pm-vmon-offset not found in the profile.' : 'The property pm-vmon-offset found in the profile. See data below.'">The property 'pm-vmon-offset' not found in the profile.</h5>
+      				<div>
+	      				<p th:each="value : ${properties}" th:text="${value}"></p>
+      				</div>
+      				<h5 class="text-success">Press the 'Calibrate' button to get and save current offsets to the profile.</h5>
+      			</div>
+ <!-- Modal Footer -->
+      			<div class="modal-footer">
+	        		<button type="button" id="currentOffsetCalibrate" class="btn btn-outline-success">Calibrate</button>
+	        		<a id="currentOffsetUpload"
+	        			class="btn"
+	        			th:classappend="${properties.isEmpty()} ? 'btn-secondary disabled' : 'btn-outline-primary'"
+	        			th:href="@{'/calibration/rest/upload?sn=' + ${serialNumber}}">Upload Profile</a>
+	        		<button type="button" class="btn btn-outline-secondary" data-bs-dismiss="modal">Close</button>
+	    		</div>
+    		</div>
+  		</div>
+  		<script th:inline="javascript">
+			/*<![CDATA[*/
+
+			// Uplode the profile
+			$('#currentOffsetUpload').click(function(e){
+				e.preventDefault();
+				upload(this);
+			});
+
+			var $modal = $('#modal');
+			$modal.modal('show');
+
+		/*]]>*/
+		//# sourceURL=gain.js
+  		</script>
+	</th:block>
+	</div>
+
+    <script type="application/javascript" src="https://ajax.googleapis.com/ajax/libs/jquery/3.5.1/jquery.min.js"></script>
+    <script type="application/javascript" src="https://cdnjs.cloudflare.com/ajax/libs/popper.js/2.10.2/umd/popper.min.js"></script>
+    <script type="application/javascript" src="https://stackpath.bootstrapcdn.com/bootstrap/4.4.1/js/bootstrap.min.js"></script>
+	<script type="application/javascript" src="https://cdn.jsdelivr.net/npm/js-cookie@2/src/js.cookie.min.js"></script>
+	<script type="application/javascript" src="../../static/js/irt.js" th:src="@{/js/irt.js}"></script>
+</body>
+</html>
