@@ -1,5 +1,6 @@
-
 $('#miCalibration').addClass('active');
+
+let $modal = $('#modal');
 
 // Get HTTP Serial Port Server from the cookies
 var cookie = Cookies.get("spServers");
@@ -154,11 +155,9 @@ $('.calibrate').click(function(e){
 	e.preventDefault();
 
 	let id = e.target.id;
-	let $modal = $('#modal');
-	let s2 = typeof unitSerialNumber==='undefined';
 
 // Load for first time or when the serial number is changed 
-	if(typeof unitSerialNumber==='undefined' || !$('#serialNumber').text().match('^' + unitSerialNumber) || calibrateId!=id){
+	if(calibrateId!=id){
 			calibrateId = id;
 			$modal.load(this.href, function(body,error,c){
 				if(error=='error')
@@ -182,6 +181,17 @@ function upload(link){
 	})
 	.fail(conectionFail);
 }
+
+function moduleUpload(e, link){
+	e.preventDefault();
+
+	$.post(link.href)
+	.done(function(data){
+		alert(data);
+	})
+	.fail(conectionFail);
+}
+
 // Login to the unit
 $('.unitLogin').click(function(e){
 	e.preventDefault();
@@ -214,7 +224,6 @@ var $scan = $('#scan');
 $scan.click(function(e){
 	e.preventDefault();
 
-	$modal = $('#modal');
 	$modal.empty();
 	var $modalBody = $('<div>', {class:'modal-body'});
 	let $scanBtn = $('<button>', {id: 'scanBtn', type:'button', class: 'btn btn-primary'}).text('Stop');
@@ -248,7 +257,7 @@ $scan.click(function(e){
 
 			case 'Stop':	ip = 250;break;
 
-			case 'Restart':	$('#modal').modal('hide');
+			case 'Restart':	$modal.modal('hide');
 							setTimeout(()=>$scan.click(), 500);
 		}
 	});
@@ -430,13 +439,17 @@ $('#currents').click(function(e){
 
 	let serialNumber = $('#serialNumber').text();
 	let href = '/calibration/currents?sn=' + serialNumber;
-	let modal = $('#modal').load(href);
+	let modal = $modal.load(href);
 })
 
 $('#profile').click(function(e){
+	getProfile(e, this);
+ });
+
+function getProfile(e, link){
 	e.preventDefault();
 
-	$.get(this.href)
+	$.get(link.href)
 	.done(function(profile){
 		let $message = $('<div>', { class: "alert alert-light alert-dismissible fade show row", role: "alert"})
 						.append($('<strong>', {class: 'col pre-line'}).text(profile))			
@@ -455,12 +468,16 @@ $('#profile').click(function(e){
 		if(conectionFail(error))
 			$('#calMode').removeClass('text-primary text-success').text('Calibration Mode');
 	});
+}
+
+$('.profilePath').click(function(e){
+	getProfilePath(e, this);
  });
-
-$('#profilePath').click(function(e){
-	e.preventDefault();
-
-	$.get(this.href)
+ 
+ function getProfilePath(e, link){
+ 	e.preventDefault();
+ 
+ 	$.get(link.href)
 	.done(function(path){
 
 		let $message = $('<div>', { class: "alert alert-warning alert-dismissible fade show row", role: "alert"})
@@ -480,8 +497,7 @@ $('#profilePath').click(function(e){
 		if(conectionFail(error))
 			$('#calMode').removeClass('text-primary text-success').text('Calibration Mode');
 	});
- });
- 
+ }
 function selectAndCopy(element) {
     if (document.body.createTextRange) {
         var range = document.body.createTextRange();
@@ -527,7 +543,6 @@ $('#gain_from_cookies').click(function(){
 		return;
 	}
 
-	var $modal = $('#modal');
 	$modal.empty();
 	var $tbody = $('<tbody>');
 	let $copyBtn = $('<button>', {type:'button', class: 'btn btn-primary'}).text('Copy').click(function(){selectAndCopy($tbody[0]);});
@@ -575,4 +590,49 @@ $('.input-value').on('input', function(){
 		$(btnID).text('Set');
 	else
 		$(btnID).text('Get');
+});
+$('#menuUploadModule').click(function(){
+
+	let $menu = $(this).parent().children('.dropdown-menu')
+	let length = $menu.children().length;
+
+	if(length>1) return;
+
+	var serialNumber = $('#serialNumber').text();
+
+	$.get('/calibration/upload_modules_menu', {sn: serialNumber})
+	.done(function(data){
+		$menu.append($(data));
+	})
+	.fail(conectionFail);
+});
+$('#menuModuleProfilePath').click(function(){
+
+	let $menu = $(this).parent().children('.dropdown-menu')
+	let length = $menu.children().length;
+
+	if(length>1) return;
+
+	var serialNumber = $('#serialNumber').text();
+
+	$.get('/calibration/modules_profile_path_menu', {sn: serialNumber})
+	.done(function(data){
+		$menu.append($(data));
+	})
+	.fail(conectionFail);
+});
+$('#menuModuleProfile').click(function(){
+
+	let $menu = $(this).parent().children('.dropdown-menu')
+	let length = $menu.children().length;
+
+	if(length>1) return;
+
+	var serialNumber = $('#serialNumber').text();
+
+	$.get('/calibration/modules_profile_menu', {sn: serialNumber})
+	.done(function(data){
+		$menu.append($(data));
+	})
+	.fail(conectionFail);
 });

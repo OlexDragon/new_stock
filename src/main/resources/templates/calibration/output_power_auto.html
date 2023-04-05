@@ -81,7 +81,6 @@
 				});
 
 				let intervalByInputPower;
-				var $modal = $('#modal');
 				$modal.on('shown.bs.modal', function (e) {
 					getAllByInputPower();
 					intervalByInputPower = setInterval(calibrateByInputPower, 1000);

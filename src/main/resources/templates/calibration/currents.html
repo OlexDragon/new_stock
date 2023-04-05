@@ -126,7 +126,6 @@
 			var $currentDelay = $('#currentDelay').text('Delay: ' + delay + ' ms');
 
 			var intervalCurrent = setInterval(getCurrents, delay);
-			var $modal = $('#modal');
 			$modal.on('hidden.bs.modal', function () {
 				err = true;
 				clearInterval(intervalCurrent);

@@ -18,26 +18,22 @@
   		<div class="modal-dialog modal-lg">
     		<div class="modal-content">
 <!-- Modal Header -->
-      			<div class="modal-header row">
+      			<div class="modal-header">
         			<h4 class="modal-title">Current Offset</h4>
 <!-- X Button -->
         			<button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
       			</div>
  <!-- Modal Body -->
       			<div id="modal-body" class="modal-body">
-      				<h5 th:text="${properties.isEmpty()} ? 'The property pm-vmon-offset not found in the profile.' : 'The property pm-vmon-offset found in the profile. See data below.'">The property 'pm-vmon-offset' not found in the profile.</h5>
-      				<div>
-	      				<p th:each="value : ${properties}" th:text="${value}"></p>
-      				</div>
-      				<h5 class="text-success">Press the 'Calibrate' button to get and save current offsets to the profile.</h5>
+      				<p class="m-5">Press the <strong class="text-success">Local</strong> or <strong class="text-primary">Module</strong> button to get current offsets.</p>
       			</div>
  <!-- Modal Footer -->
       			<div class="modal-footer">
-	        		<button type="button" id="currentOffsetCalibrate" class="btn btn-outline-success">Calibrate</button>
-	        		<a id="currentOffsetUpload"
-	        			class="btn"
-	        			th:classappend="${properties.isEmpty()} ? 'btn-secondary disabled' : 'btn-outline-primary'"
-	        			th:href="@{'/calibration/rest/upload?sn=' + ${serialNumber}}">Upload Profile</a>
+	        		<button type="button"  class="btn btn-outline-success current_offset" data-local="true">Local</button>
+	        		<button type="button" class="btn btn-outline-primary current_offset" data-local="false">Module</button>
+<!-- 	        		<a id="currentOffsetUpload" -->
+<!-- 	        			class="btn btn-outline-primary" -->
+<!-- 	        			th:href="@{'/calibration/rest/upload?sn=' + ${serialNumber}}">Upload Profile</a> -->
 	        		<button type="button" class="btn btn-outline-secondary" data-bs-dismiss="modal">Close</button>
 	    		</div>
     		</div>
@@ -45,17 +41,102 @@
   		<script th:inline="javascript">
 			/*<![CDATA[*/
 
+			var serialNumber = /*[[${serialNumber}]]*/ irt-2301001;
+			// Calibrate
+			$('.current_offset').click(function(e){
+				e.preventDefault();
+
+				$('.current_offset').addClass('disabled');
+				let local = this.dataset.local;
+				$.post('/calibration/rest/current_offset', {sn: serialNumber, local: local})
+				.done(function(data){
+
+					if(!data.length){
+						alert("There is nothing to save in the profile.");
+						return;
+					}
+					
+					if(data[0].path == 'ERROR'){
+						let arr = data[0].offsets
+						if(arr.length)
+							alert(data[0].offsets[0]);
+						else
+							alert('An error occurred while executing the script.');
+						return;
+					}
+
+					let b = $('<button>', {text: 'Save All', class: 'btn btn-outline-primary'}).click(function(e){
+						e.preventDefault();
+
+						data.forEach(currentOffset=>saveOffset(currentOffset));
+					});
+
+					let $toReplace = $('.current_offset');
+					$toReplace.get(0).remove();
+					$toReplace.replaceWith(b);
+
+					// Change modal body
+					let $body = $('#modal-body').empty();
+					data.forEach(currentOffset=>{
+
+						let $cadrBody = $('<div>', {class: 'card-body'});
+						let $cardButton = $('<button>', {class: 'btn btn-outline-info', text: 'Save'}).click(function(){saveOffset(currentOffset);});
+						let fileName = currentOffset.path.split('\\').pop();
+
+						$body.append($('<div>',{ class: 'card'})
+								.append(
+									$('<table>', {class: 'table mt-3'})
+									.append(
+										$('<th>', {class: 'text-center pt-2', scope: 'col',  text: fileName}))
+									.append(
+										$('<th>', {scope: 'col'})
+										.append($cardButton)))
+								.append($cadrBody));
+
+						currentOffset.offsets.forEach(offset=>$cadrBody.append($('<div>',{ text: offset})));
+						$cadrBody.append($('<div>', {id: fileName}));
+					});
+				})
+				.fail(conectionFail);
+			});
 			// Uplode the profile
 			$('#currentOffsetUpload').click(function(e){
 				e.preventDefault();
-				upload(this);
+				if(confirm("Are you sure you want to reload the profile?"))
+					upload(this);
 			});
 
-			var $modal = $('#modal');
 			$modal.modal('show');
 
+			function saveOffset(currentOffset){
+				$.ajax({
+					url:'/calibration/rest/save_current_offset',
+					type: 'POST',
+					contentType: "application/json",
+					data: JSON.stringify(currentOffset),
+					dataType: 'json',
+					success: showUploadButton,
+					error: showUploadButton
+				});
+			}
+			function showUploadButton(pair){
+				let id = '#' + pair.key.replace('.', '\\.');
+				let $div = $(id);
+
+				if(pair.value=='Saved')
+					$div.append(
+							$('<a>', {class: "btn btn-outline-success", href: '/calibration/rest/upload?sn=' + serialNumber, text: 'Upload'})
+							.click(function(e){
+								e.preventDefault();
+								upload(this);
+							}));
+				else{
+					$div.attr('class', 'text-center text-danger');
+					$div.text(pair.value);
+				}
+			}
 		/*]]>*/
-		//# sourceURL=gain.js
+		//# sourceURL=current_offset.js
   		</script>
 	</th:block>
 	</div>

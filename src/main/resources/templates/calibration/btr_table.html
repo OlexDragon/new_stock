@@ -203,7 +203,7 @@
 							if(err)
 								return;
 
-							$('#modal').modal('hide');
+							$modal.modal('hide');
 
 							if(error.statusText!='abort'){
 								err = true;
@@ -255,7 +255,6 @@
 
 				btrUpdate();
 
-				var $modal = $('#modal');
 				$modal.on('shown.bs.modal', function (e) {
 					btrUpdate();
 					enableButton();
@@ -269,7 +268,7 @@
 
 				$('#show-settings').click(function(){
 					var partNumber = /*[[${partNumber}]]*/ 'IPB-CB00530-RMS11';
-					 $('#modal').load('/calibration/btr?sn=' + encodeURIComponent(serialNumber) + '&pn=' + encodeURIComponent(partNumber) + '&setting=true');
+					 $modal.load('/calibration/btr?sn=' + encodeURIComponent(serialNumber) + '&pn=' + encodeURIComponent(partNumber) + '&setting=true');
 				});
 
 				$('#outputComPorts').change(()=>enableButton());
@@ -311,7 +310,7 @@
 						btrData.measurement.p1db	 = rowToObject($('.btr-row-p1db'));
 					btrData.measurement.detector	 = rowToObject($('.btr-row-detector'));
 
-					$('#modal').find('input').prop('disabled', true);
+					$modal.find('input').prop('disabled', true);
 					$('#save').addClass('disabled');
 					$('#btr-scan').prop('checked', false)
 
@@ -372,7 +371,7 @@
 				});
 
 				// On madal close
-				$('#modal').on('hide.bs.modal', function(e){
+				$modal.on('hide.bs.modal', function(e){
 
 					if($('#save').hasClass('disabled') || !$('#modal-body').find('input').filter(((i,v)=>v.value)).length || confirm('To close the table without saving the data, click OK.'))
 						return;

@@ -69,6 +69,7 @@
 
 			var err;
 			var interval;
+
 			function update(){
 				if(interval)
 					clearInterval(interval);
@@ -86,7 +87,7 @@
 								if(err)
 									return;
 
-								$('#modal').modal('hide');
+								$modal.modal('hide');
 
 								err = error;
 								if(error.statusText!='abort'){
@@ -99,7 +100,6 @@
 
 			update();
 
-			var $modal = $('#modal');
 			$modal.on('shown.bs.modal', function (e) {
 				update();
 			});
@@ -316,7 +316,7 @@
 					})
 					.done(function(data){
 						alert(data);
-						$('#modal').modal('hide');
+						$modal.modal('hide');
 					})
 					.fail(function(error) {
 						if(error.statusText!='abort'){
@@ -359,7 +359,7 @@
 							})
 							.fail(function(error) {
 								if(error.statusText!='abort'){
-									$('#modal').modal('hide');
+									$modal.modal('hide');
 									alert(error.responseText);
 								}
 							});

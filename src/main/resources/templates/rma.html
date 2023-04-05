@@ -323,6 +323,9 @@
 		</script>
 	</th:block>
 	</div>
+<th:block th:remove="all">
+	<div class="alert alert-warning" role="alert" th:fragment="alert">Your login has expired. Refresh the page, please, and <strong>login again.</strong></div>
+</th:block>
 <th:block th:replace="components :: scripts">
     <script type="application/javascript" src="https://ajax.googleapis.com/ajax/libs/jquery/3.6.0/jquery.min.js"></script>
     <script type="application/javascript" src="https://cdnjs.cloudflare.com/ajax/libs/popper.js/2.9.2/umd/popper.min.js"></script>

@@ -1,6 +1,8 @@
 package irt.components.controllers.calibration;
 
 import java.io.BufferedReader;
+import java.io.File;
+import java.io.FileNotFoundException;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.InputStreamReader;
@@ -13,6 +15,7 @@ import java.net.MalformedURLException;
 import java.net.URISyntaxException;
 import java.net.URL;
 import java.net.UnknownHostException;
+import java.nio.file.Files;
 import java.nio.file.Path;
 import java.util.AbstractMap;
 import java.util.AbstractMap.SimpleEntry;
@@ -20,15 +23,19 @@ import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
 import java.util.Optional;
+import java.util.Scanner;
 import java.util.concurrent.ExecutionException;
 import java.util.concurrent.FutureTask;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.TimeoutException;
+import java.util.stream.Collectors;
+import java.util.stream.IntStream;
 
 import javax.servlet.http.HttpServletResponse;
 
 import org.apache.http.NameValuePair;
 import org.apache.http.client.utils.URIBuilder;
+import org.apache.http.conn.HttpHostConnectException;
 import org.apache.http.message.BasicNameValuePair;
 import org.apache.logging.log4j.Level;
 import org.apache.logging.log4j.LogManager;
@@ -44,6 +51,8 @@ import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
 
+import irt.components.beans.CurrentOffset;
+import irt.components.beans.irt.AlarmInfo;
 import irt.components.beans.irt.CalibrationInfo;
 import irt.components.beans.irt.Info;
 import irt.components.beans.irt.MonitorInfo;
@@ -63,14 +72,26 @@ import irt.components.beans.jpa.repository.calibration.CalibrationPowerOffsetSet
 import irt.components.workers.HtmlParsel;
 import irt.components.workers.HttpRequest;
 import irt.components.workers.ProfileWorker;
+import irt.components.workers.ThreadRunner;
+import javafx.util.Pair;
 
 @RestController
 @RequestMapping("/calibration/rest")
 public class CalibrationRestController {
 	private final static Logger logger = LogManager.getLogger();
+	private static final String LINE_SEPARATOR = System.getProperty("line.separator");
 
 	@Value("${irt.profile.path}")
 	private String profileFolder;
+
+	@Value("${irt.perl.path}")
+	private String perlPath;
+
+	@Value("${irt.perl.script.path}")
+	private String perlScriptPath;
+
+	@Value("${irt.perl.script.argument}")
+	private String perlScriptArgument;
 
 	@Autowired private CalibrationOutputPowerSettingRepository calibrationOutputPowerSettingRepository;
 	@Autowired private CalibrationPowerOffsetSettingRepository calibrationPowerOffsetSettingRepository;
@@ -228,9 +249,9 @@ public class CalibrationRestController {
 	}
 
     @PostMapping("upload")
-    String uploadProfile(@RequestParam String sn) throws IOException {
+    String uploadProfile(@RequestParam String sn, @RequestParam(required = false) String module) throws IOException {
 
-    	final ProfileWorker profileWorker = new ProfileWorker(profileFolder, sn);
+    	final ProfileWorker profileWorker = new ProfileWorker(profileFolder, Optional.ofNullable(module).orElse(sn));
 
 		if(!profileWorker.exists())
 			return sn + " profile does not exist.";
@@ -244,19 +265,169 @@ public class CalibrationRestController {
 		return "Wait for the profile to load.";
 	}
 
+    @PostMapping("current_offset")
+    List<CurrentOffset> currentOffset(@RequestParam String sn, @RequestParam Boolean local) throws UnknownHostException {
+
+    	final InetAddress byName = InetAddress.getByName(sn);
+    	final byte[] bytes = byName.getAddress();
+    	final int length = bytes.length;
+    	final List<CurrentOffset> offsets = new ArrayList<>();
+
+    	if(length!=4) {
+    		final CurrentOffset co = new CurrentOffset("ERROR");
+    		co.getOffsets().add("Unable to get an IP address.");
+			offsets.add(co);
+    		return offsets;
+    	}
+
+    	final String ipAddress = IntStream.range(0, length).map(index->bytes[index]&0xff).mapToObj(Integer::toString).collect(Collectors.joining("."));
+
+    	 try {
+
+    		 List<String> commands = new ArrayList<>();
+    		 commands.add(perlPath);
+    		 commands.add(perlScriptPath);
+    		 commands.add(perlScriptArgument + ipAddress);
+    		 if(local)
+    			 commands.add("--local=1");
+
+    		 final ProcessBuilder builder = new ProcessBuilder(commands);
+    		 builder.redirectErrorStream(true);
+
+    		 final Process process = builder.start();
+
+    		 final FutureTask<Void> ft = new FutureTask<>(()->null);
+
+    		 ThreadRunner.runThread(
+    				 ()->{
+    					 final BufferedReader reader = new BufferedReader(new InputStreamReader(process.getInputStream()));
+    			            String line;
+    			            try {
+
+    			            	CurrentOffset offset = null;
+    			            	while ((line = reader.readLine()) != null) {
+    			            		logger.debug(line);
+    			            		if(!ft.isDone())
+    			            			ThreadRunner.runThread(ft);
+
+    			            		if(line.startsWith("[psu_offset.pl->psu_offset.pl")) {
+    			            			if(line.endsWith(".bin:")) {
+    			            				final CurrentOffset co = Optional.of(line.split("\\s+")).filter(arr->arr.length==2).map(arr->arr[1].substring(0, arr[1].length()-1)).map(CurrentOffset::new).orElse(null);
+    			            				if(co!=null) {
+    			            					offset = co;
+    			            					offsets.add(co);
+    			            				}
+    			            			}
+    			            		}else if(line.startsWith("pm-vmon-offset")) {
+    			            			final String l = line;
+    			            			Optional.ofNullable(offset).ifPresent(os->os.getOffsets().add(l));
+    			            		}
+								}
+
+    			            } catch (IOException e) {
+								logger.catching(e);
+							}
+    				 });
+
+    		 // Wait for script to start
+    		 try {
+
+    			 ft.get(5, TimeUnit.SECONDS);
+
+    		 } catch (ExecutionException | TimeoutException e) {
+				logger.catching(Level.DEBUG, e);
+			}
+
+
+    		 try(final OutputStream os = process.getOutputStream();){
+    			 while(process.isAlive()) {
+    				 os.write(("\n").getBytes());
+    				 os.flush();
+    	    		 Thread.sleep(3000);
+    			 }
+    		 }
+
+    		 return offsets.stream().filter(os->!os.getOffsets().isEmpty()).collect(Collectors.toList());
+
+    	 } catch (IOException | InterruptedException e) {
+			logger.catching(e);
+			final CurrentOffset co = new CurrentOffset("ERROR");
+			offsets.add(co);
+			final String localizedMessage = e.getLocalizedMessage();
+
+			if(localizedMessage.isEmpty()) {
+	    		co.getOffsets().add(e.getClass().getSimpleName());
+	    		return offsets;
+			}else {
+	    		co.getOffsets().add(localizedMessage);
+	    		return offsets;
+			}
+		}
+	}
+
+    @PostMapping(path = "save_current_offset", consumes = MediaType.APPLICATION_JSON_VALUE)
+    Pair<String, String> saveCurrentOffset(@RequestBody CurrentOffset offset) {
+
+    	final File file = new File(offset.getPath());
+    	final String name = file.getName();
+
+    	if(!file.exists())
+    		return new Pair<>(name, "File isn't exists.");
+
+    	StringBuilder sb = new StringBuilder();
+    	try(Scanner scanner = new Scanner(file);) {
+
+    		while(scanner.hasNextLine()) {
+
+    			final String line = scanner.nextLine();
+
+    			if(line.startsWith("pm-vmon-offset"))
+    				continue;
+
+    			sb.append(line).append(LINE_SEPARATOR);
+    		}
+
+    		offset.getOffsets().forEach(os->sb.append(os).append(LINE_SEPARATOR));
+
+    	} catch (FileNotFoundException e) {
+			logger.catching(e);
+    		return new Pair<>(name, e.getLocalizedMessage());
+		}
+
+		try {
+			Files.write(file.toPath(), sb.toString().getBytes());
+		} catch (IOException e) {
+			logger.catching(e);
+    		return new Pair<>(name, e.getLocalizedMessage());
+		}
+
+		return new Pair<>(name, "Saved");
+    }
+
     @GetMapping("profile")
-    String getProfile(@RequestParam String sn) throws IOException, URISyntaxException {
+    String getProfile(@RequestParam String sn, @RequestParam(required = false) Integer moduleId) throws IOException, URISyntaxException {
 
-    	final URL url = new URL("http", sn, "/diagnostics.asp");
-    	final URIBuilder builder = new URIBuilder(url.toString()).setParameter("profile", "1");
+    	final URIBuilder builder;
 
-    	String str = HttpRequest.getForString(builder.build().toString());
-
-        try(final StringReader reader = new StringReader(str);){
+    	if(moduleId==null) {
+        	final URL url = new URL("http", sn, "/diagnostics.asp");
+        	builder = new URIBuilder(url.toString()).setParameter("profile", "1");
+        	String str = HttpRequest.getForString(builder.build().toString());
+        	try(final StringReader reader = new StringReader(str);){
  
-        	final HtmlParsel htmlParsel = new HtmlParsel("textarea");
-        	return Optional.ofNullable(htmlParsel.parseFirst(str)).map(s->s.substring(s.indexOf('>') + 1).trim()).orElse(str);
-        }
+        		final HtmlParsel htmlParsel = new HtmlParsel("textarea");
+        		return Optional.ofNullable(htmlParsel.parseFirst(str)).map(s->s.substring(s.indexOf('>') + 1).trim()).orElse(str);
+        	}
+
+    	}else {
+
+    		final URL url = new URL("http", sn, "/device_debug_read.cgi");
+    		List<NameValuePair> params = new ArrayList<>();
+    		params.addAll(Arrays.asList(new BasicNameValuePair[]{new BasicNameValuePair("devid", moduleId.toString()), new BasicNameValuePair("command", "profile")}));
+       		return HttpRequest.postForString(url.toString(), params);
+    	}
+
+
 	}
 
     @GetMapping("profile_path")
@@ -322,17 +493,22 @@ public class CalibrationRestController {
     }
 
     @PostMapping("info")
-    Info info(@RequestParam String ip) throws IOException {
-
-    	final Integer systemIndex = CalibrationController.getSystemIndex(ip);
-		final URL url = new URL("http", ip, "/device_debug_read.cgi");
-		List<NameValuePair> params = new ArrayList<>();
-		params.addAll(Arrays.asList(new BasicNameValuePair[]{new BasicNameValuePair("devid", systemIndex.toString()), new BasicNameValuePair("command", "info")}));
+    Info info(@RequestParam String ip)  {
 
 		try {
+
+	    	final Integer systemIndex = CalibrationController.getSystemIndex(ip);
+			final URL url = new URL("http", ip, "/device_debug_read.cgi");
+			List<NameValuePair> params = new ArrayList<>();
+			params.addAll(Arrays.asList(new BasicNameValuePair[]{new BasicNameValuePair("devid", systemIndex.toString()), new BasicNameValuePair("command", "info")}));
+
 			return HttpRequest.postForIrtObgect(url.toString(), Info.class, params).get(1, TimeUnit.SECONDS);
-		} catch (InterruptedException | ExecutionException | TimeoutException e) {
+
+		} catch (InterruptedException | ExecutionException | TimeoutException | HttpHostConnectException e) {
 			logger.catching(Level.DEBUG, e);
+
+		} catch (IOException e) {
+			logger.catching(e);
 		}
 		return null;
     }
@@ -411,5 +587,27 @@ public class CalibrationRestController {
 //		logger.error(entry);
 
 		return entry;
+    }
+
+    @PostMapping("alarm_info")
+    Optional<AlarmInfo> alarmInfo(@RequestParam String sn) throws MalformedURLException, InterruptedException, ExecutionException{
+//    	logger.error(sn);
+    	return Optional.ofNullable(sn)
+
+    			.map(
+    					s->{
+    						try {
+
+    							return Arrays.stream(CalibrationController.getHttpUpdate(s, AlarmInfo[].class, new BasicNameValuePair("exec", "alarms_info")).get(5, TimeUnit.SECONDS)).filter(a->a.getDevname()!=null).findAny();
+
+    						} catch (MalformedURLException | InterruptedException | ExecutionException e) {
+    							logger.catching(new Throwable(sn, e));
+    						} catch (TimeoutException e) {
+    							logger.catching(Level.DEBUG, new Throwable(sn, e));
+							}
+
+    						return null;
+    					})
+    			.orElse(null);
     }
 }

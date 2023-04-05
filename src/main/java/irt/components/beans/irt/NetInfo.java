@@ -1,7 +1,5 @@
 package irt.components.beans.irt;
 
-import java.math.BigDecimal;
-
 import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 
 import lombok.Getter;
@@ -9,8 +7,12 @@ import lombok.Setter;
 import lombok.ToString;
 
 @Getter @Setter @ToString @JsonIgnoreProperties(ignoreUnknown = true)
-public class IrtValue {
+public class NetInfo {
 
-	private BigDecimal value;
-	private String unit;
+	private String mac;
+	private String type;
+	private String isup;
+	private String addr;
+	private String mask;
+	private String gw;
 }

@@ -155,7 +155,7 @@
 			}
 
 			var moduleId;
-			var modulSN;
+			var moduleSN;
 			for(const item of document.getElementsByClassName('accordion-item')){
 
 				var $rmsNumber = $(item).find('.bg-secondary');
@@ -171,16 +171,16 @@
 				    	if(moduleId==id){
 				    		return;
 				    	}
-				    	if(confirm(sn + '\nTo link the ' + modulSN + ' to this unit as a module, click the "OK" button.')){
+				    	if(confirm(sn + '\nTo link the ' + moduleSN + ' to this unit as a module, click the "OK" button.')){
 				    		$.post('btr/rest/as_module', {parentId: id, moduleId: moduleId})
 				    		window.location.href = window.location.href;
 
-				    	}else if(confirm('To clear the ' + modulSN + ' modul, click the "OK" button.')){
+				    	}else if(confirm('To clear the ' + moduleSN + ' modul, click the "OK" button.')){
 					    	moduleId = undefined;
 				    	}
 				    }else if(confirm('To link the ' + sn + ' unit as a module, click the "OK" button.')){
 				    	moduleId = id;
-				    	modulSN = sn;
+				    	moduleSN = sn;
 					    alert('Now right click on the top unit.');
 				    }
 				    return false;

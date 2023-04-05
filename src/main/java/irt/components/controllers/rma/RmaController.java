@@ -192,7 +192,7 @@ public class RmaController {
     	ProfileWorker profileWorker = new ProfileWorker(profileFolder, serialNumber);
 
 		if(!(principal instanceof UsernamePasswordAuthenticationToken) || !profileWorker.exists())
-			return null;
+			return "rma :: alert";
 
 		final Optional<Rma> oRma = rmaRepository.findBySerialNumberAndStatusNot(serialNumber, Rma.Status.SHIPPED);
 //		logger.error(oRma);

@@ -52,6 +52,7 @@ import irt.components.beans.irt.update.Profile;
 
 public class HttpRequest {
 	private final static Logger logger = LogManager.getLogger();
+	private static final String LINE_SEPARATOR = System.getProperty("line.separator");
 
 	public static <T> FutureTask<T> getForObgect(String url, Class<T> classToReturn) {
 //		logger.error("classToReturn: {}; url: {}", classToReturn, url);
@@ -74,18 +75,7 @@ public class HttpRequest {
 				()->{
 
 					final HttpPost httpPost = new HttpPost(url);
-					Optional.ofNullable(params).map(
-							p -> {
-								try {
-
-									return new UrlEncodedFormEntity(p);
-
-								} catch (UnsupportedEncodingException e) {
-									logger.catching(e);
-								}
-								return null;
-							})
-					.ifPresent(httpPost::setEntity);
+					setEntity(httpPost, params);
 
 					return httpForObject(classToReturn, httpPost);
 				});
@@ -138,18 +128,7 @@ public class HttpRequest {
 					logger.traceEntry("\n\tpostForIrtObgect - classToReturn: {}; \n\turl: {}, params: {}\n", classToReturn, url, params);
 
 					final HttpPost httpPost = new HttpPost(url);
-					Optional.ofNullable(params).map(
-							p -> {
-								try {
-
-									return new UrlEncodedFormEntity(p);
-
-								} catch (UnsupportedEncodingException e) {
-									logger.catching(e);
-								}
-								return null;
-							})
-					.ifPresent(httpPost::setEntity);
+					setEntity(httpPost, params);
 
 					return httpForIrtObject(classToReturn, httpPost);
 				});
@@ -196,7 +175,7 @@ public class HttpRequest {
 		return null;
 	}
 
-	private static String javaScriptToJSon(String javaScript) throws ScriptException, JsonProcessingException {
+	public static String javaScriptToJSon(String javaScript) throws ScriptException, JsonProcessingException {
 		logger.traceEntry(javaScript);
 
 		final ScriptEngineManager scriptEngineManager = new ScriptEngineManager();
@@ -296,7 +275,7 @@ public class HttpRequest {
 
 			// When the unit accepts the update it return page with the title 'End of session'
 			while ((line = reader.readLine())!=null) {
-				buf.append(line).append(System.getProperty("line.separator"));
+				buf.append(line).append(LINE_SEPARATOR);
 			}
 //			logger.error(buf);
 		}
@@ -313,18 +292,7 @@ public class HttpRequest {
 					logger.traceEntry("\n\tpostForIrtObgect - classToReturn: {}; \n\turl: {}, params: {}\n", classToReturn, url, params);
 
 					final HttpPost httpPost = new HttpPost(url);
-					Optional.ofNullable(params).map(
-							p -> {
-								try {
-
-									return new UrlEncodedFormEntity(p);
-
-								} catch (UnsupportedEncodingException e) {
-									logger.catching(e);
-								}
-								return null;
-							})
-					.ifPresent(httpPost::setEntity);
+					setEntity(httpPost, params);
 
 					return httpForIrtYaml(classToReturn, httpPost);
 				});
@@ -333,29 +301,64 @@ public class HttpRequest {
 		return ft;
 	}
 
-	public static String getForString(String url) throws IOException {
+	public static String postForString(String url, List<NameValuePair> params) throws IOException {
 
-		logger.traceEntry(url);
+		logger.traceEntry("{}; {}", url, params);
 
-		final HttpGet httpPost = new HttpGet(url);
+		final HttpPost httpPost = new HttpPost(url);
+		httpPost.addHeader("Accept", "text/html,application/json;metadata=full;charset=utf-8;");
+		setEntity(httpPost, params);
 
 		try(	final CloseableHttpClient httpclient = HttpClients.createDefault();
 				final CloseableHttpResponse response = httpclient.execute(httpPost);){
 
-			return Optional.ofNullable(response.getEntity())
-					.map(
-							t -> {
-								try {
-
-									return EntityUtils.toString(t);
-
-								} catch (ParseException e) {} catch (IOException e) {
-									logger.catching(e);
-								}
-								return null;
-							}).orElse(null);
+			return entityToString(response);
 
 		}
+	}
+
+	public static void setEntity(final HttpPost httpPost, List<NameValuePair> params) {
+		Optional.ofNullable(params).map(
+				p -> {
+					try {
+
+						return new UrlEncodedFormEntity(p);
+
+					} catch (UnsupportedEncodingException e) {
+						logger.catching(e);
+					}
+					return null;
+				})
+		.ifPresent(httpPost::setEntity);
+	}
+
+	public static String getForString(String url) throws IOException {
+
+		logger.traceEntry(url);
+
+		final HttpGet httpGet = new HttpGet(url);
+
+		try(	final CloseableHttpClient httpclient = HttpClients.createDefault();
+				final CloseableHttpResponse response = httpclient.execute(httpGet);){
+
+			return entityToString(response);
+
+		}
+	}
+
+	private static String entityToString(final CloseableHttpResponse response) {
+		return Optional.ofNullable(response.getEntity())
+				.map(
+						t -> {
+							try {
+
+								return EntityUtils.toString(t);
+
+							} catch (ParseException e) {} catch (IOException e) {
+								logger.catching(e);
+							}
+							return null;
+						}).orElse(null);
 	}
 
 	private static <T> T httpForIrtYaml(Class<T> classToReturn, HttpPost uriRequest) throws IOException, ScriptException {

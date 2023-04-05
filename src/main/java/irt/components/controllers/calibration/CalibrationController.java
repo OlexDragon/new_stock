@@ -15,9 +15,12 @@ import java.util.concurrent.ExecutionException;
 import java.util.concurrent.FutureTask;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.TimeoutException;
+import java.util.concurrent.atomic.AtomicBoolean;
+import java.util.stream.Collectors;
 import java.util.stream.Stream;
 
 import org.apache.http.NameValuePair;
+import org.apache.http.conn.HttpHostConnectException;
 import org.apache.http.message.BasicNameValuePair;
 import org.apache.logging.log4j.Level;
 import org.apache.logging.log4j.LogManager;
@@ -31,14 +34,17 @@ import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestParam;
 
 import irt.components.beans.HttpSerialPortServersCollector;
-import irt.components.beans.irt.BiasBoard;
+import irt.components.beans.irt.Bias;
 import irt.components.beans.irt.CalibrationInfo;
 import irt.components.beans.irt.ConverterInfo;
 import irt.components.beans.irt.Dacs;
+import irt.components.beans.irt.HomePageInfo;
 import irt.components.beans.irt.Info;
 import irt.components.beans.irt.IrtFrequency;
 import irt.components.beans.irt.IrtValue;
+import irt.components.beans.irt.Monitor;
 import irt.components.beans.irt.MonitorInfo;
+import irt.components.beans.irt.SysInfo;
 import irt.components.beans.irt.calibration.CalibrationTable;
 import irt.components.beans.irt.calibration.NameIndexPair;
 import irt.components.beans.irt.calibration.PowerDetectorSource;
@@ -79,31 +85,48 @@ public class CalibrationController {
 		model.addAttribute("serialPortServers", httpSerialPortServers);
 		model.addAttribute("serialNumber", sn);
 
+		final AtomicBoolean noError = new AtomicBoolean(true);
 		Optional.ofNullable(sn)
     	.filter(s->!s.isEmpty())
     	.ifPresent(
     			s->{
     				try {
 
-    					final Integer devid = getSystemIndex(sn);
+     					final Integer devid = getSystemIndex(sn);
     					final Info info = getHttpDeviceDebug(sn, Info.class, new BasicNameValuePair("devid", devid.toString()), new BasicNameValuePair("command", "info")).get(10, TimeUnit.SECONDS);
     					model.addAttribute("info", info);
+    					model.addAttribute("ip", sn);
 
-					} catch (TimeoutException | UnknownHostException e) {
+					} catch (TimeoutException | UnknownHostException | HttpHostConnectException e) {
 						logger.catching(Level.DEBUG, e);
+						noError.set(false);
+
 					} catch (Exception e) {
 						logger.catching(e);
+						noError.set(false);
 					}
     			});
 
+		if(noError.get() && model.getAttribute("info")==null) {
+				try {
+				getHomePageInfo(sn)
+				.ifPresent(home->{
+					final SysInfo sysInfo = home.getSysInfo();
+					final Info info = new Info();
+					info.setSerialNumber(sysInfo.getSn());
+					info.setName(sysInfo.getDesc());
+					info.setPartNumber(sysInfo.getHw_id());
+					info.setSoftVertion(sysInfo.getFw_version());
+					model.addAttribute("info", info);
+					model.addAttribute("ip", home.getNetInfo().getAddr());
+				});
+			} catch (IOException e) {
+				logger.catching(e);
+			}
+		}
+
 		return "calibration/calibration";
     }
-
-	public static Integer getSystemIndex(String sn) throws IOException{
-
-		final Map<String, Integer> allDevices = HttpRequest.getAllDevices(sn);
-		return Optional.ofNullable(allDevices.get("System")).orElse(1);
-	}
 
     @GetMapping("output_power")
     String outputPower(@RequestParam String sn, @RequestParam String pn, Model model) {
@@ -124,7 +147,7 @@ public class CalibrationController {
     					model.addAttribute("settings", settings);
 
     					final CalibrationInfo calibrationInfo = httpUpdate.get(10, TimeUnit.SECONDS);
-    					final IrtValue power = Optional.ofNullable(calibrationInfo).map(CalibrationInfo::getBiasBoard).map(BiasBoard::getPower).orElseGet(()->new IrtValue());
+    					final IrtValue power = Optional.ofNullable(calibrationInfo).map(CalibrationInfo::getBias).map(Bias::getPower).orElseGet(()->new IrtValue());
 						model.addAttribute("power", power);
 
     				} catch (MalformedURLException | InterruptedException | ExecutionException | TimeoutException e) {
@@ -225,7 +248,7 @@ public class CalibrationController {
     					model.addAttribute("settings", settings);
 
     					final CalibrationInfo calibrationInfo = httpUpdate.get(10, TimeUnit.SECONDS);
-    					final IrtValue power = Optional.ofNullable(calibrationInfo).map(CalibrationInfo::getBiasBoard).map(BiasBoard::getPower).orElseGet(()->new IrtValue());
+    					final IrtValue power = Optional.ofNullable(calibrationInfo).map(CalibrationInfo::getBias).map(Bias::getPower).orElseGet(()->new IrtValue());
 						model.addAttribute("power", power);
 
 						ftProfile.get(10, TimeUnit.SECONDS);
@@ -274,7 +297,7 @@ public class CalibrationController {
     					final Dacs dacs = httpDeviceDebug.get(10, TimeUnit.SECONDS);
 
 //    					logger.error("dacs: {}", dacs);
-    					Optional.ofNullable(calibrationInfo.getBiasBoard()).ifPresent(biasBoard->model.addAttribute("temperature", biasBoard.getTemperature()));
+    					Optional.ofNullable(calibrationInfo.getBias()).ifPresent(biasBoard->model.addAttribute("temperature", biasBoard.getTemperature()));
     					model.addAttribute("dac2", dacs.getDac2RowValue());
 
     					// Get settings from DB
@@ -297,15 +320,7 @@ public class CalibrationController {
 
 		Optional.ofNullable(sn)
     	.filter(s->!s.isEmpty())
-    	.ifPresent(
-    			s->{
-
-					model.addAttribute("serialNumber", s);
-
-					FutureTask<Void> ftProfile = new FutureTask<>(()->null);
-					final List<String> properties = getProfileWorker(sn, ftProfile, model).getProperties("pm-vmon-offset");
-					model.addAttribute("properties", properties);
-    			});
+    	.ifPresent(s->model.addAttribute("serialNumber", s));
 
     	return "calibration/current_offset :: modal";
     }
@@ -342,14 +357,13 @@ public class CalibrationController {
 					Optional.ofNullable(sn)
 			    	.filter(s->!s.isEmpty())
 			    	.ifPresent(
-			    			s->{
+			    			serialNumber->{
 
 								FutureTask<Void> ftProfile = gainFromProfile(sn, model);
 
 								try {
 
-									Optional.ofNullable(getHttpUpdate(s, MonitorInfo.class, new BasicNameValuePair("exec", "mon_info")).get(5, TimeUnit.SECONDS))
-									.map(MonitorInfo::getData)
+									getUnitMonitor(serialNumber)
 									.ifPresent(data->model.addAttribute("monitor", data));
 
 									ftProfile.get(10, TimeUnit.SECONDS);
@@ -362,6 +376,10 @@ public class CalibrationController {
 
     	return "calibration/btr_table :: modal";
     }
+
+	public static Optional<Monitor> getUnitMonitor(String serialNumber) throws InterruptedException, ExecutionException, TimeoutException, MalformedURLException {
+		return Optional.ofNullable(getHttpUpdate(serialNumber, MonitorInfo.class, new BasicNameValuePair("exec", "mon_info")).get(5, TimeUnit.SECONDS)).map(MonitorInfo::getData);
+	}
 
 	@GetMapping("currents")
     String currents(@RequestParam String sn, Model model) {
@@ -388,6 +406,85 @@ public class CalibrationController {
 		return ftProfile;
 	}
 
+	@GetMapping("upload_modules_menu")
+    String getUploadModuleMenu(@RequestParam String sn, Model model) throws IOException {
+
+		model.addAttribute("serialNumber", sn);
+
+		final List<Info> infos = getModulesInfo(sn);
+
+//    	logger.error(infos);
+    	model.addAttribute("modules", infos);
+
+    	return "calibration/calibration :: upload_modules_menu";
+    }
+
+	@GetMapping("modules_profile_path_menu")
+    String getModuleProfilePathMenu(@RequestParam String sn, Model model) throws IOException {
+//		logger.error(sn);
+
+		final List<Info> infos = getModulesInfo(sn);
+
+//    	logger.error(infos);
+    	model.addAttribute("modules", infos);
+
+    	return "calibration/calibration :: modules_profile_path_menu";
+    }
+
+	@GetMapping("modules_profile_menu")
+    String getModuleProfileMenu(@RequestParam String sn, Model model) throws IOException {
+//		logger.error(sn);
+
+		model.addAttribute("serialNumber", sn);
+
+		final List<Info> infos = getModulesInfo(sn);
+
+//    	logger.error(infos);
+    	model.addAttribute("modules", infos);
+
+    	return "calibration/calibration :: modules_profile_menu";
+    }
+
+	@GetMapping("power_chart")
+    String powerChart(@RequestParam String sn, Model model) throws IOException {
+//		logger.error(sn);
+
+		getHomePageInfo(sn)
+		.ifPresent(
+				hpi->{
+					model.addAttribute("serialNumber", hpi.getSysInfo().getSn());
+					model.addAttribute("ip", hpi.getNetInfo().getAddr());
+				});
+
+    	return "calibration/power_chart :: modal";
+    }
+
+	private List<Info> getModulesInfo(String sn) throws IOException {
+
+		final Map<String, Integer> allDevices = HttpRequest.getAllDevices(sn);
+    	allDevices.remove("System");
+
+    	return allDevices.entrySet().stream()
+    			.map(
+    					es->{
+    						try {
+
+    							final URL url = new URL("http", sn, "/device_debug_read.cgi");
+    							List<NameValuePair> params = new ArrayList<>();
+    							params.addAll(Arrays.asList(new BasicNameValuePair[]{new BasicNameValuePair("devid", es.getValue().toString()), new BasicNameValuePair("command", "info")}));
+
+    							final Info info = HttpRequest.postForIrtObgect(url.toString(), Info.class, params).get(1, TimeUnit.SECONDS);
+    							info.setModuleId(es.getValue());
+								return info;
+
+    						} catch (InterruptedException | ExecutionException | TimeoutException | MalformedURLException e) {
+    							logger.catching(Level.DEBUG, e);
+    						}
+    						return null;
+    					})
+    			.filter(info->info!=null).collect(Collectors.toList());
+	}
+
 	private ProfileWorker getProfileWorker(String sn, FutureTask<Void> ftProfile, Model model) {
 		ProfileWorker profileWorker = new ProfileWorker(profileFolder, sn);
 		try {
@@ -404,6 +501,16 @@ public class CalibrationController {
 			return null;
 		}
 		return profileWorker;
+	}
+
+	public static Optional<HomePageInfo> getHomePageInfo(String sn) throws IOException {
+		return Optional.ofNullable(getHonePage(sn)).map(HomePageInfo::new);
+	}
+
+	public static Integer getSystemIndex(String sn) throws IOException{
+
+		final Map<String, Integer> allDevices = HttpRequest.getAllDevices(sn);
+		return Optional.ofNullable(allDevices.get("System")).orElse(1);
 	}
 
 	public static <T> FutureTask<T> getHttpUpdate(String ipAddress, Class<T> toClass, BasicNameValuePair...basicNameValuePairs) throws MalformedURLException {
@@ -425,4 +532,12 @@ public class CalibrationController {
 
 			return HttpRequest.postForIrtObgect(url.toString(), toClass, params);
 	}
+
+	private static String getHonePage(String ipAddress) throws IOException {
+
+		final URL url = new URL("http", ipAddress, "/overview.asp");
+		logger.debug(url);
+
+		return HttpRequest.getForString(url.toString());
+}
 }

@@ -110,7 +110,7 @@
 								if(err)
 									return;
 
-								$('#modal').modal('hide');
+								$modal.modal('hide');
 
 								err = error;
 								if(error.statusText!='abort'){
@@ -121,7 +121,6 @@
 				}, 2000);
 			}
 			update();
-			var $modal = $('#modal');
 			$modal.on('shown.bs.modal', function (e) {
 				update();
 			});
@@ -290,7 +289,7 @@
 				})
 				.done(function(data){
 					alert(data);
-					$('#modal').modal('hide');
+					$modal.modal('hide');
 				})
 				.fail(function(error) {
 					if(error.statusText!='abort'){

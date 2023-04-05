@@ -2,16 +2,22 @@ package irt.components.beans.irt.update;
 
 import lombok.Getter;
 import lombok.RequiredArgsConstructor;
+import lombok.Setter;
 
-@RequiredArgsConstructor @Getter
+@RequiredArgsConstructor @Getter @Setter
 public class SetupInfo {
 
-	public final static String setupInfoPathern = "system any.any.any.%1$s { profile { path {%1$s.bin}}}";
+	public final static String setupInfoPathern = "%1$s any.any.any.%2$s { profile { path { %2$s.bin }}}";
 
 	private final String serialNumber;
 
+	private boolean module;
+
 	@Override
 	public String toString() {
-		return String.format(setupInfoPathern, serialNumber);
+
+		String loadTo = module ? "file" : "system";
+
+		return String.format(setupInfoPathern, loadTo, serialNumber);
 	}
 }

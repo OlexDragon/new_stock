@@ -144,12 +144,12 @@
 					if(err)
 						return;
 
-					$('#modal').modal('hide');
+					$modal.modal('hide');
 
 					err = error;
 					if(error.statusText!='abort'){
 
-						$('#modal').modal('hide');
+						$modal.modal('hide');
 
 						alert(error.responseText);
 						err = null;
@@ -202,7 +202,7 @@
 									if(err)
 										return;
 
-									$('#modal').modal('hide');
+									$modal.modal('hide');
 
 									err = error;
 									if(error.statusText!='abort'){
@@ -225,10 +225,7 @@
 				}, 3000);
 			}
 			update();
-			var $modal = $('#modal');
-			$modal.on('shown.bs.modal', function (e) {
-				update();
-			});
+			$modal.on('shown.bs.modal', function (e) { update(); });
 
 			$modal.on('hidden.bs.modal', function () {
 				clearInterval(interval);
@@ -406,7 +403,7 @@
 				})
 				.done(function(data){
 					alert(data);
-					$('#modal').modal('hide');
+					$modal.modal('hide');
 				})
 				.fail(function(error) {
 					if(error.statusText!='abort'){
