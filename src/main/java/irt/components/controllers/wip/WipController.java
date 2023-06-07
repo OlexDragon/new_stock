@@ -8,11 +8,11 @@ import java.nio.file.Paths;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Optional;
+import java.util.stream.Collectors;
 
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 import org.apache.poi.ss.usermodel.Row.MissingCellPolicy;
-import org.apache.poi.xssf.usermodel.XSSFCell;
 import org.apache.poi.xssf.usermodel.XSSFRow;
 import org.apache.poi.xssf.usermodel.XSSFSheet;
 import org.apache.poi.xssf.usermodel.XSSFWorkbook;
@@ -30,6 +30,17 @@ import irt.components.beans.wip.WipContent;
 @RequestMapping("wip")
 public class WipController {
 	private final static Logger logger = LogManager.getLogger();
+
+	private final static int WIP_WORK_ORDER = 4;
+	private final static int LOG_WORK_ORDER = 3;
+
+	private final static int WIP_PART_NUMBER = 2;
+	private final static int LOG_PART_NUMBER = 2;
+
+	private final static int WIP_DESCRIPTION = 1;
+	private final static int LOG_DESCRIPTION = 4;
+
+	private final static int WIP_QTY = 3;
 
 	@Value("${irt.wip.directory}")
 	private String wipDirectory;
@@ -97,42 +108,97 @@ public class WipController {
 				if(row==null)
 					continue;
 
-				final XSSFCell cell = row.getCell(3, MissingCellPolicy.CREATE_NULL_AS_BLANK);
+				final String workOrder = row.getCell(LOG_WORK_ORDER, MissingCellPolicy.CREATE_NULL_AS_BLANK).toString().trim();
 
-				final String workOrder = cell.toString();
+				final List<WipContent> wips = rows.stream().filter(wip->wip.getWorkOrder().equals(workOrder)).collect(Collectors.toList());
 
-				final Boolean found = rows.stream().filter(wip->wip.getWorkOrder().equals(workOrder))
+				final String pn		 = row.getCell(LOG_PART_NUMBER, MissingCellPolicy.CREATE_NULL_AS_BLANK).toString().trim();
+				final String descr	 = row.getCell(LOG_DESCRIPTION, MissingCellPolicy.CREATE_NULL_AS_BLANK).toString().trim();
+				final WipContent logContent = new WipContent(workOrder, pn, descr);
+				logContent.setQty(1);
 
-						.map(
-								wip->{
+				if(wips.isEmpty()) {
 
-									final WipContent fromLogFile = wip.getFromLogFile();
-									final String pn = row.getCell(2, MissingCellPolicy.CREATE_NULL_AS_BLANK).toString();
-									final String descr = row.getCell(4, MissingCellPolicy.CREATE_NULL_AS_BLANK).toString();
+					WipContent tmp = new WipContent(workOrder, "", workOrder + " does not exists in the 'WIP....xlsx' file.");
+					tmp.setFromLogFile(logContent);
+					wips.add(tmp);
 
-									if(fromLogFile==null) {
+				}else{
 
-										final WipContent log = new WipContent(workOrder, pn, descr);
-										log.setQty(1);
-										wip.setFromLogFile(log);
-
-									}else {
-
-										int qty = fromLogFile.getQty();
-										fromLogFile.setQty(++qty);
-									}
-
-									return true;
-								})
-						.filter(t->t).findAny().orElse(false);
-
-				if(found) {
-					final int tmp = i - 50;
+					final int tmp = i - 500;
 					toThis = tmp > 0 ? tmp : 0;
+
+					final int size = wips.size();
+
+					if(size==1) {
+
+						final WipContent w = wips.get(0);
+						final WipContent l = w.getFromLogFile();
+						if(l==null)
+							w.setFromLogFile(logContent);
+
+						else {
+							int qty = l.getQty();
+							l.setQty(++qty);
+						}
+
+					} else if(size>1) {
+
+						final List<WipContent> left = wips.parallelStream()
+
+								.filter(
+										w->{
+											final String wDescription = w.getDescription();
+
+											if(wDescription.length()==descr.length())
+												return wDescription.equals(descr);
+
+											else if(wDescription.length()>descr.length())
+												return wDescription.contains(descr);
+
+											else
+												return descr.contains(wDescription);
+										})
+								.collect(Collectors.toList());
+
+						if(left.isEmpty())
+							fillNext(wips, logContent);
+
+						else if(left.size()>1)
+							fillNext(left, logContent);
+
+						else {
+							final WipContent w = left.get(0);
+							if(w.getFromLogFile()==null)
+								w.setFromLogFile(logContent);
+							else 
+								addQty(left);
+
+						}
+					}
+						
 				}
 			}
 		}
 	
+	}
+
+	private void fillNext(final List<WipContent> wips, final WipContent logContent) {
+		int wSize = wips.size();
+		for(int index=0; index<wSize; index++) {
+			WipContent w = wips.get(index);
+			if(w.getFromLogFile()==null) {
+				w.setFromLogFile(logContent);
+				break;
+			}
+		}
+		addQty(wips);
+	}
+
+	private void addQty(final List<WipContent> wips) {
+		final WipContent w = wips.get(0);
+		int qty = w.getQty();
+		w.setQty(++qty);
 	}
 
 	private void getDataFomWipFilw(InputStream is, List<WipContent> rows, String wo) throws IOException {
@@ -144,14 +210,12 @@ public class WipController {
 			for(int lastRowNum = sheet.getLastRowNum(); lastRowNum>0; lastRowNum--) {
 
 				final XSSFRow row = sheet.getRow(lastRowNum);
-				final XSSFCell cell = row.getCell(4, MissingCellPolicy.CREATE_NULL_AS_BLANK);
-
-				final String workOrder = cell.toString();
+				final String workOrder = row.getCell(WIP_WORK_ORDER, MissingCellPolicy.CREATE_NULL_AS_BLANK).toString().trim();
 				if(workOrder.contains(wo)) {
 					
-					final String pn = row.getCell(2, MissingCellPolicy.CREATE_NULL_AS_BLANK).toString();
-					final String descr = row.getCell(1, MissingCellPolicy.CREATE_NULL_AS_BLANK).toString();
-					final String qtyStr = row.getCell(3, MissingCellPolicy.CREATE_NULL_AS_BLANK).toString();
+					final String pn 	= row.getCell(WIP_PART_NUMBER	, MissingCellPolicy.CREATE_NULL_AS_BLANK).toString().trim();
+					final String descr 	= row.getCell(WIP_DESCRIPTION	, MissingCellPolicy.CREATE_NULL_AS_BLANK).toString().trim();
+					final String qtyStr = row.getCell(WIP_QTY			, MissingCellPolicy.CREATE_NULL_AS_BLANK).toString().trim();
 					final Integer qty = Optional.of(qtyStr).filter(s->!s.isEmpty()).filter(s->s.replaceAll("[\\d.]", "").isEmpty()).map(Double::parseDouble).map(Number::intValue).orElse(0);
 
 					final WipContent e = new WipContent(workOrder, pn, descr);
