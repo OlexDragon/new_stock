@@ -15,7 +15,6 @@ import java.util.concurrent.ExecutionException;
 import java.util.concurrent.FutureTask;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.TimeoutException;
-import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
 
@@ -83,47 +82,45 @@ public class CalibrationController {
 
 		final Map<String, String> httpSerialPortServers = httpSerialPortServersCollector.getHttpSerialPortServers();
 		model.addAttribute("serialPortServers", httpSerialPortServers);
-		model.addAttribute("serialNumber", sn);
 
-		final AtomicBoolean noError = new AtomicBoolean(true);
 		Optional.ofNullable(sn)
     	.filter(s->!s.isEmpty())
     	.ifPresent(
     			s->{
+    				model.addAttribute("serialNumber", s);
     				try {
 
      					final Integer devid = getSystemIndex(sn);
     					final Info info = getHttpDeviceDebug(sn, Info.class, new BasicNameValuePair("devid", devid.toString()), new BasicNameValuePair("command", "info")).get(10, TimeUnit.SECONDS);
     					model.addAttribute("info", info);
     					model.addAttribute("ip", sn);
+    					model.addAttribute("devid", devid);
 
-					} catch (TimeoutException | UnknownHostException | HttpHostConnectException e) {
+    					return;
+
+    				} catch (TimeoutException | UnknownHostException | HttpHostConnectException e) {
 						logger.catching(Level.DEBUG, e);
-						noError.set(false);
 
 					} catch (Exception e) {
 						logger.catching(e);
-						noError.set(false);
 					}
-    			});
 
-		if(noError.get() && model.getAttribute("info")==null) {
-				try {
-				getHomePageInfo(sn)
-				.ifPresent(home->{
-					final SysInfo sysInfo = home.getSysInfo();
-					final Info info = new Info();
-					info.setSerialNumber(sysInfo.getSn());
-					info.setName(sysInfo.getDesc());
-					info.setPartNumber(sysInfo.getHw_id());
-					info.setSoftVertion(sysInfo.getFw_version());
-					model.addAttribute("info", info);
-					model.addAttribute("ip", home.getNetInfo().getAddr());
-				});
-			} catch (IOException e) {
-				logger.catching(e);
-			}
-		}
+    				try {
+    					getHomePageInfo(sn)
+    					.ifPresent(home->{
+    						final SysInfo sysInfo = home.getSysInfo();
+    						final Info info = new Info();
+    						info.setSerialNumber(sysInfo.getSn());
+    						info.setName(sysInfo.getDesc());
+    						info.setPartNumber(sysInfo.getHw_id());
+    						info.setSoftVertion(sysInfo.getFw_version());
+    						model.addAttribute("info", info);
+    						model.addAttribute("ip", home.getNetInfo().getAddr());
+    					});
+    				} catch (IOException e) {
+    					logger.catching(e);
+    				}
+    			});
 
 		return "calibration/calibration";
     }

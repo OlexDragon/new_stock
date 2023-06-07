@@ -43,7 +43,9 @@ public class WebSecurityConfig {
 										"/rma/**",
 										"/inventory",
 										"/images/**",
-										"/wo/**")
+										"/wo/**",
+										"/wip/**",
+										"/production/**")
 			.permitAll()
 
 			.antMatchers(HttpMethod.POST,

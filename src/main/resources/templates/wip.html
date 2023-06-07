@@ -1,0 +1,92 @@
+<!DOCTYPE html>
+<html 	xmlns="http://www.w3.org/1999/xhtml"
+		xmlns:th="https://www.thymeleaf.org"
+      	xmlns:sec="https://www.thymeleaf.org/thymeleaf-extras-springsecurity5"
+      	lang="en">
+<head>
+    <title>WIP.</title>
+    <link rel="shortcut icon" href="http://irttechnologies.com/favicon.ico">
+<th:block th:replace="components :: bootstrapLink">
+    <link rel="stylesheet" href="https://stackpath.bootstrapcdn.com/bootstrap/4.4.1/css/bootstrap.min.css">
+</th:block>
+    <link rel="stylesheet" href="../static/css/components.css" th:href="@{/css/components.css}">
+    <link rel="stylesheet" href="../static/css/old.css" th:href="@{/css/old.css}">
+</head>
+<body>
+
+	<nav class="navbar fixed-top navbar-light bg-light row">
+ 
+<!-- Navigation Dropdown Menu from components.html -->
+		<div class="dropdown" th:replace="components :: dropdownMenu">
+  			<button class="btn btn-secondary dropdown-toggle" type="button" id="dropdownMenuButton" data-bs-toggle="dropdown" aria-expanded="false"></button>
+  			<div class="dropdown-menu" aria-labelledby="dropdownMenuButton">
+    				<a id="miWIP" class="dropdown-item" href="wip.html" th:href="@{/wip}">WIP</a>
+  			</div>
+		</div>
+
+		<div class="nav-item col">
+  		<form class="row">
+
+<!-- WIP Files -->
+  			<div class="input-group col">
+      			<label for="wipFiles" class="input-group-text">File</label>
+      			<select id="wipFiles" class="form-control">
+      				<option>Wait please...</option>
+      			</select>
+    		</div>
+<!-- WO -->
+  			<div class="input-group col">
+      			<label for="wipWO" class="input-group-text">WO</label>
+      			<input id="wipWO" type="text" class="form-control">
+    		</div>
+
+  		</form>
+  		</div>
+	</nav>
+
+<!-- Content -->
+	<div id="content" class="container-fluid mt-5 pt-5" th:remove="body">
+
+		<div class="card shadow mb-3" th:each="row: ${rows}" th:fragment="content">
+			<div class="card-body">
+				<h5 class="card-header" th:text="${row.workOrder}">Work Order</h5>
+				<div class="row mt-2 mb-1">
+					<div class="col-2" th:text="${row.partNumber}">Part Number</div>
+					<div class="col" th:text="${row.description}">Description</div>
+					<div class="col-auto" th:text="${row.qty}">Quantity</div>
+				</div>
+
+				<div class="row bg-danger bg-opacity-10" th:switch="${row.status.toString()}">
+					<th:block th:case="NOT_EQUALE">
+						<div class="col-2" th:text="${row.fromLogFile.partNumber}">Part Number</div>
+						<div class="col" th:text="${row.fromLogFile.description}">Description</div>
+						<div class="col-auto" th:text="${row.fromLogFile.qty}">Quantity</div>
+					</th:block>
+					<th:block th:case="MOT_IN_LOG">
+						<h6>The [[${row.workOrder}]] does not exists in the 'Sipped Log.xlsx' file.</h6>
+					</th:block>
+				</div>
+			</div>
+		</div>
+
+		<div class="row" th:fragment="no_file">
+			<h4>The file '[[${path}]]' does not exist.</h4>
+		</div>
+
+		<div class="row" th:fragment="error">
+			<h4 th:text="${error}"></h4>
+		</div>
+	</div>
+
+<!-- Modal Message -->
+	<div id="modal" class="modal fade" tabindex="-1" role="dialog" th:replace="components :: componentData"></div>
+
+<th:block th:replace="components :: scripts">
+    <script type="application/javascript" src="https://ajax.googleapis.com/ajax/libs/jquery/3.6.0/jquery.min.js"></script>
+    <script type="application/javascript" src="https://cdnjs.cloudflare.com/ajax/libs/popper.js/2.9.2/umd/popper.min.js"></script>
+    <script type="application/javascript" src="https://stackpath.bootstrapcdn.com/bootstrap/4.4.1/js/bootstrap.min.js"></script>
+	<script type="application/javascript" src="https://cdn.jsdelivr.net/npm/js-cookie@2/src/js.cookie.min.js"></script>
+</th:block>
+	<script type="application/javascript" src="../static/js/old.js" th:src="@{/js/wip.js}"></script>
+</body>
+</html>

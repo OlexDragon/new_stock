@@ -21,7 +21,7 @@ public enum UserRoles implements GrantedAuthority{
     EDIT_COMPANIES		(262144		, "Can add, edit, delete company"),
     USER				(524288		, "Can see all IRT workers"),
 	ADMIN				(1048576	, "Admin"),
-	EDITING				(2097152	, "Edit component data."),
+	VIP_PAGE			(2097152	, "old role: 'EDITING'; Can access to the VIP page."),
 	SELLERS				(4194304	, "Can add, edit, delete sellers"),
 	CALIBRATION_SETTINGS	(8388608	, "old role: 'DATABASE'; Save Calibration Settings"),
 	EDIT_BOM			(16777216	, "Can edit BOMs."),

@@ -53,9 +53,6 @@ public class BomController {
 	@Value("${irt.url.bom.content}")
 	private String bomContent;
 
-	@Value("${irt.url.components.catalog}")
-	private String componentsCatalog;
-
     @GetMapping
     String getBoms(@RequestParam(name="key", required=false) String bomKey, Model model) {
 		logger.traceEntry(bomKey);

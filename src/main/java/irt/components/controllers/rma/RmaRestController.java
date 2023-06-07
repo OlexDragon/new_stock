@@ -46,7 +46,8 @@ public class RmaRestController {
 
 	@PostConstruct
 	public void postConstruct() {
-        try {
+
+		try {
 
     		// get system name
         	String sName = InetAddress.getLocalHost().getHostName();
@@ -124,7 +125,6 @@ public class RmaRestController {
 
 		if(!(principal instanceof UsernamePasswordAuthenticationToken && rmaId!=null && (oComment.isPresent() || ready!=null || shipped !=null || oFiles.isPresent())))
 			return "Not all variables are present.";
-
 
 		final Rma rma = rmaRepository.findById(rmaId).get();
 

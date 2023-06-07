@@ -38,7 +38,6 @@ public class EcoController {
 	@Value("${irt.url.protocol}") 			private String protocol;
 	@Value("${irt.url.login}") 				private String login;
 	@Value("${irt.url}") 					private String url;
-	@Value("${irt.url.components.catalog}") private String componentsCatalog;
 	@Value("${irt.eco.files.path}") 		private String ecoFilesPath;
 
 	@Autowired private EcoRepository ecoRepository;

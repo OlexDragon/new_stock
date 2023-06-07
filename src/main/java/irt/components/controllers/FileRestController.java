@@ -190,6 +190,12 @@ public class FileRestController {
 		
 		final String contentType = new MimetypesFileTypeMap().getContentType(file);
 		logger.debug(contentType);
-		return contentType.startsWith("image") || file.getName().toLowerCase().endsWith("png");
+
+		if(contentType.startsWith("image"))
+			return true;
+
+		final String lowerCase = file.getName().toLowerCase();
+
+		return lowerCase.endsWith(".png") || lowerCase.endsWith(".bmp");
 	}
 }

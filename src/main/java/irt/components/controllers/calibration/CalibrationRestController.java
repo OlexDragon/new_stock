@@ -44,6 +44,7 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.core.io.FileSystemResource;
 import org.springframework.http.MediaType;
+import org.springframework.ui.Model;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestBody;
@@ -440,6 +441,22 @@ public class CalibrationRestController {
 
     	return profileWorker.getOPath().get().toString();
 	}
+
+    @GetMapping("dumps")
+    String dumps(@RequestParam String sn, @RequestParam String devid, @RequestParam String command, @RequestParam(required = false) String groupindex, Model model) throws IOException {
+
+		final URL url = new URL("http", sn, "/device_debug_read.cgi");
+		List<NameValuePair> params = new ArrayList<>();
+
+		final BasicNameValuePair[] pairs = Optional.ofNullable(groupindex)
+
+				.map(gi->new BasicNameValuePair[]{new BasicNameValuePair("devid", devid), new BasicNameValuePair("command", command), new BasicNameValuePair("groupindex", gi)})
+				.orElse(new BasicNameValuePair[]{new BasicNameValuePair("devid", devid), new BasicNameValuePair("command", command)});
+
+		params.addAll(Arrays.asList(pairs));
+
+		return HttpRequest.postForString(url.toString(), params);
+    }
 
     @GetMapping(path = "download", produces = MediaType.APPLICATION_OCTET_STREAM_VALUE)
     FileSystemResource downloadProfile(@RequestParam String sn, HttpServletResponse response) throws IOException {

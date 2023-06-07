@@ -35,7 +35,7 @@
         				<label for="sensitivity">Sensitivity (+/- dB)</label>
  	     			</div>
  	     			<div id="radioButtons">
-						<input name="testBy" id="byPower" type="radio" class="btn-check" autocomplete="off" checked="checked" data-property-path="data.outpower">
+						<input name="testBy" id="byPower" type="radio" class="btn-check" autocomplete="off" checked="checked" data-property-path="data.outpower" data-unit= "dBn">
 						<label for="byPower" class="btn btn-outline-primary">By Power</label>
 					</div>
 	        		<button type="button" id="restart" class="btn btn-outline-success">Restart</button>
@@ -161,7 +161,7 @@
 					.done(function(unitInfo){
 
 						if(!unitInfo){
-							console.warn('POST ' + url + 'returns NULL.');
+							console.warn('POST ' + url + ' returns NULL.');
 							let $alarmStatus = $('#alarmStatus');
 							let $children = $alarmStatus.children();
 							if($children.length==1 || !$($children.get(1)).text().endsWith('Communication lost.'))
@@ -186,7 +186,7 @@
 							value = valueAsString = valueAsString.value;
 						}else{
 							unit = 'dBm';
-							value = parseFloat(valueAsString ? valueAsString.replace('<', '').replace('>', '') : 0);
+							value = parseFloat((valueAsString && valueAsString.length) ? valueAsString.replace('<', '').replace('>', '') : 0);
 						}
 						$lastPoint.text('( ' + date + '; ' + valueAsString + ' ' + unit + '; ' + temperature + ' °C; )');
 						
@@ -284,8 +284,8 @@
 					$('label[for="sensitivity"]').text('Sensitivity (+/- dB)');
 					chart.data.datasets[0].label='Power(dBm)';
 				}else{
-					$('label[for="sensitivity"]').text('Sensitivity (+/- A)');
-					chart.data.datasets[0].label='Current(A)';
+					$('label[for="sensitivity"]').text('Sensitivity (+/- ' + b.dataset.unit + ')');
+					chart.data.datasets[0].label='Current(' + b.dataset.unit + ')';
 				}
 			}
 			function getTemperature(unitInfo){
@@ -320,24 +320,26 @@
 
 				return value;
 			}
-			function addButton(id, propertyPath, text){
+			function addButton(id, propertyPath, text, unit){
 				$('#radioButtons')
-				.append($('<input>', {id: id, name: 'testBy', type: 'radio', class: 'btn-check', autocomplete: 'off', 'data-property-path': propertyPath, onchange: 'testByChange(this);'}))
+				.append($('<input>', {id: id, name: 'testBy', type: 'radio', class: 'btn-check', autocomplete: 'off', 'data-property-path': propertyPath, onchange: 'testByChange(this);', 'data-unit': unit}))
 				.append($('<label>', {for: id, class: 'btn btn-outline-primary', text: text}));
 			}
 			function addTestByButtons(unitInfo){
 				if(unitInfo.hss1)
-					addButton('hss1', 'hss1', 'HSS1');
+					addButton('hss1', 'hss1', 'HSS1', 'A');
 				if(unitInfo.hss2)
-					addButton('hss2', 'hss2', 'HSS2');
+					addButton('hss2', 'hss2', 'HSS2', 'A');
 				if(unitInfo.boards && unitInfo.boards.data){
 					let properties = unitInfo.boards.data.filter(d=>d.name!=null)
-					if(properties.length==1){
-						let data = properties[0].powerSuplyData;
-						let d = data.filter(d=>d.value.unit=='A');
-						d.forEach((v,i)=>{
-							addButton('testBy' + i, 'boards.data.0.powerSuplyData:' + v.name, v.name);
-						});
+					if(properties.length){
+						properties.forEach((p,i1)=>{
+							let data = p.powerSuplyData;
+							let d = data.filter(d=>d.value.unit=='A' || d.value.unit=='mA');
+							d.forEach((v,i2)=>{
+								addButton('testBy' + '_' + i1 + '_' + i2, 'boards.data.' + i1 + '.powerSuplyData:' + v.name, v.name, v.value.unit);
+							});
+						})
 					}else
 						console.warn('Something is wrong with the properties. properties=' + properties);
 				}

@@ -457,11 +457,6 @@ function getProfile(e, link){
 
 		$('body').append($message);
 
-		$('.copy').click(function(){
-			var strong = $(this).parent().children('strong')[0];
-			selectAndCopy(strong);
-		});
-
 		$message.get(0).scrollIntoView({behavior: 'smooth'});
 	})
 	.fail(function(error) {
@@ -621,7 +616,7 @@ $('#menuModuleProfilePath').click(function(){
 	})
 	.fail(conectionFail);
 });
-$('#menuModuleProfile').click(function(){
+$('#menuModuleProfile').click(function(у){
 
 	let $menu = $(this).parent().children('.dropdown-menu')
 	let length = $menu.children().length;
@@ -633,6 +628,23 @@ $('#menuModuleProfile').click(function(){
 	$.get('/calibration/modules_profile_menu', {sn: serialNumber})
 	.done(function(data){
 		$menu.append($(data));
+	})
+	.fail(conectionFail);
+});
+$('.dump_devices').click(function(e){
+	e.preventDefault();
+
+	let href = this.href;
+	$.get(href)
+	.done(function(data){
+
+		let $message = $('<div>', { class: "alert alert-success alert-dismissible fade show row", role: "alert"})
+						.append($('<strong>', {class: 'col pre-line', text: data}))			
+						.append($('<button>', {type: 'button', class: 'btn-close col-auto', 'data-bs-dismiss': 'alert', 'aria-label': 'Close'}));
+
+		$('body').append($message);
+
+		$message.get(0).scrollIntoView({behavior: 'smooth'});
 	})
 	.fail(conectionFail);
 });

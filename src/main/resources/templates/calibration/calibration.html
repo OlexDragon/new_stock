@@ -14,6 +14,7 @@
     <link rel="stylesheet" href="../../static/css/calibration.css" th:href="@{/css/calibration.css}">
 </head>
 <body>
+	<input id="devid" type="hidden" th:value="${devid}">
 
 	<nav class="navbar fixed-top navbar-light bg-light row">
  
@@ -166,8 +167,6 @@
     				th:href="@{${(info==null or info.deviceId==null)} ? '#' : '/calibration/power_offset?sn=' + ${info.serialNumber} + '&pn=' + ${info.partNumber} + '&deviceId=' + ${#strings.substring(info.deviceId, 1, info.deviceId.length()-1)}}">Power Offset</a>
 <!-- Gain -->
     			<a id="menuGain" class="dropdown-item calibrate" th:classappend="${info==null ? 'disabled list-group-item-light' : ''}" th:href="@{${info==null} ? '#' : '/calibration/gain?sn=' + ${info.serialNumber} + '&pn=' + ${info.partNumber}}">Gain</a>
-<!-- Current Offset -->
-    			<a id="menuCurrentOffset" class="dropdown-item calibrate" th:classappend="${info==null ? 'disabled list-group-item-light' : ''}" th:href="@{${info==null} ? '#' : '/calibration/current_offset?sn=' + ${info.serialNumber}}">Current Offset</a>
 <!-- BTR Measurement -->
     			<a id="btr" 
     				class="dropdown-item calibrate" 
@@ -175,8 +174,16 @@
     				th:classappend="${#authentication.principal=='anonymousUser' or info==null} ? 'disabled' : null" 
     				th:text="${#authentication.principal=='anonymousUser'} ? 'Measurement - Login required' : 'Measurement'">Measurement</a>
     			<div><hr class="dropdown-divider"></div>
+<!-- Current Offset -->
+    			<a id="menuCurrentOffset" class="dropdown-item calibrate" th:classappend="${info==null ? 'disabled list-group-item-light' : ''}" th:href="@{${info==null} ? '#' : '/calibration/current_offset?sn=' + ${info.serialNumber}}">Current Offset</a>
+    			<a 	class="dropdown-item dump_devices"
+    				th:classappend="${info==null ? 'disabled list-group-item-light' : ''}"
+    				th:href="@{${info==null} ? '#' : '/calibration/rest/dumps?sn=' + ${info.serialNumber} + '&devid=' + ${devid} + '&command=regs&groupindex=20'}">Current Dump</a>
+    			<div><hr class="dropdown-divider"></div>
+<!-- Calibration Mode -->
     			<a class="dropdown-item" id="calMode" th:classappend="${info==null ? 'disabled list-group-item-light' : ''}" href="#">Calibration Mode</a>
     			<div><hr class="dropdown-divider"></div>
+<!-- Gain From -->
     			<a class="dropdown-item" id="gain_from_cookies" th:classappend="${serialNumber==null ? 'disabled list-group-item-light' : ''}" href="#" data-th-data-sn="${serialNumber} + '_gainTable'">Gain from Cookies</a>
 <!-- Upload -->
 				<div class="btn-group" style="width:100%;">

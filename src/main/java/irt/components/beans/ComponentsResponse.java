@@ -13,4 +13,16 @@ public class ComponentsResponse {
 
 	@JsonProperty("value")
 	private Component[] components;
+
+	@JsonProperty("Parent\\@navigationLinkUrl")
+	private String parentUrl;
+
+	@JsonProperty("MeasurementUnit\\@navigationLinkUrl")
+	private String measurementUnitUrl;
+
+	@JsonProperty("IRT_DefaultSchematicLetter\\@navigationLinkUrl")
+	private String schematicLetterUrl;
+
+	@JsonProperty("ReportUOM\\@navigationLinkUrl")
+	private String reportUOM_Url;
 }

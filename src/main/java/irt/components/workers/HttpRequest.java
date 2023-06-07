@@ -55,7 +55,7 @@ public class HttpRequest {
 	private static final String LINE_SEPARATOR = System.getProperty("line.separator");
 
 	public static <T> FutureTask<T> getForObgect(String url, Class<T> classToReturn) {
-//		logger.error("classToReturn: {}; url: {}", classToReturn, url);
+		logger.traceEntry("classToReturn: {}; url: {}", classToReturn, url);
 
 		final FutureTask<T> ft = new FutureTask<T>(
 				()->{
@@ -247,6 +247,7 @@ public class HttpRequest {
 
 	private static final String lineEnd = "\r\n";
 	public static void upload(String sn, Profile profile) throws IOException {
+		logger.traceEntry(sn);
 
 		URL url = new URL("http", sn, "/upgrade.cgi");
 		HttpURLConnection connection = (HttpURLConnection) url.openConnection();
@@ -277,7 +278,7 @@ public class HttpRequest {
 			while ((line = reader.readLine())!=null) {
 				buf.append(line).append(LINE_SEPARATOR);
 			}
-//			logger.error(buf);
+			logger.debug(buf);
 		}
 
 		connection.disconnect();

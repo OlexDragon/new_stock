@@ -38,9 +38,6 @@ public class ComponentsRestController {
 	@Value("${irt.url}")
 	private String url;
 
-	@Value("${irt.url.components.catalog}")
-	private String componentsCatalog;
-
 	@Value("${irt.url.components.attributes}")
 	private String componentsAttributes;
 
@@ -68,6 +65,7 @@ public class ComponentsRestController {
 
 		String url = createComponentQtyUrl(componentKey);
 		final FutureTask<ComponentQuantityResponse> quantityFutureTask = HttpRequest.getForObgect(url, ComponentQuantityResponse.class);
+		logger.debug(url);
 
 		url = createBomUrl(componentKey);
 //		logger.error(url);

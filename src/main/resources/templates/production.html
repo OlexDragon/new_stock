@@ -1,0 +1,65 @@
+<!DOCTYPE html>
+<html 	xmlns="http://www.w3.org/1999/xhtml"
+		xmlns:th="https://www.thymeleaf.org"
+      	xmlns:sec="https://www.thymeleaf.org/thymeleaf-extras-springsecurity5"
+      	lang="en">
+<head>
+    <title>Production.</title>
+    <link rel="shortcut icon" href="http://irttechnologies.com/favicon.ico">
+<th:block th:replace="components :: bootstrapLink">
+    <link rel="stylesheet" href="https://stackpath.bootstrapcdn.com/bootstrap/4.4.1/css/bootstrap.min.css">
+</th:block>
+    <link rel="stylesheet" href="../static/css/components.css" th:href="@{/css/components.css}">
+    <link rel="stylesheet" href="../static/css/production.css" th:href="@{/css/production.css}">
+</head>
+<body class="pt-3">
+
+	<nav class="navbar fixed-top navbar-light bg-light row">
+ 
+<!-- Navigation Dropdown Menu from components.html -->
+		<div class="dropdown" th:replace="components :: dropdownMenu">
+  			<button class="btn btn-secondary dropdown-toggle" type="button" id="dropdownMenuButton" data-bs-toggle="dropdown" aria-expanded="false"></button>
+  			<div class="dropdown-menu" aria-labelledby="dropdownMenuButton">
+    			<a class="dropdown-item" href="production.html" th:href="@{/production}">Production</a>
+  			</div>
+		</div>
+
+		<div class="nav-item col">
+  		</div>
+	</nav>
+
+	<div class="row mt-5">
+		<div class="col">
+			<a href="/production/sales_orders" class="btn btn-outline-primary">SalesOrder</a>
+		</div>
+		<div class="col">
+			<a href="/production/Rest/production_order" class="btn btn-outline-primary">ProductionOrder</a>
+		</div>
+	</div>
+	<div id="productionContainer" class="container-fluid" th:remove="body">
+		<div class="row" th:each="salesOrder: ${salesOrders}" th:fragment="sales_order">
+			<div class="col" th:text="${salesOrder.number}"></div>
+			<div class="col" th:text="${salesOrder.comment}"></div>
+		</div>
+	</div>
+<!-- Modal Message -->
+	<div id="modal" class="modal fade" aria-hidden="true" tabindex="-1" sec:authorize="hasAuthority('ADD_RMA_COMMENT')">
+	</div>
+
+<th:block th:remove="all">
+	<div class="alert alert-warning" role="alert" th:fragment="alert">Your login has expired. Refresh the page, please, and <strong>login again.</strong></div>
+</th:block>
+<th:block th:replace="components :: scripts">
+    <script type="application/javascript" src="https://ajax.googleapis.com/ajax/libs/jquery/3.6.0/jquery.min.js"></script>
+    <script type="application/javascript" src="https://cdnjs.cloudflare.com/ajax/libs/popper.js/2.9.2/umd/popper.min.js"></script>
+    <script type="application/javascript" src="https://stackpath.bootstrapcdn.com/bootstrap/4.4.1/js/bootstrap.min.js"></script>
+	<script type="application/javascript" src="https://cdn.jsdelivr.net/npm/js-cookie@2/src/js.cookie.min.js"></script>
+</th:block>
+	<script type="application/javascript" src="../static/js/production.js" th:src="@{/js/production.js}"></script>
+	<script type="application/javascript">
+	/*<![CDATA[*/
+		$('#miProduction').addClass('active');
+	/*]]>*/
+	</script>
+</body>
+</html>
