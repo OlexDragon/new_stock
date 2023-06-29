@@ -43,24 +43,33 @@
   		</form>
   		</div>
 	</nav>
-
+<!-- Toast -->
+<div id="toast-container" class="toast-container position-fixed start-0 mt-5">
+</div>
 <!-- Content -->
 	<div id="content" class="container-fluid mt-5 pt-5" th:remove="body">
 
-		<div class="card shadow mb-3" th:each="row: ${rows}" th:fragment="content">
-			<div class="card-body">
-				<h5 class="card-header" th:text="${row.workOrder}">Work Order</h5>
-				<div class="row mt-2 mb-1">
-					<div class="col-2" th:text="${row.partNumber}">Part Number</div>
-					<div class="col" th:text="${row.description}">Description</div>
-					<div class="col-auto" th:text="${row.qty}">Quantity</div>
+			<div class="card shadow mb-3" th:each="row, stat : ${rows}" th:fragment="content">
+			<div class="card-body" data-th-data-index="${stat.index}">
+				<div class="card-header row">
+					<div class="col">
+						<h5 th:text="${row.workOrder}">Work Order</h5>
+					</div>
+					<div class="col-auto">
+						<button sec:authorize="hasAuthority('WIP_PAGE')" th:if="${row.status.toString()} != 'MOT_IN_LOG'" type="button" class="btn btn-outline-warning" th:value="${row.workOrder}">Edit</button>
+					</div>
+				</div>
+				<div class="row mt-2 mb-1 fromWIP">
+					<div class="col-2 partNumber" th:text="${row.partNumber}">Part Number</div>
+					<div class="col description" th:text="${row.description}">Description</div>
+					<div class="col-auto qty" th:text="${row.qty}">Quantity</div>
 				</div>
 
-				<div class="row bg-danger bg-opacity-10" th:switch="${row.status.toString()}">
+				<div class="row bg-danger bg-opacity-10 fromLOG" th:switch="${row.status.toString()}">
 					<th:block th:case="NOT_EQUALE">
-						<div class="col-2" th:text="${row.fromLogFile.partNumber}">Part Number</div>
-						<div class="col" th:text="${row.fromLogFile.description}">Description</div>
-						<div class="col-auto" th:text="${row.fromLogFile.qty}">Quantity</div>
+						<div class="col-2 partNumber" th:text="${row.fromLogFile.partNumber}">Part Number</div>
+						<div class="col description" th:text="${row.fromLogFile.description}">Description</div>
+						<div class="col-auto qty" th:text="${row.fromLogFile.qty}">Quantity</div>
 					</th:block>
 					<th:block th:case="MOT_IN_LOG">
 						<h6>The [[${row.workOrder}]] does not exists in the 'Sipped Log.xlsx' file.</h6>
@@ -74,14 +83,49 @@
 		</div>
 
 		<div class="row" th:fragment="error">
-			<h4 th:text="${error}"></h4>
+			<h4 th:text="${file}" class="text-danger-emphasis"></h4>
+			<h4 th:text="${error}" class="text-danger"></h4>
 		</div>
 	</div>
 
 <!-- Modal Message -->
-	<div id="modal" class="modal fade" tabindex="-1" role="dialog" th:replace="components :: componentData"></div>
+	<div id="modal" class="modal fade" tabindex="-1" role="dialog" aria-labelledby="headerWO" aria-hidden="true">
+		<div class="modal-dialog modal-lg">
+			<div class="modal-content">
+				<div class="modal-header">
+					<div class="col">
+						<h1 class="modal-title fs-5" id="headerWO">WO2322001</h1>
+					</div>
+					<div class="col">
+						<input type="radio" name="frimFile" id="fromWIP" class="btn-check" aria-label="From WIP File" checked>
+						<label class="btn btn-outline-primary" for="fromWIP">Text From WIP</label>
+					</div>
+					<div class="col">
+						<input type="radio" name="frimFile" id="fromLOG" class="btn-check" aria-label="From WIP File">
+						<label class="btn btn-outline-primary" for="fromLOG">Text From LOG</label>
+					</div>
+					<button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+				</div>
+				<div class="modal-body">
+					<input id="modalCardIndex" type="hidden">
+					<div class="form-floating mb-3">
+						<input type="text" class="form-control" id="modalPartNumber" placeholder="Part Number">
+						<label for="modalPartNumber">Part Number</label>
+					</div>
+					<div class="form-floating">
+						<textarea class="form-control" placeholder="Leave a comment here" id="modalTextarea" rows="4" style="height:100%;"></textarea>
+						<label for="modalTextarea">Description</label>
+					</div>
+				</div>
+				<div class="modal-footer">
+					<button type="submit" class="btn btn-outline-success">Save changes</button>
+					<button type="button" class="btn btn-outline-secondary" data-bs-dismiss="modal">Close</button>
+				</div>
+			</div>
+		</div>
+	</div>
 
-<th:block th:replace="components :: scripts">
+	<th:block th:replace="components :: scripts">
     <script type="application/javascript" src="https://ajax.googleapis.com/ajax/libs/jquery/3.6.0/jquery.min.js"></script>
     <script type="application/javascript" src="https://cdnjs.cloudflare.com/ajax/libs/popper.js/2.9.2/umd/popper.min.js"></script>
     <script type="application/javascript" src="https://stackpath.bootstrapcdn.com/bootstrap/4.4.1/js/bootstrap.min.js"></script>

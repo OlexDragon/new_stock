@@ -1,6 +1,9 @@
 var tooltipTriggerList = document.querySelectorAll('[data-bs-toggle="tooltip"]')
 var tooltipList = [...tooltipTriggerList].map(tooltipTriggerEl => new bootstrap.Tooltip(tooltipTriggerEl))
 
+// Used in rmaComments.js script on rma.html
+let clicked = false;
+
 // Get RMA filter text from the cookies
 var filterCookie = Cookies.get("rmafilter")
 if(filterCookie){

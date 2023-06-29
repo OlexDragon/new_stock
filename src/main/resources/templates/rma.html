@@ -107,7 +107,11 @@
           				<div class="col-auto text-secondary">
           					<strong th:text="${rma.user.username}" th:title="${ rma.user.firstname + ' ' + rma.user.lastname}" data-bs-toggle="tooltip">User Name</strong>
           				</div>
-  						<div class="col-auto" th:if="${rma.status == T(irt.components.beans.jpa.rma.Rma.Status).CREATED}" sec:authorize="hasAuthority('ADD_RMA')">
+  						<div class="col-auto" sec:authorize="hasAuthority('ADD_RMA_COMMENT')" >
+<!-- Button to Add Comment -->
+      						<div class="btn btn-outline-primary add-comment" title="Add Comment">Comm.</div>
+    					</div>
+ 						<div class="col-auto" th:if="${rma.status == T(irt.components.beans.jpa.rma.Rma.Status).CREATED}" sec:authorize="hasAuthority('ADD_RMA')">
 <!-- Button to Add RMA unit -->
       						<div class="btn btn-outline-primary add-to-rma" th:data-rma-number="${ rma.rmaNumber }">Add</div>
     					</div>
@@ -170,9 +174,30 @@
 		<script type="application/javascript" sec:authorize="hasAuthority('ADD_RMA_COMMENT')" th:if="${ rmas != null ? rmas.size() > 0 : false }" th:inline="javascript">
 			/*<![CDATA[*/
 
-			function ondblclick(){
+			$('.add-comment').mouseenter(removeDataCollapse);
+			$('.add-to-rma').mouseenter(removeDataCollapse);
+			function removeDataCollapse(){
+				let t = $(this).parents('.accordion-button').attr('data-bs-toggle', '');
+			}
 
+			$('.add-comment').mouseleave(addDataCollapse);
+			$('.add-to-rma').mouseleave(addDataCollapse);
+			function addDataCollapse(){
+				$(this).parents('.accordion-button').attr('data-bs-toggle', 'collapse');
+			}
+
+			$('.add-comment').click(function(e){
+				e.stopPropagation();
+
+				let $row = $(this).parents('.row');
+				showComment($row);
+			});
+			function ondblclick(){
 				var $this = $(this);
+				showComment($this)
+			}
+			function showComment($this){
+
 				var $serialNumber = $this.find(".serialNumber");
 				var readyToShip = $this.find(".rma-status").hasClass('bg-info');
 				if(readyToShip)

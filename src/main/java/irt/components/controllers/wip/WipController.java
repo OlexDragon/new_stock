@@ -31,16 +31,16 @@ import irt.components.beans.wip.WipContent;
 public class WipController {
 	private final static Logger logger = LogManager.getLogger();
 
-	private final static int WIP_WORK_ORDER = 4;
-	private final static int LOG_WORK_ORDER = 3;
+	public final static int WIP_WORK_ORDER = 4;
+	public final static int LOG_WORK_ORDER = 3;
 
-	private final static int WIP_PART_NUMBER = 2;
-	private final static int LOG_PART_NUMBER = 2;
+	public final static int WIP_PART_NUMBER = 2;
+	public final static int LOG_PART_NUMBER = 2;
 
-	private final static int WIP_DESCRIPTION = 1;
-	private final static int LOG_DESCRIPTION = 4;
+	public final static int WIP_DESCRIPTION = 1;
+	public final static int LOG_DESCRIPTION = 4;
 
-	private final static int WIP_QTY = 3;
+	public final static int WIP_QTY = 3;
 
 	@Value("${irt.wip.directory}")
 	private String wipDirectory;
@@ -71,8 +71,9 @@ public class WipController {
 
     		getDataFomWipFilw(is, rows, wo);
 
-    	} catch (IOException e) {
-			return error(model, e);
+    	} catch (Exception e) {
+    		logger.catching(e);
+			return error(model, e, f);
 		}
 
     	// Log File
@@ -86,8 +87,9 @@ public class WipController {
 
     		getDataFomLogFile(is, rows, wo);
 
-    	} catch (IOException e) {
-			return error(model, e);
+    	} catch (Exception e) {
+    		logger.catching(e);
+			return error(model, e, lf);
 		}
 
     	model.addAttribute("rows", rows);
@@ -101,10 +103,10 @@ public class WipController {
  
 			XSSFSheet sheet=wb.getSheetAt(0);
 
-			int toThis = 0;
-			for(int i = sheet.getLastRowNum(); i>toThis; i--) {
+			int scanTo = 0;
+			for(int nextToRead = sheet.getLastRowNum(); nextToRead>scanTo; nextToRead--) {
 
-				final XSSFRow row = sheet.getRow(i);
+				final XSSFRow row = sheet.getRow(nextToRead);
 				if(row==null)
 					continue;
 
@@ -113,7 +115,7 @@ public class WipController {
 				final List<WipContent> wips = rows.stream().filter(wip->wip.getWorkOrder().equals(workOrder)).collect(Collectors.toList());
 
 				final String pn		 = row.getCell(LOG_PART_NUMBER, MissingCellPolicy.CREATE_NULL_AS_BLANK).toString().trim();
-				final String descr	 = row.getCell(LOG_DESCRIPTION, MissingCellPolicy.CREATE_NULL_AS_BLANK).toString().trim();
+				final String descr	 = row.getCell(LOG_DESCRIPTION, MissingCellPolicy.CREATE_NULL_AS_BLANK).toString().replaceAll("[\n\r]", " ").replaceAll(" +", " ").trim();
 				final WipContent logContent = new WipContent(workOrder, pn, descr);
 				logContent.setQty(1);
 
@@ -125,8 +127,8 @@ public class WipController {
 
 				}else{
 
-					final int tmp = i - 500;
-					toThis = tmp > 0 ? tmp : 0;
+					final int tmp = nextToRead - 500;
+					scanTo = tmp > 0 ? tmp : 0;
 
 					final int size = wips.size();
 
@@ -180,7 +182,6 @@ public class WipController {
 				}
 			}
 		}
-	
 	}
 
 	private void fillNext(final List<WipContent> wips, final WipContent logContent) {
@@ -207,14 +208,17 @@ public class WipController {
  
 			XSSFSheet sheet=wb.getSheetAt(0);
 
-			for(int lastRowNum = sheet.getLastRowNum(); lastRowNum>0; lastRowNum--) {
+			for(int nextToRead = sheet.getLastRowNum(); nextToRead>0; nextToRead--) {
 
-				final XSSFRow row = sheet.getRow(lastRowNum);
+				final XSSFRow row = sheet.getRow(nextToRead);
+				if(row==null)
+					continue;
+
 				final String workOrder = row.getCell(WIP_WORK_ORDER, MissingCellPolicy.CREATE_NULL_AS_BLANK).toString().trim();
 				if(workOrder.contains(wo)) {
 					
 					final String pn 	= row.getCell(WIP_PART_NUMBER	, MissingCellPolicy.CREATE_NULL_AS_BLANK).toString().trim();
-					final String descr 	= row.getCell(WIP_DESCRIPTION	, MissingCellPolicy.CREATE_NULL_AS_BLANK).toString().trim();
+					final String descr 	= row.getCell(WIP_DESCRIPTION	, MissingCellPolicy.CREATE_NULL_AS_BLANK).toString().replaceAll("[\n\r]", " ").replaceAll(" +", " ").trim();
 					final String qtyStr = row.getCell(WIP_QTY			, MissingCellPolicy.CREATE_NULL_AS_BLANK).toString().trim();
 					final Integer qty = Optional.of(qtyStr).filter(s->!s.isEmpty()).filter(s->s.replaceAll("[\\d.]", "").isEmpty()).map(Double::parseDouble).map(Number::intValue).orElse(0);
 
@@ -228,8 +232,9 @@ public class WipController {
 		}
 	}
 
-	private String error(Model model, IOException e) {
+	private String error(Model model, Exception e, File f) {
 		logger.catching(e);
+		model.addAttribute("file", f);
 		model.addAttribute("error", e);
 		return "wip :: error";
 	}
