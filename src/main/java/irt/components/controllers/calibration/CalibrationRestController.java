@@ -42,8 +42,12 @@ import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
+import org.springframework.core.io.ByteArrayResource;
 import org.springframework.core.io.FileSystemResource;
+import org.springframework.http.ContentDisposition;
+import org.springframework.http.HttpHeaders;
 import org.springframework.http.MediaType;
+import org.springframework.http.ResponseEntity;
 import org.springframework.ui.Model;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PostMapping;
@@ -264,6 +268,30 @@ public class CalibrationRestController {
 		HttpRequest.upload(sn, profile);
 
 		return "Wait for the profile to load.";
+	}
+
+    @GetMapping("package")
+    ResponseEntity<ByteArrayResource> getPackage(@RequestParam String sn, @RequestParam(required = false) String module) throws IOException {
+
+    	final ProfileWorker profileWorker = new ProfileWorker(profileFolder, Optional.ofNullable(module).orElse(sn));
+
+		if(!profileWorker.exists())
+			return null;
+
+		final Optional<Path> oPath = profileWorker.getOPath();
+
+		final Path path = oPath.get();
+		final Profile profile = new Profile(path);
+	    ByteArrayResource resource = new ByteArrayResource(profile.toBytes());
+
+	    return ResponseEntity.ok()
+	            .contentType(MediaType.APPLICATION_OCTET_STREAM)
+	            .contentLength(resource.contentLength())
+	            .header(HttpHeaders.CONTENT_DISPOSITION,
+	                    ContentDisposition.attachment()
+	                        .filename(sn + ".pkg")
+	                        .build().toString())
+	            .body(resource);
 	}
 
     @PostMapping("current_offset")

@@ -122,14 +122,17 @@
 			function showUploadButton(pair){
 				let id = '#' + pair.key.replace('.', '\\.');
 				let $div = $(id);
+				let module = pair.key.split('.')[0];
 
 				if(pair.value=='Saved')
 					$div.append(
-							$('<a>', {class: "btn btn-outline-success", href: '/calibration/rest/upload?sn=' + serialNumber, text: 'Upload'})
+							$('<a>', {class: "btn btn-outline-success", href: '/calibration/rest/upload?sn=' + serialNumber + '&module=' + module, text: 'Upload'})
 							.click(function(e){
 								e.preventDefault();
 								upload(this);
-							}));
+							}))
+						.append(
+							$('<a>', {class: "btn btn-outline-secondary", href: '/calibration/rest/package?sn=' + serialNumber + '&module=' + module, target: '_blank', text: 'Get Package'}));
 				else{
 					$div.attr('class', 'text-center text-danger');
 					$div.text(pair.value);

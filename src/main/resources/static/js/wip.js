@@ -185,6 +185,7 @@ $('.modal-footer button[type=submit]').click(e=>{
 });
 
 function addToast(headerText, text, colorClass, delay){
+	console.log(`Showing the Toast-> HEADER: ${headerText}; TEXT: ${text}`);
 	let $closeButton = $('<button>', {type: 'button', class: 'btn-close', 'data-bs-dismiss': 'toast', 'aria-label': 'Close'});
 	let $toast = $('<div>', {class: 'toast', role: 'alert', 'aria-live': 'assertive', 'aria-atomic': 'true'}).append($('<div>', {class: `toast-header ${colorClass}`}).append($('<strong>', {class: 'me-auto', text: headerText})).append($closeButton)).append($('<div>', {class: 'toast-body', text: text}));
 	$toast.on('hidden.bs.toast', e=>$toast.remove());

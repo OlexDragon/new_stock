@@ -468,10 +468,11 @@ public class CalibrationController {
 
     							final URL url = new URL("http", sn, "/device_debug_read.cgi");
     							List<NameValuePair> params = new ArrayList<>();
-    							params.addAll(Arrays.asList(new BasicNameValuePair[]{new BasicNameValuePair("devid", es.getValue().toString()), new BasicNameValuePair("command", "info")}));
+								final Integer modulId = es.getValue();
+    							params.addAll(Arrays.asList(new BasicNameValuePair[]{new BasicNameValuePair("devid", modulId.toString()), new BasicNameValuePair("command", "info")}));
 
     							final Info info = HttpRequest.postForIrtObgect(url.toString(), Info.class, params).get(1, TimeUnit.SECONDS);
-    							info.setModuleId(es.getValue());
+    							Optional.ofNullable(info).ifPresent(inf->inf.setModuleId(modulId));
 								return info;
 
     						} catch (InterruptedException | ExecutionException | TimeoutException | MalformedURLException e) {
