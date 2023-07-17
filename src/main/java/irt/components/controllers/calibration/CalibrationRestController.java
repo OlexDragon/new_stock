@@ -559,14 +559,21 @@ public class CalibrationRestController {
     }
 
     @PostMapping("calibration_mode")
-    CalibrationMode getCalibrationMode(@RequestParam String ip) throws InterruptedException, ExecutionException, TimeoutException, IOException {
+    CalibrationMode getCalibrationMode(@RequestParam String ip) throws IOException {
 
-		final URL url = new URL("http", ip, "/device_debug_read.cgi");
-		List<NameValuePair> params = new ArrayList<>();
-    	final Integer systemIndex = CalibrationController.getSystemIndex(ip);
-		params.addAll(Arrays.asList(new BasicNameValuePair[]{new BasicNameValuePair("devid", systemIndex.toString()), new BasicNameValuePair("command", "hwinfo"), new BasicNameValuePair("groupindex", "4")}));
+		try {
 
-		return HttpRequest.postForIrtObgect(url.toString(), CalibrationMode.class, params).get(5, TimeUnit.SECONDS);
+			final URL url = new URL("http", ip, "/device_debug_read.cgi");
+			List<NameValuePair> params = new ArrayList<>();
+	    	final Integer systemIndex = CalibrationController.getSystemIndex(ip);
+			params.addAll(Arrays.asList(new BasicNameValuePair[]{new BasicNameValuePair("devid", systemIndex.toString()), new BasicNameValuePair("command", "hwinfo"), new BasicNameValuePair("groupindex", "4")}));
+
+			return HttpRequest.postForIrtObgect(url.toString(), CalibrationMode.class, params).get(5, TimeUnit.SECONDS);
+
+		} catch (InterruptedException | ExecutionException | TimeoutException | UnknownHostException e) {
+			logger.catching(Level.DEBUG, e);
+			return null;
+		}
     }
 
     @PostMapping("calibration_mode_toggle")

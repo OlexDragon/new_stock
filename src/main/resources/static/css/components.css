@@ -28,11 +28,6 @@
 .border_white{
  	border-color: white;
 }
-.bg_tropo{
-	background-image: url("/images/tropo_rf.png");
-	background-repeat: no-repeat;
-	background-size: auto;
-}
 .form-floating label[for]:not([for=""]){
 	color: LightSteelBlue;
 }

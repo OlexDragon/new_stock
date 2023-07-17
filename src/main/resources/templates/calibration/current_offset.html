@@ -31,9 +31,6 @@
       			<div class="modal-footer">
 	        		<button type="button"  class="btn btn-outline-success current_offset" data-local="true">Local</button>
 	        		<button type="button" class="btn btn-outline-primary current_offset" data-local="false">Module</button>
-<!-- 	        		<a id="currentOffsetUpload" -->
-<!-- 	        			class="btn btn-outline-primary" -->
-<!-- 	        			th:href="@{'/calibration/rest/upload?sn=' + ${serialNumber}}">Upload Profile</a> -->
 	        		<button type="button" class="btn btn-outline-secondary" data-bs-dismiss="modal">Close</button>
 	    		</div>
     		</div>
@@ -46,13 +43,30 @@
 			$('.current_offset').click(function(e){
 				e.preventDefault();
 
-				$('.current_offset').addClass('disabled');
+				let classList = this.classList;
+				let indexOf = Array.from(this.classList).map((t, i)=>t.startsWith('btn-outline-') ? i : 0).filter(i=>i);
+				let btnClass;
+				let pressedBtn;
+				if(indexOf.length){
+					btnClass = this.classList[indexOf[0]];
+					pressedBtn = btnClass.replace('outline-', '');
+					classList.remove(btnClass);
+					classList.add(pressedBtn);
+				}
+
+				let $currentOffset = $('.current_offset').addClass('disabled');
+
 				let local = this.dataset.local;
 				$.post('/calibration/rest/current_offset', {sn: serialNumber, local: local})
 				.done(function(data){
 
 					if(!data.length){
 						alert("There is nothing to save in the profile.");
+						$currentOffset.removeClass('disabled');
+						if(btnClass){
+							classList.remove(pressedBtn);
+							classList.add(btnClass);
+						}
 						return;
 					}
 					
@@ -65,9 +79,10 @@
 						return;
 					}
 
-					let b = $('<button>', {text: 'Save All', class: 'btn btn-outline-primary'}).click(function(e){
+					let b = $('<button>', {text: 'Save All', class: 'btn btn-outline-primary btn-save'}).click(function(e){
 						e.preventDefault();
 
+						$('.btn-save').addClass('disabled');
 						data.forEach(currentOffset=>saveOffset(currentOffset));
 					});
 
@@ -80,7 +95,13 @@
 					data.forEach(currentOffset=>{
 
 						let $cadrBody = $('<div>', {class: 'card-body'});
-						let $cardButton = $('<button>', {class: 'btn btn-outline-info', text: 'Save'}).click(function(){saveOffset(currentOffset);});
+						let $cardButton = $('<button>', {class: 'btn btn-outline-info btn-save', text: 'Save'})
+												.click(function(e){
+													e.preventDefault();
+
+													$(this).addClass('disabled');
+													saveOffset(currentOffset);
+												});
 						let fileName = currentOffset.path.split('\\').pop();
 
 						$body.append($('<div>',{ class: 'card'})
@@ -98,12 +119,6 @@
 					});
 				})
 				.fail(conectionFail);
-			});
-			// Uplode the profile
-			$('#currentOffsetUpload').click(function(e){
-				e.preventDefault();
-				if(confirm("Are you sure you want to reload the profile?"))
-					upload(this);
 			});
 
 			$modal.modal('show');
@@ -124,18 +139,19 @@
 				let $div = $(id);
 				let module = pair.key.split('.')[0];
 
-				if(pair.value=='Saved')
-					$div.append(
-							$('<a>', {class: "btn btn-outline-success", href: '/calibration/rest/upload?sn=' + serialNumber + '&module=' + module, text: 'Upload'})
-							.click(function(e){
+				if(pair.value=='Saved'){
+					let btnUpload = $('<a>', {class: "btn btn-outline-success", href: '/calibration/rest/upload?sn=' + serialNumber + '&module=' + module, text: 'Upload'})
+					$div.append(btnUpload.click(function(e){
 								e.preventDefault();
+								$(this).addClass('disabled');
 								upload(this);
 							}))
 						.append(
 							$('<a>', {class: "btn btn-outline-secondary", href: '/calibration/rest/package?sn=' + serialNumber + '&module=' + module, target: '_blank', text: 'Get Package'}));
-				else{
+				}else{
 					$div.attr('class', 'text-center text-danger');
 					$div.text(pair.value);
+					$div.parents('.card').find('.btn-save').removeClass('disabled');
 				}
 			}
 		/*]]>*/

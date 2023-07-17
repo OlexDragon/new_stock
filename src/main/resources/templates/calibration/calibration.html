@@ -166,7 +166,7 @@
     				th:classappend="${(info==null or info.deviceId==null) ? 'disabled list-group-item-light' : ''}"
     				th:href="@{${(info==null or info.deviceId==null)} ? '#' : '/calibration/power_offset?sn=' + ${info.serialNumber} + '&pn=' + ${info.partNumber} + '&deviceId=' + ${#strings.substring(info.deviceId, 1, info.deviceId.length()-1)}}">Power Offset</a>
 <!-- Gain -->
-    			<a id="menuGain" class="dropdown-item calibrate" th:classappend="${info==null ? 'disabled list-group-item-light' : ''}" th:href="@{${info==null} ? '#' : '/calibration/gain?sn=' + ${info.serialNumber} + '&pn=' + ${info.partNumber}}">Gain</a>
+    			<a id="menuGain" class="dropdown-item calibrate disabled" th:classappend="${info==null ? 'disabled list-group-item-light' : ''}" th:href="@{${info==null} ? '#' : '/calibration/gain?sn=' + ${info.serialNumber} + '&pn=' + ${info.partNumber}}">Gain</a>
 <!-- BTR Measurement -->
     			<a id="btr" 
     				class="dropdown-item calibrate" 

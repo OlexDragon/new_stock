@@ -507,11 +507,11 @@
 			/*<![CDATA[*/
 
 				var partNumber = /*[[${partNumber}]]*/ 'IPB-CB00530-RMS11';
-				if(!partNumber){
-					var serialNumber =  /*[[${serialNumber}]]*/ 'IRT-2121021';
-					alert('This unit is not in the database.\nHave to add the ' + serialNumber + ' to the database.\nTo add it to the database,\nyou will be redirected to the "IRT Work Orders" page.');
-					window.location.href = "/wo?sn=" + serialNumber;
-				}
+// 				if(!partNumber){
+// 					var serialNumber =  /*[[${serialNumber}]]*/ 'IRT-2121021';
+// 					alert('This unit is not in the database.\nHave to add the ' + serialNumber + ' to the database.\nTo add it to the database,\nyou will be redirected to the "IRT Work Orders" page.');
+// 					window.location.href = "/wo?sn=" + serialNumber;
+// 				}
 
 				$('.setting').on('input', function(){
 					enableButtons();

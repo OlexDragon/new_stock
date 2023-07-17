@@ -30,6 +30,7 @@ public class BtrSerialNumber implements Serializable{
 	private Long id;
 	private Long workOrderId;
 	private String serialNumber;
+	private String partNumber;
 	private String description;
 	private Long parentId;
 

@@ -33,6 +33,8 @@ import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestParam;
 
 import irt.components.beans.HttpSerialPortServersCollector;
+import irt.components.beans.ProductionOrder;
+import irt.components.beans.ProductionOrderResponse;
 import irt.components.beans.irt.Bias;
 import irt.components.beans.irt.CalibrationInfo;
 import irt.components.beans.irt.ConverterInfo;
@@ -49,10 +51,12 @@ import irt.components.beans.irt.calibration.NameIndexPair;
 import irt.components.beans.irt.calibration.PowerDetectorSource;
 import irt.components.beans.irt.calibration.ProfileTableDetails;
 import irt.components.beans.jpa.btr.BtrSerialNumber;
+import irt.components.beans.jpa.btr.BtrWorkOrder;
 import irt.components.beans.jpa.calibration.CalibrationGainSettings;
 import irt.components.beans.jpa.calibration.CalibrationOutputPowerSettings;
 import irt.components.beans.jpa.calibration.CalibrationPowerOffsetSettings;
 import irt.components.beans.jpa.repository.btr.BtrSerialNumberRepository;
+import irt.components.beans.jpa.repository.btr.BtrWorkOrderRepository;
 import irt.components.beans.jpa.repository.calibration.CalibrationBtrSettingRepository;
 import irt.components.beans.jpa.repository.calibration.CalibrationGainSettingRepository;
 import irt.components.beans.jpa.repository.calibration.CalibrationOutputPowerSettingRepository;
@@ -66,6 +70,15 @@ import irt.components.workers.ThreadRunner;
 public class CalibrationController {
 	private final static Logger logger = LogManager.getLogger();
 
+	@Value("${irt.url.protocol}")
+	private String protocol;
+
+	@Value("${irt.url.login}")
+	private String login;
+
+	@Value("${irt.url}")
+	private String url;
+
 	@Value("${irt.profile.path}")
 	private String profileFolder;
 
@@ -74,6 +87,8 @@ public class CalibrationController {
 	@Autowired private CalibrationPowerOffsetSettingRepository	 calibrationPowerOffsetSettingRepository;
 	@Autowired private CalibrationGainSettingRepository			 calibrationGainSettingRepository;
 	@Autowired private CalibrationBtrSettingRepository			 calibrationBtrSettingRepository;
+
+	@Autowired private BtrWorkOrderRepository			 		 workOrderRepository;
 	@Autowired private BtrSerialNumberRepository				 serialNumberRepository;
 
 	@GetMapping
@@ -84,7 +99,7 @@ public class CalibrationController {
 		model.addAttribute("serialPortServers", httpSerialPortServers);
 
 		Optional.ofNullable(sn)
-    	.filter(s->!s.isEmpty())
+    	.filter(s->!s.trim().isEmpty())
     	.ifPresent(
     			s->{
     				model.addAttribute("serialNumber", s);
@@ -118,7 +133,7 @@ public class CalibrationController {
     						model.addAttribute("ip", home.getNetInfo().getAddr());
     					});
     				} catch (IOException e) {
-    					logger.catching(e);
+    					logger.catching(Level.DEBUG, e);
     				}
     			});
 
@@ -323,20 +338,77 @@ public class CalibrationController {
     }
 
 	@GetMapping("btr")
-    String measurement(@RequestParam String sn, @RequestParam String pn, @RequestParam(required = false) Boolean setting, Model model) {
+    String measurement(@RequestParam String sn, @RequestParam String pn, @RequestParam(required = false) Boolean setting, Model model) throws IOException {
     	logger.traceEntry("sn: {}; pn: {}", sn, pn);
 
 		model.addAttribute("serialNumber", sn);
+    	model.addAttribute("partNumber", pn);
 
 		final Optional<BtrSerialNumber> oSerialNumber = serialNumberRepository.findBySerialNumber(sn);
-		//The DB serial number does not exist. Redirect to adding a serial number to the database.
+		logger.error(oSerialNumber);
+
+		//The DB serial number does not exist.
     	if(!oSerialNumber.isPresent()) {
+
+    		//Get data from 1C
+    		String url = createProductionOrderUrl(sn);
+    		logger.debug(url);
+
+    		final FutureTask<ProductionOrderResponse> frProductionOrderResponse = HttpRequest.getForObgect(url, ProductionOrderResponse.class);
+    		try {
+
+    			Optional.of(frProductionOrderResponse.get(500, TimeUnit.MILLISECONDS)).map(ProductionOrderResponse::getProductionOrders).filter(pos->pos.length>0).map(pos->pos[0]).map(ProductionOrder::getComment)
+    			.ifPresent(c->{
+
+    				Optional<BtrWorkOrder> findByNumber = Optional.empty();
+    				final String[] split = c.split("\\s+");
+    				for(String s: split) {
+    					if(s.startsWith("WO")) {
+    						findByNumber = workOrderRepository.findByNumber(s);
+
+    						if(!findByNumber.isPresent()){ 
+    							final BtrWorkOrder btrWorkOrder = new BtrWorkOrder();
+    							btrWorkOrder.setNumber(s);
+    							findByNumber = Optional.of(workOrderRepository.save(btrWorkOrder));
+    						}
+    						break;
+    					}
+    				}
+        			findByNumber.ifPresent(
+        					wo->{
+
+        						final Optional<BtrSerialNumber> findBySerialNumber = serialNumberRepository.findBySerialNumber(sn);
+        						if(!findBySerialNumber.isPresent()) {
+        							final BtrSerialNumber btrSerialNumber = new BtrSerialNumber();
+        							btrSerialNumber.setSerialNumber(sn);
+           							btrSerialNumber.setWorkOrder(wo);
+           							btrSerialNumber.setWorkOrderId(wo.getId());
+           							btrSerialNumber.setPartNumber(pn);
+
+									try {
+
+										Integer devid = getSystemIndex(sn);
+										final Info info = getHttpDeviceDebug(sn, Info.class, new BasicNameValuePair("devid", devid.toString()), new BasicNameValuePair("command", "info")).get(10, TimeUnit.SECONDS);
+										btrSerialNumber.setDescription(info.getName());
+
+									} catch (IOException | InterruptedException | ExecutionException | TimeoutException e) {
+										logger.catching(e);
+									}
+
+									serialNumberRepository.save(btrSerialNumber);
+        						}
+        					});
+    			});
+
+    		} catch (InterruptedException | ExecutionException | TimeoutException e) {
+				logger.catching(Level.DEBUG, e);
+			}
+
     		model.addAttribute("showSetting", true);
     		return "calibration/btr_table :: modal";
     	}
  
     	model.addAttribute("dbSerialNumber", oSerialNumber.get());
-    	model.addAttribute("partNumber", pn);
 
 		// Get settings from DB
 		calibrationBtrSettingRepository.findById(pn).ifPresent(
@@ -373,6 +445,10 @@ public class CalibrationController {
 
     	return "calibration/btr_table :: modal";
     }
+
+	private String createProductionOrderUrl(String sn) {
+		return new StringBuilder(protocol).append(login).append(url).append("Document_ProductionOrder?$filter=like(Comment,%27%25").append(sn.replaceAll("\\D", "")).append("%25%27)").toString();
+	}
 
 	public static Optional<Monitor> getUnitMonitor(String serialNumber) throws InterruptedException, ExecutionException, TimeoutException, MalformedURLException {
 		return Optional.ofNullable(getHttpUpdate(serialNumber, MonitorInfo.class, new BasicNameValuePair("exec", "mon_info")).get(5, TimeUnit.SECONDS)).map(MonitorInfo::getData);

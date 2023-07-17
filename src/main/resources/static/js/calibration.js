@@ -367,15 +367,21 @@ function getHostName(){
 	return null;
 }
 
+let $menuGain = $('#menuGain');
 $('#dropdownCalibrateButton').on('show.bs.dropdown', function(){
 
-	var serialNumber = $('#serialNumber').text();
+	$menuGain.addClass('disabled list-group-item-light');
+
+	let serialNumber = $('#serialNumber').text();
 
 	if(!serialNumber)
 		return;
 
 	$.post('/calibration/rest/calibration_mode', { ip: serialNumber })
 	.done(function(calMode){
+
+		if(!calMode)
+			calibrationModeError('calMode == null');
 
 		var status = calMode["Calibration mode"];
 		var $calMode = $('#calMode').removeClass('text-primary text-success');
@@ -385,25 +391,28 @@ $('#dropdownCalibrateButton').on('show.bs.dropdown', function(){
 
 		case 'OFF':
 			$calMode.addClass('text-primary').text('Calibration Mode: ' + status);
-			$('#menuGain').addClass('disabled list-group-item-light').text('Gain - Cal.Mode must be ON');
+			$menuGain.text('Gain - Cal.Mode must be ON');
 			break;
 
 		case 'ON':
 			$calMode.addClass('text-success').text('Calibration Mode: ' + status);
-			$('#menuGain').removeClass('disabled list-group-item-light').text('Gain');
+			$menuGain.removeClass('disabled list-group-item-light').text('Gain');
 			break;
 
 		default:
 			$calMode.text('Calibration Mode');
-			$('#menuGain').addClass('disabled list-group-item-light');
 		}
 	})
-	.fail(function(error) {
-
-		$('#calMode').removeClass('text-primary text-success').text('Calibration Mode');
-		alert('Unable to connect to Unit.');
-	});
+	.fail(calibrationModeError);
 });
+function calibrationModeError(error) {
+
+	if(error)
+		console.error(error);
+
+	$('#calMode').removeClass('text-primary text-success').text('Calibration Mode');
+	alert('Unable to connect to Unit.');
+}
 
 $('#calMode').click(function(e){
 	e.preventDefault();
