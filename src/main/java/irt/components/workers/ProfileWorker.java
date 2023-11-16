@@ -204,7 +204,14 @@ public class ProfileWorker {
 							input = Integer.parseInt(split[2]);
 
 						Number output = Double.parseDouble(split[3]);
-						table.add(new TableValue(input, output));
+
+						String comment = null;
+						if(split.length==5) {
+							final String[] c = split[5].split("#", 2);
+							if(c.length==2)
+								comment = c[1];
+						}
+						table.add(new TableValue(input, output, comment));
 					}
 				}
 			}
@@ -232,7 +239,7 @@ public class ProfileWorker {
 
 				if(line.startsWith(profileTable.getName() + "-lut-entry")) {
 
-					final String[] split = line.split("\\s+", 5);
+					final String[] split = line.split("\\s+", 3);
 
 					final Number input;
 					if(split[1].contains("."))
@@ -241,7 +248,14 @@ public class ProfileWorker {
 						input = Integer.parseInt(split[1]);
 
 					Number output = Double.parseDouble(split[2]);
-					table.add(new TableValue(input, output));
+
+					String comment = null;
+					if(split.length==3) {
+						final String[] c = split[2].split("#", 2);
+						if(c.length==2)
+							comment = c[1];
+					}
+					table.add(new TableValue(input, output, comment));
 				}
 			}
 

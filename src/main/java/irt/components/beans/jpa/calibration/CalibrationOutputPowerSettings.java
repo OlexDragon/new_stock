@@ -18,4 +18,5 @@ public class CalibrationOutputPowerSettings {
 	@Id private String partNumber;
 	private Integer startValue;
 	private Integer stopValue;
+	private String name;
 }

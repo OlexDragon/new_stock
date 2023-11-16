@@ -29,20 +29,20 @@
   		<form class="row">
 
 <!-- Filter RMA unit by shipped or not -->
- 			<div id="rmaFilter" class="btn btn-outline-primary ml-1 col-auto" title="Click to show RMA units in work.\nPress CTRL to change direction.">ALL</div>
+ 			<div id="rmaFilter" class="btn btn-outline-primary ml-1 col-auto" data-bs-html="true" data-bs-toggle="tooltip" title="Click to show RMA units in work.<br>Press CTRL to change direction.">ALL</div>
  
 <!-- RMA Number search-->
   			<div class="input-group col">
 				<input type="radio" class="btn-check" name="sort_by" id="rmaOrderByRmaNumber" autocomplete="off">
-      			<label for="rmaOrderByRmaNumber" class="input-group-text btn btn-outline-secondary">RMA</label>
+      			<label for="rmaOrderByRmaNumber" class="input-group-text btn btn-outline-secondary" data-bs-toggle="tooltip" title="RMA Number">RMA</label>
       			<input id="rmaNumber" type="text" class="form-control searchRma" placeholder="RMA Number" aria-label="RMA Number">
     		</div>
 
 <!-- Serial Number search-->
   			<div class="input-group col">
 				<input type="radio" class="btn-check" name="sort_by" id="rmaOrderBySerialNumber" autocomplete="off">
-      			<label for="rmaOrderBySerialNumber" class="input-group-text btn btn-outline-secondary" title="Serial Number" data-bs-toggle="tooltip">SN</label>
-      			<input id="rmaSerialNumber" type="text" class="form-control searchRma" placeholder="RMA Serial Number" aria-label="RMA Serial Number">
+      			<label for="rmaOrderBySerialNumber" class="input-group-text btn btn-outline-secondary" title="Unit Serial Number" data-bs-toggle="tooltip">SN</label>
+      			<input id="rmaSerialNumber" type="text" class="form-control searchRma" placeholder="UNIT Serial Number" aria-label="UNIT Serial Number">
     		</div>
 
  <!--  Description search -->
@@ -107,13 +107,13 @@
           				<div class="col-auto text-secondary">
           					<strong th:text="${rma.user.username}" th:title="${ rma.user.firstname + ' ' + rma.user.lastname}" data-bs-toggle="tooltip">User Name</strong>
           				</div>
-  						<div class="col-auto" sec:authorize="hasAuthority('ADD_RMA_COMMENT')" >
-<!-- Button to Add Comment -->
-      						<div class="btn btn-outline-primary add-comment" title="Add Comment">Comm.</div>
-    					</div>
  						<div class="col-auto" th:if="${rma.status == T(irt.components.beans.jpa.rma.Rma.Status).CREATED}" sec:authorize="hasAuthority('ADD_RMA')">
 <!-- Button to Add RMA unit -->
-      						<div class="btn btn-outline-primary add-to-rma" th:data-rma-number="${ rma.rmaNumber }">Add</div>
+      						<div class="btn btn-outline-primary add-to-rma" th:data-rma-number="${ rma.rmaNumber }" th:title="'Add another unit to ' + ${rma.rmaNumber}" data-bs-toggle="tooltip">Add</div>
+    					</div>
+  						<div class="col-auto" sec:authorize="hasAuthority('ADD_RMA_COMMENT')" >
+<!-- Button to Add Comment -->
+      						<div class="btn btn-outline-primary add-comment" title="Add Comment" data-bs-toggle="tooltip">Comm.</div>
     					</div>
            			</div>
         		</button>
@@ -331,12 +331,14 @@
 			function showSelected($this){
 
 				let $fullImage = $('#fullImage');
+				let $href = $fullImage.parent();
 
 				let v = $this.attr('src').replace('thumbnails/', '');
 				$fullImage.attr('src',v);
+				$href.attr('href',v);
 
-				v = $this.attr('title') + '\nClick to Download';
-				$fullImage.attr('title',v);
+				v = $this.attr('data-bs-original-title') + '\nClick to Download';
+				$fullImage.attr('title', v);
 
 				v = $this.attr('alt');
 				$fullImage.attr('alt',v);

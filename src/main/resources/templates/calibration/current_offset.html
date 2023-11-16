@@ -147,7 +147,7 @@
 								upload(this);
 							}))
 						.append(
-							$('<a>', {class: "btn btn-outline-secondary", href: '/calibration/rest/package?sn=' + serialNumber + '&module=' + module, target: '_blank', text: 'Get Package'}));
+							$('<a>', {class: "btn btn-outline-secondary", href: '/calibration/rest/package/' + (module==null ? serialNumber : module), target: '_blank', text: 'Get Package'}));
 				}else{
 					$div.attr('class', 'text-center text-danger');
 					$div.text(pair.value);

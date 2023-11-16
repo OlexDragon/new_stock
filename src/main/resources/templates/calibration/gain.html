@@ -71,23 +71,25 @@
   		<script th:inline="javascript">
 			/*<![CDATA[*/
 
-			/*[# th:if="${message}!=null" ]*/
-				alert(/*[[${message}]]*/ 'Some Message');
-				return;
+		    /*[# th:if="${message}!=null" ]*/
+				alert(/*[[${message}]]*/ 'Message');
+				throw new Error(/*[[${message}]]*/ 'Message');
 			/*[/]*/
 
-			var unitSerialNumber = /*[[${serialNumber}]]*/ 'IRT-2121021';
-
+			$save = $('#save');
+			$calc = $('#calc');
+			$step = $('#step');
+			$addRow = $('#addRow');
 // Step
 			var step = Cookies.get("dacStep");
 			if(step)
-				$('#step').val(step);
+				$step.val(step);
 
-			$('#step').focusout(function() {
+			$step.focusout(function() {
 				
 				var newValue = this.valueAsNumber;
 				if(!newValue || newValue<1){
-					$('#step').val(1);
+					$step.val(1);
 					Cookies.set("dacStep", null, { expires: 0 });
 					return;
 				}
@@ -111,14 +113,14 @@
 				
 				if(defaultValue<newValue){
 					if((newValue - defaultValue) == 1){
-						var step = parseInt($('#step').val());
+						let step = parseInt($step.val());
 						newValue = parseInt(defaultValue) + step;
 						doPost = true;
 					}
 
 				}else{
 					if((defaultValue - newValue) == 1){
-						var step = parseInt($('#step').val());
+						let step = parseInt($step.val());
 						newValue = parseInt(defaultValue) - step;
 						doPost = true;
 					}
@@ -157,8 +159,6 @@
 	   			});
 			}
 
-			var err;
-			var interval;
 			function update(){
 
 				clearInterval(interval);
@@ -170,7 +170,7 @@
 							.done(function(dacs){
 
 								if(!dacs){
-									$('#addRow').addClass('disabled');
+									$addRow.addClass('disabled');
 									return;
 								}
 
@@ -199,7 +199,7 @@
 										return;
 									}
 
-									$('#addRow').removeClass('disabled');
+									$addRow.removeClass('disabled');
 
 									var temperature = data.bias.temperature;
 									$('#temperature').text(temperature);
@@ -223,7 +223,7 @@
 				if(err)
 					return;
 
-				$('#addRow').addClass('disabled');
+				$addRow.addClass('disabled');
 				$modal.modal('hide');
 
 				err = error;
@@ -246,7 +246,7 @@
 				addRow(temperature, dacValue);
 			}
 
-			$('#addRow').click(onAddRow);
+			$addRow.click(onAddRow);
 			$('#setDacValue').on('keypress', function (e) {
 				 if(e.which === 13){	// Enter key
 					 var newValue = $(this).val();
@@ -288,7 +288,7 @@
 			    });
 
 				var json = JSON.stringify(gainTable);
-				Cookies.set(unitSerialNumber + "_gainTable", json, { expires: 7 });
+				Cookies.set(unitSerialNumber + "_gainTable", json, { expires: 30 });
 			}
 
 			function disableButtons(){
@@ -300,8 +300,8 @@
 				if(!length){
 
 					$('#clear').addClass('disabled');
-					$('#calc').addClass('disabled');
-					$('#save').addClass('disabled');
+					$calc.addClass('disabled');
+					$save.addClass('disabled');
 
 					return 0;
 				}
@@ -309,11 +309,11 @@
 				$('#clear').removeClass('disabled');
 
 				if(length>1)
-					$('#calc').removeClass('disabled');
+					$calc.removeClass('disabled');
 
 				else{
-					$('#calc').addClass('disabled');
-					$('#save').addClass('disabled');
+					$calc.addClass('disabled');
+					$save.addClass('disabled');
 		    		return;
 		    	}
 
@@ -324,10 +324,10 @@
 				var lastTemperatur	 = parseFloat($($children[--length]).find('.input').text());
 
 				if(minTemp < firstTemperatur || maxTemp > lastTemperatur)
-					$('#save').addClass('disabled');
+					$save.addClass('disabled');
 				else{
-					$('#calc').addClass('disabled');
-					$('#save').removeClass('disabled');
+					$calc.addClass('disabled');
+					$save.removeClass('disabled');
 				}
 
 				return length;
@@ -355,7 +355,7 @@
 				disableButtons();
 		    });
 
-		    $('#save').click(function(){
+		    $save.click(function(){
 
 		    	var hasError = false;
 		    	var prevInput;
@@ -403,6 +403,7 @@
 				})
 				.done(function(data){
 					alert(data);
+					$save.addClass('disabled');
 					$modal.modal('hide');
 				})
 				.fail(function(error) {
@@ -413,7 +414,7 @@
 		    		
 		    });
 
-		    $('#calc').click(function(){
+		    $calc.click(function(){
 
 		    	var $children = $('#modal-body').children();
 		    	var length = $children.length;

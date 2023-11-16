@@ -13,7 +13,7 @@
     <link rel="stylesheet" href="../../static/css/components.css" th:href="@{/css/components.css}">
     <link rel="stylesheet" href="../../static/css/calibration.css" th:href="@{/css/calibration.css}">
 </head>
-<body>
+<body th:with="partNumber = ${info==null ? '' : info.partNumber}">
 	<input id="devid" type="hidden" th:value="${devid}">
 
 	<nav class="navbar fixed-top navbar-light bg-light row">
@@ -26,10 +26,9 @@
     			<a class="dropdown-item" href="bom.html" th:href="@{/bom}">BOMs</a>
   			</div>
 		</div>
-		<div class="nav-item col-auto"><h4 id="serialNumber" th:text="${info==null ? '' : info.serialNumber }">Serial Number</h4></div>
+		<div class="nav-item col-auto"><h4 id="serialNumber" th:text="${info==null ? '' : info.serialNumber }" th:title="${partNumber}">Serial Number</h4></div>
 		<div class="nav-item col-auto"><h4>:</h4></div>
 		<div id="unit_description" class="nav-item col"><h4 th:text="${info==null ? '' : info.name}">Unit Name</h4></div>
-		<input th:if="${info!=null}" type="hidden" id="partNumber" th:value="${info.partNumber}">
 
 		<div class="nav-item input-group col" title="Serial Port Servers">
    			<label for="spServers" class="input-group-text">SP Server: </label>
@@ -42,6 +41,23 @@
 			</select>
 		</div>
 
+<!-- BTRs Dropdown menu -->
+		<div class="nav-item dropstart col-auto">
+  			<button class="btn dropdown-toggle" type="button" id="dropdownBtrButton" data-bs-toggle="dropdown" aria-haspopup="true" aria-expanded="false">BTR</button>
+  			<div class="dropdown-menu" aria-labelledby="dropdownBtrButton">
+<!-- BTR Measurement -->
+    			<a id="btrMeasurement" 
+    				class="dropdown-item calibrate" 
+    				th:href="@{${info==null} ? '#' : '/calibration/btr?sn=' + ${info.serialNumber} + '&pn=' + ${partNumber}}" 
+    				th:classappend="${#authentication.principal=='anonymousUser' or info==null} ? 'disabled' : ''" 
+    				th:text="${#authentication.principal=='anonymousUser'} ? 'Measurement - Login required' : 'Measurement'">Measurement</a>
+<!-- BTR Excel -->
+    			<a id="btrExcel" 
+    				class="dropdown-item" 
+    				th:href="@{${info==null} ? '#' : '/calibration/btr/excel?sn=' + ${info.serialNumber}}" 
+    				th:classappend="${#authentication.principal=='anonymousUser' or info==null} ? 'disabled' : ''">Excel</a>
+  			</div>
+		</div>
 <!-- Unit Dropdown menu -->
 		<div class="nav-item dropstart col-auto">
   			<button class="btn dropdown-toggle" type="button" id="dropdownUnitButton" data-bs-toggle="dropdown" aria-haspopup="true" aria-expanded="false">Unit</button>
@@ -54,7 +70,7 @@
 					<div class="btn-group dropstart" role="group">
  						<button id="menuModuleProfile"
  								type="button"
- 								class="btn dropdown-toggle dropdown-toggle-split submenu"
+ 								class="btn dropdown-toggle dropdown-toggle-split submenu modules"
  								th:classappend="${info==null ? 'disabled list-group-item-light' : ''}"
  								data-bs-toggle="dropdown"
  								aria-expanded="false">
@@ -64,7 +80,7 @@
     						<a class="dropdown-item disabled">Modules:</a>
 <!--  Profile  Modules -->
 <th:block th:remove="all">
-<th:block th:fragment="modules_profile_menu">
+<th:block th:fragment="menuModuleProfile">
     						<a	th:each="info : ${modules}"
     							th:text="${info.serialNumber}"
     							th:title="${info.name}"
@@ -88,7 +104,7 @@
 					<div class="btn-group dropstart" role="group">
  						<button id="menuModuleProfilePath"
  								type="button"
- 								class="btn dropdown-toggle dropdown-toggle-split submenu"
+ 								class="btn dropdown-toggle dropdown-toggle-split submenu modules"
  								th:classappend="${info==null ? 'disabled list-group-item-light' : ''}"
  								data-bs-toggle="dropdown"
  								aria-expanded="false">
@@ -98,7 +114,7 @@
     						<a class="dropdown-item disabled">Modules:</a>
 <!--  Profile Path Modules -->
 <th:block th:remove="all">
-<th:block th:fragment="modules_profile_path_menu">
+<th:block th:fragment="menuModuleProfilePath">
     						<a	th:each="info : ${modules}"
     							th:text="${info.serialNumber}"
     							th:title="${info.name}"
@@ -111,7 +127,7 @@
     					</div>
 					</div>
 <!-- System Profile Path -->
-   					<a class="dropdown-item profilePath" th:classappend="${info==null ? 'disabled list-group-item-light' : ''}" th:href="@{${info==null} ? '#' : '/calibration/rest/profile_path?sn=' + ${info.serialNumber}}" target="_blank">Profile Path</a>
+   					<a class="dropdown-item profilePath" th:href="@{'/calibration/rest/profile_path?sn=' + ${info==null ? serialNumber : info.serialNumber}}" target="_blank">Profile Path</a>
  				</div>
     			<div><hr class="dropdown-divider"></div>
 <!-- Power Chart -->
@@ -147,32 +163,26 @@
     						<a id="menuAutoByInput"
     							class="dropdown-item calibrate disabled"
     							th:classappend="${info==null ? 'disabled list-group-item-light' : ''}"
-    							th:href="@{${info==null} ? '#' : '/calibration/output_power/by_input?sn=' + ${info.serialNumber} + '&pn=' + ${info.partNumber}}">by Input</a>
+    							th:href="@{${info==null} ? '#' : '/calibration/output_power/by_input?sn=' + ${info.serialNumber} + '&pn=' + ${partNumber}}">by Input</a>
 
     						<a id="nemuAutoByGain"
     							class="dropdown-item calibrate disabled"
     							th:classappend="${info==null ? 'disabled list-group-item-light' : ''}"
-    							th:href="@{${info==null} ? '#' : '/calibration/output_power/by_gain?sn=' + ${info.serialNumber} + '&pn=' + ${info.partNumber}}">by Gain</a>
+    							th:href="@{${info==null} ? '#' : '/calibration/output_power/by_gain?sn=' + ${info.serialNumber} + '&pn=' + ${partNumber}}">by Gain</a>
     					</div>
 					</div>
     				<a	id="menuOutputPower"
     					class="dropdown-item calibrate"
     					th:classappend="${info==null ? 'disabled list-group-item-light' : ''}"
-    					th:href="@{${info==null} ? '#' : '/calibration/output_power?sn=' + ${info.serialNumber} + '&pn=' + ${info.partNumber}}">Output Power</a>
+    					th:href="@{${info==null} ? '#' : '/calibration/output_power?sn=' + ${info.serialNumber} + '&pn=' + ${partNumber}}">Output Power</a>
  				</div>
 <!-- Power Offset -->
     			<a	id="menuPowerOffset"
     				class="dropdown-item calibrate"
     				th:classappend="${(info==null or info.deviceId==null) ? 'disabled list-group-item-light' : ''}"
-    				th:href="@{${(info==null or info.deviceId==null)} ? '#' : '/calibration/power_offset?sn=' + ${info.serialNumber} + '&pn=' + ${info.partNumber} + '&deviceId=' + ${#strings.substring(info.deviceId, 1, info.deviceId.length()-1)}}">Power Offset</a>
+    				th:href="@{${(info==null or info.deviceId==null)} ? '#' : '/calibration/power_offset?sn=' + ${info.serialNumber} + '&pn=' + ${partNumber} + '&deviceId=' + ${#strings.substring(info.deviceId, 1, info.deviceId.length()-1)}}">Power Offset</a>
 <!-- Gain -->
-    			<a id="menuGain" class="dropdown-item calibrate disabled" th:classappend="${info==null ? 'disabled list-group-item-light' : ''}" th:href="@{${info==null} ? '#' : '/calibration/gain?sn=' + ${info.serialNumber} + '&pn=' + ${info.partNumber}}">Gain</a>
-<!-- BTR Measurement -->
-    			<a id="btr" 
-    				class="dropdown-item calibrate" 
-    				th:href="@{${info==null} ? '#' : '/calibration/btr?sn=' + ${info.serialNumber} + '&pn=' + ${info.partNumber}}" 
-    				th:classappend="${#authentication.principal=='anonymousUser' or info==null} ? 'disabled' : ''" 
-    				th:text="${#authentication.principal=='anonymousUser'} ? 'Measurement - Login required' : 'Measurement'">Measurement</a>
+    			<a id="menuGain" class="dropdown-item calibrate disabled" th:classappend="${info==null ? 'disabled list-group-item-light' : ''}" th:href="@{${info==null} ? '#' : '/calibration/gain?sn=' + ${info.serialNumber} + '&pn=' + ${partNumber}}">Gain</a>
     			<div><hr class="dropdown-divider"></div>
 <!-- Calibration Mode -->
     			<a class="dropdown-item" id="calMode" th:classappend="${info==null ? 'disabled list-group-item-light' : ''}" href="#">Calibration Mode</a>
@@ -182,7 +192,10 @@
     			<a 	class="dropdown-item dump_devices"
     				th:classappend="${info==null ? 'disabled list-group-item-light' : ''}"
     				th:href="@{${info==null} ? '#' : '/calibration/rest/dumps?sn=' + ${info.serialNumber} + '&devid=' + ${devid} + '&command=regs&groupindex=20'}">Current Dump</a>
-    			<div><hr class="dropdown-divider"></div>
+	   			<div><hr class="dropdown-divider"></div>
+<!-- PLL Registers -->
+    			<a id="menuPll" class="dropdown-item calibrate" th:classappend="${info==null ? 'disabled list-group-item-light' : ''}" th:href="@{${info==null} ? '#' : '/calibration/pll?sn=' + ${info.serialNumber}}">PLL</a>
+	   			<div><hr class="dropdown-divider"></div>
 <!-- Gain From -->
     			<a class="dropdown-item" id="gain_from_cookies" th:classappend="${serialNumber==null ? 'disabled list-group-item-light' : ''}" href="#" data-th-data-sn="${serialNumber} + '_gainTable'">Gain from Cookies</a>
 <!-- Upload -->
@@ -190,7 +203,7 @@
 					<div class="btn-group dropstart" role="group">
  						<button id="menuUploadModule"
  								type="button"
- 								class="btn dropdown-toggle dropdown-toggle-split submenu"
+ 								class="btn dropdown-toggle dropdown-toggle-split submenu modules"
  								th:classappend="${info==null ? 'disabled list-group-item-light' : ''}"
  								data-bs-toggle="dropdown"
  								aria-expanded="false">
@@ -201,7 +214,7 @@
     						<a class="dropdown-item disabled">Modules:</a>
 <!--  Upload Modules -->
 <th:block th:remove="all">
-<th:block th:fragment="upload_modules_menu">
+<th:block th:fragment="menuUploadModule">
     						<a	th:each="info : ${modules}"
     							th:text="${info.serialNumber}"
     							th:title="${info.name}"
@@ -217,8 +230,39 @@
 						th:classappend="${info==null ? 'disabled list-group-item-light' : ''}"
 						th:href="@{${info==null} ? '#' : '/calibration/rest/upload?sn=' + ${info.serialNumber}}">Upload Profile</a>
  				</div>
+<!-- Package -->
+				<div class="btn-group" style="width:100%;">
+					<div class="btn-group dropstart" role="group">
+ 						<button id="menuModulePackage"
+ 								type="button"
+ 								class="btn dropdown-toggle dropdown-toggle-split submenu modules"
+ 								th:classappend="${info==null ? 'disabled list-group-item-light' : ''}"
+ 								data-bs-toggle="dropdown"
+ 								aria-expanded="false">
+    						<span class="visually-hidden">Toggle Dropdown</span>
+  						</button>
+   						<div class="dropdown-menu " aria-labelledby="menuModulePackage">
+
+    						<a class="dropdown-item disabled">Modules:</a>
+<!--  Modules Package -->
+<th:block th:remove="all">
+<th:block th:fragment="menuModulePackage">
+    						<a	th:each="info : ${modules}"
+    							th:text="${info.serialNumber}"
+    							th:title="${info.name}"
+    							class="dropdown-item"
+    							th:href="@{${info==null} ? '#' : '/calibration/rest/package?sn=' + ${serialNumber} + '&module=' + ${info.serialNumber}}">Module Serial Number</a>
+</th:block>
+</th:block>
+    					</div>
+					</div>
+<!-- System Package-->
+					<a	class="dropdown-item"
+						th:classappend="${info==null ? 'disabled list-group-item-light' : ''}"
+						th:href="@{${info==null} ? '#' : '/calibration/rest/package?sn=' + ${info.serialNumber}}">Download Package</a>
+ 				</div>
     			<div><hr class="dropdown-divider"></div>
-    			<a class="dropdown-item" href="../static/files/http.serial_port.jar" th:href="@{/files/http.serial_port.jar}">Dounload HTTP Serial Port App.</a>
+    			<a class="dropdown-item" href="../static/files/http.serial_port.jar" th:href="@{/files/http.serial_port.jar}">Download HTTP Serial Port App.</a>
   			</div>
 		</div>
 	</nav>
@@ -317,6 +361,10 @@
 								<option selected="selected" disabled="disabled" hidden="hidden" title="Serial Port Server" value="">Select a Serial Port</option>
 	        				</select>
 
+	        				<button id="prologixGetAll"
+	        						class="form-control col btn btn-outline-secondary to-disable disabled"
+	        						data-commands='["++savecfg", "++mode", "++addr"]'>Get All</button>
+
 	        				<button id="mode"
 	        						class="form-control col btn btn-outline-secondary prologix-buton to-disable disabled"
 	        						title="Press To get the Prologix Mode"
@@ -337,9 +385,15 @@
 	        						data-title='["Press to set SAVE CONFIG on", "Press to set SAVE CONFIG off"]'
 	        						data-classes='["btn-outline-success", "btn-outline-primary", "btn-outline-secondary"]'>SAVE CONFIG</button>
 
-	        				<button id="prologixGetAll"
+							<div class="col input-group">
+								<input id="prologixAddress" type="number" class="form-control" placeholder="Address" aria-label="Address">
+								<button id="prologixSetAddress" class="input-group-text btn btn-outline-secondary to-disable disabled">Get</button>
+							</div>
+
+	        				<button id="prologixSetDefault"
 	        						class="form-control col btn btn-outline-secondary to-disable disabled"
-	        						data-commands='["++savecfg", "++mode", "++addr"]'>Get All</button>
+	        						title="Press to set default values( SAVE CONFIG = off, MODE = CONTROLLER)"
+	        						data-commands='["++savecfg 0", "++mode 1"]'>Set Default</button>
 
 	        				<button id="rst"
 	        						class="form-control col btn btn-outline-secondary prologix-buton to-disable disabled"
@@ -347,15 +401,6 @@
 	        						data-command-index="0"
 	        						data-commands='["++rst"]'
 	        						data-get-answer="[false]">Reset</button>
-
-	        				<button id="prologixSetDefault"
-	        						class="form-control col btn btn-outline-secondary to-disable disabled"
-	        						data-commands='["++savecfg 0", "++mode 1"]'>Set Default</button>
-
-							<div class="col input-group">
-								<input id="prologixAddress" type="number" class="form-control" placeholder="Address" aria-label="Address">
-								<button id="prologixSetAddress" class="input-group-text btn btn-outline-secondary to-disable disabled">Get</button>
-							</div>
 						</div>
       				</div>
 				</div>
@@ -377,7 +422,7 @@
             				<label for="sn" class="col-form-label ml-3"><strong>SN:</strong></label>
             				<div class="col-sm-10">
             					<div class="input-group">
-            						<input type="text" class="form-control" id="sn" name="sn" placeholder="Serial Number or IP Address">
+            						<input type="text" class="form-control" id="sn" name="sn" placeholder="Serial Number or IP Address" />
             						<div class="input-group-append">
             							<input type="submit" value="Submit">
     								</div>
@@ -405,5 +450,12 @@
 	<script type="application/javascript" src="../../static/js/prologix.js" th:src="@{/js/prologix.js}"></script>
 	<script type="application/javascript" src="../../static/js/inputTool.js" th:src="@{/js/inputTool.js}"></script>
 	<script type="application/javascript" src="../../static/js/outputTool.js" th:src="@{/js/outputTool.js}"></script>
+	<script th:inline="javascript">
+	/*<![CDATA[*/
+
+		let unitSerialNumber =  $('#serialNumber').text();
+	/*]]>*/
+	//# unitSerialNumber=Pll.js
+	</script>
 </body>
 </html>

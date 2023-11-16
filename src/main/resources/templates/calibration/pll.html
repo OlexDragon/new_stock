@@ -1,0 +1,1368 @@
+<!DOCTYPE html>
+<html 	xmlns="http://www.w3.org/1999/xhtml"
+		xmlns:th="https://www.thymeleaf.org"
+      	xmlns:sec="https://www.thymeleaf.org/thymeleaf-extras-springsecurity5"
+      	lang="en">
+<head>
+    <meta charset="UTF-8" />
+    <title>IRT Bom.</title>
+    <link rel="shortcut icon" href="http://irttechnologies.com/favicon.ico">
+    <link rel="stylesheet" href="https://stackpath.bootstrapcdn.com/bootstrap/4.4.1/css/bootstrap.min.css" data-integrity="sha384-Vkoo8x4CGsO3+Hhxv8T/Q5PaXtkKtu6ug5TOeNV6gBiFeWPGFN9MuhOf23Q9Ifjh" data-crossorigin="anonymous">
+    <link rel="stylesheet" href="../../static/css/components.css" th:href="@{/css/components.css}">
+</head>
+<body>
+
+<!-- Modal Message -->
+	<div id="modal" class="modal" tabindex="-1" role="dialog">
+	<th:block th:fragment="modal">
+  		<div class="modal-dialog modal-xl">
+    		<div class="modal-content">
+<!-- Modal Header -->
+      			<div class="modal-header">
+        			<h5 class="modal-title">PLL</h5>
+<!-- X Button -->
+        			<button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+      			</div>
+ <!-- Modal Body -->
+      			<div id="modal-body" class="modal-body bg-dark-subtle">
+      				<div class="row mb-3">
+     					<div class="col">
+      						<div class="form-floating">
+	      						<input id="freqSet" type="number" class="form-control" disabled="disabled">
+	      						<label for="freqSet">Output Frequency (MHz)</label>
+      						</div>
+      					</div>
+     					<div class="col">
+      						<div class="form-floating">
+	      						<input id="refSet" type="number" class="form-control" value="100">
+	      						<label for="refSet">Reference Frequency (MHz)</label>
+      						</div>
+      					</div>
+      				</div>
+      				<div class="row">
+ <!-- ST0 -->
+      					<div class="col-xl-3">
+      						<div class="card">
+      							<div class="card-header"><h6>Master register (ST0):</h6><strong id="st0"></strong></div>
+      							<div class="card-body">
+									<div class="d-grid gap-2">
+										<input type="checkbox" class="btn-check changed" id="VCO_CALB_DISABLE" autocomplete="off" data-mask="100000000000000000000000000">
+										<label class="btn btn-outline-primary" for="VCO_CALB_DISABLE" title="1: Disable the VCO calibrator">[26] VCO_CALB_DISABLE</label>
+      									<div class="form-floating">
+	      									<input id="CP_SEL" type="number" class="form-control changed" min="0" max="4.9" step="0.158" placeholder="Charge Pump (mA)" data-mask="11111000000000000000000000" data-shift="21">
+	      									<label for="CP_SEL">[25:21] CP_SEL (mA); max: 4.9 mA</label>
+      									</div>
+      									<div class="form-floating">
+	      									<input id="PFD_DEL" type="number" class="form-control changed" min="0.0" max="0.75" step="0.25" placeholder="Delay (*Icp)" data-mask="110000000000000000000" data-shift="19">
+	      									<label for="PFD_DEL">[20:19] PFD_DEL (*Icp); max:0.75</label>
+      									</div>
+      									<div class="form-floating">
+	      									<input id="N" type="number" class="form-control changed" min="0" max="65535" step="1" placeholder="Divider" data-mask="11111111111111111" data-shift="0">
+	      									<label for="N">[16:0] N; max: 65535</label>
+      									</div>
+										<div class="card-footer">
+											<button class="btn btn-outline-secondary btn-sm freqCalc" onclick="setST0()">Reset</button>
+											<button class="btn btn-outline-warning btn-sm btnSet">Set</button>
+										</div>
+ 									</div>
+      							</div>
+      						</div>
+      					</div>
+ <!-- ST1 -->
+      					<div class="col-xl-3">
+      						<div class="card">
+      							<div class="card-header"><h6>Fractional value (ST1):</h6><strong id="st1"></strong></div>
+      							<div class="card-body">
+ 									<div class="d-grid gap-2">
+										<input id="DBR_ST1" type="checkbox" class="btn-check changed" autocomplete="off" data-mask="100000000000000000000000000">
+										<label for="DBR_ST1" class="btn btn-outline-primary" title="DBR: double buffering bit enable">[26] DBR</label>
+  										<input id="RF1_OUT_PD" type="checkbox" class="btn-check changed" autocomplete="off" data-mask="1000000000000000000000000">
+										<label for="RF1_OUT_PD" class="btn btn-outline-primary" title="0: RF1 output enabled; 1: RF1 output disabled">[24] RF1_OUT_PD</label>
+ 										<input id="MAN_CALB_EN" type="checkbox" class="btn-check changed" autocomplete="off" data-mask="100000000000000000000000">
+										<label for="MAN_CALB_EN" class="btn btn-outline-primary" title="Enables manual VCO calibrator mode">[23] MAN_CALB_EN</label>
+ 										<input id="PLL_SEL" type="checkbox" class="btn-check changed" autocomplete="off" data-mask="10000000000000000000000">
+										<label for="PLL_SEL" class="btn btn-outline-primary" title="0: VCO direct to PLL; 1: VCO divided by 2 to PLL">[22] PLL_ SEL</label>
+ 										<input id="RF1_SEL" type="checkbox" class="btn-check changed" autocomplete="off" data-mask="1000000000000000000000">
+										<label for="RF1_SEL" class="btn btn-outline-primary" title="0: VCO direct; 1: VCO divided by 2">[21] RF1_ SEL</label>
+      									<div class="form-floating">
+	      									<input id="FRAC" type="number" class="form-control changed" min="0" max="2097151" step="1" placeholder="Fractional value" data-mask="111111111111111111111" data-shift="0">
+	      									<label for="FRAC">[20:0] FRAC; max: 2097151</label>
+      									</div>
+      								</div>
+									<div class="card-footer">
+										<button class="btn btn-outline-secondary btn-sm freqCalc" onclick="setST1()">Reset</button>
+										<button class="btn btn-outline-warning btn-sm btnSet">Set</button>
+									</div>
+      							</div>
+      						</div>
+      					</div>
+<!-- ST2 -->
+      					<div class="col-xl-3">
+      						<div class="card">
+      							<div class="card-header"><h6>Modulus value (ST2):</h6><strong id="st2"></strong></div>
+      							<div class="card-body">
+ 									<div class="d-grid gap-2">
+										<input id="DBR_ST2" type="checkbox" class="btn-check changed" autocomplete="off" data-mask="100000000000000000000000000">
+										<label for="DBR_ST2" class="btn btn-outline-primary" title="DBR: double buffering bit enable">[26] DBR</label>
+										<input id="DSM_CLK_DISABLE" type="checkbox" class="btn-check changed" autocomplete="off" data-mask="10000000000000000000000000">
+										<label for="DSM_CLK_DISABLE" class="btn btn-outline-primary" title=" for test purposes only.">[25] DSM_CLK_DISABLE</label>
+  										<input id="RF2_OUT_PD" type="checkbox" class="btn-check changed" autocomplete="off" data-mask="1000000000000000000000">
+										<label for="RF2_OUT_PD" class="btn btn-outline-primary" title="0: RF2 output enabled; 1: RF2 output disabled">[21] RF2_OUT_PD</label>
+      									<div class="form-floating">
+	      									<input id="MOD" type="number" class="form-control changed" min="2" max="2097151" step="1" placeholder="Fractional value" data-mask="111111111111111111111" data-shift="0">
+	      									<label for="MOD" title="Modulus value bit">[20:0] MOD; range: 2-2097151</label>
+      									</div>
+      								</div>
+									<div class="card-footer">
+										<button class="btn btn-outline-secondary btn-sm freqCalc" onclick="setST2()">Reset</button>
+										<button class="btn btn-outline-warning btn-sm btnSet">Set</button>
+									</div>
+      							</div>
+      						</div>
+      					</div>
+<!-- ST3 -->
+      					<div class="col-xl-3">
+      						<div class="card">
+      							<div class="card-header"><h6>R divider, CP leakage, ... (ST3):</h6><strong id="st3"></strong></div>
+      							<div class="card-body">
+ 									<div class="d-grid gap-2">
+										<input id="DBR_ST3" type="checkbox" class="btn-check changed" autocomplete="off" data-mask="100000000000000000000000000">
+										<label for="DBR_ST3" class="btn btn-outline-primary" title="DBR: double buffering bit enable">[26] DBR</label>
+										<input id="PD" type="checkbox" class="btn-check changed" autocomplete="off" data-mask="10000000000000000000000000">
+										<label for="PD" class="btn btn-outline-primary" title="at ‘1’ put OFF all blocks (except LDOs)">[25] PD</label>
+  										<input id="CP_LEAK_x2" type="checkbox" class="btn-check changed" autocomplete="off" data-mask="1000000000000000000000000">
+										<label for="CP_LEAK_x2" class="btn btn-outline-primary" title="0: 10 µA step; 1: 20 µA step">[24] CP_LEAK (10 µA step)</label>
+     									<div class="form-floating">
+	      									<input id="CP_LEAK" type="number" class="form-control changed" min="0" max="2097151" step="10" placeholder="Fractional value" data-mask="111110000000000000000000" data-shift="19">
+	      									<label for="CP_LEAK" title="Charge Pump leakage current value">[23:19] CP_LEAK (μA); max: 310</label>
+      									</div>
+ 										<input id="CP_LEAK_DIR" type="checkbox" class="btn-check changed" autocomplete="off" data-mask="1000000000000000000">
+										<label for="CP_LEAK_DIR" class="btn btn-outline-primary" title="0: set down-leakage; 1: set up-leakage">[18] CP_LEAK_DIR</label>
+ 										<input id="DNSPLIT_EN" type="checkbox" class="btn-check changed" autocomplete="off" data-mask="100000000000000000">
+										<label for="DNSPLIT_EN" class="btn btn-outline-primary" title="Current level set by PFD_DEL[1:0] in register ST0">[17] DNSPLIT_EN</label>
+      									<div class="form-floating">
+	      									<select id="PFD_DEL_MODE" class="form-control changed" data-mask="11000000000000000" data-shift="15">
+	      										<option value="0">No Delay</option>
+	      										<option value="1">VCO_DIV delayed</option>
+	      										<option value="2">REF_DIV delayed</option>
+	      									</select>
+	      									<label for="PFD_DEL_MODE" title="Delay values set by PFD_DEL[1:0] in register ST0">[16:15] PFD_DEL_MODE</label>
+      									</div>
+      									<div class="form-floating">
+	      									<select id="REF_PATH_SEL" class="form-control changed" data-mask="110000000000000" data-shift="13">
+	      										<option value="0">Direct</option>
+	      										<option value="1">Doubled in single mode</option>
+	      										<option value="2">Divided by 2</option>
+	      										<option value="3">Divided by 4</option>
+	      									</select>
+	      									<label for="REF_PATH_SEL" title="Reference clock path selection">[14:13] REF_PATH_SEL</label>
+      									</div>
+     									<div class="form-floating">
+	      									<input id="R" type="number" class="form-control changed" min="1" max="8191" step="1" placeholder="Reference clock divider ratio" data-mask="1111111111111" data-shift="0">
+	      									<label for="R" title="Reference clock divider ratio (allowed setting range 1 to 8191)">[12:0] R</label>
+      									</div>
+      								</div>
+									<div class="card-footer">
+										<button class="btn btn-outline-secondary btn-sm freqCalc" onclick="setST3()">Reset</button>
+										<button class="btn btn-outline-warning btn-sm btnSet">Set</button>
+									</div>
+      							</div>
+      						</div>
+      					</div>
+<!-- ST4 -->
+      					<div class="col-xl-3">
+      						<div class="card">
+      							<div class="card-header"><h6>Lock det., ... (ST4):</h6><strong id="st4"></strong></div>
+      							<div class="card-body">
+ 									<div class="d-grid gap-2">
+										<input id="CALB_3V3_MODE1" type="checkbox" class="btn-check changed" autocomplete="off" data-mask="1000000000000000000000000">
+										<label for="CALB_3V3_MODE1" class="btn btn-outline-primary" title="calibrator supply mode bit1">[24] CALB_3V3_MODE1</label>
+										<input id="RF_OUT_3V3" type="checkbox" class="btn-check changed" autocomplete="off" data-mask="100000000000000000000000">
+										<label for="RF_OUT_3V3" class="btn btn-outline-primary" title="0: 4.5V; 1: 3.3V">[23] RF_OUT_3V3</label>
+  										<input id="EXT_VCO_EN" type="checkbox" class="btn-check changed" autocomplete="off" data-mask="10000000000000000000">
+										<label for="EXT_VCO_EN" class="btn btn-outline-primary" title="0: disabled; 1: RF2 enabled">[19] EXT_VCO_EN</label>
+      									<div class="form-floating">
+	      									<input id="VCO_AMP" type="number" class="form-control changed" min="0" max="7" step="1" placeholder="VCO signal amplitude" data-mask="111000000000000000" data-shift="15">
+	      									<label for="VCO_AMP" title="Modulus value bit">[17:15] VCO_AMP;  2-2097151</label>
+      									</div>
+  										<input id="CALB_3V3_MODE0" type="checkbox" class="btn-check changed" autocomplete="off" data-mask="100000000000000">
+										<label for="CALB_3V3_MODE0" class="btn btn-outline-primary" title="0: when VCC_VCO_Core = 4.5 V; 1: when VCC_VCO_Core = 3.3 V; This feature is not available on product codes STUW81300-1T and STUW81300-1TR">[14] CALB_3V3_MODE0</label>
+  										<input id="VCALB_MODE" type="checkbox" class="btn-check changed" autocomplete="off" data-mask="1000000000000" disabled>
+										<label for="VCALB_MODE" class="btn btn-outline-primary" title="0: for FVCO ≤ 4500 MHz; 1: for FVCO > 4500 MHz;">[12] VCALB_MODE</label>
+ 										<input id="KVCO_COMP_DIS" type="checkbox" class="btn-check changed" autocomplete="off" data-mask="100000000000">
+										<label for="KVCO_COMP_DIS" class="btn btn-outline-primary" title="0: for FVCO ≤ 4500 MHz; 1: for FVCO > 4500 MHz;">[11] KVCO_COMP_DIS</label>
+ 										<input id="PFD_POL" type="checkbox" class="btn-check changed" autocomplete="off" data-mask="10000000000">
+										<label for="PFD_POL" class="btn btn-outline-primary" title="0: standard mode (default); 1: “inverted” mode;">[10] PFD_POL</label>
+     									<div class="form-floating">
+	      									<select id="REF_BUFF_MODE" class="form-control changed" data-mask="1100000000" data-shift="8">
+	      										<option value="0" disabled>Reserved</option>
+	      										<option value="1">Differential Mode</option>
+	      										<option value="2">XTAL Mode</option>
+	      										<option value="3">Single Ended Mode</option>
+	      									</select>
+	      									<label for="REF_PATH_SEL" title="Reference clock path selection">[9:8] REF_BUFF_MODE</label>
+      									</div>
+ 										<input id="MUTE_LOCK_EN" type="checkbox" class="btn-check changed" autocomplete="off" data-mask="10000000">
+										<label for="MUTE_LOCK_EN" class="btn btn-outline-primary" title="0: disabled; 1: enabled;">[7] MUTE_LOCK_EN</label>
+ 										<input id="LD_ACTIVELOW" type="checkbox" class="btn-check changed" autocomplete="off" data-mask="1000000">
+										<label for="LD_ACTIVELOW" class="btn btn-outline-primary" title="0: active high; 1: active low;">[6] LD_ACTIVELOW</label>
+     									<div class="form-floating">
+	      									<select id="LD_PREC" class="form-control changed" data-mask="111000" data-shift="3">
+	      										<option value="0">2 ns (default for integer mode)</option>
+	      										<option value="1">4 ns (default for fractional mode)</option>
+	      										<option value="2">6 ns</option>
+	      										<option value="3">8 ns</option>
+	      										<option value="4">10 ns</option>
+	      										<option value="5">12 ns</option>
+	      										<option value="6">14 ns</option>
+	      										<option value="7">16 ns</option>
+	      									</select>
+	      									<label for="LD_PREC" title="LD_PREC: set lock detector precision">[5:3] LD_PREC</label>
+      									</div>
+     									<div class="form-floating">
+	      									<select id="LD_COUNT" class="form-control changed" data-mask="111" data-shift="0">
+	      										<option value="0">4</option>
+	      										<option value="1"> 8 (default for FPFD ~1 MHz in integer mode)</option>
+	      										<option value="2">16</option>
+	      										<option value="3">64</option>
+	      										<option value="4">256</option>
+	      										<option value="5">1024 (default for FPFD ~50 MHz in both fractional/integer mode)</option>
+	      										<option value="6">2048</option>
+	      										<option value="7">4096</option>
+	      									</select>
+	      									<label for="LD_COUNT" title=" LD_COUNT: set lock detector counter for lock condition">[2:0] LD_COUNT</label>
+      									</div>
+      								</div>
+									<div class="card-footer">
+										<button class="btn btn-outline-secondary btn-sm" onclick="setST4()">Reset</button>
+										<button class="btn btn-outline-warning btn-sm btnSet">Set</button>
+									</div>
+      							</div>
+      						</div>
+      					</div>
+<!-- ST5 -->
+      					<div class="col-xl-3">
+      						<div class="card">
+      							<div class="card-header"><h6>Low power mode (ST5):</h6><strong id="st5"></strong></div>
+      							<div class="card-body">
+ 									<div class="d-grid gap-2">
+										<input id="RF2_OUTBUF_LP" type="checkbox" class="btn-check changed" autocomplete="off" data-mask="10000">
+										<label for="RF2_OUTBUF_LP" class="btn btn-outline-primary" title="RF2 Output Buffer">[4] RF2_OUTBUF_LP</label>
+										<input id="DEMUX_LP" type="checkbox" class="btn-check changed" autocomplete="off" data-mask="100">
+										<label for="DEMUX_LP" class="btn btn-outline-primary" title="DEMUX_LP: RF DEMUX low power mode (0=full power; 1=low power)">[2] DEMUX_LP</label>
+  										<input id="REF_BUFF_LP" type="checkbox" class="btn-check changed" autocomplete="off" data-mask="1">
+										<label for="REF_BUFF_LP" class="btn btn-outline-primary" title=" REF_BUFF_LP: reference buffer low power mode (0=full power; 1=low power)">[0] REF_BUFF_LP</label>
+      								</div>
+									<div class="card-footer">
+										<button class="btn btn-outline-secondary btn-sm" onclick="setST5()">Reset</button>
+										<button class="btn btn-outline-warning btn-sm btnSet">Set</button>
+									</div>
+      							</div>
+      						</div>
+      					</div>
+<!-- ST6 -->
+      					<div class="col-xl-3">
+      						<div class="card">
+      							<div class="card-header"><h6>VCO Calibrator, ... (ST6):</h6><strong id="st6"></strong></div>
+      							<div class="card-body">
+ 									<div class="d-grid gap-2">
+										<input id="DITHERING" type="checkbox" class="btn-check changed" autocomplete="off" data-mask="100000000000000000000000000">
+										<label for="DITHERING" class="btn btn-outline-primary" title="DITHERING: at ‘1’ enables dithering of DSM output sequence">[26] DITHERING</label>
+										<input id="CP_UP_OFF" type="checkbox" class="btn-check changed" autocomplete="off" data-mask="10000000000000000000000000">
+										<label for="CP_UP_OFF" class="btn btn-outline-primary" title=" CP_UP_OFF: for test purposes only; must be set to ‘0’">[25] CP_UP_OFF</label>
+  										<input id="CP_DN_OFF" type="checkbox" class="btn-check changed" autocomplete="off" data-mask="1000000000000000000000000">
+										<label for="CP_DN_OFF" class="btn btn-outline-primary" title=" CP_DN_OFF: for test purposes only; must be set to ‘0’">[24] CP_DN_OFF</label>
+     									<div class="form-floating">
+	      									<select id="DSM_ORDER" class="form-control changed" data-mask="110000000000000000000000" data-shift="22">
+	      										<option value="0">3rd order DSM (recommended)</option>
+	      										<option value="1">2nd order DSM</option>
+	      										<option value="2">1st order DSM</option>
+	      										<option value="3">4th order DSM</option>
+	      									</select>
+	      									<label for="DSM_ORDER" title="Reference clock path selection">[23:22] DSM_ORDER</label>
+      									</div>
+  										<input id="EN_AUTOCAL" type="checkbox" class="btn-check changed" autocomplete="off" data-mask="100000000000000000000">
+										<label for="EN_AUTOCAL" class="btn btn-outline-primary" title="1: enable the VCO calibration auto-restart feature">[20] EN_AUTOCAL</label>
+     									<div class="form-floating">
+	      									<select id="VCO_SEL" class="form-control changed" data-mask="11000000000000000000" data-shift="18">
+	      										<option value="0">VCO_LOW</option>
+	      										<option value="1">VCO_LOW_MID</option>
+	      										<option value="2">VCO_MID_HIGH</option>
+	      										<option value="3">VCO_HIGH</option>
+	      									</select>
+	      									<label for="VCO_SEL" title="VCO_SEL: VCO selection bit. For test purposes only.">[19:18] VCO_SEL</label>
+      									</div>
+      									<div class="form-floating">
+	      									<input id="VCO_WORD" type="number" class="form-control changed" min="0" max="31" step="1" placeholder="VCO sub-band" data-mask="111110000000000000" data-shift="13">
+	      									<label for="VCO_WORD" title=" VCO_WORD: select specific VCO sub-band (range:0 to 31). For test purposes only.">[17:13] VCO_WORD</label>
+      									</div>
+  										<input id="CAL_TEMP_COMP" type="checkbox" class="btn-check changed" autocomplete="off" data-mask="1000000000000">
+										<label for="CAL_TEMP_COMP" class="btn btn-outline-primary" title="0: compensation disabled; 1: compensation enabled">[12] CAL_TEMP_COMP</label>
+     									<div class="form-floating">
+	      									<select id="PRCHG_DEL" class="form-control changed" data-mask="110000000000" data-shift="10">
+	      										<option value="0">1 slot (default)</option>
+	      										<option value="1">2 slots</option>
+	      										<option value="2">3 slots</option>
+	      										<option value="3">4 slots</option>
+	      									</select>
+	      									<label for="PRCHG_DEL" title="PRCHG_DEL: set the number of calibration slots for pre-charge of VCTRL">[11:10] PRCHG_DEL</label>
+      									</div>
+  										<input id="CAL_ACC_EN" type="checkbox" class="btn-check changed" autocomplete="off" data-mask="1000000000">
+										<label for="CAL_ACC_EN" class="btn btn-outline-primary" title=" CAL_ACC_EN: at ‘1’ increase calibrator accuracy by removing residual error taking 2 additional calibration slots (default = ‘0’)">[9] CAL_ACC_EN</label>
+      									<div class="form-floating">
+	      									<input id="CAL_DIV" type="number" class="form-control changed" min="0" max="511" step="1" placeholder="Clock Divider" data-mask="111111111" data-shift="0">
+	      									<label for="CAL_DIV" title="CAL_DIV: Set Calibrator clock divider ratio (range:1 to 511); ‘0’ set the maximum ratio (‘511’)">[8:0] CAL_DIV max: 511</label>
+      									</div>
+      								</div>
+
+									<div class="card-footer">
+										<button class="btn btn-outline-secondary btn-sm freqCalc" onclick="setST6()">Reset</button>
+										<button class="btn btn-outline-warning btn-sm btnSet">Set</button>
+									</div>
+      							</div>
+      						</div>
+      					</div>
+<!-- ST7 -->
+      					<div class="col-xl-3">
+      						<div class="card">
+      							<div class="card-header"><h6>Fast Lock , LD_SDO (ST7):</h6><strong id="st7"></strong></div>
+      							<div class="card-body">
+ 									<div class="d-grid gap-2">
+										<input id="LD_SDO_tristate" type="checkbox" class="btn-check changed" autocomplete="off" data-mask="10000000000000000000000000">
+										<label for="LD_SDO_tristate" class="btn btn-outline-primary" title="LD_SDO_tristate: at ‘1’ put LD_SDO out pin in tri-state mode">[25] LD_SDO_tristate</label>
+										<input id="LD_SDO_MODE" type="checkbox" class="btn-check changed" autocomplete="off" data-mask="1000000000000000000000000">
+										<label for="LD_SDO_MODE" class="btn btn-outline-primary" title="0: Open Drain mode; 1: 2.5V CMOS output mode">[24] LD_SDO_MODE</label>
+ 										<input id="SPI_DATA_OUT_DISABLE" type="checkbox" class="btn-check changed" autocomplete="off" data-mask="100000000000000000000000">
+										<label for="SPI_DATA_OUT_DISABLE" class="btn btn-outline-primary" title="0: LD_SDO pin automatically switched; 1: LD_SDO pin fixed ">SPI_DATA_OUT_DISABLE</label>
+     									<div class="form-floating">
+	      									<select id="LD_SDO_SEL" class="form-control changed" data-mask="11000000000000000000000" data-shift="21">
+	      										<option value="0">Lock Detector (default)</option>
+	      										<option value="1">VCO Divider output (for test purposes only)</option>
+	      										<option value="2">Calibrator VCO Divider output (for test purposes only)</option>
+	      										<option value="3">Fast Lock clock output (for test purposes only)</option>
+	      									</select>
+	      									<label for="LD_SDO_SEL" title="LD_SDO_SEL: LD_SDO multiplexer output selection bit">[22:21] LD_SDO_SEL</label>
+      									</div>
+ 										<input id="REGDIG_OCP_DIS" type="checkbox" class="btn-check changed" autocomplete="off" data-mask="100000000000000000000">
+										<label for="REGDIG_OCP_DIS" class="btn btn-outline-primary" title="1: disable the over-current protection of Digital LDO Voltage Regulator">[20] REGDIG_OCP_DIS</label>
+ 										<input id="CYCLE_SLIP_EN" type="checkbox" class="btn-check changed" autocomplete="off" data-mask="10000000000000000000">
+										<label for="CYCLE_SLIP_EN" class="btn btn-outline-primary" title="CYCLE_SLIP_EN: at ‘1’ enables cycle-slip feature">[19] CYCLE_SLIP_EN</label>
+ 										<input id="FSTLCK_EN" type="checkbox" class="btn-check changed" autocomplete="off" data-mask="1000000000000000000">
+										<label for="FSTLCK_EN" class="btn btn-outline-primary" title=" FSTLCK_EN: at ‘1’ enables fast lock mode using pin #6 (PD_RF2/FL_SW)">[18] FSTLCK_EN</label>
+      									<div class="form-floating">
+	      									<input id="CP_SEL_FL" type="number" class="form-control changed" min="0" max="31" step="1" placeholder="VCO sub-band" data-mask="111110000000000000" data-shift="13">
+	      									<label for="CP_SEL_FL" title="CP_SEL_FL: set the Charge Pump current during fast lock time slot (range:0 to 31)">[17:13] CP_SEL_FL</label>
+      									</div>
+      									<div class="form-floating">
+	      									<input id="FSTLCK_CNT" type="number" class="form-control changed" min="2" max="8191" step="1" placeholder="VCO sub-band" data-mask="1111111111111" data-shift="0">
+	      									<label for="FSTLCK_CNT" title="FSTLCK_CNT: Fast-Lock counter value (allowed setting range: 2 to 8191)">[12:0] FSTLCK_CNT</label>
+      									</div>
+      								</div>
+									<div class="card-footer">
+										<button class="btn btn-outline-secondary btn-sm" onclick="setST7()">Reset</button>
+										<button class="btn btn-outline-warning btn-sm btnSet">Set</button>
+									</div>
+      							</div>
+      						</div>
+      					</div>
+<!-- ST8 -->
+      					<div class="col-xl-3">
+      						<div class="card">
+      							<div class="card-header"><h6>LDO Voltage Regulator (ST8):</h6><strong id="st8"></strong></div>
+      							<div class="card-body">
+ 									<div class="d-grid gap-2">
+										<input id="PD_RF2_DISABLE" type="checkbox" class="btn-check changed" autocomplete="off" data-mask="100000000000000000000000000">
+										<label for="PD_RF2_DISABLE" class="btn btn-outline-primary" title="PD_RF2_DISABLE: at ‘1’ disable the hardware power">[26] PD_RF2_DISABLE</label>
+										<input id="REG_OCP_DIS" type="checkbox" class="btn-check changed" autocomplete="off" data-mask="10000000000000000000">
+										<label for="REG_OCP_DIS" class="btn btn-outline-primary" title="1: disable the over-current protection of LDO voltage regulators except DIG regulator">[19] REG_OCP_DIS</label>
+ 										<input id="REG_DIG_PD" type="checkbox" class="btn-check changed" autocomplete="off" data-mask="1000000000000000000">
+										<label for="REG_DIG_PD" class="btn btn-outline-primary" title="REG_DIG_PD: DIGITAL Regulator power down for test purposes only. Must be set to ‘0 ">[18] REG_DIG_PD</label>
+     									<div class="form-floating">
+	      									<select id="REG_DIG_VOUT" class="form-control changed" data-mask="110000000000000000" data-shift="16">
+	      										<option value="0">2.6 V (Default)</option>
+	      										<option value="1">2.3 V (for test purposes only)</option>
+	      										<option value="2">2.4 V (for test purposes only)</option>
+	      										<option value="3">2.5 V (for test purposes only)</option>
+	      									</select>
+	      									<label for="REG_DIG_VOUT" title=" REG_DIG_VOUT: DIGITAL regulator output voltage set">[17:16] REG_DIG_VOUT</label>
+      									</div>
+ 										<input id="REG_REF_PD" type="checkbox" class="btn-check changed" autocomplete="off" data-mask="100000000000000">
+										<label for="REG_REF_PD" class="btn btn-outline-primary" title=" REG_REF_PD: REFERENCE CLOCK Regulator power down for test purposes only. Must be set to ‘0’">[14] REG_REF_PD</label>
+     									<div class="form-floating">
+	      									<select id="REG_REF_VOUT" class="form-control changed" data-mask="11000000000000" data-shift="12">
+	      										<option value="0">2.6 V (Default)</option>
+	      										<option value="1">2.3 V (for test purposes only)</option>
+	      										<option value="2">2.4 V (for test purposes only)</option>
+	      										<option value="3">2.5 V (for test purposes only)</option>
+	      									</select>
+	      									<label for="REG_REF_VOUT" title="REG_REF_VOUT: REFERENCE CLOCK Regulator output voltage set">[13:12] REG_REF_VOUT</label>
+      									</div>
+ 										<input id="REG_RF_PD" type="checkbox" class="btn-check changed" autocomplete="off" data-mask="10000000000">
+										<label for="REG_RF_PD" class="btn btn-outline-primary" title="REG_RF_PD: RF Output section Regulator power down for test purposes only. Must be set to ‘0’">[10] REG_RF_PD</label>
+    									<div class="form-floating">
+	      									<select id="REG_RF_VOUT" class="form-control changed" data-mask="1100000000" data-shift="8">
+	      										<option value="0">2.6 V (Default)</option>
+	      										<option value="1">2.3 V (for test purposes only)</option>
+	      										<option value="2">2.4 V (for test purposes only)</option>
+	      										<option value="3">2.5 V (for test purposes only)</option>
+	      									</select>
+	      									<label for="REG_RF_VOUT" title="REG_REF_VOUT: REFERENCE CLOCK Regulator output voltage set">[9:8] REG_RF_VOUT</label>
+      									</div>
+ 										<input id="REG_VCO_PD" type="checkbox" class="btn-check changed" autocomplete="off" data-mask="1000000">
+										<label for="REG_VCO_PD" class="btn btn-outline-primary" title="REG_VCO_PD: VCO bias-and-control regulator power down for test purposes only. Must be set to ‘0">[6] REG_VCO_PD</label>
+    									<div class="form-floating">
+	      									<select id="REG_VCO_VOUT" class="form-control changed" data-mask="110000" data-shift="4">
+	      										<option value="0">2.6 V (Default)</option>
+	      										<option value="1">2.3 V (for test purposes only)</option>
+	      										<option value="2">2.4 V (for test purposes only)</option>
+	      										<option value="3">2.5 V (for test purposes only)</option>
+	      									</select>
+	      									<label for="REG_VCO_VOUT" title="REG_VCO_VOUT: VCO bias-and-control regulator output voltage set">[5:4] REG_VCO_VOUT</label>
+      									</div>
+ 										<input id="REG_VCO_4V5_PD" type="checkbox" class="btn-check changed" autocomplete="off" data-mask="100">
+										<label for="REG_VCO_4V5_PD" class="btn btn-outline-primary" title=" REG_VCO_4V5_PD: High-voltage regulator power down">[2] REG_VCO_4V5_PD</label>
+    									<div class="form-floating">
+	      									<select id="REG_VCO_4V5_VOUT" class="form-control changed" data-mask="11" data-shift="0">
+	      										<option value="0">5.0 V</option>
+	      										<option value="1">2.6 V</option>
+	      										<option value="2">3.3 V</option>
+	      										<option value="3">4.5 V</option>
+	      									</select>
+	      									<label for="REG_VCO_4V5_VOUT" title=" REG_VCO_4V5_VOUT: High-voltage regulator output voltage set">[1:0] REG_VCO_4V5_VOUT</label>
+      									</div>
+      								</div>
+									<div class="card-footer">
+										<button class="btn btn-outline-secondary btn-sm" onclick="setST8()">Reset</button>
+										<button class="btn btn-outline-warning btn-sm btnSet">Set</button>
+									</div>
+      							</div>
+      						</div>
+      					</div>
+<!-- ST9 -->
+      					<div class="col-xl-3">
+      						<div class="card">
+      							<div class="card-header"><h6>Test & Initialization (ST9):</h6><strong id="st9"></strong></div>
+      							<div class="card-body">
+ 									<div class="d-grid gap-2">
+    									<div class="form-floating">
+	      									<input id="RESERVED_ST9" type="number" class="form-control changed" min="0" max="134217727" step="1" placeholder="Test and Initialization" data-mask="111111111111111111111111111" data-shift="0">
+	      									<label for="RESERVED_ST9" title="RESERVED: Test and Initialization bit; must be set to ‘0">[]26:0] RESERVED</label>
+      									</div>
+      								</div>
+									<div class="card-footer">
+										<button class="btn btn-outline-secondary btn-sm" onclick="setST9()">Reset</button>
+										<button class="btn btn-outline-warning btn-sm btnSet">Set</button>
+									</div>
+      							</div>
+      						</div>
+      					</div>
+<!-- ST10 -->
+      					<div class="col-xl-3">
+      						<div class="card">
+      							<div class="card-header"><h6>Status (ST10):</h6><strong id="st10"></strong></div>
+      							<div class="card-body">
+ 									<div class="d-grid gap-2">
+     									<input id="REG_DIG_STARTUP" type="checkbox" class="form-control btn-check" autocomplete="off" data-mask="100000000000000000" disabled>
+	      								<label for="REG_DIG_STARTUP" class="btn btn-outline-success" title="REG_DIG_STARTUP: DIGITAL regulator ramp-up indicator">[17] REG_DIG_STARTUP</label>
+     									<input id="REG_REF_STARTUP" type="checkbox" class="form-control btn-check" autocomplete="off" data-mask="10000000000000000" disabled>
+	      								<label for="REG_REF_STARTUP" class="btn btn-outline-success" title="REG_REF_STARTUP: REFERENCE CLOCK regulator ramp-up indicator">[16] REG_REF_STARTUP</label>
+     									<input id="REG_RF_STARTUP" type="checkbox" class="form-control btn-check" autocomplete="off" data-mask="1000000000000000" disabled>
+	      								<label for="REG_RF_STARTUP" class="btn btn-outline-success" title="REG_RF_STARTUP: RF Output section regulator ramp-up indicator">[15] REG_RF_STARTUP</label>
+     									<input id="REG_VCO_STARTUP" type="checkbox" class="form-control btn-check" autocomplete="off" data-mask="100000000000000" disabled>
+	      								<label for="REG_VCO_STARTUP" class="btn btn-outline-success" title=" REG_VCO_STARTUP: VCO bias-and-control regulator ramp-up indicator">[14] REG_VCO_STARTUP</label>
+    									<input id="REG_VCO_4V5_STARTUP" type="checkbox" class="form-control btn-check" autocomplete="off" data-mask="10000000000000" disabled>
+	      								<label for="REG_VCO_4V5_STARTUP" class="btn btn-outline-success" title="REG_VCO_4V5_STARTUP: High-voltage regulator ramp-up indicator">REG_VCO_4V5_STARTUP</label>
+     									<input id="REG_DIG_OCP" type="checkbox" class="form-control btn-check" autocomplete="off" data-mask="1000000000000" disabled>
+	      								<label for="REG_DIG_OCP" class="btn btn-outline-danger" title="REG_DIG_OCP: DIGITAL regulator over-current protection indicator">[12] REG_DIG_OCP</label>
+     									<input id="REG_REF_OCP" type="checkbox" class="form-control btn-check" autocomplete="off" data-mask="100000000000" disabled>
+	      								<label for="REG_REF_OCP" class="btn btn-outline-danger" title="REG_REF_OCP: REFERENCE CLOCK regulator over-current protection indicator">[11] REG_REF_OCP</label>
+     									<input id="REG_RF_OCP" type="checkbox" class="form-control btn-check" autocomplete="off" data-mask="10000000000" disabled>
+	      								<label for="REG_RF_OCP" class="btn btn-outline-danger" title="REG_RF_OCP: RF Output section regulator over-current protection indicator">[10] REG_RF_OCP</label>
+    									<input id="REG_VCO_OCP" type="checkbox" class="form-control btn-check" autocomplete="off" data-mask="1000000000" disabled>
+	      								<label for="REG_VCO_OCP" class="btn btn-outline-danger" title=" REG_VCO_OCP: VCO bias and control regulator over-current protection indicator">[9] REG_VCO_OCP</label>
+    									<input id="REG_VCO_4V5_OCP" type="checkbox" class="form-control btn-check" autocomplete="off" data-mask="100000000" disabled>
+	      								<label for="REG_VCO_4V5_OCP" class="btn btn-outline-danger" title="REG_VCO_4V5_OCP: high-voltage regulator over-current protection indicator">[8] REG_VCO_4V5_OCP</label>
+    									<input id="LOCK_DET" type="checkbox" class="form-control btn-check" autocomplete="off" data-mask="10000000" disabled>
+	      								<label for="LOCK_DET" class="btn btn-outline-success" title="LOCK_DET: Lock detector status bit (‘1’ means PLL locked)">[7] LOCK_DET</label>
+    									<div class="form-floating">
+	      									<select id="VCO_SEL_ST10" class="form-control" data-mask="1100000" data-shift="5" disabled>
+	      										<option value="0">VCO_LOW</option>
+	      										<option value="1">VCO_LOW_MID</option>
+	      										<option value="2">VCO_MID_HIGH</option>
+	      										<option value="3">VCO_HIGH</option>
+	      									</select>
+	      									<label for="VCO_SEL_ST10" title=" REG_VCO_4V5_VOUT: High-voltage regulator output voltage set">[6:5] VCO_SEL</label>
+      									</div>
+    									<div class="form-floating">
+	      									<input id="WORD" type="number" class="form-control" min="0" max="21" step="1" placeholder="Specific VCO sub-band selected by calibration algorithm (range:0 to 31)" data-mask="11111" data-shift="0" disabled>
+	      									<label for="WORD" title=" specific VCO sub-band selected by calibration algorithm (range:0 to 31)">[4:0] WORD</label>
+      									</div>
+      								</div>
+      							</div>
+      						</div>
+      					</div>
+<!-- ST11 -->
+      					<div class="col-xl-3">
+      						<div class="card">
+      							<div class="card-header"><h6>Device identifier (ST11):</h6><strong id="st11"></strong></div>
+      							<div class="card-body">
+ 									<div class="d-grid gap-2">
+    									<div class="form-floating">
+	      									<select id="Device_ID" class="form-control" data-mask="11111111111111111111111111" data-shift="0" disabled>
+	      										<option value="0">Unknown</option>
+	      										<option value="32843">STUW81300-1T and STUW81300-1TR</option>
+	      										<option value="32850">STUW81300T or STUW81300TR</option>
+	      									</select>
+	      									<label for="Device_ID" title="Device identifier">[26:0] Device_ID</label>
+      									</div>
+      								</div>
+      							</div>
+      						</div>
+      					</div>
+
+      				</div>
+      			</div>
+ <!-- Modal Footer -->
+				<div class="modal-footer">
+	        		<button type="button" class="btn btn-sm btn-outline-secondary" data-bs-dismiss="modal">Close</button>
+	    		</div>
+    		</div>
+  		</div>
+  		<script th:inline="javascript">
+			/*<![CDATA[*/
+
+//
+// ***** ST0 *****
+//
+			let $st0 = $('#st0');
+
+			let $VCO_CALB_DISABLE = $('#VCO_CALB_DISABLE');
+			let $CP_SEL = $('#CP_SEL');
+			let $PFD_DEL = $('#PFD_DEL');
+			let $N = $('#N');
+
+			if(!unitSerialNumber){
+				alert("Unknown serial number.");
+			}else{
+				getReg(102);
+				$modal.modal('show');
+			}
+
+			function setST0(){
+
+				let storedValue = parseInt($st0.attr('title'));
+
+				$st0.text(storedValue);
+				changeColor($st0, storedValue);
+
+// Charge Pump
+				setValue($CP_SEL, storedValue);
+// Delay
+				setValue($PFD_DEL, storedValue);
+// Devider
+				setValue($N, storedValue);
+
+				checkN();
+			}
+//
+// ***** ST1 *****
+//
+			let $st1 = $('#st1');
+
+			let $DBR_ST1 = $('#DBR_ST1');
+			let $RF1_OUT_PD = $('#RF1_OUT_PD');
+			let $MAN_CALB_EN = $('#MAN_CALB_EN');
+			let $PLL_SEL = $('#PLL_SEL');
+			let $RF1_SEL = $('#RF1_SEL');
+			let $FRAC = $('#FRAC');
+
+			function setST1(){
+
+				let storedValue = parseInt($st1.attr('title'));
+
+				$st1.text(storedValue);
+				changeColor($st1, storedValue);
+
+// DBR
+				setCheckBox($DBR_ST1, storedValue);
+// Output Power;	0: RF1 output enabled; 1: RF1 output disabled
+				setCheckBox($RF1_OUT_PD, storedValue);
+// enables manual VCO calibrator mode
+				setCheckBox($PLL_SEL, storedValue);
+// enables manual VCO calibrator mode
+				setCheckBox($PLL_SEL, storedValue);
+// RF1 output divider selection
+				setCheckBox($RF1_SEL, storedValue);
+// Fractional value bit
+				setValue($FRAC, storedValue);
+			}
+//
+// ***** ST2 *****
+//
+			let $st2 = $('#st2');
+
+			let $DBR_ST2	 = $('#DBR_ST2');
+			let $DSM_CLK_DISABLE = $('#DSM_CLK_DISABLE')
+			let $RF2_OUT_PD	 = $('#RF2_OUT_PD');
+			let $MOD		 = $('#MOD');
+
+			function setST2(){
+
+				let storedValue = parseInt($st2.attr('title'));
+
+				$st2.text(storedValue);
+				changeColor($st2, storedValue);
+
+// DBR
+				setCheckBox($DBR_ST2, storedValue);
+// DSM_CLK_DISABLE
+				setCheckBox($DSM_CLK_DISABLE, storedValue);
+// RF2_OUT_PD
+				setCheckBox($RF2_OUT_PD, storedValue);
+// Modulus value bit
+				setValue($MOD, storedValue);
+			}
+//
+// ***** ST3 *****
+//
+			let $st3 = $('#st3');
+
+			let $DBR_ST3	 = $('#DBR_ST3');
+			let $PD			 = $('#PD');
+			let $CP_LEAK_x2	 = $('#CP_LEAK_x2');
+			let $CP_LEAK_x2_for	 = $('label[for=CP_LEAK_x2]');
+			let $CP_LEAK	 = $('#CP_LEAK');
+			let $CP_LEAK_DIR = $('#CP_LEAK_DIR');
+			let $DNSPLIT_EN	 = $('#DNSPLIT_EN');
+			let $PFD_DEL_MODE= $('#PFD_DEL_MODE');
+			let $REF_PATH_SEL= $('#REF_PATH_SEL');
+			let $R			 = $('#R');
+
+			function setST3(){
+
+				let storedValue = parseInt($st3.attr('title'));
+
+				$st3.text(storedValue);
+				changeColor($st3, storedValue);
+
+// DBR
+				setCheckBox($DBR_ST3, storedValue);
+// Device power down
+				setCheckBox($PD, storedValue);
+// Leakage current
+				setCheckBox($CP_LEAK_x2, storedValue);
+// Charge Pump (μA)
+				setValue($CP_LEAK, storedValue);
+// Down-Leakage
+				setCheckBox($CP_LEAK_DIR, storedValue);
+// Enables down-split pulse
+				setCheckBox($DNSPLIT_EN, storedValue);
+// PFD delay mode
+				setValue($PFD_DEL_MODE, storedValue);
+// Reference clock path selection
+				setValue($REF_PATH_SEL, storedValue);
+// Reference clock divider ratio
+				setValue($R, storedValue);
+			}
+//
+// ***** ST4 *****
+//
+			let $st4 = $('#st4');
+
+			let $CALB_3V3_MODE1	 = $('#CALB_3V3_MODE1');
+			let $RF_OUT_3V3		 = $('#RF_OUT_3V3');
+			let $EXT_VCO_EN		 = $('#EXT_VCO_EN');
+			let $VCO_AMP		 = $('#VCO_AMP');
+			let $CALB_3V3_MODE0	 = $('#CALB_3V3_MODE0');
+			let $VCALB_MODE		 = $('#VCALB_MODE');
+			let $KVCO_COMP_DIS	 = $('#KVCO_COMP_DIS');
+			let $PFD_POL		 = $('#PFD_POL');
+			let $REF_BUFF_MODE	 = $('#REF_BUFF_MODE');
+			let $MUTE_LOCK_EN	 = $('#MUTE_LOCK_EN');
+			let $LD_ACTIVELOW	 = $('#LD_ACTIVELOW');
+			let $LD_PREC		 = $('#LD_PREC');
+			let $LD_COUNT		 = $('#LD_COUNT');
+
+			function setST4(){
+
+				let storedValue = parseInt($st4.attr('title'));
+
+				$st4.text(storedValue);
+				changeColor($st4, storedValue);
+
+// CALB_3V3_MODE1
+				setCheckBox($CALB_3V3_MODE1, storedValue);
+// RF_OUT_3V3
+				setCheckBox($RF_OUT_3V3, storedValue);
+// EXT_VCO_EN
+				setCheckBox($RF_OUT_3V3, storedValue);
+// VCO_AMP
+				setValue($VCO_AMP, storedValue);
+// CALB_3V3_MODE0
+				setCheckBox($CALB_3V3_MODE0, storedValue);
+// VCALB_MODE
+				setCheckBox($VCALB_MODE, storedValue);
+// KVCO_COMP_DIS
+				setCheckBox($KVCO_COMP_DIS, storedValue);
+// PFD_POL
+				setCheckBox($RF_OUT_3V3, storedValue);
+// REF_BUFF_MODE
+				setValue($REF_BUFF_MODE, storedValue);
+// MUTE_LOCK_EN
+				setCheckBox($MUTE_LOCK_EN, storedValue);
+// LD_ACTIVELOW
+				setCheckBox($LD_ACTIVELOW, storedValue);
+// LD_PREC
+				setValue($LD_PREC, storedValue);
+// LD_COUNT
+				setValue($LD_COUNT, storedValue);
+			}
+//
+// ***** ST5 *****
+//
+			let $st5 = $('#st5');
+
+			let $RF2_OUTBUF_LP	 = $('#RF2_OUTBUF_LP');
+			let $DEMUX_LP		 = $('#DEMUX_LP')
+			let $REF_BUFF_LP	 = $('#REF_BUFF_LP');
+
+			function setST5(){
+
+				let storedValue = parseInt($st5.attr('title'));
+
+				$st5.text(storedValue);
+				changeColor($st5, storedValue);
+
+// RF2_OUTBUF_LP
+				setCheckBox($RF2_OUTBUF_LP, storedValue);
+// DEMUX_LP
+				setCheckBox($DEMUX_LP, storedValue);
+// REF_BUFF_LP
+				setCheckBox($REF_BUFF_LP, storedValue);
+			}
+//
+//***** ST6 *****
+//
+			let $st6 = $('#st6');
+
+			let $DITHERING	 = $('#DITHERING');
+			let $CP_UP_OFF	 = $('#CP_UP_OFF')
+			let $CP_DN_OFF	 = $('#CP_DN_OFF');
+			let $DSM_ORDER	 = $('#DSM_ORDER');
+			let $EN_AUTOCAL	 = $('#EN_AUTOCAL');
+			let $VCO_SEL	 = $('#VCO_SEL');
+			let $VCO_WORD	 = $('#VCO_WORD');
+			let $CAL_TEMP_COMP = $('#CAL_TEMP_COMP');
+			let $PRCHG_DEL	 = $('#PRCHG_DEL');
+			let $CAL_ACC_EN	 = $('#CAL_ACC_EN');
+			let $CAL_DIV	 = $('#CAL_DIV');
+
+			function setST6(){
+
+				let storedValue = parseInt($st6.attr('title'));
+
+				$st6.text(storedValue);
+				changeColor($st6, storedValue);
+
+//DITHERING
+				setCheckBox($DITHERING, storedValue);
+//CP_UP_OFF
+				setCheckBox($CP_UP_OFF, storedValue);
+//CP_DN_OFF
+				setCheckBox($CP_DN_OFF, storedValue);
+// DSM_ORDER
+				setValue($DSM_ORDER, storedValue);
+// EN_AUTOCAL
+				setCheckBox($EN_AUTOCAL, storedValue);
+// VCO_SEL
+				setValue($VCO_SEL, storedValue);
+// VCO_WORD
+				setValue($VCO_WORD, storedValue);
+// CAL_TEMP_COMP
+				setCheckBox($CAL_TEMP_COMP, storedValue);
+// PRCHG_DEL
+				setValue($PRCHG_DEL, storedValue);
+// CAL_ACC_EN
+				setCheckBox($CAL_ACC_EN, storedValue);
+// CAL_DIV
+				setValue($CAL_DIV, storedValue);
+			}
+
+//
+//***** ST7 *****
+//
+			let $st7 = $('#st7');
+
+			let $LD_SDO_tristate	 = $('#LD_SDO_tristate');
+			let $LD_SDO_MODE		 = $('#LD_SDO_MODE')
+			let $SPI_DATA_OUT_DISABLE = $('#SPI_DATA_OUT_DISABLE');
+			let $LD_SDO_SEL			 = $('#LD_SDO_SEL');
+			let $REGDIG_OCP_DIS		 = $('#REGDIG_OCP_DIS');
+			let $CYCLE_SLIP_EN		 = $('#CYCLE_SLIP_EN');
+			let $FSTLCK_EN			 = $('#FSTLCK_EN');
+			let $CP_SEL_FL			 = $('#CP_SEL_FL');
+			let $FSTLCK_CNT			 = $('#FSTLCK_CNT');
+
+			function setST7(){
+
+				let storedValue = parseInt($st7.attr('title'));
+
+				$st7.text(storedValue);
+				changeColor($st7, storedValue);
+
+// LD_SDO_tristate
+				setCheckBox($LD_SDO_tristate, storedValue);
+// LD_SDO_MODE
+				setCheckBox($LD_SDO_MODE, storedValue);
+// SPI_DATA_OUT_DISABLE
+				setCheckBox($SPI_DATA_OUT_DISABLE, storedValue);
+// LD_SDO_SEL
+				setValue($LD_SDO_SEL, storedValue);
+// REGDIG_OCP_DIS
+				setCheckBox($REGDIG_OCP_DIS, storedValue);
+// CYCLE_SLIP_EN
+				setCheckBox($CYCLE_SLIP_EN, storedValue);
+// FSTLCK_EN
+				setCheckBox($FSTLCK_EN, storedValue);
+// CP_SEL_FL
+				setValue($CP_SEL_FL, storedValue);
+// FSTLCK_CNT
+				setValue($FSTLCK_CNT, storedValue);
+			}
+//
+//***** ST8 *****
+//
+			let $st8 = $('#st8');
+
+			let $PD_RF2_DISABLE	 = $('#PD_RF2_DISABLE');
+			let $REG_OCP_DIS	 = $('#REG_OCP_DIS')
+			let $REG_DIG_PD		 = $('#REG_DIG_PD');
+			let $REG_DIG_VOUT	 = $('#REG_DIG_VOUT');
+			let $REG_REF_PD		 = $('#REG_REF_PD');
+			let $REG_REF_VOUT	 = $('#REG_REF_VOUT');
+			let $REG_RF_PD		 = $('#REG_RF_PD');
+			let $REG_RF_VOUT	 = $('#REG_RF_VOUT');
+			let $REG_VCO_PD		 = $('#REG_VCO_PD');
+			let $REG_VCO_VOUT	 = $('#REG_VCO_VOUT');
+			let $REG_VCO_4V5_PD	 = $('#REG_VCO_4V5_PD');
+			let $REG_VCO_4V5_VOUT= $('#REG_VCO_4V5_VOUT');
+
+			function setST8(){
+
+				let storedValue = parseInt($st8.attr('title'));
+
+				$st8.text(storedValue);
+				changeColor($st8, storedValue);
+
+// PD_RF2_DISABLE
+				setCheckBox($PD_RF2_DISABLE, storedValue);
+// REG_OCP_DIS
+				setCheckBox($REG_OCP_DIS, storedValue);
+// REG_DIG_PD
+				setCheckBox($REG_DIG_PD, storedValue);
+// REG_DIG_VOUT
+				setValue($REG_DIG_VOUT, storedValue);
+// REG_REF_PD
+				setCheckBox($REG_REF_PD, storedValue);
+// REG_REF_VOUT
+				setValue($REG_REF_VOUT, storedValue);
+// REG_RF_PD
+				setCheckBox($REG_RF_PD, storedValue);
+// REG_RF_VOUT
+				setValue($REG_RF_VOUT, storedValue);
+// REG_VCO_PD
+				setCheckBox($REG_VCO_PD, storedValue);
+// REG_VCO_VOUT
+				setValue($REG_VCO_VOUT, storedValue);
+// REG_VCO_4V5_PD
+				setCheckBox($REG_VCO_4V5_PD, storedValue);
+// REG_VCO_4V5_VOUT
+				setValue($REG_VCO_4V5_VOUT, storedValue);
+			}
+//
+//***** ST9 *****
+//
+			let $st9 = $('#st9');
+
+			let $RESERVED_ST9	 = $('#RESERVED_ST9');
+
+			function setST9(){
+
+				let storedValue = parseInt($st9.attr('title'));
+
+				$st9.text(storedValue);
+				changeColor($st9, storedValue);
+
+//RESERVED_ST9
+				setValue($RESERVED_ST9, storedValue);
+			}
+//
+//***** ST10 *****
+//
+			let $st10 = $('#st10');
+
+			let $REG_DIG_STARTUP	 = $('#REG_DIG_STARTUP');
+			let $REG_REF_STARTUP	 = $('#REG_REF_STARTUP');
+			let $REG_RF_STARTUP		 = $('#REG_RF_STARTUP');
+			let $REG_VCO_STARTUP	 = $('#REG_VCO_STARTUP');
+			let $REG_VCO_4V5_STARTUP = $('#REG_VCO_4V5_STARTUP');
+			let $REG_DIG_OCP		 = $('#REG_DIG_OCP');
+			let $REG_REF_OCP		 = $('#REG_REF_OCP');
+			let $REG_RF_OCP			 = $('#REG_RF_OCP');
+			let $REG_VCO_OCP		 = $('#REG_VCO_OCP');
+			let $REG_VCO_4V5_OCP	 = $('#REG_VCO_4V5_OCP');
+			let $LOCK_DET			 = $('#LOCK_DET');
+			let $VCO_SEL_ST10		 = $('#VCO_SEL_ST10');
+			let $WORD				 = $('#WORD');
+
+			function setST10(){
+
+				let storedValue = parseInt($st10.attr('title'));
+
+				$st10.text(storedValue);
+				changeColor($st10, storedValue);
+
+				if(!storedValue){
+					$st10.parents('.card').find('.card-body').addClass('bg-dark');
+					return;
+				}
+
+//REG_DIG_STARTUP
+				setCheckBox($REG_DIG_STARTUP, storedValue);
+//REG_REF_STARTUP
+				setCheckBox($REG_REF_STARTUP, storedValue);
+//REG_RF_STARTUP
+				setCheckBox($REG_RF_STARTUP, storedValue);
+//REG_VCO_STARTUP
+				setCheckBox($REG_VCO_STARTUP, storedValue);
+//REG_VCO_4V5_STARTUP
+				setCheckBox($REG_VCO_4V5_STARTUP, storedValue);
+//REG_DIG_OCP
+				setCheckBox($REG_DIG_OCP, storedValue);
+//REG_REF_OCP
+				setCheckBox($REG_REF_OCP, storedValue);
+//REG_RF_OCP
+				setCheckBox($REG_RF_OCP, storedValue);
+//REG_VCO_OCP
+				setCheckBox($REG_VCO_OCP, storedValue);
+//REG_VCO_4V5_OCP
+				setCheckBox($REG_VCO_4V5_OCP, storedValue);
+//LOCK_DET
+				setCheckBox($LOCK_DET, storedValue);
+//VCO_SEL
+				setValue($VCO_SEL, storedValue);
+//WORD
+				setValue($WORD, storedValue);
+			}
+//
+//***** ST11 *****
+//
+			let $st11 = $('#st11');
+
+			let $Device_ID	 = $('#Device_ID');
+
+			function setST11(){
+
+				let storedValue = parseInt($st11.attr('title'));
+
+				$st11.text(storedValue);
+				changeColor($st11, storedValue);
+
+				if(!storedValue){
+					$st11.parents('.card').find('.card-body').addClass('bg-dark');
+					return;
+				}
+
+//Device_ID
+				setValue($Device_ID, storedValue);
+			}
+
+			$('.changed').on('input', (e)=>{ 
+
+				 let id = e.target.id;
+				switch(id){
+				case 'VCO_CALB_DISABLE':
+					changedCheckBox(e.target, $st0);
+					break;
+				case 'CP_SEL':
+				case 'PFD_DEL':
+				case 'N':
+					changeInput(e.target, $st0);
+					break;
+				case 'DBR_ST1':
+				case 'RF1_OUT_PD':
+				case 'MAN_CALB_EN':
+				case 'PLL_SEL':
+				case 'RF1_SEL':
+					changedCheckBox(e.target, $st1);
+					break;
+				case 'FRAC':
+					changeInput(e.target, $st1);
+					break;
+				case 'DBR_ST2':
+				case 'DSM_CLK_DISABLE':
+				case 'RF2_OUT_PD':
+					changedCheckBox(e.target, $st2);
+					break;
+				case 'MOD':
+					changeInput(e.target, $st2);
+					break;
+				case 'DBR_ST3':
+				case 'PD':
+				case 'CP_LEAK_x2':
+				case 'CP_LEAK_DIR':
+				case 'DNSPLIT_EN':
+					changedCheckBox(e.target, $st3);
+					break;
+				case 'CP_LEAK':
+				case 'PFD_DEL_MODE':
+				case 'REF_PATH_SEL':
+				case 'R':
+					changeInput(e.target, $st3);
+					break;
+				case 'CALB_3V3_MODE1':
+				case 'RF_OUT_3V3':
+				case 'EXT_VCO_EN':
+				case 'CALB_3V3_MODE0':
+				case 'VCALB_MODE':
+				case 'KVCO_COMP_DIS':
+				case 'PFD_POL':
+				case 'MUTE_LOCK_EN':
+				case 'LD_ACTIVELOW':
+					changedCheckBox(e.target, $st4);
+					break;
+				case 'VCO_AMP':
+				case 'REF_BUFF_MODE':
+				case 'LD_PREC':
+				case 'LD_COUNT':
+					changeInput(e.target, $st4);
+					break;
+				case 'RF2_OUTBUF_LP':
+				case 'DEMUX_LP':
+				case 'REF_BUFF_LP':
+					changedCheckBox(e.target, $st5);
+					break;
+				case 'DITHERING':
+				case 'CP_UP_OFF':
+				case 'CP_DN_OFF':
+				case 'EN_AUTOCAL':
+				case 'CAL_TEMP_COMP':
+				case 'CAL_ACC_EN':
+					changedCheckBox(e.target, $st6);
+					break;
+				case 'DSM_ORDER':
+				case 'VCO_SEL':
+				case 'VCO_WORD':
+				case 'PRCHG_DEL':
+				case 'CAL_DIV':
+					changeInput(e.target, $st6);
+					break;
+				case 'LD_SDO_tristate':
+				case 'LD_SDO_MODE':
+				case 'SPI_DATA_OUT_DISABLE':
+				case 'REGDIG_OCP_DIS':
+				case 'CYCLE_SLIP_EN':
+				case 'FSTLCK_EN':
+					changedCheckBox(e.target, $st7);
+					break;
+				case 'LD_SDO_SEL':
+				case 'CP_SEL_FL':
+				case 'FSTLCK_CNT':
+					changeInput(e.target, $st7);
+					break;
+				case 'PD_RF2_DISABLE':
+				case 'REG_OCP_DIS':
+				case 'REG_DIG_PD':
+				case 'REG_REF_PD':
+				case 'REG_RF_PD':
+				case 'REG_VCO_PD':
+				case 'REG_VCO_4V5_PD':
+					changedCheckBox(e.target, $st8);
+					break;
+				case 'REG_DIG_VOUT':
+				case 'REG_REF_VOUT':
+				case 'REG_RF_VOUT':
+				case 'REG_VCO_VOUT':
+				case 'REG_VCO_4V5_VOUT':
+					changeInput(e.target, $st8);
+					break;
+				case 'RESERVED_ST9':
+					changeInput(e.target, $st9);
+				}
+			});
+			$CP_LEAK_x2.on('input', (e)=>{
+				changCurrentStep();
+			});
+			$MAN_CALB_EN.on('input', (e)=>{
+				disableIgnored();
+			});
+			let $refSet = $('#refSet');
+			$N.add($R).add($FRAC).add($MOD).add($DITHERING).add($refSet).on('input', freqCalculator);
+			$('.freqCalc').click(freqCalculator);
+			$('.btnSet').click(e=>{
+
+				let $card = $(e.currentTarget).parents('.card');
+				let $strong = $card.find('.card-header strong');
+				let id = $strong.attr('id');
+				let addr = id.replace(/\D/g, '');
+				let newValue = $strong.text();
+
+				$.post('/calibration/rest/pll_register', {sn: unitSerialNumber, addr: addr, value: newValue})
+				.done(function(reg){
+					let value = reg[id.toUpperCase()];
+					setTitle($strong, value)
+					$card.find('.card-footer .freqCalc').trigger( "click" );
+				})
+				.fail(function(error) {
+
+					$modal.modal('hide');
+
+					err = error;
+					if(error.statusText!='abort'){
+
+						$modal.modal('hide');
+
+						alert(error.responseText);
+						err = null;
+					};
+   				});
+			});
+
+			function setTitle($strong, value){
+				switch($strong.prop('id')){
+				case 'st0':
+					value &= 0b11111110011111111111111111;// [26], [18], [17] - must be set to ‘0’
+					break;
+				case 'st1':
+					value &= 0b101111111111111111111111111;// [25] - must be set to ‘0’
+					break;
+				case 'st2':
+					value &= 0b1100001111111111111111111111;// [22:25] - must be set to ‘0’
+					break;
+				case 'st4':
+					value &= 0b1100010111101111111111111;// [26:25], [22:20], [18], [13] - must be set to ‘0’
+					break;
+				case 'st5':
+					value &= 0b10101;// [26:5], [3], [1] - must be set to ‘0’
+					break;
+				case 'st6':
+					value &= 0b111110111111111111111111111;// [21] - must be set to ‘0’
+					break;
+				case 'st7':
+					value &= 0b11111111111111111111111111;// [26] - must be set to ‘0’
+					break;
+				case 'st8':
+					value &= 0b100000011110111011101110111;// [25-20], [15], [11], [7], [3] - must be set to ‘0’
+					break;
+				case 'st10':
+					if(value)
+						value &= 0b111111111111111111;// [26-18] - must be set to ‘0’
+					break;
+				case 'st3':
+				case 'st9':// [26-0] - must be set to ‘0’
+				case 'st11':
+					if(value)
+						value &= 0b111111111111111111111111111;
+					break;
+				}
+				$strong.attr('title', value);
+			}
+			function setValue($target, value){
+
+				let mask = parseInt($target.data('mask'), 2);
+				let shift = parseInt($target.data('shift'));
+				let divider = parseFloat($target.prop('step'));
+				if(!divider)
+					divider = 1;
+				let val = (value & mask) >>> shift;
+				$target.val(val*divider);
+			}
+			function setCheckBox($target, value){
+
+				mask = parseInt($target.data('mask'), 2);
+				let val = value & mask;
+				$target.prop('checked', val);
+			}
+
+			function changeInput(target, $value){
+
+				let mask = parseInt(target.dataset.mask, 2);
+				let maskXOR = mask ^ 0b111111111111111111111111111;
+				let shift = parseInt(target.dataset.shift);
+				let divider = parseFloat(target.step);
+				if(!divider)
+					divider = 1;
+				
+				let round = Math.round(Number(target.value)/divider);
+				let value = (round << shift) & mask;
+				let presentValue = parseInt($value.text());
+				let newValue = (presentValue & maskXOR) | value;
+				$value.text(newValue);
+
+				changeColor($value, newValue);
+			}
+
+			function changedCheckBox(target, $value){
+				let mask = parseInt(target.dataset.mask, 2);
+
+				let newValue = parseInt($value.text())
+				if(target.checked)
+					newValue = newValue | mask;
+				else{
+					mask = mask ^ 0b111111111111111111111111111;
+					newValue = newValue & mask;
+				}
+
+				$value.text(newValue);
+
+				changeColor($value, newValue);
+			}
+
+			function changeColor($value, newValue){
+
+				let btnSet = $value.parents('.card').find('.card-footer .btnSet');
+				let storedValue = parseInt($value.attr('title'));
+				if(newValue == storedValue){
+					$value.removeClass('text-danger');
+					btnSet.addClass('btn-outline-warning').removeClass('btn-outline-danger');
+				}else{
+					$value.addClass('text-danger');
+					btnSet.removeClass('btn-outline-warning').addClass('btn-outline-danger');
+				}
+				
+			}
+			function getReg(index){
+
+				$.post('/calibration/rest/pll_registers', {sn: unitSerialNumber, index: index})
+				.done(function(reg){
+					if(!reg){
+						alert('Can not get PLL Registers.');
+						return;
+					}
+					setTitle($st0, parseInt(reg.ST0));
+					setST0();
+					setTitle($st1, parseInt(reg.ST1));
+					setST1();
+					setTitle($st2, parseInt(reg.ST2));
+					setST2();
+					setTitle($st3, parseInt(reg.ST3));
+					setST3();
+					setTitle($st4, parseInt(reg.ST4));
+					setST4();
+					setTitle($st5, parseInt(reg.ST5));
+					setST5();
+					setTitle($st6, parseInt(reg.ST6));
+					setST6();
+					setTitle($st7, parseInt(reg.ST7));
+					setST7();
+					setTitle($st8, parseInt(reg.ST8));
+					setST8();
+					setTitle($st9, parseInt(reg.ST9));
+					setST9();
+					setTitle($st10, parseInt(reg.ST10));
+					setST10();
+					setTitle($st11, parseInt(reg.ST11));
+					setST11();
+
+					disableIgnored();
+					changCurrentStep();
+					checkProductId();
+					freqCalculator();
+				})
+				.fail(function(error) {
+
+					$modal.modal('hide');
+
+					err = error;
+					if(error.statusText!='abort'){
+
+						$modal.modal('hide');
+
+						alert(error.responseText);
+						err = null;
+					};
+   				});
+			}
+			function disableIgnored(){
+				let ckecked = $MAN_CALB_EN.prop('checked');
+				if(ckecked){
+					$VCO_SEL.prop('disabled', true);
+					$VCO_WORD.prop('disabled', true);
+				}else{
+					$VCO_SEL.prop('disabled', false);
+					$VCO_WORD.prop('disabled', false);
+				}
+
+//TODO
+//				$PLL_SEL
+//				$RF2_OUT_PD
+			}
+			function changCurrentStep(){
+				let ckecked = $CP_LEAK_x2.prop('checked');
+				if(ckecked){
+					$CP_LEAK.prop('max', 620);
+					$CP_LEAK.prop('step', 20);
+					$CP_LEAK_x2_for.text('[24] CP_LEAK (20 µA step)');
+				}else{
+					$CP_LEAK.prop('max', 310);
+					$CP_LEAK.prop('step', 10);
+					$CP_LEAK_x2_for.text('[24] CP_LEAK (10 µA step)');
+				}
+
+				let setedValue = parseInt($st3.text());
+				setValue($CP_LEAK, setedValue);
+			}
+			function checkProductId(){
+				let value = $Device_ID.val();
+				if(value == '32843'){
+					$CALB_3V3_MODE0.val(0);
+					$CALB_3V3_MODE0.prop('disabled', true);
+					$EN_AUTOCAL.val(0);
+					$EN_AUTOCAL.prop('disabled', true);
+				}
+			}
+			let $freqSet = $('#freqSet');
+			function freqCalculator(){
+				let refSet = parseFloat($refSet.val());
+				let r	 = parseInt($R.val());
+				let n	 = parseInt($N.val());
+				let frac = parseInt($FRAC.val());
+				let d	 = $DITHERING.prop('checked') ? 1 : 0;
+
+				if(frac>0){
+					let mod	 = parseInt($MOD.val());
+					let n_frac = frac/mod;
+					if(d){
+						n_frac += 1/(2*mod);
+					}
+					n += n_frac;
+				}
+				let freq = refSet/r*n;
+				$freqSet.val(freq);
+			}
+			$('.changed').on('input', e=>{
+				checkN();
+			});
+			function checkN(){
+				let n = $N.val();
+				if(n >= 512){
+					$FRAC.prop('disabled', true);
+					$MOD.prop('disabled', true);
+				}else{
+					$FRAC.prop('disabled', false);
+					$MOD.prop('disabled', false);
+				}
+			}
+			/*]]>*/
+			//# sourceURL=Pll.js
+  		</script>
+	</th:block>
+	</div>
+
+    <script type="application/javascript" src="https://ajax.googleapis.com/ajax/libs/jquery/3.5.1/jquery.min.js"></script>
+    <script type="application/javascript" src="https://cdnjs.cloudflare.com/ajax/libs/popper.js/2.10.2/umd/popper.min.js"></script>
+    <script type="application/javascript" src="https://stackpath.bootstrapcdn.com/bootstrap/4.4.1/js/bootstrap.min.js"></script>
+	<script type="application/javascript" src="https://cdn.jsdelivr.net/npm/js-cookie@2/src/js.cookie.min.js"></script>
+	<script type="application/javascript" src="../../static/js/irt.js" th:src="@{/js/irt.js}"></script>
+</body>
+</html>

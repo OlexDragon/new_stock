@@ -186,7 +186,7 @@ public class HttpRequest {
 	}
 
 	private static String textToJSON(String text) {
-		logger.traceEntry("'{}'", text);
+		logger.traceEntry("\n\t'{}'", text);
 		
 		StringBuffer sb = new StringBuffer("{");
 
@@ -246,42 +246,47 @@ public class HttpRequest {
 	}
 
 	private static final String lineEnd = "\r\n";
-	public static void upload(String sn, Profile profile) throws IOException {
+	public static void upload(String sn, Profile profile) {
 		logger.traceEntry(sn);
 
-		URL url = new URL("http", sn, "/upgrade.cgi");
-		HttpURLConnection connection = (HttpURLConnection) url.openConnection();
-		connection.setRequestMethod("POST");
-		connection.setRequestProperty("Content-Type", "multipart/form-data;");
-		connection.setDoOutput(true);
+		HttpURLConnection connection = null;
+		try {
+			URL url = new URL("http", sn, "/upgrade.cgi");
+			connection = (HttpURLConnection) url.openConnection();
+			connection.setRequestMethod("POST");
+			connection.setRequestProperty("Content-Type", "multipart/form-data;");
+			connection.setDoOutput(true);
 
-		try(	OutputStream outputStream = connection.getOutputStream();
-				DataOutputStream dataOutputStream = new DataOutputStream(outputStream);) {
-			
-			dataOutputStream.writeBytes("Upgrade" + lineEnd);
-			dataOutputStream.writeBytes(lineEnd);
+			try(	OutputStream outputStream = connection.getOutputStream();
+					DataOutputStream dataOutputStream = new DataOutputStream(outputStream);) {
+				
+				dataOutputStream.writeBytes("Upgrade" + lineEnd);
+				dataOutputStream.writeBytes(lineEnd);
 
-			byte[] bytes = profile.toBytes();
-			dataOutputStream.write(bytes , 0, bytes.length);
-			dataOutputStream.writeBytes(lineEnd);
-			dataOutputStream.flush();
-		}
-
-		// Read Response
-		try(	InputStream inputStream = connection.getInputStream();
-				BufferedReader reader = new BufferedReader(new InputStreamReader(inputStream));) {
-			
-			StringBuffer buf = new StringBuffer();
-			String line;
-
-			// When the unit accepts the update it return page with the title 'End of session'
-			while ((line = reader.readLine())!=null) {
-				buf.append(line).append(LINE_SEPARATOR);
+				byte[] bytes = profile.toBytes();
+				dataOutputStream.write(bytes , 0, bytes.length);
+				dataOutputStream.writeBytes(lineEnd);
+				dataOutputStream.flush();
 			}
-			logger.debug(buf);
+
+			// Read Response
+			try(	InputStream inputStream = connection.getInputStream();
+					BufferedReader reader = new BufferedReader(new InputStreamReader(inputStream));) {
+				
+				StringBuffer buf = new StringBuffer();
+				String line;
+
+				// When the unit accepts the update it return page with the title 'End of session'
+				while ((line = reader.readLine())!=null) {
+					buf.append(line).append(LINE_SEPARATOR);
+				}
+				logger.debug(buf);
+			}
+		} catch (IOException e) {
+			logger.catching(e);
 		}
 
-		connection.disconnect();
+		Optional.ofNullable(connection).ifPresent(HttpURLConnection::disconnect);
 	}
 
 	// Send post request and parse text like YAML file
@@ -408,7 +413,9 @@ public class HttpRequest {
 	public static Map<String, Integer> getAllDevices(String sn) throws IOException{
 		try {
 
-			final URL url = new URL("http", sn, "/diagnostics.asp?devices=1");
+			final URL url = new URL("http", sn.trim(), "/diagnostics.asp?devices=1");
+			logger.debug(url);
+
 			final String html = getForString(url.toString());
 			final String str = Optional.of(html.indexOf("devices = [")).filter(index->index>=0)
 								.flatMap(start->Optional.of(html.indexOf("]", start)).filter(index->index>=0)

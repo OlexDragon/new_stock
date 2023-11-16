@@ -1,4 +1,4 @@
-package irt.components.beans.jpa.calibration;
+package irt.components.beans.jpa.btr;
 
 import javax.persistence.Column;
 import javax.persistence.Convert;
@@ -16,7 +16,7 @@ import lombok.ToString;
 @Entity
 @Table
 @NoArgsConstructor @AllArgsConstructor @Getter @Setter @ToString
-public class CalibrationBtrSetting {
+public class BtrSetting {
 
 	@Id private String partNumber;
 
@@ -32,7 +32,7 @@ public class CalibrationBtrSetting {
 	@Column(name = "has_p1db")
 	private boolean hasP1db;
 
-	public void set(CalibrationBtrSetting btrSetting) {
+	public void set(BtrSetting btrSetting) {
 		setFrequencies(btrSetting.frequencies);
 		setTemperatures(btrSetting.temperatures);
 		setDetectors(btrSetting.detectors);

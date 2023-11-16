@@ -41,6 +41,7 @@ public class WebSecurityConfig {
 										"/old/get_fields",
 										"/eco",
 										"/rma/**",
+										"/calibration/rest/**",
 										"/inventory",
 										"/images/**",
 										"/wo/**",

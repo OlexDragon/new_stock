@@ -11,4 +11,5 @@ public class TableValue {
 
 	private Number input;
 	private Number output;
+	private String comment;
 }

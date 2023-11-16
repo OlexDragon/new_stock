@@ -55,9 +55,6 @@
 					<div class="col">
 						<h5 th:text="${row.workOrder}">Work Order</h5>
 					</div>
-					<div class="col-auto">
-						<button sec:authorize="hasAuthority('WIP_PAGE')" th:if="${row.status.toString()} != 'MOT_IN_LOG'" type="button" class="btn btn-outline-warning" th:value="${row.workOrder}">Edit</button>
-					</div>
 				</div>
 				<div class="row mt-2 mb-1 fromWIP">
 					<div class="col-2 partNumber" th:text="${row.partNumber}">Part Number</div>

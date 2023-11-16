@@ -1,6 +1,10 @@
 package irt.components.beans.irt.calibration;
 
+import java.text.DateFormat;
+import java.text.SimpleDateFormat;
+import java.util.Calendar;
 import java.util.List;
+import java.util.Optional;
 
 import irt.components.beans.irt.update.TableValue;
 import lombok.Getter;
@@ -33,11 +37,22 @@ public class ProfileTable {
 		}
 	}
 
+	private DateFormat dateFormat = new SimpleDateFormat("MMMM dd, yyyy HH:mm");
+	private String getDate() {
+		Calendar cal = Calendar.getInstance();
+		return dateFormat.format(cal.getTime());
+	}
+
 	private String getNewTable(List<TableValue> values) {
 
 		StringBuilder sb = new StringBuilder();
-		sb.append("lut-size ").append(index).append(' ').append(values.size()).append("\t # Created by Calibration App").append("\r\n");
-		values.forEach(v->sb.append("lut-entry ").append(index).append(' ').append(v.getInput()).append(' ').append(v.getOutput()).append("\r\n"));
+		sb.append("lut-size ").append(index).append(' ').append(values.size()).append("\t # Created by Calibration App; ").append(getDate()).append("\r\n");
+		values.forEach(
+				v->{
+					sb.append("lut-entry ").append(index).append(' ').append(v.getInput()).append(' ').append(v.getOutput());
+					Optional.ofNullable(v.getComment()).ifPresent(comm->sb.append("\t # ").append(comm));
+					sb.append("\r\n");
+				});
 		sb.append("lut-ref ").append(index).append(" \"").append(name).append("\"\r\n");
 		return sb.toString();
 	}
@@ -45,8 +60,12 @@ public class ProfileTable {
 	private String getOldTable(List<TableValue> values) {
 
 		StringBuilder sb = new StringBuilder();
-		sb.append(name).append("-lut-size ").append(values.size()).append("\r\n");
-		values.forEach(v->sb.append(name).append("-lut-entry ").append(v.getInput()).append(' ').append(v.getOutput()).append("\r\n"));
+		sb.append(name).append("-lut-size ").append(values.size()).append("\t # Created by Calibration App; ").append(getDate()).append("\r\n");
+		values.forEach(
+				v->{sb.append(name).append("-lut-entry ").append(v.getInput()).append(' ').append(v.getOutput());
+				Optional.ofNullable(v.getComment()).ifPresent(comm->sb.append("\t # ").append(comm));
+				sb.append("\r\n");
+			});
 
 		return sb.toString();
 	}

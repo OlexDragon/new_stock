@@ -1,6 +1,9 @@
 package irt.components.controllers.calibration;
 
+import java.io.File;
+import java.io.FileInputStream;
 import java.io.IOException;
+import java.io.InputStream;
 import java.math.BigDecimal;
 import java.math.MathContext;
 import java.net.MalformedURLException;
@@ -15,6 +18,7 @@ import java.util.concurrent.ExecutionException;
 import java.util.concurrent.FutureTask;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.TimeoutException;
+import java.util.concurrent.atomic.AtomicReference;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
 
@@ -24,6 +28,10 @@ import org.apache.http.message.BasicNameValuePair;
 import org.apache.logging.log4j.Level;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
+import org.apache.poi.ss.usermodel.Row.MissingCellPolicy;
+import org.apache.poi.xssf.usermodel.XSSFRow;
+import org.apache.poi.xssf.usermodel.XSSFSheet;
+import org.apache.poi.xssf.usermodel.XSSFWorkbook;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Controller;
@@ -35,14 +43,12 @@ import org.springframework.web.bind.annotation.RequestParam;
 import irt.components.beans.HttpSerialPortServersCollector;
 import irt.components.beans.ProductionOrder;
 import irt.components.beans.ProductionOrderResponse;
-import irt.components.beans.irt.Bias;
 import irt.components.beans.irt.CalibrationInfo;
 import irt.components.beans.irt.ConverterInfo;
 import irt.components.beans.irt.Dacs;
 import irt.components.beans.irt.HomePageInfo;
 import irt.components.beans.irt.Info;
 import irt.components.beans.irt.IrtFrequency;
-import irt.components.beans.irt.IrtValue;
 import irt.components.beans.irt.Monitor;
 import irt.components.beans.irt.MonitorInfo;
 import irt.components.beans.irt.SysInfo;
@@ -51,13 +57,14 @@ import irt.components.beans.irt.calibration.NameIndexPair;
 import irt.components.beans.irt.calibration.PowerDetectorSource;
 import irt.components.beans.irt.calibration.ProfileTableDetails;
 import irt.components.beans.jpa.btr.BtrSerialNumber;
+import irt.components.beans.jpa.btr.BtrSetting;
 import irt.components.beans.jpa.btr.BtrWorkOrder;
 import irt.components.beans.jpa.calibration.CalibrationGainSettings;
 import irt.components.beans.jpa.calibration.CalibrationOutputPowerSettings;
 import irt.components.beans.jpa.calibration.CalibrationPowerOffsetSettings;
 import irt.components.beans.jpa.repository.btr.BtrSerialNumberRepository;
 import irt.components.beans.jpa.repository.btr.BtrWorkOrderRepository;
-import irt.components.beans.jpa.repository.calibration.CalibrationBtrSettingRepository;
+import irt.components.beans.jpa.repository.calibration.BtrSettingRepository;
 import irt.components.beans.jpa.repository.calibration.CalibrationGainSettingRepository;
 import irt.components.beans.jpa.repository.calibration.CalibrationOutputPowerSettingRepository;
 import irt.components.beans.jpa.repository.calibration.CalibrationPowerOffsetSettingRepository;
@@ -68,6 +75,12 @@ import irt.components.workers.ThreadRunner;
 @Controller
 @RequestMapping("calibration")
 public class CalibrationController {
+	private static final int WORK_ORDER = 3;
+
+	private static final int SERIAL_NUMBER = 1;
+
+	private static final String WO_NOT_FOUND = "WO Not Found";
+
 	private final static Logger logger = LogManager.getLogger();
 
 	@Value("${irt.url.protocol}")
@@ -82,14 +95,17 @@ public class CalibrationController {
 	@Value("${irt.profile.path}")
 	private String profileFolder;
 
+	@Value("${irt.log.file}")
+	private String logFile;
+
 	@Autowired private HttpSerialPortServersCollector			 httpSerialPortServersCollector;
 	@Autowired private CalibrationOutputPowerSettingRepository	 calibrationOutputPowerSettingRepository;
 	@Autowired private CalibrationPowerOffsetSettingRepository	 calibrationPowerOffsetSettingRepository;
 	@Autowired private CalibrationGainSettingRepository			 calibrationGainSettingRepository;
-	@Autowired private CalibrationBtrSettingRepository			 calibrationBtrSettingRepository;
 
-	@Autowired private BtrWorkOrderRepository			 		 workOrderRepository;
-	@Autowired private BtrSerialNumberRepository				 serialNumberRepository;
+	@Autowired private BtrSettingRepository			btrSettingRepository;
+	@Autowired private BtrWorkOrderRepository		workOrderRepository;
+	@Autowired private BtrSerialNumberRepository	serialNumberRepository;
 
 	@GetMapping
     String calibration(@RequestParam(required = false) String sn, Model model) {
@@ -99,17 +115,20 @@ public class CalibrationController {
 		model.addAttribute("serialPortServers", httpSerialPortServers);
 
 		Optional.ofNullable(sn)
+		.map(String::trim)
     	.filter(s->!s.trim().isEmpty())
     	.ifPresent(
     			s->{
     				model.addAttribute("serialNumber", s);
     				try {
 
-     					final Integer devid = getSystemIndex(sn);
-    					final Info info = getHttpDeviceDebug(sn, Info.class, new BasicNameValuePair("devid", devid.toString()), new BasicNameValuePair("command", "info")).get(10, TimeUnit.SECONDS);
+     					final Integer devid = getSystemIndex(s);
+    					final Info info = getHttpDeviceDebug(s, Info.class, new BasicNameValuePair("devid", devid.toString()), new BasicNameValuePair("command", "info")).get(10, TimeUnit.SECONDS);
     					model.addAttribute("info", info);
-    					model.addAttribute("ip", sn);
+    					model.addAttribute("ip", s);
     					model.addAttribute("devid", devid);
+    					model.addAttribute("devid", devid);
+//    					logger.error(info);
 
     					return;
 
@@ -121,9 +140,10 @@ public class CalibrationController {
 					}
 
     				try {
-    					getHomePageInfo(sn)
+    					getHomePageInfo(s)
     					.ifPresent(home->{
     						final SysInfo sysInfo = home.getSysInfo();
+    						logger.error(sysInfo);
     						final Info info = new Info();
     						info.setSerialNumber(sysInfo.getSn());
     						info.setName(sysInfo.getDesc());
@@ -141,36 +161,26 @@ public class CalibrationController {
     }
 
     @GetMapping("output_power")
-    String outputPower(@RequestParam String sn, @RequestParam String pn, Model model) {
+    String outputPower(@RequestParam String sn, @RequestParam String pn, Model model) throws ExecutionException {
     	logger.traceEntry(sn);
 
     	Optional.ofNullable(sn)
+		.map(String::trim)
     	.filter(s->!s.isEmpty())
     	.ifPresent(
     			s->{
-    				try {
-
-    					final FutureTask<CalibrationInfo> httpUpdate = getHttpUpdate(s, CalibrationInfo.class, new BasicNameValuePair("exec", "calib_ro_info"));
-    					// Get settings from DB
-    					final CalibrationOutputPowerSettings settings = calibrationOutputPowerSettingRepository.findById(pn).orElseGet(()->new CalibrationOutputPowerSettings(pn, 30, 46));
+    				// Get settings from DB
+					final CalibrationOutputPowerSettings settings = calibrationOutputPowerSettingRepository.findById(pn).orElseGet(()->new CalibrationOutputPowerSettings(pn, 30, 46, "power1"));
 
 //    					logger.error("calibrationInfo: {}", calibrationInfo);
-    					model.addAttribute("serialNumber", s);
-    					model.addAttribute("settings", settings);
-
-    					final CalibrationInfo calibrationInfo = httpUpdate.get(10, TimeUnit.SECONDS);
-    					final IrtValue power = Optional.ofNullable(calibrationInfo).map(CalibrationInfo::getBias).map(Bias::getPower).orElseGet(()->new IrtValue());
-						model.addAttribute("power", power);
-
-    				} catch (MalformedURLException | InterruptedException | ExecutionException | TimeoutException e) {
-						throw new RuntimeException("Unable to connect to Unit.", e);
-					}
+					model.addAttribute("serialNumber", s);
+					model.addAttribute("settings", settings);
     			});
         return "calibration/output_power :: outputPower";
     }
 
     @GetMapping("output_power/by_gain")
-    String outputPowerByGain(@RequestParam String sn, @RequestParam String pn, Model model) {
+    String outputPowerByGain(@RequestParam String sn, @RequestParam String pn, Model model) throws ExecutionException {
     	logger.error(sn);
 
     	outputPower(sn, pn, model);
@@ -178,14 +188,14 @@ public class CalibrationController {
     }
 
     @GetMapping("output_power/by_input")
-    String outputPowerByInput(@RequestParam String sn, @RequestParam String pn, Model model) {
+    String outputPowerByInput(@RequestParam String sn, @RequestParam String pn, Model model) throws ExecutionException {
 
     	outputPower(sn, pn, model);
     	return "calibration/output_power_auto :: byInput";
     }
 
     @GetMapping("power_offset")
-    String powerOffset(@RequestParam String sn, @RequestParam String pn, @RequestParam String deviceId, Model model) {
+    String modalPowerOffset(@RequestParam String sn, @RequestParam String pn, @RequestParam String deviceId, Model model) {
     	logger.traceEntry("{} : {} : {}", sn, pn, deviceId);
 
     	final String[] split = deviceId.split("\\.");
@@ -195,6 +205,7 @@ public class CalibrationController {
 		model.addAttribute("inHertz", inHertz);
 
 		Optional.ofNullable(sn)
+		.map(String::trim)
     	.filter(serialNumber->!serialNumber.isEmpty())
     	.ifPresent(
     			serialNumber->{
@@ -210,7 +221,16 @@ public class CalibrationController {
    									List<NameValuePair> params = new ArrayList<>();
    									params.add(new BasicNameValuePair("exec", "debug_devices"));
    									final NameIndexPair[] pairs = HttpRequest.postForIrtObgect(url.toString(), NameIndexPair[].class,  params).get(5, TimeUnit.SECONDS);
-   									Optional.ofNullable(pairs).map(Arrays::stream).orElse(Stream.empty()).filter(p->p.getName().equals("FCM")).findAny().map(p->p.getIndex())
+
+   									Optional.ofNullable(pairs)
+   									.map(Arrays::stream)
+   									.orElse(Stream.empty())
+   									.filter(p->{
+   										final String name = p.getName();
+										return name!=null && name.equals("FCM");
+   									})
+   									.findAny()
+   									.map(p->p.getIndex())
    									.ifPresent(
    											index->{
 
@@ -233,37 +253,31 @@ public class CalibrationController {
    						ThreadRunner.runThread(taskLoFrequencty);
 
    	   					FutureTask<Void> ftProfile = new FutureTask<>(()->null);
+						final ProfileWorker profileWorker = getProfileWorker(serialNumber, model);
 
-   	    				ThreadRunner.runThread(
-   								()->{
+						if(profileWorker!=null)
+							ThreadRunner.runThread(
+									()->{
 
-   									// Get Power table from the profile
-   									Optional.of(getProfileWorker(sn, ftProfile, model))
-   							    	.ifPresent(
-   							    			pw->{
-   												pw.getTable(ProfileTableDetails.OUTPUT_POWER.getDescription()).map(CalibrationTable::getTable).ifPresent(table->model.addAttribute("table", table));//TODO
+										// Get Power table from the profile
+										profileWorker.getTable(ProfileTableDetails.OUTPUT_POWER.getDescription()).map(CalibrationTable::getTable).ifPresent(table->model.addAttribute("table", table));//TODO
 
-   			    						    	// Get Power detector source
-   			    						    	final PowerDetectorSource powerDetectorSource = pw.scanForPowerDetectorSource();
-   							    				model.addAttribute("jsFunction", powerDetectorSource.getJsFunction());
+										// Get Power detector source
+										final PowerDetectorSource powerDetectorSource = profileWorker.scanForPowerDetectorSource();
+										model.addAttribute("jsFunction", powerDetectorSource.getJsFunction());
 
-   										    	ThreadRunner.runThread(ftProfile);
-   							    			});
+										ThreadRunner.runThread(ftProfile);
    								});
 
-    					final FutureTask<CalibrationInfo> httpUpdate = getHttpUpdate(serialNumber, CalibrationInfo.class, new BasicNameValuePair("exec", "calib_ro_info"));
     					// Get settings from DB
-    					final CalibrationPowerOffsetSettings settings = calibrationPowerOffsetSettingRepository.findById(pn).orElseGet(()->new CalibrationPowerOffsetSettings(pn, new BigDecimal(13.75, new MathContext(9)), new BigDecimal(14.5, new MathContext(9))));
+    					final CalibrationPowerOffsetSettings settings = calibrationPowerOffsetSettingRepository.findById(pn).orElseGet(()->new CalibrationPowerOffsetSettings(pn, new BigDecimal(13.75, new MathContext(9)), new BigDecimal(14.5, new MathContext(9)), null));
 
 //    					logger.error("calibrationInfo: {}", calibrationInfo);
     					model.addAttribute("serialNumber", serialNumber);
     					model.addAttribute("settings", settings);
 
-    					final CalibrationInfo calibrationInfo = httpUpdate.get(10, TimeUnit.SECONDS);
-    					final IrtValue power = Optional.ofNullable(calibrationInfo).map(CalibrationInfo::getBias).map(Bias::getPower).orElseGet(()->new IrtValue());
-						model.addAttribute("power", power);
-
-						ftProfile.get(10, TimeUnit.SECONDS);
+						if(profileWorker!=null)
+							ftProfile.get(10, TimeUnit.SECONDS);
 
 						// LO Frequency. Don't stop process on error
    						try {
@@ -274,7 +288,7 @@ public class CalibrationController {
 							logger.catching(e);
 						}
 
-   					} catch (MalformedURLException | InterruptedException | ExecutionException | TimeoutException e) {
+   					} catch (InterruptedException | ExecutionException | TimeoutException e) {
 						logger.catching(e);
 					}
     			});
@@ -283,10 +297,11 @@ public class CalibrationController {
     }
 
 	@GetMapping("gain")
-    String gain(@RequestParam String sn, @RequestParam String pn, Model model) {
+    String modalGain(@RequestParam String sn, @RequestParam String pn, Model model) {
 //    	logger.error(sn);
 
 		Optional.ofNullable(sn)
+		.map(String::trim)
     	.filter(s->!s.isEmpty())
     	.ifPresent(
     			s->{
@@ -299,14 +314,23 @@ public class CalibrationController {
 
     					final Integer devid = getSystemIndex(sn);
     					model.addAttribute("devid", devid);
-    					final FutureTask<CalibrationInfo> httpUpdate = getHttpUpdate(s, CalibrationInfo.class, new BasicNameValuePair("exec", "calib_ro_info"));
-    					final FutureTask<Dacs> httpDeviceDebug = getHttpDeviceDebug(s, Dacs.class,
+    					final FutureTask<CalibrationInfo> httpUpdate = getHttpUpdate(
+
+    							s,
+    							CalibrationInfo.class,
+    							new BasicNameValuePair("exec", "calib_ro_info"));
+
+    					final FutureTask<Dacs> httpDeviceDebug = getHttpDeviceDebug(
+
+    							s,
+    							Dacs.class,
     							new BasicNameValuePair("devid", devid.toString()),
     							new BasicNameValuePair("command", "regs"),
     							new BasicNameValuePair("groupindex", "100"));
 
     					final CalibrationInfo calibrationInfo = httpUpdate.get(10, TimeUnit.SECONDS);
     					final Dacs dacs = httpDeviceDebug.get(10, TimeUnit.SECONDS);
+    					logger.debug("\n\t{}\n\t", calibrationInfo, dacs);
 
 //    					logger.error("dacs: {}", dacs);
     					Optional.ofNullable(calibrationInfo.getBias()).ifPresent(biasBoard->model.addAttribute("temperature", biasBoard.getTemperature()));
@@ -327,10 +351,11 @@ public class CalibrationController {
     }
 
 	@GetMapping("current_offset")
-    String currentOffset(@RequestParam String sn, Model model) {
+    String modalCurrentOffset(@RequestParam String sn, Model model) {
 //    	logger.error(sn);
 
 		Optional.ofNullable(sn)
+		.map(String::trim)
     	.filter(s->!s.isEmpty())
     	.ifPresent(s->model.addAttribute("serialNumber", s));
 
@@ -338,14 +363,12 @@ public class CalibrationController {
     }
 
 	@GetMapping("btr")
-    String measurement(@RequestParam String sn, @RequestParam String pn, @RequestParam(required = false) Boolean setting, Model model) throws IOException {
-    	logger.traceEntry("sn: {}; pn: {}", sn, pn);
+    String modalBtr(@RequestParam String sn, @RequestParam(required = false, defaultValue = "false") Boolean setting, Model model) throws IOException {
+    	logger.traceEntry("sn: {}; setting: {}", sn, setting);
 
 		model.addAttribute("serialNumber", sn);
-    	model.addAttribute("partNumber", pn);
 
-		final Optional<BtrSerialNumber> oSerialNumber = serialNumberRepository.findBySerialNumber(sn);
-		logger.error(oSerialNumber);
+		Optional<BtrSerialNumber> oSerialNumber = serialNumberRepository.findBySerialNumber(sn);
 
 		//The DB serial number does not exist.
     	if(!oSerialNumber.isPresent()) {
@@ -357,105 +380,208 @@ public class CalibrationController {
     		final FutureTask<ProductionOrderResponse> frProductionOrderResponse = HttpRequest.getForObgect(url, ProductionOrderResponse.class);
     		try {
 
-    			Optional.of(frProductionOrderResponse.get(500, TimeUnit.MILLISECONDS)).map(ProductionOrderResponse::getProductionOrders).filter(pos->pos.length>0).map(pos->pos[0]).map(ProductionOrder::getComment)
-    			.ifPresent(c->{
+    			oSerialNumber = Optional.of(frProductionOrderResponse.get(10, TimeUnit.SECONDS))
 
-    				Optional<BtrWorkOrder> findByNumber = Optional.empty();
-    				final String[] split = c.split("\\s+");
-    				for(String s: split) {
-    					if(s.startsWith("WO")) {
-    						findByNumber = workOrderRepository.findByNumber(s);
+    					.map(ProductionOrderResponse::getProductionOrders)
+    					.filter(pos->pos.length>0)
+    					.map(pos->pos[0])
+    					.map(ProductionOrder::getComment)
+    					.flatMap(
+    							c->{
 
-    						if(!findByNumber.isPresent()){ 
-    							final BtrWorkOrder btrWorkOrder = new BtrWorkOrder();
-    							btrWorkOrder.setNumber(s);
-    							findByNumber = Optional.of(workOrderRepository.save(btrWorkOrder));
-    						}
-    						break;
-    					}
-    				}
-        			findByNumber.ifPresent(
-        					wo->{
+    								Optional<BtrWorkOrder> findByNumber = Optional.empty();
+    								final String[] split = c.split("\\s+");
+    								for(String woNumber: split) {
+    									if(woNumber.startsWith("WO")) {
 
-        						final Optional<BtrSerialNumber> findBySerialNumber = serialNumberRepository.findBySerialNumber(sn);
-        						if(!findBySerialNumber.isPresent()) {
-        							final BtrSerialNumber btrSerialNumber = new BtrSerialNumber();
-        							btrSerialNumber.setSerialNumber(sn);
-           							btrSerialNumber.setWorkOrder(wo);
-           							btrSerialNumber.setWorkOrderId(wo.getId());
-           							btrSerialNumber.setPartNumber(pn);
+    										findByNumber = workOrderRepository.findByNumber(woNumber);
+    										if(!findByNumber.isPresent()){
+    											findByNumber = createNewWO(woNumber);
+			            						logger.debug("{} from 1C system.", woNumber);
+    										}
+    										break;
+    									}
+    								}
+    								if(!findByNumber.isPresent()) { // Search WO in the LogFile
 
-									try {
+    						    		final File lf = new File(logFile);
+    						        	if(lf.exists()){
 
-										Integer devid = getSystemIndex(sn);
-										final Info info = getHttpDeviceDebug(sn, Info.class, new BasicNameValuePair("devid", devid.toString()), new BasicNameValuePair("command", "info")).get(10, TimeUnit.SECONDS);
-										btrSerialNumber.setDescription(info.getName());
+    						            	try(InputStream is=new FileInputStream(lf); ){
 
-									} catch (IOException | InterruptedException | ExecutionException | TimeoutException e) {
-										logger.catching(e);
-									}
+    						            		final String[] splitSN = sn.split("-");
+    						            		final String number;
+    						            		if(splitSN.length>1) {
+    						            			number = splitSN[1];
+    						            		}else
+    						            			number = splitSN[0];
 
-									serialNumberRepository.save(btrSerialNumber);
-        						}
-        					});
-    			});
+												final Optional<XSSFRow> rowWithSN = getRowWithSN(is, number);
+    						            		if(rowWithSN.isPresent()) {
+
+    						            			final XSSFRow row = rowWithSN.get();
+					            					final String woNumber = row.getCell(WORK_ORDER, MissingCellPolicy.CREATE_NULL_AS_BLANK).toString().trim();
+					            					if(!woNumber.isEmpty()) {
+					            						findByNumber = createNewWO(woNumber);
+					            						logger.debug("{} from LogFile.", woNumber);
+					            					}
+    						            		}
+
+    						            	} catch (Exception e) {
+    						            		logger.catching(e);
+    						        		}
+    						        	}
+    								}
+    								if(!findByNumber.isPresent()) {
+    									findByNumber = workOrderRepository.findByNumber(WO_NOT_FOUND);
+
+										if(!findByNumber.isPresent()){ 
+											final BtrWorkOrder btrWorkOrder = new BtrWorkOrder();
+											btrWorkOrder.setNumber(WO_NOT_FOUND);
+											findByNumber = Optional.of(workOrderRepository.save(btrWorkOrder));
+										}
+	            						logger.debug("WO Not Found.");
+    								}
+    								return findByNumber.map(
+    										wo->{
+
+    											Optional<BtrSerialNumber> findBySerialNumber = serialNumberRepository.findBySerialNumber(sn);
+    											if(!findBySerialNumber.isPresent()) {
+    												final BtrSerialNumber btrSerialNumber = new BtrSerialNumber();
+    												btrSerialNumber.setSerialNumber(sn);
+    												btrSerialNumber.setWorkOrder(wo);
+    												btrSerialNumber.setWorkOrderId(wo.getId());
+
+    												try {
+
+        												final FutureTask<AtomicReference<String>> aDescription = descriptionFromProfile(sn, model);
+        												final FutureTask<AtomicReference<String>> aPpartNumber = partNumberFromProfile(sn, model);
+
+        												final String description = aDescription.get(10, TimeUnit.SECONDS).get();
+														btrSerialNumber.setDescription(description);
+        												final String partNumber = aPpartNumber.get(10, TimeUnit.SECONDS).get();
+														btrSerialNumber.setPartNumber(partNumber);
+
+        												return serialNumberRepository.save(btrSerialNumber);
+
+    												} catch (InterruptedException | ExecutionException | TimeoutException e) {
+    													logger.catching(e);
+    												}
+
+    												return null;
+    											}
+
+    											return findBySerialNumber.get();
+    										});
+    							});
 
     		} catch (InterruptedException | ExecutionException | TimeoutException e) {
 				logger.catching(Level.DEBUG, e);
 			}
-
-    		model.addAttribute("showSetting", true);
-    		return "calibration/btr_table :: modal";
     	}
- 
-    	model.addAttribute("dbSerialNumber", oSerialNumber.get());
 
-		// Get settings from DB
-		calibrationBtrSettingRepository.findById(pn).ifPresent(
-				btrSetting->{
+    	boolean showSetting = false;
+    	if(oSerialNumber.isPresent()) {
 
-					logger.debug(btrSetting);
-					model.addAttribute("settings", btrSetting);
+    		final BtrSerialNumber btrSerialNumber = oSerialNumber.get();
+    		model.addAttribute("dbSerialNumber", btrSerialNumber);
 
-					final Optional<Boolean> oSetting = Optional.ofNullable(setting).filter(s->s);
-					oSetting.ifPresent(s->model.addAttribute("showSetting", s));
+    		// Get settings from DB
+    		final Optional<BtrSetting> oBtrSetting = btrSettingRepository.findById(btrSerialNumber.getPartNumber());
+    		oBtrSetting.ifPresent(btrSetting->model.addAttribute("settings", btrSetting));
+    		showSetting = !oBtrSetting.isPresent() || setting;
+    		model.addAttribute("showSetting", showSetting);
 
-					if(oSetting.isPresent())
-						return;
+    	}
 
-					Optional.ofNullable(sn)
-			    	.filter(s->!s.isEmpty())
-			    	.ifPresent(
-			    			serialNumber->{
 
-								FutureTask<Void> ftProfile = gainFromProfile(sn, model);
+		if(!showSetting)
+			Optional.ofNullable(sn).filter(s->!s.isEmpty())
+			.ifPresent(
+					serialNumber->{
 
-								try {
+						try {
 
-									getUnitMonitor(serialNumber)
-									.ifPresent(data->model.addAttribute("monitor", data));
+							final Optional<Monitor> oUnitMonitor = getUnitMonitor(serialNumber);
+							if(oUnitMonitor.isPresent()) {
 
-									ftProfile.get(10, TimeUnit.SECONDS);
+								final Monitor monitor = oUnitMonitor.get();
+								model.addAttribute("monitor", monitor);
 
-			    				} catch (MalformedURLException | InterruptedException | ExecutionException | TimeoutException e) {
-									logger.catching(e);
-								}
-			    			});
-				});
+								gainFromProfile(sn, model).get(10, TimeUnit.SECONDS);
+							}
+
+						} catch (MalformedURLException | InterruptedException | ExecutionException | TimeoutException e) {
+							logger.catching(e);
+						}
+					});
+
+		logger.debug(
+				"\n\tSerialNumber:\t{}\n\tMonitor:\t{}\n\tGein:\t{}\n\tSettings:\t{}\n\tShowSetting:\t{}\n\tDbSerialNumber:\t{}",
+				()->model.getAttribute("serialNumber"),
+				()->model.getAttribute("monitor"),
+				()->model.getAttribute("gain"),
+				()->model.getAttribute("settings"),
+				()->model.getAttribute("showSetting"),
+				()->model.getAttribute("dbSerialNumber"));
 
     	return "calibration/btr_table :: modal";
     }
 
-	private String createProductionOrderUrl(String sn) {
-		return new StringBuilder(protocol).append(login).append(url).append("Document_ProductionOrder?$filter=like(Comment,%27%25").append(sn.replaceAll("\\D", "")).append("%25%27)").toString();
+    @GetMapping("pll")
+    String modalPll(@RequestParam String sn, Model model) {
+
+    	Optional.ofNullable(sn)
+		.map(String::trim)
+    	.filter(s->!s.isEmpty())
+    	.ifPresent(s->{
+    		model.addAttribute("serialNumber", s);
+    	});
+
+    	return "calibration/pll :: modal";
+    }
+
+	private Optional<BtrWorkOrder> createNewWO(String woNumber) {
+		Optional<BtrWorkOrder> wo;
+		final BtrWorkOrder btrWorkOrder = new BtrWorkOrder();
+		btrWorkOrder.setNumber(woNumber);
+		wo = Optional.of(workOrderRepository.save(btrWorkOrder));
+		logger.debug("Created new WO. ( {} )", woNumber);
+		return wo;
 	}
 
-	public static Optional<Monitor> getUnitMonitor(String serialNumber) throws InterruptedException, ExecutionException, TimeoutException, MalformedURLException {
-		return Optional.ofNullable(getHttpUpdate(serialNumber, MonitorInfo.class, new BasicNameValuePair("exec", "mon_info")).get(5, TimeUnit.SECONDS)).map(MonitorInfo::getData);
+	private Optional<XSSFRow> getRowWithSN(InputStream is, String sn) throws IOException {
+
+		try(XSSFWorkbook wb=new XSSFWorkbook(is);){
+
+			XSSFSheet sheet=wb.getSheetAt(0);
+			for(int nextToRead = sheet.getLastRowNum(); nextToRead>0; nextToRead--) {
+
+				final XSSFRow row = sheet.getRow(nextToRead);
+				if(row==null)
+					continue;
+
+				final String cellSN = row.getCell(SERIAL_NUMBER, MissingCellPolicy.RETURN_BLANK_AS_NULL).toString().trim();
+				if(!cellSN.isEmpty()) {
+					return Optional.of(row);
+				}
+			}
+
+		}
+		return Optional.empty();
+	}
+
+	private String createProductionOrderUrl(String sn) {
+		return new StringBuilder(protocol).append(login).append(url).append("Document_ProductionOrder?$filter=like(Comment,%27%25").append(sn.trim().replaceAll("\\D", "")).append("%25%27)").toString();
+	}
+
+	public static Optional<Monitor> getUnitMonitor(String serialNumber) throws MalformedURLException, InterruptedException, ExecutionException, TimeoutException {
+		final MonitorInfo value = getHttpUpdate(serialNumber, MonitorInfo.class, new BasicNameValuePair("exec", "mon_info")).get(5, TimeUnit.SECONDS);
+		return Optional.ofNullable(value).map(MonitorInfo::getData);
 	}
 
 	@GetMapping("currents")
-    String currents(@RequestParam String sn, Model model) {
+    String modalCurrents(@RequestParam String sn, Model model) {
 
 		model.addAttribute("serialNumber", sn);
 
@@ -469,18 +595,42 @@ public class CalibrationController {
 				()->{
 
 					// Get 'zero-attenuation-gain' from the profile
-					Optional.ofNullable(getProfileWorker(sn, ftProfile, model))
-					.ifPresent(
-							pw->{
-								pw.getGain().ifPresent(gain->model.addAttribute("gain", gain));
-						    	ThreadRunner.runThread(ftProfile);
-							});
+					Optional.ofNullable(getProfileWorker(sn, model)).ifPresent(pw->pw.getGain().ifPresent(gain->model.addAttribute("gain", gain)));
+			    	ThreadRunner.runThread(ftProfile);
 				});
 		return ftProfile;
 	}
 
-	@GetMapping("upload_modules_menu")
-    String getUploadModuleMenu(@RequestParam String sn, Model model) throws IOException {
+	public FutureTask<AtomicReference<String>> partNumberFromProfile(String sn, Model model) {
+		AtomicReference<String> atomicReference = new AtomicReference<>();
+		FutureTask<AtomicReference<String>> ftProfile = new FutureTask<>(()->atomicReference);
+
+		ThreadRunner.runThread(
+				()->{
+
+					// Get 'zero-attenuation-gain' from the profile
+					Optional.ofNullable(getProfileWorker(sn, model)).ifPresent(pw->pw.getPartNumber().ifPresent(atomicReference::set));
+			    	ThreadRunner.runThread(ftProfile);
+				});
+		return ftProfile;
+	}
+
+	public FutureTask<AtomicReference<String>> descriptionFromProfile(String sn, Model model) {
+		AtomicReference<String> atomicReference = new AtomicReference<>();
+		FutureTask<AtomicReference<String>> ftProfile = new FutureTask<>(()->atomicReference);
+
+		ThreadRunner.runThread(
+				()->{
+
+					// Get 'zero-attenuation-gain' from the profile
+					Optional.ofNullable(getProfileWorker(sn, model)).ifPresent(pw->pw.getDescription().ifPresent(atomicReference::set));
+			    	ThreadRunner.runThread(ftProfile);
+				});
+		return ftProfile;
+	}
+
+	@GetMapping("modules_menu")
+    String getModulesMenu(@RequestParam String sn, @RequestParam String fragment, Model model) throws IOException {
 
 		model.addAttribute("serialNumber", sn);
 
@@ -489,37 +639,11 @@ public class CalibrationController {
 //    	logger.error(infos);
     	model.addAttribute("modules", infos);
 
-    	return "calibration/calibration :: upload_modules_menu";
-    }
-
-	@GetMapping("modules_profile_path_menu")
-    String getModuleProfilePathMenu(@RequestParam String sn, Model model) throws IOException {
-//		logger.error(sn);
-
-		final List<Info> infos = getModulesInfo(sn);
-
-//    	logger.error(infos);
-    	model.addAttribute("modules", infos);
-
-    	return "calibration/calibration :: modules_profile_path_menu";
-    }
-
-	@GetMapping("modules_profile_menu")
-    String getModuleProfileMenu(@RequestParam String sn, Model model) throws IOException {
-//		logger.error(sn);
-
-		model.addAttribute("serialNumber", sn);
-
-		final List<Info> infos = getModulesInfo(sn);
-
-//    	logger.error(infos);
-    	model.addAttribute("modules", infos);
-
-    	return "calibration/calibration :: modules_profile_menu";
+    	return "calibration/calibration :: " + fragment;
     }
 
 	@GetMapping("power_chart")
-    String powerChart(@RequestParam String sn, Model model) throws IOException {
+    String modalPowerChart(@RequestParam String sn, Model model) throws IOException {
 //		logger.error(sn);
 
 		getHomePageInfo(sn)
@@ -559,26 +683,26 @@ public class CalibrationController {
     			.filter(info->info!=null).collect(Collectors.toList());
 	}
 
-	private ProfileWorker getProfileWorker(String sn, FutureTask<Void> ftProfile, Model model) {
-		ProfileWorker profileWorker = new ProfileWorker(profileFolder, sn);
+	private ProfileWorker getProfileWorker(String sn, Model model) {
+		ProfileWorker profileWorker = new ProfileWorker(profileFolder, sn.trim());
 		try {
 			if(!profileWorker.exists()) {
-				model.addAttribute("message", "The profile could not be found.");
-				ThreadRunner.runThread(ftProfile);
+				model.addAttribute("message", "The profile " + sn + ".bin could not be found.");
 				return null;
 			}
 
 		} catch (Exception e) {
 			logger.catching(e);
 			model.addAttribute("message", e.getLocalizedMessage());
-			ThreadRunner.runThread(ftProfile);
 			return null;
 		}
 		return profileWorker;
 	}
 
 	public static Optional<HomePageInfo> getHomePageInfo(String sn) throws IOException {
-		return Optional.ofNullable(getHonePage(sn)).map(HomePageInfo::new);
+		final String honePage = getHonePage(sn);
+		logger.error(honePage);
+		return Optional.ofNullable(honePage).map(HomePageInfo::new);
 	}
 
 	public static Integer getSystemIndex(String sn) throws IOException{
@@ -589,8 +713,9 @@ public class CalibrationController {
 
 	public static <T> FutureTask<T> getHttpUpdate(String ipAddress, Class<T> toClass, BasicNameValuePair...basicNameValuePairs) throws MalformedURLException {
 
-
 		final URL url = new URL("http", ipAddress, "/update.cgi");
+		logger.debug("{} {}", url, basicNameValuePairs);
+
 		List<NameValuePair> params = new ArrayList<>();
 		params.addAll(Arrays.asList(basicNameValuePairs));
 
@@ -599,12 +724,13 @@ public class CalibrationController {
 
 	public static <T> FutureTask<T> getHttpDeviceDebug(String ipAddress, Class<T> toClass, BasicNameValuePair...basicNameValuePairs) throws MalformedURLException{
 
-			final URL url = new URL("http", ipAddress, "/device_debug_read.cgi");
-			logger.debug(url);
-			List<NameValuePair> params = new ArrayList<>();
-			params.addAll(Arrays.asList(basicNameValuePairs));
+		final URL url = new URL("http", ipAddress, "/device_debug_read.cgi");
+		logger.debug("{} {}", url, basicNameValuePairs);
 
-			return HttpRequest.postForIrtObgect(url.toString(), toClass, params);
+		List<NameValuePair> params = new ArrayList<>();
+		params.addAll(Arrays.asList(basicNameValuePairs));
+
+		return HttpRequest.postForIrtObgect(url.toString(), toClass, params);
 	}
 
 	private static String getHonePage(String ipAddress) throws IOException {

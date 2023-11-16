@@ -1,13 +1,17 @@
-var tooltipTriggerList = document.querySelectorAll('[data-bs-toggle="tooltip"]')
-var tooltipList = [...tooltipTriggerList].map(tooltipTriggerEl => new bootstrap.Tooltip(tooltipTriggerEl))
+let tooltipTriggerList = document.querySelectorAll('[data-bs-toggle="tooltip"]')
+let tooltipList = [...tooltipTriggerList].map(tooltipTriggerEl => new bootstrap.Tooltip(tooltipTriggerEl))
+
+let $accordion = $('#accordion');
+let $sortBy = $('input[name=sort_by]');
+let $rmaFilter = $('#rmaFilter');
 
 // Used in rmaComments.js script on rma.html
 let clicked = false;
 
 // Get RMA filter text from the cookies
-var filterCookie = Cookies.get("rmafilter")
+let filterCookie = Cookies.get("rmafilter")
 if(filterCookie){
-	$('#rmaFilter').text(filterCookie);
+	$rmaFilter.text(filterCookie);
 }
 
 // Get RMA sort by
@@ -58,17 +62,18 @@ function search($this){
 	$('.searchRma').filter(':not(#' + attrId + ')').val('');
 
 // Sort By
-	var $radio = $("input[name=sort_by]").filter(':checked');
-	if(!$radio.length)
-		$radio = $('#rmaOrderBySerialNumber').prop('checked', true);
+	var $radio = $sortBy.filter(':checked');
+	if(!$radio.length)	// If no one checked.
+		$radio = $('#rmaOrderByRmaNumber').prop('checked', true);
 
 	var sortBy = $radio.prop('id');
-	var rmaFilter = $('#rmaFilter').text();
+	var rmaFilter = $rmaFilter.text();
 
 // Load RMAs
-	var $accordion = $('#accordion');
+
 	$accordion.load('/rma/search', {id : attrId, value : val, sortBy: sortBy, rmaFilter: rmaFilter}, function(responseText, textStatus, req){
 
+		$('.tooltip').remove();
 		tooltipTriggerList = document.querySelectorAll('[data-bs-toggle="tooltip"]')
 		tooltipList = [...tooltipTriggerList].map(tooltipTriggerEl => new bootstrap.Tooltip(tooltipTriggerEl))
 
@@ -93,7 +98,7 @@ function search($this){
 	});
 
 // Draw attention to the filter button. ('All', 'WOR_king', 'SHI_pped')
-	var $rmaFilter = $('#rmaFilter').removeClass('btn-outline-primary');
+	$rmaFilter.removeClass('btn-outline-primary');
 
 	(function pointToFilter(times){
 		setTimeout(function(){
@@ -137,7 +142,7 @@ $('#addRMA').click(function(e){
 	if(!confirm("Save Unit " + val + ' as RMA?'))
 		return;
 
-	$('#accordion').load('/rma/add_rma', { serialNumber: val});
+	$accordion.load('/rma/add_rma', { serialNumber: val});
 });
 
 $('#saveComment').click(function(e){
@@ -198,7 +203,7 @@ $('#saveComment').click(function(e){
         }
 	});
 });
-$('#accordion').on('shown.bs.collapse', function () {
+$accordion.on('shown.bs.collapse', function () {
 
 	var $accordionItem = $(this).children().filter(function(index,a){return !$(this).find('button').hasClass('collapsed');});
   	var $accordionBody = $accordionItem.find('.accordion-body');
@@ -221,7 +226,7 @@ if(cookie){
 	search($('#rmaNumber').val('RMA'));
 
 // Filter RMA units by shipping status
-$('#rmaFilter').click(function(e){
+$rmaFilter.click(function(e){
 
 	var $this = $(this);
 	var text = $this.text();
@@ -231,40 +236,40 @@ $('#rmaFilter').click(function(e){
 	case 'ALL':
 		if(e.ctrlKey){
 			text = 'SHI';
-			$this.prop('title', 'Shipped\nClick to show All units.\nPress CTRL to change direction.')
+			$this.prop('title', 'Shipped<br>Click to show All units.<br>Press CTRL to change direction.')
 		}else{
 			text = 'WOR';
-			$this.prop('title', 'In Work\nClick to show READY to ship units.\nPress CTRL to change direction. ')
+			$this.prop('title', 'In Work<br>Click to show READY to ship units.<br>Press CTRL to change direction. ')
 		}
 		break;
 
 	case 'WOR':
 		if(e.ctrlKey){
 			text = 'ALL';
-			$this.prop('title', 'Click to show RMA units in work.\nPress CTRL to change direction.')
+			$this.prop('title', 'Click to show RMA units in work.<br>Press CTRL to change direction.')
 		}else{
 			text = 'REA';
-			$this.prop('title', 'Ready to ship\nClick to show SHIPPED units.\nPress CTRL to change direction.')
+			$this.prop('title', 'Ready to ship<br>Click to show SHIPPED units.<br>Press CTRL to change direction.')
 		}
 		break;
 
 	case 'REA':
 		if(e.ctrlKey){
 			text = 'WOR';
-			$this.prop('title', 'In Work\nClick to show READY to ship units.\nPress CTRL to change direction.')
+			$this.prop('title', 'In Work<br>Click to show READY to ship units.<br>Press CTRL to change direction.')
 		}else{
 			text = 'SHI';
-			$this.prop('title', 'Shipped\nClick to show All units.\nPress CTRL to change direction.')
+			$this.prop('title', 'Shipped<br>Click to show All units.<br>Press CTRL to change direction.')
 		}
 		break;
 
 	default:
 		if(e.ctrlKey){
 			text = 'REA';
-			$this.prop('title', 'Ready to ship\nClick to show SHIPPED units.\nPress CTRL to change direction.')
+			$this.prop('title', 'Ready to ship<br>Click to show SHIPPED units.<br>Press CTRL to change direction.')
 		}else{
 			text = 'ALL';
-			$this.prop('title', 'Click to show RMA units in work.\nPress CTRL to change direction.')
+			$this.prop('title', 'Click to show RMA units in work.<br>Press CTRL to change direction.')
 	}
 	}
 
@@ -280,6 +285,7 @@ $('#rmaFilter').click(function(e){
     clearTimeout(timer);
     timer = setTimeout(search, 500, $input);
 
+	$('.tooltip').remove();
 });
 var timer;
 
@@ -338,7 +344,7 @@ function addToRma(rmaNumber){
 	});
 }
 
-$('input[name=sort_by]').change(function(){
+$sortBy.change(function(){
 	var id = $(this).prop('id');
 	Cookies.set("rmaSorting", id, { expires: 7 });
 
@@ -348,6 +354,7 @@ $('input[name=sort_by]').change(function(){
 		var $input = $("#" + bomSearch[0]);
 		search($input);
 	}
+	$('.tooltip').remove();
 });
 
 $('#readyToShip').click(function(e){

@@ -1,6 +1,27 @@
 $('#miCalibration').addClass('active');
 
-let $modal = $('#modal');
+let $modal = $('#modal').on('shown.bs.modal', e=>$('#sn').focus());
+let $btrMeasurement	 = $('#btrMeasurement');
+let $serialNumber	 = $('#serialNumber');
+
+// Variables Used in modals
+let loFrequencty;
+let err;
+let interval;
+let table;
+let buzy = false;
+let $btnSave;
+let $btnAddRow;
+let $btnCalc;
+let $step;
+let $name;
+let $input;
+let $modalBody;
+let $addRow;
+let $menuPowerOffset = $('#menuPowerOffset');
+let $base;
+let $minValue;
+let $out;
 
 // Get HTTP Serial Port Server from the cookies
 var cookie = Cookies.get("spServers");
@@ -145,7 +166,7 @@ function setAccordionHeaderText($parent){
 
 	$message.text(port + toolMessage + toolAdderss);
 }
-if(!$('#serialNumber').text())
+if(!$serialNumber.text())
 	new bootstrap.Modal('#modal').show();
 
 var calibrateId = undefined;
@@ -158,16 +179,23 @@ $('.calibrate').click(function(e){
 
 // Load for first time or when the serial number is changed 
 	if(calibrateId!=id){
-			calibrateId = id;
-			$modal.load(this.href, function(body,error,c){
-				if(error=='error')
-					alert('Unable to connect to Unit.');
-			});
+
+		if(this.href.slice(-1) == '#'){
+			alert('Unable to connect to the Unit.');
+			return;
+		}
+
+		$modal.off('.bs.modal');
+		calibrateId = id;
+		$modal.load(this.href, function(body,error,c){
+			if(error=='error')
+				alert('Unable to connect to the Unit.');
+		});
 	}else
 		$modal.modal('show');
 });
 
-// Uplode the profile
+// Upload the profile
 $('.upload').click(function(e){
 	e.preventDefault();
 	upload(this);
@@ -225,7 +253,7 @@ $scan.click(function(e){
 	e.preventDefault();
 
 	$modal.empty();
-	var $modalBody = $('<div>', {class:'modal-body'});
+	$modalBody = $('<div>', {class:'modal-body'});
 	let $scanBtn = $('<button>', {id: 'scanBtn', type:'button', class: 'btn btn-primary'}).text('Stop');
 	$modal
 	.append(
@@ -235,7 +263,7 @@ $scan.click(function(e){
 			.append(
 				$('<div>', {class:'modal-header'})
 				.append($('<h5>', {id:'modal-header', class: 'modal-title ml-3 text-primary col'}).text('Scaning for online units.'))
-				.append($('<input>', {type:'number', id: 'start-from', class: 'col-1', title: 'Start scan from this value.'}))
+				.append($('<input>', {type:'number', id: 'start-from', class: 'col-1', title: 'Start scan from value.'}))
 				.append($('<button>', {type:'button', class: 'btn-close', 'data-bs-dismiss': 'modal', 'aria-label': 'Close'}))
 			)
 			.append($modalBody)
@@ -372,7 +400,7 @@ $('#dropdownCalibrateButton').on('show.bs.dropdown', function(){
 
 	$menuGain.addClass('disabled list-group-item-light');
 
-	let serialNumber = $('#serialNumber').text();
+	let serialNumber = $serialNumber.text();
 
 	if(!serialNumber)
 		return;
@@ -417,7 +445,7 @@ function calibrationModeError(error) {
 $('#calMode').click(function(e){
 	e.preventDefault();
 
-	var serialNumber = $('#serialNumber').text();
+	var serialNumber = $serialNumber.text();
 
 	$.post('/calibration/rest/calibration_mode_toggle', { ip: serialNumber })
 	.fail(conectionFail);
@@ -446,7 +474,7 @@ function toArray($inputs){
 $('#currents').click(function(e){
 	e.preventDefault();
 
-	let serialNumber = $('#serialNumber').text();
+	let serialNumber = $serialNumber.text();
 	let href = '/calibration/currents?sn=' + serialNumber;
 	let modal = $modal.load(href);
 })
@@ -595,46 +623,16 @@ $('.input-value').on('input', function(){
 	else
 		$(btnID).text('Get');
 });
-$('#menuUploadModule').click(function(){
+$('.modules').click(function(){
 
 	let $menu = $(this).parent().children('.dropdown-menu')
 	let length = $menu.children().length;
 
 	if(length>1) return;
 
-	var serialNumber = $('#serialNumber').text();
+	var serialNumber = $serialNumber.text();
 
-	$.get('/calibration/upload_modules_menu', {sn: serialNumber})
-	.done(function(data){
-		$menu.append($(data));
-	})
-	.fail(conectionFail);
-});
-$('#menuModuleProfilePath').click(function(){
-
-	let $menu = $(this).parent().children('.dropdown-menu')
-	let length = $menu.children().length;
-
-	if(length>1) return;
-
-	var serialNumber = $('#serialNumber').text();
-
-	$.get('/calibration/modules_profile_path_menu', {sn: serialNumber})
-	.done(function(data){
-		$menu.append($(data));
-	})
-	.fail(conectionFail);
-});
-$('#menuModuleProfile').click(function(у){
-
-	let $menu = $(this).parent().children('.dropdown-menu')
-	let length = $menu.children().length;
-
-	if(length>1) return;
-
-	var serialNumber = $('#serialNumber').text();
-
-	$.get('/calibration/modules_profile_menu', {sn: serialNumber})
+	$.get('/calibration/modules_menu', {sn: serialNumber, fragment: this.id})
 	.done(function(data){
 		$menu.append($(data));
 	})

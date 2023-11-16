@@ -85,7 +85,7 @@ public class WipController {
 
     	try(InputStream is=new FileInputStream(lf); ){
 
-    		getDataFomLogFile(is, rows, wo);
+    		getDataFomLogFile(is, rows);
 
     	} catch (Exception e) {
     		logger.catching(e);
@@ -97,7 +97,7 @@ public class WipController {
 		return "wip :: content";
     }
 
-	private void getDataFomLogFile(InputStream is, List<WipContent> rows, String wo) throws IOException {
+	private void getDataFomLogFile(InputStream is, List<WipContent> rows) throws IOException {
 
 		try(XSSFWorkbook wb=new XSSFWorkbook(is);){
  

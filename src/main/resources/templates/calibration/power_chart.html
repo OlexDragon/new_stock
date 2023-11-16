@@ -46,7 +46,6 @@
   		<script th:inline="javascript">
 			/*<![CDATA[*/
 
-			var unitSerialNumber = /*[[${serialNumber}]]*/ 'IRT-2121021';
 			var ip = /*[[${ip}]]*/ '192.168.30.220';
 			let testBy = 'byPower';
 
@@ -134,7 +133,6 @@
 									}
 							});
 
-			var interval;
 			$modal.modal('show');
 			$modal.on('shown.bs.modal', update);
 			$modal.on('hidden.bs.modal', function () { clearInterval(interval); });

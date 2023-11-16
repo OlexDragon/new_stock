@@ -17,13 +17,13 @@ public class Bias {
 	@JsonProperty("class")
 	private String className;
 
-	@JsonProperty("power")
-	@JsonAlias("det1")
-	private IrtValue power;
+	@JsonProperty("power1")
+	@JsonAlias({"det1", "power"})
+	private IrtValue power1;
 
-	@JsonProperty("refl_power")
-	@JsonAlias("det2")
-	private IrtValue reflPower;
+	@JsonProperty("power2")
+	@JsonAlias({"det2", "refl_power"})
+	private IrtValue power2;
 
 	private BigDecimal temperature;
 }

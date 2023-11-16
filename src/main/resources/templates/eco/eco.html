@@ -292,11 +292,13 @@
 			function showSelected($this){
 
 				let $fullImage = $('#fullImage');
+				let $href = $fullImage.parent();
 
 				let v = $this.attr('src').replace('thumbnails/', '');
 				$fullImage.attr('src',v);
+				$href.attr('href',v);
 
-				v = $this.attr('title') + '\nClick to Download';
+				v = $this.attr('data-bs-original-title') + '\nClick to Download';
 				$fullImage.attr('title',v);
 
 				v = $this.attr('alt');

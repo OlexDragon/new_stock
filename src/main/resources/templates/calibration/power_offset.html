@@ -22,10 +22,10 @@
       				<select id="base" class="form-select">
       					<option th:each="pair : ${ table }" th:value="${ pair.input }" th:text="${ pair.output }" ></option>
       				</select>
-        			<h5 id="opInputValue" class="modal-title ml-3 text-primary" th:text="${power.value}">2125</h5>
+        			<h5 id="op_InputValue" class="modal-title ml-3 text-primary"></h5>
         			<h5 class="modal-title text-primary">-</h5>
-        			<input type="number" id="po_outputValue" class="form-control" placeholder="Output Power" value="30" th:value="${valGHz}">
-        			<button type="button" id="addRow">Add</button>
+        			<input type="number" id="rf_outputValue" class="form-control" placeholder="Output Power" value="30" th:value="${valGHz}">
+        			<button type="button" id="addRow" class="form-control btn btn-sm btn-outline-secondary disabled">Add</button>
         			<h5 th:if="${loFrequencty}!=null" id="lBand" class="pl-2" th:text="${valGHz *1000 - loFrequencty.stripTrailingZeros()}">950</h5>
 <!-- Calibration settings -->
   					<div class="dropdown col-auto">
@@ -49,6 +49,8 @@
     								<input type="number" class="form-control settings" id="step" placeholder="Step" value="0.1">
     							</div>
   							</div>
+  							<div class="form-group row" th:replace="/calibration/output_power :: power_source">
+  							</div>
    						</div>
 					</div>
 <!-- X Button -->
@@ -59,8 +61,8 @@
       			</div>
  <!-- Modal Footer -->
       			<div class="modal-footer">
-	        		<button type="button" id="save" class="btn btn-primary disabled">Save to Profile</button>
-	        		<button type="button" id="clear" class="btn btn-secondary disabled">Clear</button>
+	        		<button type="button" id="save" class="btn btn-outline-primary disabled">Save to Profile</button>
+	        		<button type="button" id="clear" class="btn btn-outline-secondary disabled">Clear</button>
 	        		<button type="button" class="btn btn-outline-secondary" data-bs-dismiss="modal">Close</button>
 	    		</div>
     		</div>
@@ -70,11 +72,25 @@
 
 		    /*[# th:if="${message}!=null" ]*/
 				alert(/*[[${message}]]*/ 'Message');
-				return;
+				throw new Error(/*[[${message}]]*/ 'Message');
 			/*[/]*/
 
-			var unitSerialNumber =  /*[[${serialNumber}]]*/ 'IRT-2121021';
-			var loFrequencty = /*[[${loFrequencty}]]*/ 12800; //MHz
+			loFrequencty = /*[[${loFrequencty}]]*/ 12800; //MHz
+
+			$modalBody			 = $('#modal-body');
+			$btnAddRow			 = $('#addRow').click(onAddRow);
+			$btnSave			 = $('#save');
+			$name				 = $('#name');
+			$base				 = $('#base');
+			$minValue			 = $('#minValue');
+			$input		 = $('#op_InputValue');
+			$out				 = $('#rf_outputValue');
+
+			table = Cookies.get(unitSerialNumber + "_frTable");
+			if(table){
+				var array = JSON.parse(table);
+				array.forEach( row => addRow(row.input, row.output, row.comment));
+			}
 
 			var pos = Cookies.get("powerOffsetSteps");
 			if(pos)
@@ -93,22 +109,50 @@
 				}
 			});
 
-			var err;
-			var interval;
 			function update(){
 				if(interval)
 					clearInterval(interval);
 
 				//get value from unit
 				interval = setInterval(function() {
-							$.post('/calibration/rest/calibrationInfo', {sn : unitSerialNumber})
+
+					if(buzy)
+						return;
+
+					buzy = true;
+
+					$.post('/calibration/rest/calibrationInfo', {sn : unitSerialNumber})
 							.done(function(calInfo){
-								if(calInfo && calInfo.bias && calInfo.bias.power)
-									$('#opInputValue').text(calInfo.bias.power.value);
+
+								if(!calInfo){	// No connection
+									$btnAddRow.addClass('disabled');
+									buzy = false;
+									return;
+								}
+
+								if(!calInfo.bias){
+									login();
+									$btnAddRow.addClass('disabled');
+									buzy = false;
+									return;
+								}
+
+								let name = $name.val();
+								if(calInfo.bias[name]){
+									let value = calInfo.bias[name].value;
+									$input.text(value);
+									$btnAddRow.removeClass('disabled');
+								}else{
+									$btnAddRow.addClass('disabled');
+// 									login();
+								}
+								buzy = false;
 							})
 							.fail(function(error) {
-								if(err)
+								if(err){
+									buzy = false;
 									return;
+								}
 
 								$modal.modal('hide');
 
@@ -117,31 +161,25 @@
 									alert(error.responseText);
 									err = null;
 								};
+								buzy = false;
 				   			});
 				}, 2000);
 			}
 			update();
-			$modal.on('shown.bs.modal', function (e) {
-				update();
-			});
-
-			$modal.on('hidden.bs.modal', function () {
-				clearInterval(interval);
-				interval = undefined;
-				err = null;
-			});
 
 			function onAddRow(){
 
-				var base = $('#base').val();
-				var value = $('#opInputValue').text();
+				let base = $base.val();
+				let value = $input.text();
 
 				var offset = eval(/*[[${jsFunction}]]*/);
-				if(!offset)
-					return;
 
-				var $freq = $('#po_outputValue');
-				var freq = $freq.val();
+				if( !isFinite(offset) ){
+					alert('Unable to perform calculation.');
+					return;
+				}
+
+				var freq = $out.val();
 
 				if(!(freq && offset)){
 					alert('The input field cannot be empty.');
@@ -167,47 +205,45 @@
 				}
 
 				var outputFr = Number(Number(newVal).toFixed(9))	// GHz
-				$freq.val(outputFr);
+				$out.val(outputFr);
 
 				var lBand = parseFloat(outputFr * 1000 - loFrequencty);	//MHz
 				$('#lBand').text(lBand);
 			}
 
-			$('#addRow').click(onAddRow);
-			$('#po_outputValue').on('keypress', function (e) {
+			$out.on('keypress', function (e) {
 				 if(e.which === 13)
 					 onAddRow();
 			});
 
 			function sortModalBody(){
-			    var items = $('#modal-body').children().sort(function(a, b) {
+			    var items = $modalBody.children().sort(function(a, b) {
 			        var vA = parseFloat($(a).find('.input').text());
 			        var vB = parseFloat($(b).find('.input').text());
 			        return (vA < vB) ? -1 : (vA > vB) ? 1 : 0;
 			    });
-			    $('#modal-body').append(items);
+			    $modalBody.append(items);
 			}
 
 			function disableButtons(){
 
-				var $body = $('#modal-body');
-				var length = $body.children().length;
+				var length = $modalBody.children().length;
 
 				if(!length){
 					$('#clear').addClass('disabled');
-					$('#base').prop('disabled', false);
+					$base.prop('disabled', false);
 				}else{
 					$('#clear').removeClass('disabled');
-					$('#base').prop('disabled', true);
+					$base.prop('disabled', true);
 				}
 
 				var max = $('#maxValue').val();
-				var out = $('#po_outputValue').val();
+				var out = $out.val();
 
 				if(out<max)
-					$('#save').addClass('disabled');
+					$btnSave.addClass('disabled');
 				else
-					$('#save').removeClass('disabled');
+					$btnSave.removeClass('disabled');
 
 				return length;
 			}
@@ -216,9 +252,9 @@
 				$('<div>', {class: 'row'})
 				.append($('<div>', {class: 'col input'}).text(inputValue))
 				.append($('<div>', {class: 'col output'}).text(outputValue))
-				.append($('<div>', {class: 'col'}).text(value))
+				.append($('<div>', {class: 'col comment'}).text(value))
 				.append($('<div>', {class: 'col-auto'}).append($('<button>', {class: 'btn btn-link', onclick: 'removeRow(this)'}).text('Remove')))
-				.appendTo($('#modal-body'));
+				.appendTo($modalBody);
 
 				sortModalBody();
 				disableButtons();
@@ -227,27 +263,27 @@
 			function removeRow(button){
 				var parent = $(button).closest('.row').remove();
 				if(!disableButtons())
-		    		$('#po_outputValue').val($('#minValue').val())
+		    		$out.val($minValue.val())
 			}
 
 		    $('#clear').click(function(){
-		    	$('#modal-body').empty();
+		    	$modalBody.empty();
 
-		    	var minValue = $('#minValue').val();
-		    	$('#po_outputValue').val(minValue)
+		    	var minValue = $minValue.val();
+		    	$out.val(minValue)
 
 				var lBand = parseFloat(minValue * 1000 - loFrequencty);	//MHz
 				$('#lBand').text(lBand);
 				disableButtons();
 		    });
 
-		    $('#save').click(function(){
+		    $btnSave.click(function(){
 
-		    	var hasError = false;
-		    	var prevInput;
-		    	var array = [];
+		    	let hasError = false;
+		    	let prevInput;
+		    	let array = [];
 
-		    	$('#modal-body').find('.row').each(function(){
+		    	$modalBody.find('.row').each(function(){
 
 		    		if(hasError)
 		    			return;
@@ -265,12 +301,13 @@
 
 		    		prevInput = input;
 		    		var out = $row.find('.output').text();
+		    		var comment = 'Sensor Value: ' + $row.find('.comment').text();
 
 		    		/*[# th:if="${inHertz}" ]*/
 			    		input = parseInt(input*1000000000);
 					/*[/]*/
 
-		    		array.push({input: input, output: out});
+		    		array.push({input: input, output: out, comment: comment});
 		    	});
 
 		    	if(hasError || !array.length){
@@ -278,7 +315,7 @@
 	    			return;
 		    	}
 
-		    	var table = { serialNumber: unitSerialNumber, name: 'Power Offset', values: array };
+		    	table = { serialNumber: unitSerialNumber, name: 'Power Offset', values: array };
 
 		    	$.ajax({
 					url: '/calibration/rest/to_profile',
@@ -288,7 +325,7 @@
 					dataType: 'json'
 				})
 				.done(function(data){
-					alert(data);
+					alert(data.content);
 					$modal.modal('hide');
 				})
 				.fail(function(error) {
@@ -299,18 +336,24 @@
 		    		
 		    });
 
-		    /*[# th:if="${power.value}==null" ]*/
-		    	$.post('/calibration/rest/login?sn=' + unitSerialNumber);
-			/*[/]*/
+		    $('.modal-footer').dblclick(e=>$btnSave.removeClass('disabled'));
+
+	    	$minValue.blur(e=>{
+	    		$out.val(e.currentTarget.value);
+
+				var lBand = parseFloat(parseFloat(e.currentTarget.value) * 1000 - loFrequencty);	//MHz
+				$('#lBand').text(lBand);
+	    	})
 
 		    /*[# sec:authorize="hasAuthority('CALIBRATION_SETTINGS')"]*/
 				$('#dropdownSettingsButton').on('hidden.bs.dropdown', function () {
 					if(confirm('Do you want to save your changes to the database?')){
 
-						var pn = $('#partNumber').val();
-						var min = $('#minValue').val();
+						let pn = $serialNumber.prop('title');
+						var min = $minValue.val();
 						var max = $('#maxValue').val();
 						var step = $('#step').val();
+						let name = $('#name').val();
 
 						if(!(pn && min && max)){
 							alert('One of the values is missing.')
@@ -325,6 +368,7 @@
 								partNumber: pn,
 								startValue: min,
 								stopValue:  max,
+								name:  name
 						    }),
         					dataType: 'json'
     					})
@@ -340,6 +384,34 @@
 				});
 			/*[/]*/
 		$modal.modal('show');
+		$modal.on('shown.bs.modal', function (e) {
+			update();
+		});
+
+		$modal.on('hide.bs.modal', e=>{
+    		var array = [];
+
+    		$modalBody.find('.row').each(function(){
+    			let $row = $(this);
+    			let input = $row.find('.input').text();
+    			let out = $row.find('.output').text();
+    			let comment = $row.find('.comment').text();
+
+    			array.push({input: input, output: out, comment: comment});
+    		});
+
+    		if(!array.length)
+    			return;
+
+    		var json = JSON.stringify(array);
+			Cookies.set(unitSerialNumber + "_frTable", json, { expires: 30 });
+		});
+
+		$modal.on('hidden.bs.modal', function () {
+			clearInterval(interval);
+			interval = undefined;
+			err = null;
+		});
 
 		/*]]>*/
 		//# sourceURL=powerOffset.js

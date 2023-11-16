@@ -48,7 +48,7 @@ public class InventoryRestController {
 	public Optional<InventoryTransfer> fromStock(@RequestParam String productKey, @RequestParam int qty, @RequestParam String userName, @RequestParam String comments) throws IOException {
 		logger.error("{}; {}; {}; {};", productKey, qty, userName, comments);
 
-		final String c = userName + ": " + comments;
+//		final String c = userName + ": " + comments;
 		final InventoryTransfer inventoryTransfer = new InventoryTransfer();
 		inventoryTransfer.setTransferKey("7e349b05-8dc6-11ec-b0bd-04d4c452793b");
 //		inventoriesTransfer.setComment(c);

@@ -10,7 +10,7 @@
 
 	<groupId>irt</groupId>
 	<artifactId>components</artifactId>
-	<version>0.0.25</version>
+	<version>0.0.27</version>
 	<packaging>jar</packaging>
 
 	<name>ITR Components, RMAs, Calibration, ext.</name>
@@ -106,7 +106,7 @@
 			<version>[0.4, 0.5)</version>
 		</dependency>
 		<!-- https://mvnrepository.com/artifact/org.apache.poi/poi -->
-<!-- 	<dependency>
+		<!-- 	<dependency>
 		<groupId>org.apache.poi</groupId>
 			<artifactId>poi</artifactId>
 			<version>5.2.3</version>
@@ -116,6 +116,12 @@
 			<groupId>org.apache.poi</groupId>
 			<artifactId>poi-ooxml</artifactId>
 			<version>5.2.3</version>
+		</dependency>
+		<!-- https://mvnrepository.com/artifact/org.jsoup/jsoup -->
+		<dependency>
+			<groupId>org.jsoup</groupId>
+			<artifactId>jsoup</artifactId>
+			<version>1.16.1</version>
 		</dependency>
 
 		<dependency>

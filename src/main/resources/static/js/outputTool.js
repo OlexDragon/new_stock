@@ -1,24 +1,31 @@
 
+var $outputComPorts = $('#outputComPorts');
+var $outputTool 	= $('#outputTool');
+var $ouputAddress 	= $('#ouputAddress');
+var outputComPorts;
+var hostName;
+var outputTool
+var address;
+
 $('#outputGet').click(()=>outputGet());
 
 function outputGet(){
 
-	let outputComPorts = $('#outputComPorts').val();
+	outputComPorts = $outputComPorts.val();
 	if(!outputComPorts)
 		return;
 
-	let hostName = getHostName();
+	hostName = getHostName();
 	if(!hostName) return;
 
-	let commands = $('#outputTool').val();
-	let address = $('#ouputAddress').val();
-
-	if(!commands){
+	outputTool = $outputTool.val();
+	if(!outputTool){
 		alert('Tool not selected.');
 		return;
 	}
 
-	if(!address){
+	toolAddress = $ouputAddress.val();
+	if(!toolAddress){
 		alert('Type the Tool Address.');
 		return;
 	}
@@ -27,9 +34,9 @@ function outputGet(){
 	toSend.hostName = hostName;
 	toSend.spName = outputComPorts;
 	toSend.commands = [];
-	toSend.commands.push({command: '++addr ' + address, getAnswer: false})
+	toSend.commands.push({command: '++addr ' + toolAddress, getAnswer: false})
 
-	$.each(commands.split(','), function(index, command){
+	$.each(outputTool.split(','), function(index, command){
 
 		var split = command.split(':');
 
@@ -67,6 +74,9 @@ function outputAction(data){
 
 		if(!command.getAnswer || !command.answer)
 			return;
+
+		if(typeof dataProcessing !== 'undefined')
+			dataProcessing(data);
 
 		var answer = $.trim(String.fromCharCode.apply(String, command.answer));
 

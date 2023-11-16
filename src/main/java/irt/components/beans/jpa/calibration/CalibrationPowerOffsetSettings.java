@@ -21,6 +21,7 @@ public class CalibrationPowerOffsetSettings {
 	@Id private String partNumber;
 	@Column(precision = 12, scale = 9) private BigDecimal startValue;
 	@Column(precision = 12, scale = 9) private BigDecimal stopValue;
+	private String name;
 
 //	@PrePersist
 //	@PreUpdate

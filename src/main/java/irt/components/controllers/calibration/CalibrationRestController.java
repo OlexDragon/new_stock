@@ -31,6 +31,7 @@ import java.util.concurrent.TimeoutException;
 import java.util.stream.Collectors;
 import java.util.stream.IntStream;
 
+import javax.script.ScriptException;
 import javax.servlet.http.HttpServletResponse;
 
 import org.apache.http.NameValuePair;
@@ -63,14 +64,15 @@ import irt.components.beans.irt.Info;
 import irt.components.beans.irt.MonitorInfo;
 import irt.components.beans.irt.calibration.CalibrationMode;
 import irt.components.beans.irt.calibration.HPBMRegister;
+import irt.components.beans.irt.calibration.PLLRegister;
 import irt.components.beans.irt.calibration.ProfileTableTypes;
 import irt.components.beans.irt.update.Profile;
 import irt.components.beans.irt.update.Table;
-import irt.components.beans.jpa.calibration.CalibrationBtrSetting;
+import irt.components.beans.jpa.btr.BtrSetting;
 import irt.components.beans.jpa.calibration.CalibrationGainSettings;
 import irt.components.beans.jpa.calibration.CalibrationOutputPowerSettings;
 import irt.components.beans.jpa.calibration.CalibrationPowerOffsetSettings;
-import irt.components.beans.jpa.repository.calibration.CalibrationBtrSettingRepository;
+import irt.components.beans.jpa.repository.calibration.BtrSettingRepository;
 import irt.components.beans.jpa.repository.calibration.CalibrationGainSettingRepository;
 import irt.components.beans.jpa.repository.calibration.CalibrationOutputPowerSettingRepository;
 import irt.components.beans.jpa.repository.calibration.CalibrationPowerOffsetSettingRepository;
@@ -79,6 +81,10 @@ import irt.components.workers.HttpRequest;
 import irt.components.workers.ProfileWorker;
 import irt.components.workers.ThreadRunner;
 import javafx.util.Pair;
+import lombok.AllArgsConstructor;
+import lombok.Getter;
+import lombok.Setter;
+import lombok.ToString;
 
 @RestController
 @RequestMapping("/calibration/rest")
@@ -101,7 +107,7 @@ public class CalibrationRestController {
 	@Autowired private CalibrationOutputPowerSettingRepository calibrationOutputPowerSettingRepository;
 	@Autowired private CalibrationPowerOffsetSettingRepository calibrationPowerOffsetSettingRepository;
 	@Autowired private CalibrationGainSettingRepository calibrationGainSettingRepository;
-	@Autowired private CalibrationBtrSettingRepository calibrationBtrSettingRepository;
+	@Autowired private BtrSettingRepository calibrationBtrSettingRepository;
 
 	@PostMapping(path="monitorInfo", produces = "application/json;charset=utf-8")
     MonitorInfo monitorInfo(@RequestParam(required = false) String sn) {
@@ -176,6 +182,7 @@ public class CalibrationRestController {
 
     						ops.setStartValue(settings.getStartValue());
     						ops.setStopValue(settings.getStopValue());
+    						ops.setName(settings.getName());
     						calibrationOutputPowerSettingRepository.save(ops);
 
     						return "The setings has been updated.";
@@ -198,6 +205,7 @@ public class CalibrationRestController {
 
     						ops.setStartValue(settings.getStartValue());
     						ops.setStopValue(settings.getStopValue());
+    						ops.setName(settings.getName());
  
     						calibrationPowerOffsetSettingRepository.save(ops);
 
@@ -238,18 +246,20 @@ public class CalibrationRestController {
     					});
     }
 
-    @PostMapping(path="to_profile", consumes = MediaType.APPLICATION_JSON_VALUE)
-    String saveToProfile(@RequestBody Table table) throws IOException {
+    @PostMapping(path="to_profile")
+    Message saveToProfile(@RequestBody Table table) throws IOException {
 //    	logger.error(table);
 
     	ProfileWorker profileWorker = new ProfileWorker(profileFolder, table.getSerialNumber());
 
     	if(!profileWorker.exists())
-    		return "The profile does not exist.";
+    		return new Message("The profile does not exist.");
 
-    	return profileWorker.scanForTable(table.getName()).filter(pt->pt.getType()!=ProfileTableTypes.UNKNOWN)
+    	final String content = profileWorker.scanForTable(table.getName()).filter(pt->pt.getType()!=ProfileTableTypes.UNKNOWN)
+    			.map(pt->profileWorker.saveToProfile(pt, table.getValues()) ? "The table has been saved." : "Something went wrong. The table has not been saved.")
+    			.orElse("The table was not found.");
 
-    			.map(pt->profileWorker.saveToProfile(pt, table.getValues()) ? "The table has been saved." : "Something went wrong. The table has not been saved.").orElse("The table was not found.");
+    	return new Message(content);
 
 	}
 
@@ -435,13 +445,16 @@ public class CalibrationRestController {
 
     @GetMapping("profile")
     String getProfile(@RequestParam String sn, @RequestParam(required = false) Integer moduleId) throws IOException, URISyntaxException {
+    	logger.traceEntry("{}; {};", sn, moduleId);
 
     	final URIBuilder builder;
 
     	if(moduleId==null) {
-        	final URL url = new URL("http", sn, "/diagnostics.asp");
+
+    		final URL url = new URL("http", sn, "/diagnostics.asp");
         	builder = new URIBuilder(url.toString()).setParameter("profile", "1");
         	String str = HttpRequest.getForString(builder.build().toString());
+        	logger.debug(str);
         	try(final StringReader reader = new StringReader(str);){
  
         		final HtmlParsel htmlParsel = new HtmlParsel("textarea");
@@ -597,22 +610,22 @@ public class CalibrationRestController {
     }
 
     @PostMapping("btr/setting")
-    void saveBtrSetting(@RequestBody CalibrationBtrSetting btrSetting) {
+    BtrSetting saveBtrSetting(@RequestBody BtrSetting btrSetting) {
     	logger.traceEntry("{}", btrSetting);
 
-    	final Optional<CalibrationBtrSetting> oBtrSetting = calibrationBtrSettingRepository.findById(btrSetting.getPartNumber());
-    	CalibrationBtrSetting calibrationBtrSetting;
+    	final Optional<BtrSetting> oBtrSetting = calibrationBtrSettingRepository.findById(btrSetting.getPartNumber());
+    	BtrSetting calibrationBtrSetting;
 
     	if(oBtrSetting.isPresent())
     		calibrationBtrSetting = oBtrSetting.get();
  
     	else {
-    		calibrationBtrSetting = new CalibrationBtrSetting();
+    		calibrationBtrSetting = new BtrSetting();
     		calibrationBtrSetting.setPartNumber(btrSetting.getPartNumber());
     	}
 
     	calibrationBtrSetting.set(btrSetting);
-		calibrationBtrSettingRepository.save(calibrationBtrSetting);
+		return calibrationBtrSettingRepository.save(calibrationBtrSetting);
     }
 
     @PostMapping("hpbm_register")
@@ -661,5 +674,68 @@ public class CalibrationRestController {
     						return null;
     					})
     			.orElse(null);
+    }
+
+    @PostMapping("pll_registers")
+    PLLRegister pllRegisters(@RequestParam String sn, @RequestParam String index) throws MalformedURLException, InterruptedException, ExecutionException, ScriptException{
+//    	logger.error(sn);
+    	return Optional.ofNullable(sn)
+
+    			.map(
+    					s->{
+    						try {
+
+    							final URL url = new URL("http", sn, "/device_debug_read.cgi");
+    				    		List<NameValuePair> params = new ArrayList<>();
+    				    		params.addAll(Arrays.asList(new BasicNameValuePair[]{new BasicNameValuePair("devid", "1"), new BasicNameValuePair("command", "regs"), new BasicNameValuePair("groupindex", index)}));
+    				    		FutureTask<PLLRegister> o = HttpRequest.postForIrtObgect(url.toString(), PLLRegister.class, params);
+    				    		final PLLRegister pllRegister = o.get(5, TimeUnit.SECONDS);
+//    				    		logger.error(pllRegister);
+								return pllRegister;
+
+    						} catch (IOException | InterruptedException | ExecutionException | TimeoutException e) {
+    							logger.catching(new Throwable(sn, e));
+    						}
+
+    						return null;
+    					})
+    			.orElse(null);
+    }
+
+    @PostMapping("pll_register")
+    PLLRegister pllRegister(@RequestParam String sn, String addr, String value) throws MalformedURLException, InterruptedException, ExecutionException, ScriptException{
+    	logger.error(sn);
+    	return Optional.ofNullable(sn)
+
+    			.map(
+    					s->{
+    						try {
+
+    							final URL url = new URL("http", sn, "/device_debug_write.cgi");
+    				    		List<NameValuePair> params = new ArrayList<>();
+    				    		params.addAll(Arrays.asList(
+    				    				new BasicNameValuePair[]{
+    				    						new BasicNameValuePair("devid", "1"),
+    				    						new BasicNameValuePair("command", "regs"),
+    				    						new BasicNameValuePair("group", "102"),
+    				    						new BasicNameValuePair("address", addr),
+    				    						new BasicNameValuePair("value", value)}));
+    				    		FutureTask<PLLRegister> o = HttpRequest.postForIrtObgect(url.toString(), PLLRegister.class, params);
+    				    		final PLLRegister pllRegister = o.get(5, TimeUnit.SECONDS);
+    				    		logger.error(pllRegister);
+								return pllRegister;
+
+    						} catch (IOException | InterruptedException | ExecutionException | TimeoutException e) {
+    							logger.catching(new Throwable(sn, e));
+    						}
+
+    						return null;
+    					})
+    			.orElse(null);
+    }
+
+    @Getter @Setter @AllArgsConstructor @ToString
+    public class Message{
+    	private String content;
     }
 }
