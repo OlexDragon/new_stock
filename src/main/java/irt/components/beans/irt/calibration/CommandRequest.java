@@ -14,4 +14,5 @@ public class CommandRequest {
 	private String hostName;
 	private String spName;
 	private List<Command> commands;
+	private int timeout = 10*1000;
 }

@@ -1,185 +1,191 @@
 // Prologix
 
-// Mode
-$('.prologix-buton').click(function(){
+function prologixElements($comPorts, $toolAddress, $buttons){
 
-	var prologixComPorts = $('#prologixComPorts').val();
+	$buttons.click(e=>{
 
-	if(prologixComPorts){
+		let prologixComPorts = $comPorts.val();
+		let toSend = getToSend(prologixComPorts, e.currentTarget.dataset.commands, e.currentTarget.dataset.getAnswer);
 
-		var hostName = getHostName();
-		if(!hostName) return;
+		if(!toSend)
+			return;
 
-		var index = this.dataset.commandIndex;
-		var commands = JSON.parse(this.dataset.commands);
-		var getAnswer = JSON.parse(this.dataset.getAnswer);
+		sendPrologixCommands(toSend, function(response){
 
-		var toSend = {}
-		toSend.hostName = hostName;
-		toSend.spName = prologixComPorts;
-		toSend.commands = [{command: commands[index], getAnswer: getAnswer[index]}];
+			if(!response.getAnswer){
+				if(response.command.startsWith('++')){
+					let split = response.command.split(' ');
+					if(split.length==2){
+						let toSend = getToSend(prologixComPorts, '["' + split[0] + '"]', true);
+						sendPrologixCommands(toSend, response=>responseToButton(e.currentTarget, response));
+					}
+				}
+				return;
+			}
 
-		if(!getAnswer[index]){
-			$.each(getAnswer, function(i, get){
+			var answer = response.answer;
 
-				if(!get)
-					return;
+			if(!answer){
+				console.log("No Answer.");
+				alert('No Answer.');
+				return;
+			}
 
-				var c = {};
-				c.command = commands[i];
-				c.getAnswer = true;
-				toSend.commands.push(c);
-			});
-		}
+			if(response.command=='++addr')
+				setAddress($toolAddress, response);
+			else
+				responseToButton(e.currentTarget, response);
+		});
+	});
+	
+}
+function setAddress($address, response){
 
-		sendPrologixCommands(toSend, responseToButton);
+	let answer = getAnswer(response);
+	if(answer){
+		$address.val(answer).trigger("input");
+
+		let $parent = $address.parents('.accordion-body');
+		setAccordionHeaderText($parent);
 	}
-});
+}
+function responseToButton(button, response){
 
-function responseToButton(response){
+	let $parent = $(button).parent();
+	let $toolBtns = $parent.parent().find('.tool-btn').addClass('disabled');
 
-	var a = response.answer;
-	if(!a) return;
+	let answer = getAnswer(response);
+	if(!answer)
+		return;
 
-	var command = response.command;
-	var $button = $('#' + command.replace('++', ''));
+	let command = response.command;
+	if(!command){
+		let title = 'Wrong Response.'
+		let message = JSON.stringify(response);
+		console.log(title + ' : ' + message);
+		showToast(title, message, 'text-bg-danger');
+		return;
+	}
+	let $button = $parent.find(command.replace('++', '.btn-'));
 
 	if(!$button.length)
 		return;
 
-	var answer = $.trim(String.fromCharCode.apply(String, a));
-	$button[0].dataset.commandIndex = answer;
+	let index = parseInt(answer);
+	if(index>2){
+		let title = 'Wrong Index.'
+		let message = 'index=' + index;
+		console.log(title + ' : ' + message);
+		showToast(title, message, 'text-bg-danger');
+		return;
+	}
 
-	var index = parseInt(answer);
+	let dataMessage = $button.data('message');
+	$button.text(dataMessage[index]);
 
-	var dataMessage = $button[0].dataset.message;
-	var text = JSON.parse(dataMessage)[index];
-	$button.text(text);
-
-	var title = JSON.parse($button[0].dataset.title)[index];
+	var title = $button.data('title')[index];
 	$button.prop('title', title);
 
-	var dataClasses = $button[0].dataset.classes;
-	$.each(JSON.parse(dataClasses), function(i, c){
-		if(i==index)
-			$button.addClass(c);
-		else
-			$button.removeClass(c);
-	});
+	let t = $button.data();
+	let commandsToChoose = $button.data('commandsToChoose');
+	let c = commandsToChoose[index];
+	$button.attr('data-commands', JSON.stringify([c])).attr('data-get-answer', false);
+
+	let dataClasses = $button.data('classes');
+	$button.removeClass('btn-outline-secondary').removeClass(dataClasses).addClass(dataClasses[index]);
+
+	let $btns = $parent.find('.btn-prologix');
+	let $filter = $btns.filter('.btn-success');
+	if($btns.length == $filter.length)
+		$toolBtns.removeClass('disabled');
+}
+function getAnswer(response){
+
+	if(!response.getAnswer)
+		return null;
+
+	let answer = response.answer;
+
+	if(!answer){
+		let title = 'No Answer.'
+		let message = 'No Answer from the Output Tool.';
+		console.log(title + ' : ' + message);
+		showToast(title, message, 'text-bg-danger');
+		return null;
+	}
+
+	answer = $.trim(String.fromCharCode.apply(String, answer));
+
+	if(!answer || answer.split('\n').length>1){
+		let title = 'Wrong Answer.'
+		console.log(title + ' : ' + answer);
+		showToast(title, answer, 'text-bg-danger');
+		return;
+	}
+
+	if(answer == 'Unrecognized command'){
+
+		let title = 'Unrecognized command.'
+		let message = 'The Prologix MODE must be CONTROLLER.';
+		console.log(title + ' : ' + message);
+		showToast(title, message, 'text-bg-info');
+		return null;
+	}
+
+	return answer;
 }
 
-function sendPrologixCommands(commands, responseProcessing){
+let $address = $('.address').on('input', function(){
 
-	var json = JSON.stringify(commands);
-
-	$.ajax({
-		url: '/serial_port/rest/send',
-		type: 'POST',
-		contentType: "application/json",
-		data: json,
-        dataType: 'json'
-    })
-	.done(function(data){
-
-		$.each(data.commands, function(index, c){
-			responseProcessing(c);
-		});
-	})
-	.fail(function(error) {
-		if(error.statusText!='abort'){
-		var responseText = error.responseText;
-			if(responseText)
-				alert(error.responseText);
-			else
-				alert("Server error. Status = " + error.status)
-		}
-	});
-}
-
-$('#prologixSetAddress').click(function(){
-
-	var prologixComPorts = $('#prologixComPorts').val();
-	if(!prologixComPorts) return;
-
-	var hostName = getHostName();
-	if(!hostName) return;
-
-
-	var toSend = {};
-
-	var $prologixAddress = $('#prologixAddress');
-	var addr = $.trim($prologixAddress.val());
-
-	if(addr){
-
-		toSend = getToSend('["++addr ' + addr + '"]', false);
-
-		var c = {};
-		c.command = '++addr';
-		c.getAnswer = true;
-		toSend.commands.push(c);
-
-	}else
-		toSend = getToSend('["++addr"]', true);
-
-
-	sendPrologixCommands(toSend, setAddress);
-});
-
-function setAddress(response){
-
-	var a = response.answer;
-	if(!a) return;
-
-	var answer = $.trim(String.fromCharCode.apply(String, a));
-	$('#prologixAddress').val(answer).trigger("input");
-}
-
-$('#prologixAddress').on('input', function(){
-
-	var value = $.trim(this.value);
-	var $prologixSetAddress = $('#prologixSetAddress');
+	let value = $.trim(this.value);
+	let $toolBtns = $(this).parents('.accordion-body').find('.tool-btn');
+	
+	let $button = $(this).parent().children('button');
+	let d = $button.data('getAnswer');
 
 	if(value){
-		$prologixSetAddress.text('Set');
+		$button.text('Set').attr('data-get-answer', false).attr('data-commands', `["++addr ${value}"]`);
+		$toolBtns.removeClass('disabled');
 	}else{
-		$prologixSetAddress.text('Get');
+		$button.text('Get').attr('data-get-answer', true).attr('data-commands', '["++addr"]');
+		$toolBtns.addClass('disabled');
+	}
+})
+.focusout(function(){
+	if(this.value)
+		Cookies.set(this.id, this.value);
+
+	let $parent = $(this).parents('.accordion-body');
+	setAccordionHeaderText($parent);
+});
+$.each($address, function(index, addr){
+	let cookie = Cookies.get(addr.id)
+	if(cookie){
+		addr.value = cookie;
+		$button = $(addr).parent().children('button').attr('data-get-answer', false).attr('data-commands', `["++addr ${cookie}"]`);
 	}
 });
 
-$('#prologixGetAll').click(function(){
+function getToSend(prologixComPorts, commands, getAnswer){
 
-	var toSend = getToSend(this.dataset.commands, true);
-	if(!toSend) return;
+	if(!prologixComPorts){
+		console.log('Serial Port is not selected.');
+		alert('Serial Port is not selected.');
+		return;
+	}
 
-	sendPrologixCommands(toSend, function(response){
-
-		var a = response.answer;
-		if(!a) return;
-
-		if(response.command=='++addr')
-			setAddress(response);
-		else
-			responseToButton(response);
-	});
-});
-
-$('#prologixSetDefault').click(function(){
-
-	var toSend = getToSend(this.dataset.commands, false);
-	if(!toSend) return;
-
-	sendPrologixCommands(toSend, function(response){});
-	$('#prologixGetAll').trigger('click');
-});
-
-function getToSend(commands, getAnswer){
-
-	var prologixComPorts = $('#prologixComPorts').val();
-	if(!prologixComPorts) return;
+	if(!commands){
+		console.log("The GPIB Command is not set.");
+		alert('The GPIB Command is not set.');
+		return;
+	}
 
 	var hostName = getHostName();
-	if(!hostName) return;
+	if(!hostName){
+		console.log("Unable to get hostname.");
+		alert('Unable to get hostname.');
+		return;
+	}
 
 	var toSend = {};
 		toSend.hostName = hostName;
@@ -189,7 +195,7 @@ function getToSend(commands, getAnswer){
 	var commands = JSON.parse(commands);
 
 	$.each(commands, function(index, command){
-		var c = {};
+		let c = {};
 		c.getAnswer = getAnswer;
 		c.command = command;
 		toSend.commands.push(c);
@@ -197,3 +203,21 @@ function getToSend(commands, getAnswer){
 
 	return toSend;
 }
+$('.accordion-collapse').on('show.bs.collapse', e=>{
+	let $parent = $(e.currentTarget);
+	let comPort = $parent.find('.com-ports').val();
+	if(comPort){
+		let $btns = $parent.find('.btn-prologix');
+		$btns.not('.btn-outline-secondary')
+		.each((i,el)=>{
+			let commands = JSON.parse(el.dataset.commands);
+			let c = [];
+			$.each(commands, function(index, command){
+				let t = command.split(' ')[0];
+				c.push(t);
+			});
+			$(el).data('commands', JSON.stringify(c)).data('getAnswer', true);
+		});
+		$btns.click();
+	}
+});

@@ -65,7 +65,7 @@ public class HttpSerialPortRestController {
     	final URL url =  new URL("http", hostName, ":" + port);
 		logger.debug(url);
 
-    	return HttpRequest.postForObgect(url, CommandRequest.class, commandRequest).get(5, TimeUnit.SECONDS);
+    	return HttpRequest.postForObgect(url, CommandRequest.class, commandRequest).get(15, TimeUnit.SECONDS);
 	}
 
 	@ExceptionHandler(TimeoutException.class)

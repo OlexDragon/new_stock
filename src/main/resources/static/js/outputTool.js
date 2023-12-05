@@ -1,93 +1,100 @@
 
-var $outputComPorts = $('#outputComPorts');
-var $outputTool 	= $('#outputTool');
-var $ouputAddress 	= $('#ouputAddress');
-var outputComPorts;
-var hostName;
-var outputTool
-var address;
+let $outputComPorts		 = $('#outputComPorts');
+let $outputButtons		 = $outputComPorts.parents('.accordion-body').find('button').filter((i,el)=>!el.classList.contains('tool-btn'));
+let $outputToolAddress 	 = $('#outputToolAddress');
+let $outputTool			 = $('#outputTool');
+let $outputToolValue	 = $('#outputToolValue');
+let $outputToolAuto		 = $('#outputToolAuto');
 
-$('#outputGet').click(()=>outputGet());
+prologixElements($outputComPorts, $outputToolAddress, $outputButtons);
+
+let $outputGet = $('#outputGet').click(()=>outputGet());
 
 function outputGet(){
 
-	outputComPorts = $outputComPorts.val();
-	if(!outputComPorts)
+	$outputToolValue.val('');
+
+	let outputComPorts = $outputComPorts.val();
+	if(!outputComPorts){
+		console.log("The Serial Port is not selected.");
+		alert('The Serial Port is not selected.');
 		return;
+	}
 
-	hostName = getHostName();
-	if(!hostName) return;
-
-	outputTool = $outputTool.val();
-	if(!outputTool){
+	let toolCommands = $outputTool.val();
+	if(!toolCommands){
+		console.log("Tool not selected.");
 		alert('Tool not selected.');
 		return;
 	}
 
-	toolAddress = $ouputAddress.val();
+	let toolAddress = $outputToolAddress.val();
 	if(!toolAddress){
+		console.log("Type the Output Tool Address.");
 		alert('Type the Tool Address.');
 		return;
 	}
 
 	let toSend = {}
-	toSend.hostName = hostName;
 	toSend.spName = outputComPorts;
 	toSend.commands = [];
-	toSend.commands.push({command: '++addr ' + toolAddress, getAnswer: false})
+	toSend.commands.push({command: '++addr ' + toolAddress, getAnswer: false}); // Set Tool Address
 
-	$.each(outputTool.split(','), function(index, command){
-
-		var split = command.split(':');
-
+	let isAouto = $outputToolAuto[0].dataset.commands.includes('++auto 0');// Prologix is in AUTO mode
+	$.each(toolCommands.split(','), function(index, command){
 		var c = {};
-		c.getAnswer = split[1] == 'true';
-		c.command = split[0];
+		c.command = command;
+		c.getAnswer = isAouto;
 		toSend.commands.push(c);
 	});
 
-	let json = JSON.stringify(toSend);
+	if(!isAouto)
+		toSend.commands.push({command: '++read eoi', getAnswer: true}); // READ id prologix mode isn't AUTO
+
 	let $outputValue = $('#outputValue').text('');
-
-	$.ajax({
-		url: '/serial_port/rest/send',
-		type: 'POST',
-		contentType: "application/json",
-		data: json,
-        dataType: 'json'
-    })
-	.done(data=>outputAction(data))
-	.fail(function(error) {
-		if(error.statusText!='abort'){
-		var responseText = error.responseText;
-			if(responseText)
-				alert(error.responseText);
-			else
-				alert("Server error. Status = " + error.status)
-		}
-	});
+	sendPrologixCommands(toSend, outputAction);
 }
-
 function outputAction(data){
 
-	$.each(data.commands, function(index, command){
+	if(!data.getAnswer){
+		return;
+	}
 
-		if(!command.getAnswer || !command.answer)
-			return;
+	if(!data.answer){
+		let title = 'Communication problem.'
+		let message = 'The Output Tool did not respond..';
+		console.log(title + ' : ' + message);
+		showToast(title, message, 'text-bg-danger');
+		return;
+	}
 
-		if(typeof dataProcessing !== 'undefined')
-			dataProcessing(data);
+	if(typeof dataProcessing !== 'undefined')
+		dataProcessing(data);
 
-		var answer = $.trim(String.fromCharCode.apply(String, command.answer));
+	var answer = $.trim(String.fromCharCode.apply(String, data.answer));
+	console.log(answer);
 
-		var s = answer.split(/\s+/);
-		var a;
-		if(s.length>1)
-			a = parseFloat(s[1]).toFixed(1);
+	var s = answer.split(/\s+/);
+	var a;
+	switch(s.length){
+	case 1:
+		a = parseFloat(answer);
+		break;
+	case 2:
+		a = parseFloat(s[1]);
+		break;
+	default:
+		a = parseFloat(s[s.length-2]);
+	}
 
-		else
-			a = parseFloat(answer).toFixed(1);
+	if(!a){
+		let title = 'Parser Error.'
+		let message = 'The value "' + a + '" cannot be parsed, or is out of range.';
+		console.log(title + ' : ' + message);
+		showToast(title, message, 'text-bg-danger');
+		return;
+	}
 
-		$('#outputValue').text(a);
-	});
+	let toFixed = a.toFixed(1)
+	$outputToolValue.val(toFixed);
 }

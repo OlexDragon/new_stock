@@ -189,12 +189,13 @@ public class RmaController {
 	public String addRma(@RequestParam String serialNumber, Principal principal, Model model) throws IOException {
 //		logger.error("{} : {}", serialNumber, principal);
 
-    	ProfileWorker profileWorker = new ProfileWorker(profileFolder, serialNumber);
+		String sn = serialNumber.toUpperCase();
+    	ProfileWorker profileWorker = new ProfileWorker(profileFolder, sn);
 
 		if(!(principal instanceof UsernamePasswordAuthenticationToken) || !profileWorker.exists())
 			return "rma :: alert";
 
-		final Optional<Rma> oRma = rmaRepository.findBySerialNumberAndStatusNot(serialNumber, Rma.Status.SHIPPED);
+		final Optional<Rma> oRma = rmaRepository.findBySerialNumberAndStatusNot(sn, Rma.Status.SHIPPED);
 //		logger.error(oRma);
 		if(oRma.isPresent())
 			return null;
@@ -204,32 +205,37 @@ public class RmaController {
 				description->{
 					final LocalDate currentdate = LocalDate.now();
 					final String format = currentdate.format(formatter);
-					final int count = rmaRepository.findByRmaNumberStartsWith(format).parallelStream().map(Rma::getRmaNumber).map(rmaNumber->rmaNumber.substring(7)).mapToInt(Integer::parseInt).max().orElse(0);
+					final int count = rmaRepository.findByRmaNumberStartsWith(format).parallelStream().map(Rma::getRmaNumber).map(rmaNumber->rmaNumber.substring(7).split("[- ]")[0]).mapToInt(Integer::parseInt).max().orElse(0);
 					final String sequence = String.format("%03d", count+1);
+					final String rmaNumber = format + sequence;
 
-					final Rma rma = new Rma();
-					rma.setRmaNumber(format + sequence);
-					rma.setDescription(description);
-					rma.setSerialNumber(serialNumber);
-
-					final Object pr = ((UsernamePasswordAuthenticationToken)principal).getPrincipal();
-					final User user = ((UserPrincipal)pr).getUser();
-					rma.setUser(user);
-					rma.setUserId(user.getId());
-
-					rma.setStatus(Rma.Status.CREATED);
-//					logger.error(rma);
-
-					// Part Number
-					profileWorker.getPartNumber().ifPresent(rma::setPartNumber);
-
-					final Rma savedRma = rmaRepository.save(rma);
+					final Rma savedRma = saveRMA(rmaNumber, sn, description, principal, profileWorker, rmaRepository);
 
 					List<Rma> rmas = new ArrayList<>();
 					rmas.add(savedRma);
 					model.addAttribute("rmas", rmas);
 				});
 		return "rma :: rmaCards";
+	}
+
+	static Rma saveRMA(final String rmaNumber, String serialNumber, String description, Principal principal, ProfileWorker profileWorker, RmaRepository rmaRepository) {
+		final Rma rma = new Rma();
+		rma.setRmaNumber(rmaNumber);
+		rma.setDescription(description);
+		rma.setSerialNumber(serialNumber);
+
+		final Object pr = ((UsernamePasswordAuthenticationToken)principal).getPrincipal();
+		final User user = ((UserPrincipal)pr).getUser();
+		rma.setUser(user);
+		rma.setUserId(user.getId());
+
+		rma.setStatus(Rma.Status.CREATED);
+
+		// Part Number
+		profileWorker.getPartNumber().ifPresent(rma::setPartNumber);
+
+		final Rma savedRma = rmaRepository.save(rma);
+		return savedRma;
 	}
 
 	@PostMapping(path = "comments")

@@ -6,7 +6,8 @@ import lombok.RequiredArgsConstructor;
 @RequiredArgsConstructor @Getter
 public enum OutputTools {
 
-	HP438A("++read:true");
+	HP438A		("++read"),
+	HP_EMP_441A	("meas?");
 
 	private final String commands;
 }

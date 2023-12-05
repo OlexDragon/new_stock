@@ -102,11 +102,11 @@
 // 			});
 
 // Currenr Alarm setting.
-			let $currentAlarm = $('#currentAlarm');
+			$currentAlarm = $('#currentAlarm');
 
-			let cV = Cookies.get("currentAlarm");
-			if(cV)
-				$currentAlarm.val(cV);
+			cookies = Cookies.get("currentAlarm");
+			if(cookies)
+				$currentAlarm.val(cookies);
 
 			$currentAlarm.focusout(function(){
 				let v = $(this).val();
@@ -122,7 +122,6 @@
 			var delay = 200;
 			$('#resetBtn').click(function(){delay = 200; })
 
-			var err = false;
 			var $currentDelay = $('#currentDelay').text('Delay: ' + delay + ' ms');
 
 			var intervalCurrent = setInterval(getCurrents, delay);

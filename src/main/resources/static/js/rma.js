@@ -427,3 +427,42 @@ function showThumbnails(index, commentId){
 	$imgModal = $('#imgModal');
 	$imgModal.load('/rma/show_img', {commentID: commentId, imgIndex: index}, function(){$imgModal.modal('show');})
 }
+
+// Copy content to the clipboard
+$('.accordion').click(e=>{
+
+	if(!e.ctrlKey && e.target.localName=='strong')
+		return;
+	let input = document.createElement('input');
+    input.setAttribute('value', e.target.innerText);
+    document.body.appendChild(input);
+    input.select();
+	document.execCommand('copy');
+    document.body.removeChild(input);
+	showToast("Copy to Clipboard", `The text '${e.target.innerText}' has been copied to the clipboard.`, 'text-bg-success');
+});
+
+let $toastContaner = $('#toast-container');
+function showToast(title, message, headerClass){
+
+	let $toast = $('<div>', {class: 'toast', role: 'alert', 'aria-live': 'assertive', 'aria-atomic': true})
+		.append(
+			$('<div>', {class: 'toast-header'})
+			.append(
+				$('<strong>', {class: 'me-auto', text: title})
+			)
+			.append(
+				$('<button>', {class: 'btn-close', type: 'button', 'data-bs-dismiss': 'toast', 'aria-label': 'Close'})
+			)
+		)
+		.append(
+			$('<div>', {class: 'toast-body', text: message})
+		)
+	.appendTo($toastContaner)
+	.on('hide.bs.toast', function(){this.remove();});
+
+	if(headerClass)
+		$toast.find('.toast-header').addClass(headerClass);
+
+	new bootstrap.Toast($toast).show();
+}

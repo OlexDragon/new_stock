@@ -23,102 +23,25 @@
 
 <!-- Auto calibration by Input Power -->
 	<th:block th:fragment="byInput">
-		<th:block th:replace="calibration/output_power :: outputPower"></th:block>
+	<div class="modal-dialog modal-xl">
+		<div class="modal-content">
+			<div class="modal-header">
+				<h5 class="modal-title">OUTPUT POWER CALIBRATION - by Input Power</h5>
+				<button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+			</div>
+			<div class="modal-body">
+				<div class="row gap-3 p-3">
+				</dib>
+			</div>
+			<div class="modal-footer">
+				<button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Close</button>
+				<button type="button" class="btn btn-primary">Save changes</button>
+			</div>
+		</div>
+	</div>
   		<script  type="application/javascript">
 			/*<![CDATA[*/
-
-				let minValue	= $('#minValue').val();
-				let maxValue	= $('#maxValue').val();
-				let step		= $('#step').val();
-				let $input		= $('<div>', {class: 'col'});
-				let $output		= $('<div>', {class: 'col'});
-				let $frequ		= $('<div>', {class: 'col'});
-				let $power		= $('<div>', {class: 'col'});
-
-				$('.modal-footer')
-				.append(
-						$('<div>', {class: 'row text-center',  style:'width:100%;'})
-						.append($input)
-						.append($frequ)
-						.append($power)
-						.append($output)
-				);
-
-				// Unit Output Power Change
-				let outputPower;
-				$('#outputValue').on('DOMSubtreeModified', function () {
-					if(this.innerText){
-						outputPower = parseFloat(this.innerText);
-						$output.text(this.innerText) + ' dBm';
-					}
-				});
-				outputGet();
-
-				// Unit Input Power ON/OFF
-				let $inputOutputBtn		 = $('#inputOutputBtn');	// Button to set source output ON/OFF
-				let $inputOutput = $('#inputOutput');
-				let output;
-				$inputOutput.change( function () {				// Source output ststus.
-					output = $inputOutput.val();
-					$input.text($(this).find('option:selected').text());
-				});
-
-				// Unit Input Frequency
-				let $inputFrequencyBtn	 = $('#inputFrequencyBtn');	// Set Frequency BUTTON
-				$('#inputFrequencyUnit').val('MHZ');// Frequency UNIT
-				$('#inputFrequency').val('')
-				.change( function () {				// Source Frequency value
-					$frequ.text(this.value + ' MHz');
-				});
-				$inputFrequencyBtn.click();
-
-				//Unit Input Power Value
-				let $inputPowerBtn		 = $('#inputPowerBtn');		// Set Output Power BUTTON
-				let $inputPower			 = $('#inputPower');		// Output Power VAlue
-				.change( function () {
-					inputPower = this.value;
-					$power.text(this.value + ' dBm');
-				});
-
-				let intervalByInputPower;
-				$modal.on('shown.bs.modal', function (e) {
-					getAllByInputPower();
-					intervalByInputPower = setInterval(calibrateByInputPower, 1000);
-				});
-				$modal.on('hidden.bs.modal', function () {
-					clearInterval(intervalByInputPower);
-				});
-
-				let inputPowerSet; 
-				function calibrateByInputPower(){
-
-					outputGet();
-
-					if(!outputPower || !inputPower)
-						return;
-
-					if(output != 1){	// output != ON
-						$inputOutput.val(1);
-						$inputOutputBtn.click();
-						return;
-					}
-
-					let set = inputPower - (outputPower - minValue);
-
-					if(!inputPowerSet || !(set > inputPowerSet - 0.3 && set < inputPowerSet + 0.3)){
-						inputPowerSet = set;
-						$inputPower.val(inputPowerSet);
-						$inputPowerBtn.click();
-					}
-				}
-				function getAllByInputPower(){
-
-					$inputOutput.children(":first").prop('selected', true);
-					$inputOutputBtn.click();
-
-					$inputPower.val('');
-					$inputPowerBtn.click();
-				}
+				$modal.modal('show');
 			/*]]>*/
 			//# sourceURL=outputPowerByInput.js
   		</script>

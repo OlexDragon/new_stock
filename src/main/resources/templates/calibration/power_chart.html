@@ -47,37 +47,21 @@
 			/*<![CDATA[*/
 
 			var ip = /*[[${ip}]]*/ '192.168.30.220';
-			let testBy = 'byPower';
+			testBy = 'byPower';
 
-			let urlCalibrationInfo = '/calibration/rest/calibrationInfo';
 			postCalibrationInfo();
 
-			// X - axel
-			let options = {
 
-						hour: "numeric",
-						minute: "numeric",
-						month: "short",
-  						day: "numeric",
-  						second: "numeric",
-						hour12: false,
-					};
-			let formater = new Intl.DateTimeFormat("en-US", options)
+			timestamp = new Date().getTime()
 
-			let xLabels = [];
-			let yPower = [];
-			let yTemperature = [];
-			let timestamp = new Date().getTime()
-
-			const startSize = 2;
-			for(let i=startSize; i>=0; i--){
+			for(let i=2; i>=0; i--){
 				let d = new Date(timestamp - i*60000);
 				xLabels.push(formater.format(d));
 				yPower.push('');
 				yTemperature.push('');
 			}
 			
-			let chart = new Chart(document.getElementById('powerChart'), {
+			chart = new Chart(document.getElementById('powerChart'), {
 									type: "line",
 									data: {
 											labels: xLabels,
@@ -137,8 +121,8 @@
 			$modal.on('shown.bs.modal', update);
 			$modal.on('hidden.bs.modal', function () { clearInterval(interval); });
 
-			let $lastPoint = $('#lastPoint');
-			let chartRun = false;
+			$lastPoint = $('#lastPoint');
+			chartRun = false;
 			function update(){
 
 				interval = setInterval(function() {
@@ -252,7 +236,7 @@
 				let date1 = new Date(xLabels[y1]);
 				let date2 =  new Date(xLabels[y2]);
 				let t = date1 - date2;
-				return t<60*60*1000; // if in renge replace point. If out off renge add point
+				return t<10*60*60*1000; // if in renge replace point. If out off renge add point
 			}
 			$('#restart').click(restart);
 

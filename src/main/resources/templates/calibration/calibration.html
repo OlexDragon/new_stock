@@ -31,7 +31,7 @@
 		<div id="unit_description" class="nav-item col"><h4 th:text="${info==null ? '' : info.name}">Unit Name</h4></div>
 
 		<div class="nav-item input-group col" title="Serial Port Servers">
-   			<label for="spServers" class="input-group-text">SP Server: </label>
+   			<button id="btn-http-comport" class="input-group-text" >SP Server: </button>
 			<select id="spServers" class="form-select" aria-label="Serial Port Servers" title="Serial Port">
 				<option selected="selected" disabled="disabled" hidden="hidden" title="Serial Port Server" value="">Select a Serial Port Server</option>
 				<option
@@ -266,6 +266,9 @@
   			</div>
 		</div>
 	</nav>
+<!-- Toast -->
+<div id="toast-container" class="toast-container position-fixed start-0 mt-5">
+</div>
 
 <!-- Content -->
 	<div id="content" class="container-fluid mt-5 pt-3">
@@ -276,22 +279,78 @@
 <!-- Output -->
 			<div class="accordion-item">
 				<h2 class="accordion-header" id="headingOutput">
-					<button class="accordion-button" type="button" data-bs-toggle="collapse" data-bs-target="#collapseOutput" aria-expanded="true" aria-controls="collapseOutput">Unit Output :<strong id="outputInfo" class="text-danger"> Serial Port is not selected</strong></button>
+					<button class="accordion-button" type="button" data-bs-toggle="collapse" data-bs-target="#collapseOutput" aria-expanded="true" aria-controls="collapseOutput">Output Tool:<strong id="outputInfo" class="text-danger"> Serial Port is not selected</strong></button>
 				</h2>
 				<div id="collapseOutput" class="accordion-collapse collapse" aria-labelledby="headingOutput" data-bs-parent="#accordion">
 					<div class="accordion-body">
-						<div class="row">
-	        				<select id="outputComPorts" class="form-control col com-ports" data-info-message="outputInfo" title="Serial Port">
-								<option selected="selected" disabled="disabled" hidden="hidden" value="">Select a Serial Port</option>
-	        				</select>
-	        				<select id="outputTool" class="form-control col save-to-cookies" title="Outpu Tool">
-								<option selected="selected" disabled="disabled" hidden="hidden" value="">Select a Power Meter</option>
-								<option value="HP438A" th:each="outputTool, stat : ${T(irt.components.beans.irt.calibration.tools.OutputTools).values()}" th:text="${outputTool.name}" th:value="${outputTool.commands}">HP438A</option>
-	        				</select>
-	        				<input id="ouputAddress" type="number" class="col address" title="Tool Address" placeholder="Tool Address" value="13">
-							<button id="outputGet" class="form-control col btn btn-secondary output-buton to-disable disabled">Get</button>
-							<div class="col"><strong id="outputValue" class="fs-4"></strong></div>
-<!-- 							<button id="ouputZero" class="form-control col btn btn-outline-secondary output-buton to-disable disabled">Zero</button> -->
+						<div class="row gap-3 mb-3">
+							<div class="form-floating col">
+	        					<select id="outputComPorts" class="form-select com-ports" data-info-message="outputInfo" title="Serial Port">
+									<option selected="selected" disabled="disabled" hidden="hidden" value="">Select a Serial Port</option>
+	        					</select>
+	        					<label for="outputComPorts">Serial Port</label>
+	        				</div>
+							<div class="form-floating col">
+		        				<select id="outputTool" class="form-select col save-to-cookies" title="Outpu Tool">
+									<option selected="selected" disabled="disabled" hidden="hidden" value="">Select a Power Meter</option>
+									<option value="HP438A" th:each="outputTool, stat : ${T(irt.components.beans.irt.calibration.tools.OutputTools).values()}" th:text="${outputTool.name}" th:value="${outputTool.commands}">HP438A</option>
+		        				</select>
+	        					<label for="outputTool">Tool</label>
+	        				</div>
+							<div class="col input-group flex-nowrap">
+								<div class="form-floating col">
+									<input id="outputToolValue" type="number" class="form-control" onfocus="this.blur();" readonly></input>
+	        						<label for="outputToolValue">Output Value</label>
+	        					</div>
+								<button id="outputGet" class="input-group-text btn btn-outline-secondary tool-btn disabled">Get</button>
+							</div>
+<!-- 							<button id="ouputZero" class="input-group-text col btn btn-outline-secondary output-buton to-disable disabled">Zero</button> -->
+      					</div>
+<!--  Prologix (Output Tool) -->
+      					<div class="row gap-3 prologix">
+
+							<div class="col input-group">
+								<input id="outputToolAddress" type="number" class="form-control address" aria-label="Tool Address" title="Tool Address" placeholder="Address" value="13">
+								<button class="input-group-text btn btn-outline-secondary to-disable disabled"
+										data-commands='["++addr 13"]'
+										data-get-answer='false'>Set</button>
+							</div>
+	        				<button class="form-control col btn btn-outline-secondary to-disable disabled"
+	        						title="Press to set default values( SAVE CONFIG = off, MODE = CONTROLLER)"
+	        						data-commands='["++savecfg 0", "++mode 1"]'>Set Default</button>
+	        				<button class="form-control col btn btn-outline-secondary to-disable disabled"
+	        						data-commands='["++auto", "++savecfg", "++mode", "++addr"]'
+									data-get-answer='true'>Get All</button>
+	        				<button id="outputToolAuto"
+	        						class="form-control col btn btn-outline-secondary to-disable disabled btn-prologix btn-auto"
+	        						title="Press To get the Auto Setting"
+	        						data-commands-to-choose='["++auto 1", "++auto 0"]'
+	        						data-commands='["++auto"]'
+	        						data-get-answer="true"
+	        						data-message='["AUTO OFF", "AUTO ON"]'
+	        						data-title='["Press to set AUTO ON", "Press to set AUTO OFF"]'
+	        						data-classes='["btn-primary", "btn-success"]'>Get AUTO</button>
+	        				<button class="form-control col btn btn-outline-secondary to-disable disabled btn-prologix btn-mode"
+	        						title="Press To get the Prologix Mode"
+	        						data-commands-to-choose='["++mode 1", "++mode 0"]'
+	        						data-commands='["++mode"]'
+	        						data-get-answer="true"
+	        						data-message='["DEVICE", "CONTROLLER"]'
+	        						data-title='["Press to set CONTROLLER mode", "Press to set DEVICE mode"]'
+	        						data-classes='["btn-primary", "btn-success"]'>Get Mode</button>
+	        				<button class="form-control col btn btn-outline-secondary to-disable disabled btn-prologix btn-savecfg"
+	        						title="Press To get the SAVE CONFIG setting"
+	        						data-commands-to-choose='["++savecfg 1", "++savecfg 0"]'
+	        						data-commands='["++savecfg"]'
+	        						data-get-answer="true"
+	        						data-message='["SAVE CONF. OFF", "SAVE CONF. ON"]'
+	        						data-title='["Press to set SAVE CONFIG on", "Press to set SAVE CONFIG off"]'
+	        						data-classes='["btn-success", "btn-primary"]'>SAVE CONFIG</button>
+	        				<button id="outputToolPrologixRST"
+	        						class="form-control col btn btn-outline-secondary to-disable disabled"
+	        						title="Press to reset of the USB/GPIB controller"
+	        						data-commands='["++rst"]'
+	        						data-get-answer="false">Reset</button>
       					</div>
       				</div>
 				</div>
@@ -300,35 +359,108 @@
 <!-- Input -->
 			<div class="accordion-item">
 				<h2 class="accordion-header" id="headingInput">
-					<button class="accordion-button" type="button" data-bs-toggle="collapse" data-bs-target="#collapseInput" aria-expanded="true" aria-controls="collapseInput">Unit Input :<strong id="inputInfo" class="text-danger"> Serial Port is not selected</strong></button>
+					<button class="accordion-button" type="button" data-bs-toggle="collapse" data-bs-target="#collapseInput" aria-expanded="true" aria-controls="collapseInput">Input Tool :<strong id="inputInfo" class="text-danger"> Serial Port is not selected</strong></button>
 				</h2>
 				<div id="collapseInput" class="accordion-collapse collapse" aria-labelledby="headingInput" data-bs-parent="#accordion">
 					<div class="accordion-body">
-						<div class="row">
-	        				<select id="inputComPorts" class="form-control col com-ports" data-info-message="inputInfo" title="Serial Port">
-								<option selected="selected" disabled="disabled" hidden="hidden" title="Serial Port Server" value="">Select a Serial Port</option>
-	        				</select>
-	        				<select id="inputTool" class="form-control col save-to-cookies" title="Input Tool">
-								<option selected="selected" disabled="disabled" hidden="hidden" title="Input Tool" value="">Input</option>
-								<option value="HP438A" th:each="inputTool, stat : ${T(irt.components.beans.irt.calibration.tools.InputTools).values()}" th:text="${inputTool.name}" th:value="${inputTool.commands}">HP438A</option>
-	        				</select>
-	        				<input id="inputAddress" type="number" class="col address" title="Tool Address" placeholder="Address" value="19">
-	        				<select id="inputOutput" class="form-control col input-value" data-for="#inputOutputBtn" title="Tool Output Satatus">
-	        					<option selected="selected" title="Tool Output (ON or OFF)" value="">Output</option>
-	        					<option value="0">Off</option>
-	        					<option Value="1">On</option>
-	        				</select>
-							<button id="inputOutputBtn" class="form-control col btn btn-secondary input-buton to-disable disabled" value="0">Get</button>
-	        				<input id="inputFrequency" type="number" class="col input-value" title="Frequency" placeholder="Frequency" data-for="#inputFrequencyBtn">
-	        				<select id="inputFrequencyUnit" class="form-control col save-to-cookies" title="Frequensy Unit">
-	        					<option value="GHZ" data-divider="1000000000">GHz</option>
-	        					<option value="MHZ" data-divider="1000000">MHz</option>
-	        					<option value="KHZ" data-divider="1000">kHz</option>
-	        				</select>
-							<button id="inputFrequencyBtn" class="form-control col btn btn-secondary input-buton to-disable disabled" value="1">Get</button>
-	        				<input id="inputPower" type="number" class="col input-value" title="Power" placeholder="Power" data-for="#inputPowerBtn">
-							<button id="inputPowerBtn" class="form-control col btn btn-secondary input-buton to-disable disabled" value="2">Get</button>
+						<div class="row gap-3 mb-3">
+							<div class="form-floating col">
+								<select id="inputComPorts" class="form-select com-ports" data-info-message="inputInfo" title="Serial Port">
+									<option selected="selected" disabled="disabled" hidden="hidden" title="Serial Port Server" value="">Select a Serial Port</option>
+	    	    				</select>
+	        					<label for="inputComPorts">Serial Port</label>
+	    	    			</div>
+							<div class="form-floating col">
+		        				<select id="inputTool" class="form-select col save-to-cookies" title="Input Tool">
+									<option selected="selected" disabled="disabled" hidden="hidden" title="Input Tool" value="">Input</option>
+									<option value="HP438A" 
+											th:each="inputTool, stat : ${T(irt.components.beans.irt.calibration.tools.InputTools).values()}" 
+											th:text="${inputTool.name}" 
+											th:value="${inputTool.commands}"
+											th:data-read-format="${inputTool.toRead}"
+											th:data-freq-factor="${inputTool.freqFactor}"
+											th:data-power-unit="${inputTool.powerUnit}">HP438A</option>
+		        				</select>
+	        					<label for="inputTool">Tool</label>
+		        			</div>
+							<div class="col input-group flex-nowrap">
+								<div class="form-floating col">
+		        					<select id="inputOutput" class="form-select input-value" data-for="#inputOutputBtn" title="Tool Output Satatus">
+		        						<option selected="selected" title="Tool Output (ON or OFF)" value="">Output</option>
+		        						<option value="0">Off</option>
+		        						<option Value="1">On</option>
+		        					</select>
+	        						<label for="inputOutput">Output Power</label>
+		        				</div>
+								<button id="inputOutputBtn" class="input-group-text btn btn-outline-secondary input-tool-buton tool-btn disabled" value="0">Get</button>
+							</div>
+							<div class="col input-group flex-nowrap">
+								<div class="form-floating col">
+		        					<input id="inputFrequency" type="number" class="input-value form-control" title="Frequency" placeholder="Frequency" data-for="#inputFrequencyBtn"  data-bs-content="Bottom popover">
+	        						<label for="inputFrequency">Frequency</label>
+		        				</div>
+	        					<select id="inputFrequencyUnit" class="form-select save-to-cookies" title="Frequensy Unit" style="max-width:30%;">
+	        						<option value="GHZ" data-divider="1000000000">GHz</option>
+	        						<option value="MHZ" data-divider="1000000">MHz</option>
+	        						<option value="KHZ" data-divider="1000">kHz</option>
+	        					</select>
+								<button id="inputFrequencyBtn" class="input-group-text btn btn-outline-secondary input-tool-buton tool-btn disabled" value="1">Get</button>
+	        				</div>
+							<div class="col input-group flex-nowrap">
+								<input id="inputPowerUnit" type="hidden">
+								<div class="form-floating col">
+		        					<input id="inputPower" type="number" class="input-value form-control" title="Power" placeholder="Power" data-for="#inputPowerBtn"  data-bs-content="Bottom popover">
+	        						<label for="inputPower">Power Level</label>
+		        				</div>
+								<button id="inputPowerBtn" class="input-group-text btn btn-outline-secondary input-tool-buton tool-btn disabled" value="2">Get</button>
+							</div>
 						</div>
+<!--  Prologix (Input Tool) -->
+      					<div class="row gap-3 prologix">
+
+							<div class="col input-group">
+								<input id="inputToolAddress" type="number" class="form-control address" aria-label="Tool Address" title="Tool Address" placeholder="Address" value="13">
+								<button class="input-group-text btn btn-outline-secondary to-disable disabled"
+										data-commands='["++addr 13"]'
+										data-get-answer='false'>Set</button>
+							</div>
+	        				<button class="form-control col btn btn-outline-secondary to-disable disabled"
+	        						title="Press to set default values( SAVE CONFIG = off, MODE = CONTROLLER)"
+	        						data-commands='["++savecfg 0", "++mode 1"]'>Set Default</button>
+	        				<button class="form-control col btn btn-outline-secondary to-disable disabled"
+	        						data-commands='["++auto", "++savecfg", "++mode", "++addr"]'
+									data-get-answer='true'>Get All</button>
+	        				<button id="inputToolAuto"
+	        						class="form-control col btn btn-outline-secondary to-disable disabled btn-prologix btn-auto"
+	        						title="Press To get the Auto Setting"
+	        						data-commands-to-choose='["++auto 1", "++auto 0"]'
+	        						data-commands='["++auto"]'
+	        						data-get-answer="true"
+	        						data-message='["AUTO OFF", "AUTO ON"]'
+	        						data-title='["Press to set AUTO ON", "Press to set AUTO OFF"]'
+	        						data-classes='["btn-success", "btn-success"]'>Get AUTO</button>
+	        				<button class="form-control col btn btn-outline-secondary to-disable disabled btn-prologix btn-mode"
+	        						title="Press To get the Prologix Mode"
+	        						data-commands-to-choose='["++mode 1", "++mode 0"]'
+	        						data-commands='["++mode"]'
+	        						data-get-answer="true"
+	        						data-message='["DEVICE", "CONTROLLER"]'
+	        						data-title='["Press to set CONTROLLER mode", "Press to set DEVICE mode"]'
+	        						data-classes='["btn-primary", "btn-success"]'>Get Mode</button>
+	        				<button class="form-control col btn btn-outline-secondary to-disable disabled btn-prologix btn-savecfg"
+	        						title="Press To get the SAVE CONFIG setting"
+	        						data-commands-to-choose='["++savecfg 1", "++savecfg 0"]'
+	        						data-commands='["++savecfg"]'
+	        						data-get-answer="true"
+	        						data-message='["SAVE CONF. OFF", "SAVE CONF. ON"]'
+	        						data-title='["Press to set SAVE CONFIG on", "Press to set SAVE CONFIG off"]'
+	        						data-classes='["btn-success", "btn-primary"]'>SAVE CONFIG</button>
+	        				<button id="inputToolPrologixRST"
+	        						class="form-control col btn btn-outline-secondary to-disable disabled"
+	        						title="Press to reset of the USB/GPIB controller"
+	        						data-commands='["++rst"]'
+	        						data-get-answer="false">Reset</button>
+      					</div>
       				</div>
 				</div>
 			</div>
@@ -348,65 +480,6 @@
       				</div>
 				</div>
 			</div>
-
-<!-- Prologix -->
-			<div class="accordion-item">
-				<h2 class="accordion-header" id="headingPrologix">
-					<button class="accordion-button" type="button" data-bs-toggle="collapse" data-bs-target="#collapsePrologix" aria-expanded="true" aria-controls="collapsePrologix">Prologix :<strong id="prologixInfo" class="text-danger"> Serial Port is not selected</strong></button>
-				</h2>
-				<div id="collapsePrologix" class="accordion-collapse collapse" aria-labelledby="headingPrologix" data-bs-parent="#accordion">
-					<div class="accordion-body">
-						<div class="row">
-	        				<select id="prologixComPorts" class="form-control col com-ports" data-info-message="prologixInfo" title="Serial Port">
-								<option selected="selected" disabled="disabled" hidden="hidden" title="Serial Port Server" value="">Select a Serial Port</option>
-	        				</select>
-
-	        				<button id="prologixGetAll"
-	        						class="form-control col btn btn-outline-secondary to-disable disabled"
-	        						data-commands='["++savecfg", "++mode", "++addr"]'>Get All</button>
-
-	        				<button id="mode"
-	        						class="form-control col btn btn-outline-secondary prologix-buton to-disable disabled"
-	        						title="Press To get the Prologix Mode"
-	        						data-command-index="2"
-	        						data-commands='["++mode 1", "++mode 0", "++mode"]'
-	        						data-get-answer="[false, false, true]"
-	        						data-message='["DEVICE", "CONTROLLER"]'
-	        						data-title='["Press to set CONTROLLER mode", "Press to set DEVICE mode"]'
-	        						data-classes='["btn-outline-primary", "btn-outline-success", "btn-outline-secondary"]'>Get Mode</button>
-
-	        				<button id="savecfg"
-	        						class="form-control col btn btn-outline-secondary prologix-buton to-disable disabled"
-	        						title="Press To get the SAVE CONFIG setting"
-	        						data-command-index="2"
-	        						data-commands='["++savecfg 1", "++savecfg 0", "++savecfg"]'
-	        						data-get-answer="[false, false, true]"
-	        						data-message='["SAVE CONF. OFF", "SAVE CONF. ON"]'
-	        						data-title='["Press to set SAVE CONFIG on", "Press to set SAVE CONFIG off"]'
-	        						data-classes='["btn-outline-success", "btn-outline-primary", "btn-outline-secondary"]'>SAVE CONFIG</button>
-
-							<div class="col input-group">
-								<input id="prologixAddress" type="number" class="form-control" placeholder="Address" aria-label="Address">
-								<button id="prologixSetAddress" class="input-group-text btn btn-outline-secondary to-disable disabled">Get</button>
-							</div>
-
-	        				<button id="prologixSetDefault"
-	        						class="form-control col btn btn-outline-secondary to-disable disabled"
-	        						title="Press to set default values( SAVE CONFIG = off, MODE = CONTROLLER)"
-	        						data-commands='["++savecfg 0", "++mode 1"]'>Set Default</button>
-
-	        				<button id="rst"
-	        						class="form-control col btn btn-outline-secondary prologix-buton to-disable disabled"
-	        						title="Press to reset of the USB/GPIB controller"
-	        						data-command-index="0"
-	        						data-commands='["++rst"]'
-	        						data-get-answer="[false]">Reset</button>
-						</div>
-      				</div>
-				</div>
-			</div>
-		</div>		
-	</div>
 
 <!-- Modal Message -->
 	<div id="modal" class="modal fade" tabindex="-1">
@@ -437,7 +510,7 @@
 	    		</div>
     		</div>
   		</div>
-	</div>
+	</div>	
 
 <th:block th:replace="components :: scripts">
     <script type="application/javascript" src="https://ajax.googleapis.com/ajax/libs/jquery/3.5.1/jquery.min.js"></script>

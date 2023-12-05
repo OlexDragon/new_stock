@@ -90,20 +90,7 @@ public class RmaRestController {
 		return profileWorker.getDescription()
 				.map(
 						description->{
-
-							final Rma rma = new Rma();
-							rma.setRmaNumber(rmaNumber);
-							rma.setSerialNumber(sn);
-							rma.setDescription(description);
-
-							final Object pr = ((UsernamePasswordAuthenticationToken)principal).getPrincipal();
-							final User user = ((UserPrincipal)pr).getUser();
-							rma.setUser(user);
-							rma.setUserId(user.getId());
-//							logger.error(rma);
-							rma.setStatus(Rma.Status.CREATED);
-
-							rmaRepository.save(rma);
+							RmaController.saveRMA(rmaNumber, serialNumber, description, principal, profileWorker, rmaRepository);
 							return "";
 						})
 

@@ -74,14 +74,14 @@
   		<script th:inline="javascript">
 			/*<![CDATA[*/
 
-			$modalBody			 = $('#modal-body');
-			$btnAddRow			 = $('#addRow').click(onAddRow);
-			$btnSave			 = $('#save');
-			$btnCalc			 = $('#calc');
-			$name				 = $('#name');
-			$minValue			 = $('#minValue');
+			$modalBody	 = $('#modal-body');
+			$btnAddRow	 = $('#addRow').click(onAddRow);
+			$btnSave	 = $('#save');
+			$btnCalc	 = $('#calc');
+			$name		 = $('#name');
+			$minValue	 = $('#minValue');
 			$input		 = $('#opInputValue');
-			$out				 = $('#op_outputValue');
+			$out		 = $('#op_outputValue');
 
 			table = Cookies.get(unitSerialNumber + "_opTable");
 			if(table){
@@ -140,7 +140,7 @@
 
 								err = error;
 								if(error.statusText!='abort'){
-									alert(error.responseText);
+									conectionFail(error);
 									err = null;
 								};
 								buzy = false;
@@ -353,15 +353,10 @@
 					})
 					.done(function(data){
 						$modal.modal('hide');
-						if(confirm(data.content + '\nWant to calibrate Power Offset by frequencies?'))
+						if(confirm(data.content + '\nDo you want to calibrate Power Offset by frequencies?'))
 							$menuPowerOffset.click();
 					})
-					.fail(function(error) {
-						if(error.statusText!='abort'){
-							alert(error.responseText);
-						}
-					});
-		    		
+					.fail(conectionFail);
 		    	});
 
 		    	$minValue.blur(e=>{
@@ -401,7 +396,7 @@
 							.fail(function(error) {
 								if(error.statusText!='abort'){
 									$modal.modal('hide');
-									alert(error.responseText);
+									conectionFail(error);
 								}
 							});
 						}

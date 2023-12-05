@@ -3,12 +3,16 @@ $('#miCalibration').addClass('active');
 let $modal = $('#modal').on('shown.bs.modal', e=>$('#sn').focus());
 let $btrMeasurement	 = $('#btrMeasurement');
 let $serialNumber	 = $('#serialNumber');
+let $spServers		 = $('#spServers');
 
 // Variables Used in modals
+const urlCalibrationInfo = '/calibration/rest/calibrationInfo';
 let loFrequencty;
 let err;
 let interval;
 let table;
+let cookies;
+let testBy;
 let buzy = false;
 let $btnSave;
 let $btnAddRow;
@@ -22,6 +26,64 @@ let $menuPowerOffset = $('#menuPowerOffset');
 let $base;
 let $minValue;
 let $out;
+let $currentAlarm;
+// X - axel
+const options = {
+
+						hour: "numeric",
+						minute: "numeric",
+						month: "short",
+  						day: "numeric",
+  						second: "numeric",
+						hour12: false,
+					};
+const formater = new Intl.DateTimeFormat("en-US", options)
+let xLabels = [];
+let yPower = [];
+let yTemperature = [];
+let timestamp;
+let chart;
+let $lastPoint;
+let chartRun;
+let $st10;
+let $REG_DIG_STARTUP;
+let $REG_REF_STARTUP;
+let $REG_RF_STARTUP;
+let $REG_VCO_STARTUP;
+let $REG_VCO_4V5_STARTUP;
+let $REG_DIG_OCP;
+let $REG_REF_OCP;
+let $REG_RF_OCP;
+let $REG_VCO_OCP;
+let $REG_VCO_4V5_OCP;
+let $LOCK_DET;
+let $VCO_SEL_ST10;
+let $WORD;
+let $st3;
+let $DBR_ST3;
+let $PD;
+let $CP_LEAK_x2;
+let $CP_LEAK_x2_for;
+let $CP_LEAK;
+let $CP_LEAK_DIR;
+let $DNSPLIT_EN;
+let $PFD_DEL_MODE;
+let $REF_PATH_SEL;
+let $R;
+let $st4;
+let $CALB_3V3_MODE1;
+let $RF_OUT_3V3;
+let $EXT_VCO_EN;
+let $VCO_AMP;
+let $CALB_3V3_MODE0;
+let $VCALB_MODE;
+let $KVCO_COMP_DIS;
+let $PFD_POL;
+let $REF_BUFF_MODE;
+let $MUTE_LOCK_EN;
+let $LD_ACTIVELOW;
+let $LD_PREC;
+let $LD_COUNT;
 
 // Get HTTP Serial Port Server from the cookies
 var cookie = Cookies.get("spServers");
@@ -32,42 +94,36 @@ if(cookie){
 	}catch(err) {}
 }
 
-$('#spServers').change(function(){
+$spServers.change(function(){
 
 	var spServers = $(this).val();
 
 	if(!spServers)
 		return;
 
-	Cookies.set("spServers", spServers, { expires: 7 });
+	Cookies.set("spServers", spServers, { expires: 7, path: window.location.pathname });
 	gerSerialPorts();
 });
 
-$.each($('.save-to-cookies'), function(index, tool){
-	let cookie = Cookies.get(tool.id)
-	if(cookie)
-		$(tool).children().filter(function () { return $(this).text() == cookie; }).prop('selected', true);
-});
-$('.save-to-cookies').change(function(){
+let $saveToCookies = $('.save-to-cookies')
+.change(function(){
 	Cookies.set(this.id, $(this).find('option:selected').text());
+});
+$.each($saveToCookies, function(index, tool){
+	let cookie = Cookies.get(tool.id)
+	if(cookie){
+		let $tool = $(tool);
+		$tool.children().filter(function () { return $(this).text() == cookie; }).prop('selected', true);
+	}
 });
 $('.tool').change(function(){
 	let $parent = $(this).parent();
 	setAccordionHeaderText($parent);
 });
-$.each($('.address'), function(index, addr){
-	let cookie = Cookies.get(addr.id)
-	if(cookie)
-		$(addr).val(cookie);
-});
-$('.address').focusout(function(){
-	if(this.value)
-		Cookies.set(this.id, this.value);
-});
 
 function gerSerialPorts(){
 
-	var spHost = $('#spServers').val();
+	var spHost = $spServers.val();
 	if(!spHost)
 		return;
 
@@ -102,9 +158,10 @@ function gerSerialPorts(){
 $('.com-ports').on('change', function(){
 
 	comPortSelected(this);
-	Cookies.set(this.id, this.value, { expires: 999 });
+	Cookies.set(this.id, this.value, { expires: 999, path: window.location.pathname });
 
 	disableMenuItens();
+	$(this).parents('.accordion-collapse').trigger('show.bs.collapse');
 });
 
 function disableMenuItens(){
@@ -128,13 +185,13 @@ function disableMenuItens(){
 
 function comPortSelected(select){
 
-	let $parent = $(select).parent();
+	let $parent = $(select).parents('.accordion-body');
 	setAccordionHeaderText($parent)
 }
 
 function setAccordionHeaderText($parent){
 
-	let $port = $parent.children('.com-ports');
+	let $port = $parent.find('.com-ports');
 	let messageId = $port.attr('data-info-message');
 	let $message = $('#' + messageId);
 
@@ -150,7 +207,7 @@ function setAccordionHeaderText($parent){
 
 	$message.removeClass('text-danger');
 
-	let $tool = $parent.children('.tool');
+	let $tool = $parent.find('.tool');
 	let toolMessage = '';
 
 	if(!$tool.length || $tool.val()){
@@ -159,7 +216,7 @@ function setAccordionHeaderText($parent){
 	}else
 		$parent.find('.to-disable').addClass('disabled');
 
-	let $address = $parent.children('.address');
+	let $address = $parent.find('.address');
 	let toolAdderss = '';
 	if($address.length && $address.val())
 		toolAdderss = ', Tool Address: ' + $address.val()
@@ -241,7 +298,10 @@ function loginFromScan(e, t){
 function loginWhithHref(href){
 	$.post(href)
 	.done(function(data){
-		alert(data);
+		let title = 'Login.'
+		let message = data.content;
+		console.log(title + ' : ' + message);
+		showToast(title, message, 'text-bg-success');
 	})
 	.fail(conectionFail);
 }
@@ -300,7 +360,7 @@ $scan.click(function(e){
 	$startFrom.focusout(function(){
 		let val = $startFrom.val();
 		if(val)
-			Cookies.set("startFrom",  val);
+			Cookies.set("startFrom",  val, { path: window.location.pathname});
 		else
 			Cookies.set("startFrom",  '');
 	});
@@ -386,7 +446,7 @@ $scan.click(function(e){
 
 function getHostName(){
 
-	var spServers = $('#spServers').val();
+	var spServers = $spServers.val();
 	if(spServers)
 		return spServers;
 	else
@@ -655,3 +715,80 @@ $('.dump_devices').click(function(e){
 	})
 	.fail(conectionFail);
 });
+$('#btn-http-comport').click(e=>{
+	let httpServer = $spServers.val();
+	if(httpServer){
+		let url = 'http://' + httpServer + ':8088'
+		let win = window.open(url, '_blank');
+		if(win) 
+			win.focus();
+		else
+			alert('Please allow popups for this website');
+	}
+});
+let $toastContaner = $('#toast-container');
+function showToast(title, message, headerClass){
+
+	let $toast = $('<div>', {class: 'toast', role: 'alert', 'aria-live': 'assertive', 'aria-atomic': true})
+		.append(
+			$('<div>', {class: 'toast-header'})
+			.append(
+				$('<strong>', {class: 'me-auto', text: title})
+			)
+			.append(
+				$('<button>', {class: 'btn-close', type: 'button', 'data-bs-dismiss': 'toast', 'aria-label': 'Close'})
+			)
+		)
+		.append(
+			$('<div>', {class: 'toast-body', text: message})
+		)
+	.appendTo($toastContaner)
+	.on('hide.bs.toast', function(){this.remove();});
+
+	if(headerClass)
+		$toast.find('.toast-header').addClass(headerClass);
+
+	new bootstrap.Toast($toast).show();
+}
+
+function sendPrologixCommands(commands, responseProcessing){
+
+	if(!commands){
+		alert('There is no command to send.');
+		return;
+	}
+
+	let hostName = getHostName();
+	if(!hostName){
+		console.log("Unable to get hostname.");
+		alert('Unable to get hostname.');
+		return;
+	}
+
+	commands.hostName = hostName;
+
+	var json = JSON.stringify(commands);
+
+	$.ajax({
+		url: '/serial_port/rest/send',
+		type: 'POST',
+		contentType: "application/json",
+		data: json,
+        dataType: 'json'
+    })
+	.done(function(data){
+
+		$.each(data.commands, function(index, c){
+			responseProcessing(c);
+		});
+	})
+	.fail(function(error) {
+		if(error.statusText!='abort'){
+		var responseText = error.responseText;
+			if(responseText)
+				alert(error.responseText);
+			else
+				alert("Server error. Status = " + error.status)
+		}
+	});
+}

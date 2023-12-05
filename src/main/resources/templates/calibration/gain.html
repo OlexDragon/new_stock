@@ -71,7 +71,7 @@
   		<script th:inline="javascript">
 			/*<![CDATA[*/
 
-		    /*[# th:if="${message}!=null" ]*/
+			/*[# th:if="${message}!=null" ]*/
 				alert(/*[[${message}]]*/ 'Message');
 				throw new Error(/*[[${message}]]*/ 'Message');
 			/*[/]*/
@@ -90,11 +90,11 @@
 				var newValue = this.valueAsNumber;
 				if(!newValue || newValue<1){
 					$step.val(1);
-					Cookies.set("dacStep", null, { expires: 0 });
+					Cookies.remove("dacStep");
 					return;
 				}
 
-				Cookies.set("dacStep", newValue, { expires: 7 });
+				Cookies.set("dacStep", newValue, { expires: 7, path: window.location.pathname });
 			});
 
 // Copy updated value to input field
@@ -153,7 +153,7 @@
 
 						$modal.modal('hide');
 
-						alert(error.responseText);
+						conectionFail(error);
 						err = null;
 					};
 	   			});
@@ -229,7 +229,7 @@
 				err = error;
 				if(error.statusText!='abort'){
 
-					alert(error.responseText ? error.responseText : 'No response from the server.');
+					conectionFail(error);
 					err = null;
 				};
 			}
@@ -288,7 +288,7 @@
 			    });
 
 				var json = JSON.stringify(gainTable);
-				Cookies.set(unitSerialNumber + "_gainTable", json, { expires: 30 });
+				Cookies.set(unitSerialNumber + "_gainTable", json, { expires: 30, path: window.location.pathname });
 			}
 
 			function disableButtons(){
@@ -402,15 +402,11 @@
 					dataType: 'json'
 				})
 				.done(function(data){
-					alert(data);
+					alert(data.content);
 					$save.addClass('disabled');
 					$modal.modal('hide');
 				})
-				.fail(function(error) {
-					if(error.statusText!='abort'){
-						alert(error.responseText);
-					}
-				});
+				.fail(conectionFail);
 		    		
 		    });
 
@@ -520,7 +516,7 @@
 						})
 						.fail(function(error) {
 							if(error.statusText!='abort'){
-								alert(error.responseText);
+								conectionFail(error);
 							}
 						});
 					}

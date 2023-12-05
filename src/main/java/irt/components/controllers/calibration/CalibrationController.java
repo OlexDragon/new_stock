@@ -179,19 +179,20 @@ public class CalibrationController {
         return "calibration/output_power :: outputPower";
     }
 
+    @GetMapping("output_power/by_input")
+    String outputPowerByInput(@RequestParam String sn, @RequestParam String pn, Model model) throws ExecutionException {
+
+//    	model.addAttribute("byInput", true);
+    	outputPower(sn, pn, model);
+    	return "calibration/output_power_auto :: byInput";
+    }
+
     @GetMapping("output_power/by_gain")
     String outputPowerByGain(@RequestParam String sn, @RequestParam String pn, Model model) throws ExecutionException {
     	logger.error(sn);
 
     	outputPower(sn, pn, model);
     	return "calibration/output_power_auto :: byGain";
-    }
-
-    @GetMapping("output_power/by_input")
-    String outputPowerByInput(@RequestParam String sn, @RequestParam String pn, Model model) throws ExecutionException {
-
-    	outputPower(sn, pn, model);
-    	return "calibration/output_power_auto :: byInput";
     }
 
     @GetMapping("power_offset")
