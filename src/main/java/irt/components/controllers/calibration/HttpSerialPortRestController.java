@@ -62,6 +62,10 @@ public class HttpSerialPortRestController {
 
     	final String hostName = commandRequest.getHostName();
     	final String port = httpSerialPortServersCollector.getPort(hostName);
+
+    	if(port==null)
+    		throw new RuntimeException("Serial Port Server: Unknown Host Name: " + hostName);
+
     	final URL url =  new URL("http", hostName, ":" + port);
 		logger.debug(url);
 

@@ -142,6 +142,7 @@ public class HttpRequest {
 		uriRequest.addHeader("Accept", "text/html,application/json;metadata=full;charset=utf-8;");
 
 		String json = null;
+		String text = null;
 		//Execute and get the response.
 		try(	final CloseableHttpClient httpclient = HttpClients.createDefault();
 				final CloseableHttpResponse response = httpclient.execute(uriRequest);){
@@ -150,14 +151,14 @@ public class HttpRequest {
 
 			if (entity != null) {
 
-				final String text = EntityUtils.toString(entity);
-//				logger.error(text);
+				text = EntityUtils.toString(entity);
+				logger.debug(text);
 
 				if(classToReturn==null || text.isEmpty() || text.matches(".*\\<[^>]+>.*"))	// If HTML page
 					return null;
 
 				json = text.contains("=") ? javaScriptToJSon(text) : textToJSON(text);
-//				logger.error("classToReturn: {}; json: {}", classToReturn, json);
+				logger.trace("classToReturn: {}; json: {}", classToReturn, json);
 
 				final ObjectMapper mapper = new ObjectMapper();
 				mapper.configure(DeserializationFeature.FAIL_ON_UNKNOWN_PROPERTIES, false);
@@ -166,7 +167,7 @@ public class HttpRequest {
 			}
 
 		}catch(JsonParseException e) {
-			logger.catching(new Throwable("\n\tclass to return: " + classToReturn + "\n\turl: " + uriRequest + "\n\tfrom:\n" + json, e));
+			logger.catching(new Throwable("\n\tclass to return: " + classToReturn + "\n\turl: " + uriRequest + "\n\tfrom:\n" + json + "\n\tresponse:\n" + text, e));
 
 		}catch( ConnectException | UnknownHostException e) {
 			logger.catching(Level.DEBUG, e);
@@ -371,7 +372,6 @@ public class HttpRequest {
 
 		uriRequest.addHeader("Accept", "text/html,application/json;metadata=full;charset=utf-8;");
 
-		String json = null;
 		//Execute and get the response.
 		try(	final CloseableHttpClient httpclient = HttpClients.createDefault();
 				final CloseableHttpResponse response = httpclient.execute(uriRequest);){
@@ -401,7 +401,7 @@ public class HttpRequest {
 			}
 
 		}catch(JsonParseException e) {
-			logger.catching(new Throwable("\n\tclass to return: " + classToReturn + "\n\tfrom:\n" + json, e));
+			logger.catching(new Throwable("\n\tclass to return: " + classToReturn + "\n", e));
 
 		}catch( ConnectException | UnknownHostException e) {
 			logger.catching(Level.DEBUG, e);

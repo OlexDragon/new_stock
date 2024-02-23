@@ -13,7 +13,16 @@ let $inputTool			 = $('#inputTool')
 })
 .trigger('change');
 
-$('.input-value').on('mouseenter', e=>{
+// Control Input 
+$('.input-value').on('input', function(){
+	let btnID = this.dataset.for;
+	if(this.value)
+		$(btnID).text('Set');
+	else
+		$(btnID).text('Get');
+})
+.change(e=>$(`#${e.currentTarget.id}Btn`).click())
+.on('mouseenter', e=>{
 
 	if(!e.ctrlKey || e.currentTarget.localName != 'input' || $toastContaner.html().trim())
 		return;
@@ -26,9 +35,68 @@ $('.input-value').on('mouseenter', e=>{
 		return;
 
 	let step = Cookies.set(el.id + "Step");
-	el.setAttribute("step", step);
-});
+	el.dataset.step = step;
+})
+.on('keydown', e=>{
 
+	if(e.currentTarget.localName != 'input')
+		return;
+
+	let step;
+	if(e.currentTarget.dataset.step === 'undefined')
+		step = 1;
+	else
+		step = parseFloat(e.currentTarget.dataset.step);
+
+	switch(e.originalEvent.code){
+
+	case 'ArrowRight':
+		if(step<0.1 || !e.ctrlKey)
+			return;
+
+		e.currentTarget.dataset.step = step / 10;
+		showStepValue(e);
+		break;
+
+	case 'ArrowLeft':
+		if(step>10 || !e.ctrlKey)
+			return;
+
+		e.currentTarget.dataset.step = step * 10;
+		showStepValue(e);
+		break;
+
+	case 'ArrowUp':
+		if(e.currentTarget.value=='')
+			break;
+
+		e.currentTarget.value = (parseFloat(e.currentTarget.value) + parseFloat(e.currentTarget.dataset.step)).toFixed(2);
+		$(`#${e.currentTarget.id}Btn`).click()
+		break;
+
+	case 'ArrowDown':
+		if(e.currentTarget.value=='')
+			break;
+
+		e.currentTarget.value = (parseFloat(e.currentTarget.value) - parseFloat(e.currentTarget.dataset.step)).toFixed(2);
+		$(`#${e.currentTarget.id}Btn`).click()
+		break;
+
+	default:
+		return;
+	}
+
+	e.preventDefault();
+});
+function showStepValue(e){
+
+	let $toast = $('.toast');
+	if($toast.length){
+		$toast.find('input').val(e.currentTarget.dataset.step);
+		return;
+	}else
+		sowSetupToast(e.currentTarget);
+}
 prologixElements($inputComPorts, $inputToolAddress, $inputButtons);
 
 $('.input-tool-buton').click(function(){
@@ -108,7 +176,7 @@ $('.input-tool-buton').click(function(){
 	}
 
 // Send data
-	sendPrologixCommands(toSend, data=>inputAction(data, $valueField, divider, $button));
+	sendPrologixCommands(toSend, data=>inputAction(data, $valueField, divider, $button));	// See calibration.js
 });
 
 function inputAction(data, $valueField, divider, $button){
@@ -131,14 +199,14 @@ function inputAction(data, $valueField, divider, $button){
 }
 function sowSetupToast(target){
 
-	let $input = $('<input>', {type: 'number', class: 'form-control', style: 'text-align:center;', value: target.step ? target.step : 1})
+	let $input = $('<input>', {type: 'number', class: 'form-control', style: 'text-align:center;', value: target.dataset.step !== 'undefined' ? target.dataset.step : 1})
 	.on('focusout', e=>{
 
 		let step = e.currentTarget.value;
 		if(!step)
 			return;
 
-		target.setAttribute("step", step);
+		target.dataset.step = step;
 		Cookies.set(target.id + "Step", step, { expires: 9999 });
 	});
 

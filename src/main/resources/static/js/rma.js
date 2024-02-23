@@ -1,9 +1,9 @@
 let tooltipTriggerList = document.querySelectorAll('[data-bs-toggle="tooltip"]')
 let tooltipList = [...tooltipTriggerList].map(tooltipTriggerEl => new bootstrap.Tooltip(tooltipTriggerEl))
 
-let $accordion = $('#accordion');
-let $sortBy = $('input[name=sort_by]');
-let $rmaFilter = $('#rmaFilter');
+const $accordion = $('#accordion');
+const $sortBy = $('input[name=sort_by]');
+const $rmaFilter = $('#rmaFilter');
 
 // Used in rmaComments.js script on rma.html
 let clicked = false;
@@ -15,14 +15,14 @@ if(filterCookie){
 }
 
 // Get RMA sort by
-var rmaSorting = Cookies.get("rmaSorting")
+let rmaSorting = Cookies.get("rmaSorting")
 if(rmaSorting){
 	$('#' + rmaSorting).prop('checked', true);
 }
 
 // Input listener
 timer = 0;
-$('.searchRma').on('input', function(){
+const $searchRma = $('.searchRma').on('input', function(){
 
     if (timer) 
     	clearTimeout(timer);
@@ -30,9 +30,18 @@ $('.searchRma').on('input', function(){
     timer = setTimeout(search, 1000, $(this));
 });
 
-function search($this){
+$(window).on('popstate',()=>{
 
-	var $addRMA = $('#addRMA');	// Button "Add" RMA Unit
+	if(!history.state)
+		return;
+
+	$searchRma.val('');
+	let $field = $('#' + history.state.field_id).val(history.state.field_value);
+	search($field, false);
+});
+
+function search($this, saveCookies){
+
 	if($addRMA.length){
 		$addRMA.removeClass('btn-outline-primary');
 		$addRMA.addClass('disabled btn-secondary');
@@ -56,10 +65,20 @@ function search($this){
 	if(val.length!=tmp.length)
 		$this.val(val);
 
+	let attrId = $this.prop('id');
+
+	if(saveCookies || typeof saveCookies === 'undefined'){
+
+// Add to history
+		let state = { field_id: id, field_value: val };
+		let url = new URL(window.location.origin + window.location.pathname);
+		url.searchParams.set(id, val);
+		history.pushState(state, "", url);
+
 // Save Cookies
-	var attrId = $this.prop('id');
-	Cookies.set("rmaSearch", JSON.stringify([attrId, val]), { expires: 7 });
-	$('.searchRma').filter(':not(#' + attrId + ')').val('');
+		Cookies.set("rmaSearch", JSON.stringify([attrId, val]), { expires: 7 });
+		$searchRma.filter(':not(#' + attrId + ')').val('');
+	}
 
 // Sort By
 	var $radio = $sortBy.filter(':checked');
@@ -70,7 +89,6 @@ function search($this){
 	var rmaFilter = $rmaFilter.text();
 
 // Load RMAs
-
 	$accordion.load('/rma/search', {id : attrId, value : val, sortBy: sortBy, rmaFilter: rmaFilter}, function(responseText, textStatus, req){
 
 		$('.tooltip').remove();
@@ -129,7 +147,7 @@ function showModal(rmaId, serialNumber){
 	$('#modal').modal('show');
 }
 
-$('#addRMA').click(function(e){
+const $addRMA = $('#addRMA').click(function(e){		// Button "Add" RMA Unit
 	e.preventDefault();
 
 	var val = $.trim($('#rmaSerialNumber').val());
@@ -205,25 +223,31 @@ $('#saveComment').click(function(e){
 });
 $accordion.on('shown.bs.collapse', function () {
 
-	var $accordionItem = $(this).children().filter(function(index,a){return !$(this).find('button').hasClass('collapsed');});
-  	var $accordionBody = $accordionItem.find('.accordion-body');
-  	var $children = $accordionBody.children();
+	let $accordionItem = $(this).children().filter(function(index,a){return !$(this).find('button').hasClass('collapsed');});
+  	let $accordionBody = $accordionItem.find('.accordion-body');
+  	let $children = $accordionBody.children();
 
 	if($children.length)
  		return;
 
-	var id = $accordionItem.attr('id');
-	$accordionBody.load('/rma/comments', {rmaId: $accordionItem[0].id});
+	let id = $accordionItem.attr('id');
+	$accordionBody.load('/rma/comments', {rmaId: id});
 });
 
-// Get Part Number, Mfr PN or Description from the cookies
-var cookie = Cookies.get("rmaSearch")
-if(cookie){
-	var bomSearch = JSON.parse(cookie);
-	var $input = $("#" + bomSearch[0]).val(bomSearch[1]);
-	search($input);
-}else
-	search($('#rmaNumber').val('RMA'));
+const $searchField = $searchRma.filter((i,el)=>el.value);
+if($searchField.length)
+		search($searchField, false);
+	
+else{
+	// Get Part Number, Mfr PN or Description from the cookies
+	let cookie = Cookies.get("rmaSearch")
+	if(cookie){
+		let bomSearch = JSON.parse(cookie);
+		let $input = $("#" + bomSearch[0]).val(bomSearch[1]);
+		search($input, false);
+	}else
+		search($('#rmaNumber').val('RMA'), false);	
+}
 
 // Filter RMA units by shipping status
 $rmaFilter.click(function(e){
@@ -431,7 +455,7 @@ function showThumbnails(index, commentId){
 // Copy content to the clipboard
 $('.accordion').click(e=>{
 
-	if(!e.ctrlKey && e.target.localName=='strong')
+	if(!e.ctrlKey || e.target.localName != 'strong')
 		return;
 	let input = document.createElement('input');
     input.setAttribute('value', e.target.innerText);

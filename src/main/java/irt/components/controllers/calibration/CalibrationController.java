@@ -116,6 +116,16 @@ public class CalibrationController {
 
 		Optional.ofNullable(sn)
 		.map(String::trim)
+		.map(String::toUpperCase)
+		.map(
+				s->{
+
+					final char charAt = s.charAt(0);
+					if((charAt>='A' && charAt<='Z') || s.contains("."))
+						return s;
+
+					return "IRT-" + s;
+				})
     	.filter(s->!s.trim().isEmpty())
     	.ifPresent(
     			s->{
@@ -702,7 +712,6 @@ public class CalibrationController {
 
 	public static Optional<HomePageInfo> getHomePageInfo(String sn) throws IOException {
 		final String honePage = getHonePage(sn);
-		logger.error(honePage);
 		return Optional.ofNullable(honePage).map(HomePageInfo::new);
 	}
 

@@ -9,6 +9,8 @@ import java.security.Principal;
 import java.util.List;
 import java.util.Optional;
 import java.util.function.Consumer;
+import java.util.stream.Collectors;
+import java.util.stream.IntStream;
 import java.util.stream.Stream;
 
 import javax.annotation.PostConstruct;
@@ -29,8 +31,10 @@ import irt.components.beans.jpa.repository.rma.RmaCommentsRepository;
 import irt.components.beans.jpa.repository.rma.RmaRepository;
 import irt.components.beans.jpa.rma.Rma;
 import irt.components.beans.jpa.rma.RmaComment;
+import irt.components.services.MailSender;
 import irt.components.services.UserPrincipal;
 import irt.components.workers.ProfileWorker;
+import irt.components.workers.ThreadRunner;
 
 @RestController
 @RequestMapping("/rma/rest")
@@ -43,6 +47,7 @@ public class RmaRestController {
 
 	@Autowired private RmaRepository rmaRepository;
 	@Autowired private RmaCommentsRepository rmaCommentsRepository;
+	@Autowired private MailSender mailSender;
 
 	@PostConstruct
 	public void postConstruct() {
@@ -63,25 +68,28 @@ public class RmaRestController {
 
 	@PostMapping("has_prifile")
 	public boolean hasProfile(@RequestParam String serialNumber) throws IOException {
-//		logger.error(serialNumber);
+		logger.traceEntry(serialNumber);
 
     	final ProfileWorker profileWorker = new ProfileWorker(profileFolder, serialNumber);
-		final Optional<Rma> oRma = rmaRepository.findBySerialNumberAndStatusNot(serialNumber, Rma.Status.SHIPPED);
+		final String sn = profileWorker.getSerialNumber();
+		logger.debug("profileWorker.getSerialNumber() = {}", sn);
+
+		final Optional<Rma> oRma = rmaRepository.findBySerialNumberAndStatusNot(sn, Rma.Status.SHIPPED);
 
 		return profileWorker.exists() && !oRma.isPresent();
 	}
 
 	@PostMapping("add_to_rma")
 	public String addToRma(@RequestParam String rmaNumber, @RequestParam String serialNumber, Principal principal) throws IOException {
-//		logger.error("rmaNumber: {}; serialNumber: {};", rmaNumber, serialNumber);
+		logger.traceEntry("rmaNumber: {}; serialNumber: {};", rmaNumber, serialNumber);
 
-		String sn = serialNumber.toUpperCase();
-		final ProfileWorker profileWorker = new ProfileWorker(profileFolder, serialNumber);
+		final ProfileWorker profileWorker = new ProfileWorker(profileFolder, serialNumber.toUpperCase());
 		final boolean exists = profileWorker.exists();
 
 		if(!exists)
-			return "The Profile with sn:'" + sn + "' was not found.";
+			return "The Profile with sn:'" + profileWorker.getSerialNumber() + "' was not found.";
 
+		final String sn = profileWorker.getSerialNumber();
 		final Optional<Rma> oRma = rmaRepository.findBySerialNumberAndStatusNot(sn, Rma.Status.SHIPPED);
 //		logger.error(oRma);
 		if(oRma.isPresent())
@@ -90,7 +98,7 @@ public class RmaRestController {
 		return profileWorker.getDescription()
 				.map(
 						description->{
-							RmaController.saveRMA(rmaNumber, serialNumber, description, principal, profileWorker, rmaRepository);
+							RmaController.saveRMA(rmaNumber, description, principal, profileWorker, rmaRepository);
 							return "";
 						})
 
@@ -150,6 +158,36 @@ public class RmaRestController {
 
 		// Save files
 		oFiles.map(List::stream).orElse(Stream.empty()).forEach(saveFile(savedComment.getId()));
+
+		// Send Email
+		ThreadRunner.runThread(
+				()->{
+					synchronized (InetAddress.class) {
+
+						try {
+
+							Thread.sleep(1000);
+							String url = "";
+
+							try {
+
+								final InetAddress localHost = InetAddress.getLocalHost();
+								final byte[] address = localHost.getAddress();
+
+								url = "\nhttp://" + IntStream.range(0, address.length).mapToObj(index->address[index]&0xff).map(Number::toString).collect(Collectors.joining(".")) + ":8089/rma?rmaNumber=" + rma.getRmaNumber();
+
+							} catch (Exception e) {
+								logger.catching(e);
+							}
+
+							final String subject = rma.getRmaNumber() + " - " + user.getUsername() + " add new comment";
+							mailSender.send(subject, comment + url);
+
+						} catch (Exception e) {
+							logger.catching(e);
+						}
+					}
+				});
 
 		return "The comment has been saved.";
 	}

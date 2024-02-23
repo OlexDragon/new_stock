@@ -290,15 +290,15 @@
 	        					</select>
 	        					<label for="outputComPorts">Serial Port</label>
 	        				</div>
-							<div class="form-floating col">
-		        				<select id="outputTool" class="form-select col save-to-cookies" title="Outpu Tool">
+							<div class="form-floating col-sm">
+		        				<select id="outputTool" class="form-select save-to-cookies" title="Outpu Tool">
 									<option selected="selected" disabled="disabled" hidden="hidden" value="">Select a Power Meter</option>
 									<option value="HP438A" th:each="outputTool, stat : ${T(irt.components.beans.irt.calibration.tools.OutputTools).values()}" th:text="${outputTool.name}" th:value="${outputTool.commands}">HP438A</option>
 		        				</select>
 	        					<label for="outputTool">Tool</label>
 	        				</div>
-							<div class="col input-group flex-nowrap">
-								<div class="form-floating col">
+							<div class="col-sm input-group flex-nowrap">
+								<div class="form-floating">
 									<input id="outputToolValue" type="number" class="form-control" onfocus="this.blur();" readonly></input>
 	        						<label for="outputToolValue">Output Value</label>
 	        					</div>
@@ -309,7 +309,7 @@
 <!--  Prologix (Output Tool) -->
       					<div class="row gap-3 prologix">
 
-							<div class="col input-group">
+							<div class="col-lg input-group flex-nowrap">
 								<input id="outputToolAddress" type="number" class="form-control address" aria-label="Tool Address" title="Tool Address" placeholder="Address" value="13">
 								<button class="input-group-text btn btn-outline-secondary to-disable disabled"
 										data-commands='["++addr 13"]'
@@ -370,8 +370,8 @@
 	    	    				</select>
 	        					<label for="inputComPorts">Serial Port</label>
 	    	    			</div>
-							<div class="form-floating col">
-		        				<select id="inputTool" class="form-select col save-to-cookies" title="Input Tool">
+							<div class="form-floating col-sm">
+		        				<select id="inputTool" class="form-select save-to-cookies" title="Input Tool">
 									<option selected="selected" disabled="disabled" hidden="hidden" title="Input Tool" value="">Input</option>
 									<option value="HP438A" 
 											th:each="inputTool, stat : ${T(irt.components.beans.irt.calibration.tools.InputTools).values()}" 
@@ -383,8 +383,8 @@
 		        				</select>
 	        					<label for="inputTool">Tool</label>
 		        			</div>
-							<div class="col input-group flex-nowrap">
-								<div class="form-floating col">
+							<div class="col-sm input-group flex-nowrap">
+								<div class="form-floating">
 		        					<select id="inputOutput" class="form-select input-value" data-for="#inputOutputBtn" title="Tool Output Satatus">
 		        						<option selected="selected" title="Tool Output (ON or OFF)" value="">Output</option>
 		        						<option value="0">Off</option>
@@ -394,8 +394,8 @@
 		        				</div>
 								<button id="inputOutputBtn" class="input-group-text btn btn-outline-secondary input-tool-buton tool-btn disabled" value="0">Get</button>
 							</div>
-							<div class="col input-group flex-nowrap">
-								<div class="form-floating col">
+							<div class="col-lg input-group flex-nowrap">
+								<div class="form-floating">
 		        					<input id="inputFrequency" type="number" class="input-value form-control" title="Frequency" placeholder="Frequency" data-for="#inputFrequencyBtn"  data-bs-content="Bottom popover">
 	        						<label for="inputFrequency">Frequency</label>
 		        				</div>
@@ -408,7 +408,7 @@
 	        				</div>
 							<div class="col input-group flex-nowrap">
 								<input id="inputPowerUnit" type="hidden">
-								<div class="form-floating col">
+								<div class="form-floating">
 		        					<input id="inputPower" type="number" class="input-value form-control" title="Power" placeholder="Power" data-for="#inputPowerBtn"  data-bs-content="Bottom popover">
 	        						<label for="inputPower">Power Level</label>
 		        				</div>
@@ -418,7 +418,7 @@
 <!--  Prologix (Input Tool) -->
       					<div class="row gap-3 prologix">
 
-							<div class="col input-group">
+							<div class="col-lg input-group flex-nowrap">
 								<input id="inputToolAddress" type="number" class="form-control address" aria-label="Tool Address" title="Tool Address" placeholder="Address" value="13">
 								<button class="input-group-text btn btn-outline-secondary to-disable disabled"
 										data-commands='["++addr 13"]'

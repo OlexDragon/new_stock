@@ -444,7 +444,7 @@ public class CalibrationRestController {
     }
 
     @GetMapping("profile")
-    String getProfile(@RequestParam String sn, @RequestParam(required = false) Integer moduleId) throws IOException, URISyntaxException {
+    String profile(@RequestParam String sn, @RequestParam(required = false) Integer moduleId) throws IOException, URISyntaxException {
     	logger.traceEntry("{}; {};", sn, moduleId);
 
     	final URIBuilder builder;

@@ -11,6 +11,7 @@ import java.time.format.DateTimeFormatter;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
+import java.util.Map;
 import java.util.Optional;
 import java.util.stream.Collectors;
 
@@ -75,8 +76,11 @@ public class RmaController {
 	}
 
 	@GetMapping
-    String getRmas() {
-       return "rma";
+    String getRmas(@RequestParam(required = false) Map<String, String> rmaParam, Model model) {
+
+		model.addAllAttributes(rmaParam);
+
+		return "rma";
     }
 
 	@PostMapping(path = "search")
@@ -187,29 +191,30 @@ public class RmaController {
 	private final DateTimeFormatter formatter = DateTimeFormatter.ofPattern("'RMA'yyMM");
 	@PostMapping("add_rma")
 	public String addRma(@RequestParam String serialNumber, Principal principal, Model model) throws IOException {
-//		logger.error("{} : {}", serialNumber, principal);
+		logger.traceEntry("{} : {}", serialNumber, principal);
 
-		String sn = serialNumber.toUpperCase();
-    	ProfileWorker profileWorker = new ProfileWorker(profileFolder, sn);
+    	ProfileWorker profileWorker = new ProfileWorker(profileFolder, serialNumber.toUpperCase());
 
 		if(!(principal instanceof UsernamePasswordAuthenticationToken) || !profileWorker.exists())
 			return "rma :: alert";
 
-		final Optional<Rma> oRma = rmaRepository.findBySerialNumberAndStatusNot(sn, Rma.Status.SHIPPED);
-//		logger.error(oRma);
+		final Optional<Rma> oRma = rmaRepository.findBySerialNumberAndStatusNot(profileWorker.getSerialNumber(), Rma.Status.SHIPPED);
+		logger.debug(oRma);
+
 		if(oRma.isPresent())
 			return null;
 
 		profileWorker.getDescription()
 		.ifPresent(
 				description->{
+
 					final LocalDate currentdate = LocalDate.now();
 					final String format = currentdate.format(formatter);
 					final int count = rmaRepository.findByRmaNumberStartsWith(format).parallelStream().map(Rma::getRmaNumber).map(rmaNumber->rmaNumber.substring(7).split("[- ]")[0]).mapToInt(Integer::parseInt).max().orElse(0);
 					final String sequence = String.format("%03d", count+1);
 					final String rmaNumber = format + sequence;
 
-					final Rma savedRma = saveRMA(rmaNumber, sn, description, principal, profileWorker, rmaRepository);
+					final Rma savedRma = saveRMA(rmaNumber, description, principal, profileWorker, rmaRepository);
 
 					List<Rma> rmas = new ArrayList<>();
 					rmas.add(savedRma);
@@ -218,11 +223,11 @@ public class RmaController {
 		return "rma :: rmaCards";
 	}
 
-	static Rma saveRMA(final String rmaNumber, String serialNumber, String description, Principal principal, ProfileWorker profileWorker, RmaRepository rmaRepository) {
+	static Rma saveRMA(final String rmaNumber, String description, Principal principal, ProfileWorker profileWorker, RmaRepository rmaRepository) {
 		final Rma rma = new Rma();
 		rma.setRmaNumber(rmaNumber);
 		rma.setDescription(description);
-		rma.setSerialNumber(serialNumber);
+		rma.setSerialNumber(profileWorker.getSerialNumber());
 
 		final Object pr = ((UsernamePasswordAuthenticationToken)principal).getPrincipal();
 		final User user = ((UserPrincipal)pr).getUser();

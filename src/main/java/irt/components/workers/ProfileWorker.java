@@ -1,5 +1,6 @@
 package irt.components.workers;
 
+import java.io.File;
 import java.io.IOException;
 import java.nio.file.FileSystems;
 import java.nio.file.FileVisitResult;
@@ -10,7 +11,9 @@ import java.nio.file.PathMatcher;
 import java.nio.file.Paths;
 import java.nio.file.SimpleFileVisitor;
 import java.nio.file.attribute.BasicFileAttributes;
+import java.text.ParseException;
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.List;
 import java.util.Optional;
 import java.util.Scanner;
@@ -19,6 +22,7 @@ import java.util.concurrent.atomic.AtomicReference;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 
+import irt.components.beans.WindowsShortcut;
 import irt.components.beans.irt.calibration.CalibrationTable;
 import irt.components.beans.irt.calibration.PowerDetectorSource;
 import irt.components.beans.irt.calibration.ProfileTable;
@@ -26,17 +30,48 @@ import irt.components.beans.irt.calibration.ProfileTableDetails;
 import irt.components.beans.irt.calibration.ProfileTableTypes;
 import irt.components.beans.irt.update.TableValue;
 import lombok.Getter;
-import lombok.RequiredArgsConstructor;
 import lombok.ToString;
 
-@RequiredArgsConstructor @Getter @ToString
+@Getter @ToString
 public class ProfileWorker {
 	private final static Logger logger = LogManager.getLogger();
 
-	private final String profileRootFolder;
+	private final List<Path> searchIn = new ArrayList<>();
 	private final String serialNumber;
 
 	private Optional<Path> oPath = Optional.empty();
+
+	public ProfileWorker(String profileRootFolder, String serialNumber) {
+		logger.traceEntry("{}; {}", profileRootFolder, serialNumber);
+
+		this.serialNumber = Optional.of(serialNumber)
+				.filter(
+						sn->{
+							final char charAt = sn.charAt(0);
+							return charAt>='0' && charAt<='9';
+						})
+				.map("IRT-"::concat)	// if starts from number add "IRT-"
+				.orElse(serialNumber);
+		Optional.of(profileRootFolder)
+		.ifPresent(
+				root->{
+					searchIn.add(Paths.get(root));
+					final File[] listFiles = new File(root).listFiles((dir, name)->name.endsWith(".lnk"));
+					Arrays.stream(listFiles)
+					.forEach(
+							f->{
+								try {
+
+									final WindowsShortcut windowsShortcut = new WindowsShortcut(f);
+									if(windowsShortcut.isDirectory())
+										searchIn.add(windowsShortcut.getPath());
+
+								} catch (IOException | ParseException e) {
+									logger.catching(e);
+								}
+							});
+				});
+	}
 
 	public boolean exists() throws IOException {
 		final Optional<Path> oPath = getPath();
@@ -48,7 +83,7 @@ public class ProfileWorker {
 		if(oPath.isPresent())
 			return oPath;
 
-		final PathMatcher matcher = FileSystems.getDefault().getPathMatcher("glob:" + serialNumber + ".bin");
+		final PathMatcher matcher = FileSystems.getDefault().getPathMatcher("glob:*" + serialNumber + ".bin");
     	final AtomicReference<Path> arPath = new AtomicReference<>();
     	final FileVisitor<Path> visitor = new SimpleFileVisitor<Path>() {
 
@@ -67,7 +102,14 @@ public class ProfileWorker {
 				return FileVisitResult.CONTINUE;
 			}
 		};
-		Files.walkFileTree(Paths.get(profileRootFolder), visitor);
+
+		final int size = searchIn.size();
+		for(int i=0; i<size; i++) {
+			final Path start = searchIn.get(i);
+			Files.walkFileTree(start, visitor);
+			if(oPath.isPresent())
+				break;
+		}
 
 		return oPath = Optional.ofNullable(arPath.get());
 	}

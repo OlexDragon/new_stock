@@ -675,14 +675,6 @@ $('.submenu').click(function(e){
 	e.stopPropagation();
 });
 
-// Control Input 
-$('.input-value').on('input', function(){
-	let btnID = this.dataset.for;
-	if(this.value)
-		$(btnID).text('Set');
-	else
-		$(btnID).text('Get');
-});
 $('.modules').click(function(){
 
 	let $menu = $(this).parent().children('.dropdown-menu')
