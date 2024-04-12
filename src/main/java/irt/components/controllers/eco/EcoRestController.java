@@ -26,11 +26,11 @@ import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
 import org.springframework.web.multipart.MultipartFile;
 
+import irt.components.beans.UserPrincipal;
 import irt.components.beans.jpa.User;
 import irt.components.beans.jpa.eco.Eco;
 import irt.components.beans.jpa.eco.Eco.Status;
 import irt.components.beans.jpa.repository.EcoRepository;
-import irt.components.services.UserPrincipal;
 
 @RestController
 @RequestMapping("/eco/rest")

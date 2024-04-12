@@ -1,4 +1,4 @@
-package irt.components.services;
+package irt.components.beans;
 
 import java.util.ArrayList;
 import java.util.Collection;

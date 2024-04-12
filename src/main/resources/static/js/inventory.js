@@ -15,7 +15,7 @@ function search($this){
 		return;
 
 	var attrId = $this.prop('id');
-	Cookies.set("inventorytSearch", JSON.stringify([attrId, val]), { expires: 7 });
+	Cookies.set("inventorytSearch", JSON.stringify([attrId, val]), { expires: 7, path: '' });
 	$('.searchInput').filter(':not(#' + attrId + ')').val('');
 
 	$("#accordion").load('/inventory', {name: attrId, value: val});

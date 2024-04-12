@@ -27,12 +27,15 @@
     <Loggers>
 		<logger name="org.apache.http.client.protocol.ResponseProcessCookies" level="error" />
 
+		<logger name="irt.components.services.RmaService" level="TRACE" />
 <!-- 		<logger name="irt.components.services.IrtUrlAuthenticationSuccessHandler" level="TRACE" /> -->
-<!-- 		<logger name="irt.components.controllers.rma.RmaController" level="ALL" /> -->
-<!-- 		<logger name="irt.components.controllers.rma.RmaRestController" level="ALL" /> -->
+
 <!-- 		<logger name="org.springframework.jdbc.core.JdbcTemplate" level="TRACE" /> -->
 <!-- 		<logger name="org.springframework.jdbc.core" level="TRACE" /> -->
 <!-- 		<logger name="org.springframework.jdbc.core.StatementCreatorUtils" level="TRACE" /> -->
+
+		<logger name="irt.components.controllers.rma.RmaController" level="ALL" />
+		<logger name="irt.components.controllers.rma.RmaRestController" level="ALL" />
 
 <!-- 		<logger name="irt.components.controllers.calibration.CalibrationController" level="debug" /> -->
 <!-- 		<logger name="irt.components.controllers.calibration.CalibrationRestController" level="all" /> -->

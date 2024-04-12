@@ -1,6 +1,10 @@
 let tooltipTriggerList = document.querySelectorAll('[data-bs-toggle="tooltip"]')
 let tooltipList = [...tooltipTriggerList].map(tooltipTriggerEl => new bootstrap.Tooltip(tooltipTriggerEl))
 
+const clientIP = Cookies.get('clientIP');
+if(!clientIP)
+	$.get('https://api.ipify.org', data=>Cookies.set('clientIP', data, { path: '' }));
+
 const $accordion = $('#accordion');
 const $sortBy = $('input[name=sort_by]');
 const $rmaFilter = $('#rmaFilter');
@@ -9,15 +13,15 @@ const $rmaFilter = $('#rmaFilter');
 let clicked = false;
 
 // Get RMA filter text from the cookies
-let filterCookie = Cookies.get("rmafilter")
+let filterCookie = Cookies.get("rmaFilter")
 if(filterCookie){
 	$rmaFilter.text(filterCookie);
 }
 
 // Get RMA sort by
-let rmaSorting = Cookies.get("rmaSorting")
-if(rmaSorting){
-	$('#' + rmaSorting).prop('checked', true);
+let sortBy = Cookies.get('sortBy')
+if(sortBy){
+	$('#' + sortBy).prop('checked', true);
 }
 
 // Input listener
@@ -36,8 +40,9 @@ $(window).on('popstate',()=>{
 		return;
 
 	$searchRma.val('');
-	let $field = $('#' + history.state.field_id).val(history.state.field_value);
-	search($field, false);
+	let $input = $('#' + history.state.field_id).val(history.state.field_value);
+	clearTimeout(timer);
+	timer = setTimeout(search, 500, $input);
 });
 
 function search($this, saveCookies){
@@ -76,7 +81,8 @@ function search($this, saveCookies){
 		history.pushState(state, "", url);
 
 // Save Cookies
-		Cookies.set("rmaSearch", JSON.stringify([attrId, val]), { expires: 7 });
+		let json = JSON.stringify([attrId, val]);
+		Cookies.set('rmaSearch', json, { expires: 7, path: '' });
 		$searchRma.filter(':not(#' + attrId + ')').val('');
 	}
 
@@ -86,28 +92,21 @@ function search($this, saveCookies){
 		$radio = $('#rmaOrderByRmaNumber').prop('checked', true);
 
 	var sortBy = $radio.prop('id');
-	var rmaFilter = $rmaFilter.text();
 
 // Load RMAs
-	$accordion.load('/rma/search', {id : attrId, value : val, sortBy: sortBy, rmaFilter: rmaFilter}, function(responseText, textStatus, req){
+	$accordion.load('/rma/search', {id : attrId, value : val, sortBy: sortBy}, function(responseText){
 
 		$('.tooltip').remove();
 		tooltipTriggerList = document.querySelectorAll('[data-bs-toggle="tooltip"]')
 		tooltipList = [...tooltipTriggerList].map(tooltipTriggerEl => new bootstrap.Tooltip(tooltipTriggerEl))
 
-		if(!$addRMA.length || attrId != "rmaSerialNumber")
+		if(!$addRMA.length || attrId != "rmaSerialNumber" || $(responseText).filter('.accordion-item').length>1 || val.replace(/\D+/g, '').length!=7)
 			return;
 
-		$.post('/rma/rest/has_prifile', { serialNumber: val})
-		.done(function(hasProfile){
-
-			if(hasProfile){
-				$addRMA.removeClass('disabled btn-secondary');
-				$addRMA.addClass('btn-outline-primary');
-			}else{
-				$addRMA.removeClass('btn-outline-primary');
-				$addRMA.addClass('disabled btn-secondary');
-			}
+		$.get('/rma/rest/ready-to-add', { sn: val})
+		.done(readyToAdd=>{
+			if(readyToAdd)
+				$addRMA.removeClass('disabled btn-secondary').addClass('btn-outline-primary');
 		})
 		.fail(function(error) {
 			if(error.statusText!='abort')
@@ -157,10 +156,7 @@ const $addRMA = $('#addRMA').click(function(e){		// Button "Add" RMA Unit
 		return;
 	}
 
-	if(!confirm("Save Unit " + val + ' as RMA?'))
-		return;
-
-	$accordion.load('/rma/add_rma', { serialNumber: val});
+	confirmAddRmaModal(val);
 });
 
 $('#saveComment').click(function(e){
@@ -221,10 +217,13 @@ $('#saveComment').click(function(e){
         }
 	});
 });
-$accordion.on('shown.bs.collapse', function () {
+$accordion.on('shown.bs.collapse', function (e) {
 
-	let $accordionItem = $(this).children().filter(function(index,a){return !$(this).find('button').hasClass('collapsed');});
-  	let $accordionBody = $accordionItem.find('.accordion-body');
+	let $accordionItem = $(this).children().filter(function(i,a){
+		const $button = $(this).find('button');
+		return $button.length && !$button.hasClass('collapsed');
+	});
+  	let $accordionBody = $accordionItem.find('.content');
   	let $children = $accordionBody.children();
 
 	if($children.length)
@@ -237,13 +236,13 @@ $accordion.on('shown.bs.collapse', function () {
 const $searchField = $searchRma.filter((i,el)=>el.value);
 if($searchField.length)
 		search($searchField, false);
-	
+
 else{
 	// Get Part Number, Mfr PN or Description from the cookies
-	let cookie = Cookies.get("rmaSearch")
+	let cookie = Cookies.get("rmaSearch");
 	if(cookie){
-		let bomSearch = JSON.parse(cookie);
-		let $input = $("#" + bomSearch[0]).val(bomSearch[1]);
+		let rmaSearch = JSON.parse(cookie);
+		let $input = $("#" + rmaSearch[0]).val(rmaSearch[1]);
 		search($input, false);
 	}else
 		search($('#rmaNumber').val('RMA'), false);	
@@ -297,17 +296,14 @@ $rmaFilter.click(function(e){
 	}
 	}
 
-	Cookies.set("rmafilter", text, { expires: 999 });
+	Cookies.set("rmaFilter", text, { expires: 999, path: '' });
 	$this.text(text);
 
-	var cookie = Cookies.get("rmaSearch")
-	if(cookie){
-		var bomSearch = JSON.parse(cookie);
-		var $input = $("#" + bomSearch[0]);
+	let $input = $searchRma.filter((i,el)=>el.value);
+	if($searchField.length){
+ 	   clearTimeout(timer);
+ 	   timer = setTimeout(search, 500, $input);
 	}
-
-    clearTimeout(timer);
-    timer = setTimeout(search, 500, $input);
 
 	$('.tooltip').remove();
 });
@@ -358,7 +354,7 @@ function addToRma(rmaNumber){
 			alert(message);
 
 		else{
-			Cookies.set("rmaSearch", JSON.stringify(['rmaNumber', rmaNumber]), { expires: 7 });
+			Cookies.set("rmaSearch", JSON.stringify(['rmaNumber', rmaNumber]), { expires: 7, path: '' });
 			location.reload();
 		}
 	})
@@ -370,13 +366,14 @@ function addToRma(rmaNumber){
 
 $sortBy.change(function(){
 	var id = $(this).prop('id');
-	Cookies.set("rmaSorting", id, { expires: 7 });
+	Cookies.set('sortBy', id, { expires: 7, path: '' });
 
-	var cookie = Cookies.get("rmaSearch")
+	var cookie = Cookies.get('rmaSearch')
 	if(cookie){
-		var bomSearch = JSON.parse(cookie);
-		var $input = $("#" + bomSearch[0]);
-		search($input);
+		var rmaSearch = JSON.parse(cookie);
+		var $input = $("#" + rmaSearch[0]);
+ 	   clearTimeout(timer);
+ 	   timer = setTimeout(search, 500, $input);
 	}
 	$('.tooltip').remove();
 });
@@ -438,18 +435,18 @@ $('#attachFiles').on('input', function(){
 		$fileNames.append($('<div id="maxSize">The maximum allowed file size is <strong style="color:red;">' + new Intl.NumberFormat().format(maxFilesSize) + '<\strong> bytes.</div>'));
 });
 var thumbnailsTimeout;
-function thumbnailsClick(e, index, commentId){
+function thumbnailsClick(e, index, commentId, onWeb){
 
 	if (e.detail === 1){
 		e.preventDefault();
-		thumbnailsTimeout = setTimeout(showThumbnails, 400, index, commentId);
+		thumbnailsTimeout = setTimeout(showThumbnails, 400, index, commentId, onWeb);
 	}else
 		clearTimeout(thumbnailsTimeout);
 };
 
-function showThumbnails(index, commentId){
+function showThumbnails(index, commentId, onWeb){
 	$imgModal = $('#imgModal');
-	$imgModal.load('/rma/show_img', {commentID: commentId, imgIndex: index}, function(){$imgModal.modal('show');})
+	$imgModal.load('/rma/show_img', {commentID: commentId, imgIndex: index, onWeb: onWeb}, function(){$imgModal.modal('show');})
 }
 
 // Copy content to the clipboard
@@ -489,4 +486,57 @@ function showToast(title, message, headerClass){
 		$toast.find('.toast-header').addClass(headerClass);
 
 	new bootstrap.Toast($toast).show();
+}
+function confirmAddRmaModal(sn){
+
+	const $m = $('<div>', {class: 'modal', tabindex: -1});
+	const $btn = $('<button>', {type: 'button', class: 'btn btn-outline-primary', text: 'Create RMA', disabled: true});
+	const $textarea = $('<textarea>', {id: sn, class: 'form-control', rows: 3, style: 'height:100%;', placeholder: 'Description of the malfunction'}).on('input', e=>$btn.prop('disabled', e.currentTarget.value.length==0));
+	$btn.click(()=>{
+
+		$addRMA.prop('disabled', true);
+
+		$.post('/rma/rest/add_rma', { serialNumber: sn, cause: $textarea.val()})
+		.done(message=>{
+			if(message.cssClass=='text-bg-success'){
+
+				// Sort By
+				var $radio = $sortBy.filter(':checked');
+				if(!$radio.length)	// If no one checked.
+					$radio = $('#rmaOrderByRmaNumber').prop('checked', true);
+
+				var sortBy = $radio.prop('id');
+				$accordion.load('/rma/search', {id : 'rmaSerialNumber', value : sn, sortBy: sortBy});
+
+			}else
+				$accordion.empty().append($('<div>', {class: message.cssClass + ' text-center p-3'}).append(message.message));
+		})
+		.fail(function(error) {
+			if(error.statusText!='abort')
+				alert(error.responseText);
+		});
+
+		$m.modal('hide');
+	});
+	$m.append(
+				$('<div>', {class: 'modal-dialog'})
+				.append(
+					$('<div>', {class: 'modal-content'})
+					.append(
+						$('<div>', {class: 'modal-header'})
+						.append($('<h5>', {class: 'modal-title', text: "Create an RMA for " + sn + '?'}))
+						.append($('<button >', {type: 'button', class: 'btn-close', 'data-bs-dismiss': 'modal', 'aria-label': 'Close'})))
+					.append(
+						$('<div>', {class: 'modal-body'})
+						.append(
+							$('<div>', {class: 'form-floating'})
+							.append($textarea)
+							.append($('<label>', {for: sn, text: 'Description of the malfunction:'}))))
+					.append(
+						$('<div>', {class: 'modal-footer'})
+						.append($('<button>', {type: 'button', class: 'btn btn-outline-secondary', 'data-bs-dismiss': 'modal', text: 'Cancel'}))
+						.append($btn))));
+
+	new bootstrap.Modal($m);
+	$m.modal('show').on('hidden.bs.modal', ()=>$m.remove());
 }

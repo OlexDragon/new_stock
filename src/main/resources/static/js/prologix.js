@@ -153,7 +153,7 @@ let $address = $('.address').on('input', function(){
 })
 .focusout(function(){
 	if(this.value)
-		Cookies.set(this.id, this.value);
+		Cookies.set(this.id, this.value, { path: '' });
 
 	let $parent = $(this).parents('.accordion-body');
 	setAccordionHeaderText($parent);

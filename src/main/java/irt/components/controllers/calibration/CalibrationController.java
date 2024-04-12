@@ -40,7 +40,7 @@ import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestParam;
 
-import irt.components.beans.HttpSerialPortServersCollector;
+import irt.components.beans.HttpSerialPortServersKeeper;
 import irt.components.beans.ProductionOrder;
 import irt.components.beans.ProductionOrderResponse;
 import irt.components.beans.irt.CalibrationInfo;
@@ -98,7 +98,7 @@ public class CalibrationController {
 	@Value("${irt.log.file}")
 	private String logFile;
 
-	@Autowired private HttpSerialPortServersCollector			 httpSerialPortServersCollector;
+	@Autowired private HttpSerialPortServersKeeper			 httpSerialPortServersCollector;
 	@Autowired private CalibrationOutputPowerSettingRepository	 calibrationOutputPowerSettingRepository;
 	@Autowired private CalibrationPowerOffsetSettingRepository	 calibrationPowerOffsetSettingRepository;
 	@Autowired private CalibrationGainSettingRepository			 calibrationGainSettingRepository;

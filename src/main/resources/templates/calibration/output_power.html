@@ -160,9 +160,9 @@
 				var val = $this.val();
 
 				if(val)
-					Cookies.set("outputPowerSteps", val, { expires: 99999 });
+					Cookies.set("outputPowerSteps", val, { expires: 99999, path: '' });
 				else{
-					Cookies.set("outputPowerSteps", null, { expires: 0 });
+					Cookies.remove("outputPowerSteps", { path: '' });
 					$this.val(3);
 				}
 			});
@@ -424,7 +424,7 @@
 	    			return;
 
 	    		var json = JSON.stringify(array);
-				Cookies.set(unitSerialNumber + "_opTable", json, { expires: 30 });
+				Cookies.set(unitSerialNumber + "_opTable", json, { expires: 30, path: '' });
 			})
 
 			$modal.on('hidden.bs.modal', function () {

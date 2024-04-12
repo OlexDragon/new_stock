@@ -19,7 +19,7 @@ function search($this){
 		return;
 
 	var attrId = $this.prop('id');
-	Cookies.set("componentSearch", JSON.stringify([attrId, val]), { expires: 7 });
+	Cookies.set("componentSearch", JSON.stringify([attrId, val]), { expires: 7, path: '' });
 	$('.searchInput').filter(':not(#' + attrId + ')').val('');
 
 	$("#content").load('/components', {id: attrId, value: val})

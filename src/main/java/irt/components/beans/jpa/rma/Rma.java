@@ -20,6 +20,7 @@ import javax.persistence.TemporalType;
 
 import com.fasterxml.jackson.annotation.JsonFormat;
 
+import irt.components.beans.DateContainer;
 import irt.components.beans.jpa.User;
 import lombok.AllArgsConstructor;
 import lombok.Getter;
@@ -30,7 +31,7 @@ import lombok.ToString;
 @Entity
 @Table
 @NoArgsConstructor @AllArgsConstructor @Getter @Setter @ToString
-public class Rma {
+public class Rma implements DateContainer{
 
 	@Id @GeneratedValue(strategy = GenerationType.IDENTITY)
 	private Long	 id;
@@ -59,6 +60,8 @@ public class Rma {
 		IN_WORK,
 		SHIPPED,
 		READY,
-		CREATED;
+		CREATED,
+		CLOSED,
+		FIXED;
 	}
 }

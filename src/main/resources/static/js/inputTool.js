@@ -34,7 +34,7 @@ $('.input-value').on('input', function(){
 	if(el.localName != 'input')
 		return;
 
-	let step = Cookies.set(el.id + "Step");
+	let step = Cookies.set(el.id + "Step", { path: '' });
 	el.dataset.step = step;
 })
 .on('keydown', e=>{
@@ -207,7 +207,7 @@ function sowSetupToast(target){
 			return;
 
 		target.dataset.step = step;
-		Cookies.set(target.id + "Step", step, { expires: 9999 });
+		Cookies.set(target.id + "Step", step, { expires: 9999, path: '' });
 	});
 
 	let $toast = $('<div>', {class: 'toast', role: 'alert', 'aria-live': 'assertive', 'aria-atomic': true, 'data-bs-delay': 5*60*1000})

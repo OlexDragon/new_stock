@@ -73,6 +73,11 @@ public class ProfileWorker {
 				});
 	}
 
+	public ProfileWorker(Path path) {
+		oPath = Optional.of(path);
+		serialNumber = path.getFileName().toString().split("\\.")[0];
+	}
+
 	public boolean exists() throws IOException {
 		final Optional<Path> oPath = getPath();
 		return oPath.isPresent();

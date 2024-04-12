@@ -3,7 +3,7 @@ $('#miOldDB').addClass('active');
 
 $('#pnType').on('change', function(){
 
-	Cookies.set("oldPnType", this.value);
+	Cookies.set("oldPnType", this.value, { path: '' });
 	getPnNames();
 });
 

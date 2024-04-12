@@ -76,7 +76,7 @@
 <!-- Accordion:	Cards -->
 	<th:block th:fragment="rmaCards">
 
-		<div class="accordion-item" th:each="rma, status : ${ rmas }" th:with="index =${ status.index }" th:id="${ rma.id }">
+		<div class="accordion-item" th:each="rma, status : ${ rmas }" th:with="index =${ status.index }" th:id="${rma.fromWeb ? 'web' + rma.id : 'local' + rma.id}" >
 
 <!-- Accordion:	Card Header -->
 			<h5 th:id="heading + ${ index }" class="accordion-header">
@@ -85,13 +85,7 @@
            				<div class="col-auto rma-status"
            					th:title="${rma.status}"
            					data-bs-toggle="tooltip"
-           					th:classappend="${rma.status ==
-           										 T(irt.components.beans.jpa.rma.Rma.Status).SHIPPED ?
-           										 		'bg-secondary text-white bg-opacity-75' :
-           										 				rma.status == T(irt.components.beans.jpa.rma.Rma.Status).READY ?
-           										 						'bg-info' :
-           										 							rma.status == T(irt.components.beans.jpa.rma.Rma.Status).CREATED ? 'bg-warning' :
-           										 								''}">
+           					th:classappend="${bsClass[rma.status.ordinal()]}">
 
           					<strong th:text="${ rma.rmaNumber }"> RMA Number </strong>
           				</div>
@@ -105,17 +99,17 @@
           					<strong th:text="${ rma.description }">Description</strong>
           				</div>
           				<div class="col-auto text-secondary">
-          					<strong th:text="${#dates.format( rma.date, 'dd MMM yyyy' )}" th:title="${rma.date}" data-bs-toggle="tooltip">Date</strong>
+          					<strong th:text="${#dates.format( rma.creationDate, 'dd MMM yyyy' )}" th:title="${rma.creationDate}" data-bs-toggle="tooltip">Date</strong>
           				</div>
           				<div class="col-auto text-secondary">
-          					<strong th:text="${rma.user.username}" th:title="${ rma.user.firstname + ' ' + rma.user.lastname}" data-bs-toggle="tooltip">User Name</strong>
+          					<strong th:text="${rma.username}" th:title="${rma.fullName}" data-bs-toggle="tooltip">User Name</strong>
           				</div>
- 						<div class="col-auto" th:if="${rma.status == T(irt.components.beans.jpa.rma.Rma.Status).CREATED}" sec:authorize="hasAuthority('ADD_RMA')">
+<!--/* 						<div class="col-auto" th:if="${rma.status == T(irt.components.beans.jpa.rma.Rma.Status).CREATED}" sec:authorize="hasAuthority('ADD_RMA')">*/-->
 <!-- Button to Add RMA unit -->
-      						<div class="btn btn-outline-primary add-to-rma" th:data-rma-number="${ rma.rmaNumber }" th:title="'Add another unit to ' + ${rma.rmaNumber}" data-bs-toggle="tooltip">Add</div>
-    					</div>
+<!--/*     						<div class="btn btn-outline-primary add-to-rma" th:data-rma-number="${ rma.rmaNumber }" th:title="'Add another unit to ' + ${rma.rmaNumber}" data-bs-toggle="tooltip">Add</div>*/-->
+ <!--/*   					</div>*/-->
   						<div class="col-auto" sec:authorize="hasAuthority('ADD_RMA_COMMENT')" >
-<!-- Button to Add Comment -->
+<!--/* Button to Add Comment */-->
       						<div class="btn btn-outline-primary add-comment" title="Add Comment" data-bs-toggle="tooltip">Comm.</div>
     					</div>
            			</div>
@@ -124,7 +118,14 @@
 
 <!-- Accordion:	Card Body -->
 			<div id="rma0" th:id="rma + ${ index }" class="accordion-collapse collapse" aria-labelledby="heading0" th:attr="aria-labelledby ='heading'+${ index}" data-bs-parent="#accordion">
-				<div id="accordion-body" class="accordion-body" th:remove="body">
+				<div class="accordion-body">
+					<div class="row complain bg-info-subtle" th:if="${rma.malfunction}!=null">
+						<div class="col-auto">
+							<h6>Customer Complaint:</h6>
+						</div>
+						<div class="col" th:text="${rma.malfunction}"></div>
+					</div>
+					<div class="content" th:remove="body">
 				<th:block th:fragment="rmaBody">
 					<div class="row">
 						<div class="col-1"> # </div>
@@ -132,39 +133,40 @@
 						<div class="col-1"><strong>	  User </strong></div>
 						<div class="col-2"><strong>Date </strong></div>
 					</div>
-					<div class="row hover-light" th:id="${ rmaContent }!=null ? ${ rmaContent.id } : null" th:each="rmaContent, status : ${ comments }" th:with="user = ${ rmaContent.user }" th:classappend="${status.odd ? 'odd' : ''}">
+					<div class="row hover-light" th:each="rmaContent, status : ${ comments }" th:with="user = ${ rmaContent.user }" th:classappend="${status.odd ? 'odd' : ''}">
 						<div class="col-1" th:text="${ status.count }">	#</div>
 						<div class="col comment pre-line" th:text="${ rmaContent.comment }">Comment </div>
 						<div class="col-1 username" th:text="${ user.username }" th:title="${ user.firstname + ' ' + user.lastname}" data-bs-toggle="tooltip">User name </div>
 						<div class="col-2 date" th:text="${#dates.format( rmaContent.date, 'dd MMM yyyy kk:mm' )}">Date </div>
 						<div th:if="${ rmaContent.hasFiles }" th:id="'filesFor' + ${ rmaContent.id }">
 							<script type="application/javascript" th:inline="javascript">
-
 								var commentID = /*[[${ rmaContent.id }]]*/ 1;
-								$('#filesFor' + commentID).load('/rma/get_files', {commentID: commentID});
+								var onWeb = /*[[${onWeb}]]*/ true;
+								$('#filesFor' + commentID).load('/rma/get_files', {commentID: commentID, onWeb: onWeb});
 							</script>
 							<th:block th:remove="all">
 
 								<div th:fragment="comment_files">
 									<a 		class="thumbnails" 
 											href="#" 
-											th:each="name, stat : ${fileNames}" 
-											th:href="@{'/files/rma/' + ${commentID} + '/' + ${name.value}}" 
+											th:each="fileName, stat : ${fileNames}" 
+											th:href="@{'/files/rma/' + ${commentID} + '/' + ${fileName.second} + '/' + ${onWeb}}" 
 											target="_blank" 
-											th:onclick="'thumbnailsClick(event,' + ${stat.index} + ',' + ${commentID} + ')'">
+											th:onclick="'thumbnailsClick(event,' + ${stat.index} + ',' + ${commentID} + ',' + ${onWeb} + ')'">
 										<img 	src="/" 
 												class="img-thumbnail hover-shadow" 
 												alt="..." 
-												th:alt="${name.key}" 
-												th:src="@{'/files/rma/thumbnails/' + ${commentID} + '/' + ${name.value}}" 
-												th:title="${name.key} + '&#010;Doble Click to Download'">
+												th:alt="${fileName.first}" 
+												th:src="@{'/files/rma/thumbnails/' + ${commentID} + '/' + ${fileName.second} + '/' + ${onWeb}}" 
+												th:title="${fileName.first} + '&#010;Doble Click to Download'">
 									</a>
 								</div>
 							</th:block>
 						</div>
 					</div>
 				</th:block>
-				</div>
+					</div>
+			</div>
 			</div>
 			<script type="application/javascript" th:inline="javascript" th:if="${status.size} eq 1")>
 			/*<![CDATA[*/
@@ -287,14 +289,14 @@
 				<button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal" aria-label="Close"></button>
         	</div>
 	 		<div class="modal-body modal-content">
- 				<a href="#" th:href="@{'/files/rma/' + ${commentID} + '/' + ${imgName.value}}" target="_blank">
-		    		<img id="fullImage" src="/" alt="..." style="width:100%" th:src="@{'/files/rma/' + ${commentID} + '/' + ${imgName.value}}" th:alt="${imgName.key}" th:title="${imgName.key} + '&#010;Click to Download'">
+ 				<a href="#" th:href="@{'/files/rma/' + ${commentID} + '/' + ${imgName.second}}" target="_blank">
+		    		<img id="fullImage" src="/" alt="..." style="width:100%" th:src="@{'/files/rma/' + ${commentID} + '/' + ${imgName.second} + '/' + ${onWeb}}" th:alt="${imgName.first}" th:title="${imgName.first} + '&#010;Click to Download'">
   				</a>
     			</div>
 
 			<!-- Thumbnail image controls -->
 			<div id="images-footer" class="modal-footer" style="pointer-events: auto;">
-				<img class="thumbImg img-thumbnail" src="img1.jpg" alt="..." th:each="name, stat : ${fileNames}" th:src="@{'/files/rma/thumbnails/' + ${commentID} + '/' + ${name.value}}" th:alt="${name.key}" th:title="${name.key}" data-bs-toggle="tooltip" data-th-data-image-index="${stat.index}">
+				<img class="thumbImg img-thumbnail" src="img1.jpg" alt="..." th:each="fileName, stat : ${fileNames}" th:src="@{'/files/rma/thumbnails/' + ${commentID} + '/' + ${fileName.second} + '/' + ${onWeb}}" th:alt="${fileName.first}" th:title="${fileName.first}" data-bs-toggle="tooltip" data-th-data-image-index="${stat.index}">
 			</div>
 		</div>
 		 <button class="carousel-control-prev" type="button">
@@ -362,7 +364,7 @@
 	</th:block>
 	</div>
 <th:block th:remove="all">
-	<div class="alert alert-warning" role="alert" th:fragment="alert">Your login has expired. Refresh the page, please, and <strong>login again.</strong></div>
+	<div class="alert alert-warning" role="alert" th:fragment="alert(message)" th:utext="${message}">Your login has expired. Refresh the page, please, and <strong>login again.</strong></div>
 </th:block>
 <th:block th:replace="components :: scripts">
     <script type="application/javascript" src="https://ajax.googleapis.com/ajax/libs/jquery/3.6.0/jquery.min.js"></script>

@@ -101,13 +101,13 @@ $spServers.change(function(){
 	if(!spServers)
 		return;
 
-	Cookies.set("spServers", spServers, { expires: 7, path: window.location.pathname });
+	Cookies.set("spServers", spServers, { expires: 7, path: '' });
 	gerSerialPorts();
 });
 
 let $saveToCookies = $('.save-to-cookies')
 .change(function(){
-	Cookies.set(this.id, $(this).find('option:selected').text());
+	Cookies.set(this.id, $(this).find('option:selected').text(), { expires: 7, path: '' });
 });
 $.each($saveToCookies, function(index, tool){
 	let cookie = Cookies.get(tool.id)
@@ -158,7 +158,7 @@ function gerSerialPorts(){
 $('.com-ports').on('change', function(){
 
 	comPortSelected(this);
-	Cookies.set(this.id, this.value, { expires: 999, path: window.location.pathname });
+	Cookies.set(this.id, this.value, { expires: 999, path: '' });
 
 	disableMenuItens();
 	$(this).parents('.accordion-collapse').trigger('show.bs.collapse');
@@ -360,9 +360,9 @@ $scan.click(function(e){
 	$startFrom.focusout(function(){
 		let val = $startFrom.val();
 		if(val)
-			Cookies.set("startFrom",  val, { path: window.location.pathname});
+			Cookies.set("startFrom",  val, { path: '' });
 		else
-			Cookies.set("startFrom",  '');
+			Cookies.set("startFrom",  '', { path: '' });
 	});
 
 

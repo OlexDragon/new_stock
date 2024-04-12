@@ -18,7 +18,7 @@ function search($this){
 		return;
 
 	var attrId = $this.prop('id');
-	Cookies.set("ecoSearch", JSON.stringify([attrId, val]), { expires: 7 });
+	Cookies.set("ecoSearch", JSON.stringify([attrId, val]), { expires: 7, path: '' });
 	$('.search').filter(':not(#' + attrId + ')').val('');
 
 	if($this.hasClass('searchComponent'))

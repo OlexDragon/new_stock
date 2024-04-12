@@ -5,7 +5,7 @@ import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.integration.smb.session.SmbSessionFactory;
 
-import irt.components.beans.HttpSerialPortServersCollector;
+import irt.components.beans.HttpSerialPortServersKeeper;
 import jcifs.DialectVersion;
 
 @Configuration
@@ -31,7 +31,7 @@ public class SmbConfig {
 	}
 
 	@Bean
-	public HttpSerialPortServersCollector httpSerialPortServersCollector() {
-		return new HttpSerialPortServersCollector();
+	public HttpSerialPortServersKeeper httpSerialPortServersCollector() {
+		return new HttpSerialPortServersKeeper();
 	}
 }

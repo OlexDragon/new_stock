@@ -110,7 +110,7 @@
 
 			$currentAlarm.focusout(function(){
 				let v = $(this).val();
-				Cookies.set("currentAlarm", v, { expires: 999 });
+				Cookies.set("currentAlarm", v, { expires: 999, path: '' });
 			});
 			$currentAlarm.on('input', function(){
 				let v = $(this).val();

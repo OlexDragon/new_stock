@@ -21,6 +21,7 @@ import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
 
+import irt.components.beans.UserPrincipal;
 import irt.components.beans.irt.calibration.measurement.MeasurementRequest;
 import irt.components.beans.jpa.User;
 import irt.components.beans.jpa.btr.BtrComment;
@@ -28,7 +29,6 @@ import irt.components.beans.jpa.btr.BtrMeasurements;
 import irt.components.beans.jpa.repository.btr.BtrCommentRepository;
 import irt.components.beans.jpa.repository.btr.BtrMeasurementsRepository;
 import irt.components.beans.jpa.repository.btr.BtrSerialNumberRepository;
-import irt.components.services.UserPrincipal;
 
 @RestController
 @RequestMapping(path = "/wo/rest", produces = MediaType.APPLICATION_JSON_VALUE)

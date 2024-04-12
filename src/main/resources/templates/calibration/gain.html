@@ -90,11 +90,11 @@
 				var newValue = this.valueAsNumber;
 				if(!newValue || newValue<1){
 					$step.val(1);
-					Cookies.remove("dacStep");
+					Cookies.remove("dacStep", { path: '' });
 					return;
 				}
 
-				Cookies.set("dacStep", newValue, { expires: 7, path: window.location.pathname });
+				Cookies.set("dacStep", newValue, { expires: 7, path: '' });
 			});
 
 // Copy updated value to input field
@@ -103,7 +103,7 @@
 				  $('#setDacValue').val(value);
 			});
 
-// Send chenged DAC value to the Unit
+// Send changed DAC value to the Unit
 			var channel = 'fcm_dac';
 			$('#setDacValue').on('input', function(e){
 
@@ -288,7 +288,7 @@
 			    });
 
 				var json = JSON.stringify(gainTable);
-				Cookies.set(unitSerialNumber + "_gainTable", json, { expires: 30, path: window.location.pathname });
+				Cookies.set(unitSerialNumber + "_gainTable", json, { expires: 30, path: '' });
 			}
 
 			function disableButtons(){

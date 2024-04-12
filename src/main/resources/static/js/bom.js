@@ -20,7 +20,7 @@ function search($this){
 		window.history.pushState({}, document.title, window.location.href.split("?")[0] );
 
 	var attrId = $this.prop('id');
-	Cookies.set("bomSearch", JSON.stringify([attrId, val]), { expires: 7, path: window.location.pathname });
+	Cookies.set("bomSearch", JSON.stringify([attrId, val]), { expires: 7, path: '' });
 	$('.searchInput').filter(':not(#' + attrId + ')').val('');
 
 	$('#accordion').load('/bom/search', {id : attrId, value : val});

@@ -39,7 +39,7 @@ function search($this){
 
 // Save Cookies
 	var attrId = $this.prop('id');
-	Cookies.set("btrSearch", JSON.stringify([attrId, val]), { expires: 7 });
+	Cookies.set("btrSearch", JSON.stringify([attrId, val]), { expires: 7, path: '' });
 
 // Crear other input filds
 	$('.searchWO').filter(':not(#' + attrId + ')').val('');

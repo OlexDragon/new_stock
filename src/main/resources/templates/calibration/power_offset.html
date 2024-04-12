@@ -102,9 +102,9 @@
 				var val = $this.val();
 
 				if(val)
-					Cookies.set("powerOffsetSteps", val, { expires: 99999 });
+					Cookies.set("powerOffsetSteps", val, { expires: 99999, path: '' });
 				else{
-					Cookies.set("powerOffsetSteps", null, { expires: 0 });
+					Cookies.remove("powerOffsetSteps", { path: '' });
 					$this.val('0.1');
 				}
 			});
@@ -396,7 +396,7 @@
     			return;
 
     		var json = JSON.stringify(array);
-			Cookies.set(unitSerialNumber + "_frTable", json, { expires: 30 });
+			Cookies.set(unitSerialNumber + "_frTable", json, { expires: 30, path: '' });
 		});
 
 		$modal.on('hidden.bs.modal', function () {

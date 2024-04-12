@@ -1,82 +1,78 @@
 package irt.components.controllers.rma;
 
+import static irt.components.controllers.rma.RmaController.onErrorReturn;
+import static irt.components.services.RmaService.determineStatus;
+
 import java.io.IOException;
-import java.net.InetAddress;
-import java.net.UnknownHostException;
-import java.nio.file.Path;
-import java.nio.file.Paths;
 import java.security.Principal;
 import java.util.List;
 import java.util.Optional;
-import java.util.function.Consumer;
-import java.util.stream.Collectors;
-import java.util.stream.IntStream;
 import java.util.stream.Stream;
-
-import javax.annotation.PostConstruct;
 
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
+import org.springframework.http.HttpHeaders;
+import org.springframework.http.MediaType;
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
+import org.springframework.web.bind.annotation.CookieValue;
+import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
 import org.springframework.web.multipart.MultipartFile;
+import org.springframework.web.reactive.function.BodyInserters;
+import org.springframework.web.reactive.function.client.WebClient;
 
+import com.fasterxml.jackson.annotation.JsonValue;
+
+import irt.components.beans.RmaRequest;
+import irt.components.beans.UserPrincipal;
 import irt.components.beans.jpa.User;
-import irt.components.beans.jpa.repository.rma.RmaCommentsRepository;
 import irt.components.beans.jpa.repository.rma.RmaRepository;
 import irt.components.beans.jpa.rma.Rma;
-import irt.components.beans.jpa.rma.RmaComment;
+import irt.components.beans.jpa.rma.Rma.Status;
 import irt.components.services.MailSender;
-import irt.components.services.UserPrincipal;
+import irt.components.services.RmaService;
+import irt.components.services.RmaServiceLocal;
+import irt.components.services.RmaServiceWeb;
 import irt.components.workers.ProfileWorker;
-import irt.components.workers.ThreadRunner;
+import lombok.AllArgsConstructor;
+import lombok.Getter;
+import lombok.NoArgsConstructor;
+import lombok.ToString;
 
 @RestController
-@RequestMapping("/rma/rest")
+@RequestMapping("rma/rest")
 public class RmaRestController {
 	private final static Logger logger = LogManager.getLogger();
-	private final static long MARINA_ID = 10L;
 
-	@Value("${irt.profile.path}") private String profileFolder;
-	@Value("${irt.rma.files.path}") private String rmaFilesPath;
+	@Value("${irt.profile.path}")	private String profileFolder;
+
+	@Value("${irt.onRender}") 				private String onRender;
+	@Value("${irt.onRender.rma.create}")	private String createRma;
+	@Value("${irt.onRender.rma.readyToAdd}")private String readyToAdd;
+
+	@Autowired private RmaServiceLocal	local;
+	@Autowired private RmaServiceWeb	web;
 
 	@Autowired private RmaRepository rmaRepository;
-	@Autowired private RmaCommentsRepository rmaCommentsRepository;
 	@Autowired private MailSender mailSender;
 
-	@PostConstruct
-	public void postConstruct() {
+	@GetMapping("ready-to-add")
+	public boolean snExists(@RequestParam String sn){
+		logger.traceEntry(sn);
+		final Boolean onRenderReady = WebClient.builder().baseUrl(onRender).build().get().uri(uriBuilder -> uriBuilder.path(readyToAdd).queryParam("sn", sn).build()).retrieve()
+				.bodyToMono(Boolean.class)
+				.onErrorReturn(onErrorReturn(new Throwable("RmaRestController.snExists.onErrorReturn")), false)
+				.block();
+		// If onRender is ready check local DB.
+		if(!onRenderReady)
+			return false;
 
-		try {
-
-    		// get system name
-        	String sName = InetAddress.getLocalHost().getHostName();
-
-        	// Change the directory if server runs on my computer
-        	if(sName.equals("oleksandr"))
-        		rmaFilesPath = RmaController.TEST_PATH_TO_RMA_FILES;
-
-        } catch (UnknownHostException e) {
-			logger.catching(e);
-		}
-	}
-
-	@PostMapping("has_prifile")
-	public boolean hasProfile(@RequestParam String serialNumber) throws IOException {
-		logger.traceEntry(serialNumber);
-
-    	final ProfileWorker profileWorker = new ProfileWorker(profileFolder, serialNumber);
-		final String sn = profileWorker.getSerialNumber();
-		logger.debug("profileWorker.getSerialNumber() = {}", sn);
-
-		final Optional<Rma> oRma = rmaRepository.findBySerialNumberAndStatusNot(sn, Rma.Status.SHIPPED);
-
-		return profileWorker.exists() && !oRma.isPresent();
+		return !rmaRepository.existsBySerialNumberAndStatusNotIn(sn, Status.SHIPPED, Status.CLOSED);
 	}
 
 	@PostMapping("add_to_rma")
@@ -90,9 +86,9 @@ public class RmaRestController {
 			return "The Profile with sn:'" + profileWorker.getSerialNumber() + "' was not found.";
 
 		final String sn = profileWorker.getSerialNumber();
-		final Optional<Rma> oRma = rmaRepository.findBySerialNumberAndStatusNot(sn, Rma.Status.SHIPPED);
+		final List<Rma> oRma = rmaRepository.findBySerialNumberAndStatusNotIn(sn, Rma.Status.SHIPPED);
 //		logger.error(oRma);
-		if(oRma.isPresent())
+		if(!oRma.isEmpty())
 			return "The Unit with Serial Number '" + sn + "' exists in the production.";
 
 		return profileWorker.getDescription()
@@ -105,14 +101,35 @@ public class RmaRestController {
 				.orElse("Profile scan error.");
 	}
 
+	@PostMapping("add_rma")
+	public ResponseMessage addRma(@CookieValue(required = false) String clientIP, @RequestParam String serialNumber, String cause, Principal principal) throws IOException {
+		logger.traceEntry("{} : {}", serialNumber, principal);
+
+		if(!(principal instanceof UsernamePasswordAuthenticationToken))
+			return new ResponseMessage("Your login has expired. Please refresh the page and <strong>login again.</strong>", BootstapClass.TXT_BG_WARNING);
+
+		final RmaRequest rmaRequest = new RmaRequest();
+		rmaRequest.setSn(serialNumber);
+		rmaRequest.setCause(cause);
+		final User user = ((UserPrincipal)((UsernamePasswordAuthenticationToken)principal).getPrincipal()).getUser();
+		rmaRequest.setEmail(user.getEmail());
+		rmaRequest.setName("IRT User Id " + user.getId());
+
+		return WebClient.builder().baseUrl(onRender).defaultCookie("clientIP", clientIP).defaultHeader(HttpHeaders.CONTENT_TYPE, MediaType.APPLICATION_JSON_VALUE).build()
+
+				.post().uri(createRma).body(BodyInserters.fromValue(rmaRequest)).retrieve().toEntity(ResponseMessage.class).block().getBody();
+	}
+
 	@PostMapping(path = "add_comment", consumes = {"multipart/form-data"})
 	public String addComment(
-								@RequestParam Long rmaId,
+								@RequestParam String rmaId,
 								@RequestParam(required = false) String comment,
 								@RequestParam(required = false) Boolean ready,
 								@RequestParam(required = false) Boolean shipped,
 								@RequestParam(name = "fileToAttach[]", required = false) List<MultipartFile> files,
 								Principal principal) throws IOException {
+
+		logger.traceEntry("rmaId: {}; ready: {}; shipped: {};\n\tcomment:\n{}", rmaId, ready, shipped, comment);
 
 
 		final Optional<String> oComment = Optional.ofNullable(comment).map(String::trim);
@@ -121,95 +138,73 @@ public class RmaRestController {
 		if(!(principal instanceof UsernamePasswordAuthenticationToken && rmaId!=null && (oComment.isPresent() || ready!=null || shipped !=null || oFiles.isPresent())))
 			return "Not all variables are present.";
 
-		final Rma rma = rmaRepository.findById(rmaId).get();
+		final RmaService rmaService = rmaId.startsWith("web") ? web : local;
+		final Long id = Long.parseLong(rmaId.replaceAll("\\D", ""));
 
-		final Object pr = ((UsernamePasswordAuthenticationToken)principal).getPrincipal();
-		final User user = ((UserPrincipal)pr).getUser();
+		boolean saved = rmaService.rmaById(id)
 
-		// Change RMA Status.
-		if(shipped!=null && shipped){
+				.map(
+						rma->{
 
-			rma.setStatus(Rma.Status.SHIPPED);
-			rmaRepository.save(rma);
-
-		}else if(ready!=null && ready){
-
-			rma.setStatus(Rma.Status.READY);
-			rmaRepository.save(rma);
-
-		}else if(rma.getStatus()==Rma.Status.CREATED && user.getId()!=MARINA_ID) {
-
-			rma.setStatus(Rma.Status.IN_WORK);
-			rmaRepository.save(rma);
-		}
-
-		// Save Comment
-		final RmaComment rmaComment = new RmaComment();
-		rmaComment.setRmaId(rmaId);
-		rmaComment.setUserId(user.getId());
-
-		oComment.ifPresent(rmaComment::setComment);
-		if(!oComment.isPresent())
-			rmaComment.setComment("");
-
-		rmaComment.setHasFiles(oFiles.isPresent());
-
-		final RmaComment savedComment = rmaCommentsRepository.save(rmaComment);
-
-		// Save files
-		oFiles.map(List::stream).orElse(Stream.empty()).forEach(saveFile(savedComment.getId()));
-
-		// Send Email
-		ThreadRunner.runThread(
-				()->{
-					synchronized (InetAddress.class) {
-
-						try {
-
-							Thread.sleep(1000);
-							String url = "";
+							logger.debug(rma);
 
 							try {
 
-								final InetAddress localHost = InetAddress.getLocalHost();
-								final byte[] address = localHost.getAddress();
 
-								url = "\nhttp://" + IntStream.range(0, address.length).mapToObj(index->address[index]&0xff).map(Number::toString).collect(Collectors.joining(".")) + ":8089/rma?rmaNumber=" + rma.getRmaNumber();
+								final Object pr = ((UsernamePasswordAuthenticationToken)principal).getPrincipal();
+								final User user = ((UserPrincipal)pr).getUser();
+								final Long userId = user.getId();
+								// Change RMA Status.
+								final Status determineStatus = determineStatus(rma.getStatus(), shipped, ready, userId);
+								final Status status = rma.getStatus();
+								if(determineStatus!=status)
+									rmaService.changeStatus(id, determineStatus);
+
+								// Save Comment
+								final String c = oComment.orElse("");
+								final Long commentId = rmaService.addComment(id, c, userId, oFiles.isPresent());
+
+								final String subject = rma.getRmaNumber() + " - " + user.getUsername() + " add new comment";
+								mailSender.send(subject, c, id, rmaService==web);
+
+								// Save files
+								oFiles.map(List::stream).orElse(Stream.empty()).forEach(rmaService.saveFile(commentId));
+
+								return true;
 
 							} catch (Exception e) {
 								logger.catching(e);
+								return false;
 							}
+						})
+				.orElseGet(
+						()->{
+							logger.warn("No RMA with ID {}", rmaId);
+							return false;
+						});
 
-							final String subject = rma.getRmaNumber() + " - " + user.getUsername() + " add new comment";
-							mailSender.send(subject, comment + url);
-
-						} catch (Exception e) {
-							logger.catching(e);
-						}
-					}
-				});
-
-		return "The comment has been saved.";
+		if(saved)
+			return "The comment has been saved.";
+		else
+			return "The comment was not saved. Check logs.";
 	}
 
-	private Consumer<? super MultipartFile> saveFile(Long commentId) {
-		return mpFile->{
+	@NoArgsConstructor @AllArgsConstructor @Getter @ToString
+	public static class ResponseMessage{
+		private String message;
+		private BootstapClass cssClass;
+	}
 
-			if(mpFile.isEmpty())
-				return;
+	@AllArgsConstructor @Getter @ToString
+	public enum BootstapClass{
 
-			final Path p = Paths.get(rmaFilesPath, commentId.toString());
-			p.toFile().mkdirs();	//create a directory
-			String originalFilename = mpFile.getOriginalFilename();
-			Path path = Paths.get(p.toString(), originalFilename);
+		TXT_BG_DANGER("text-bg-danger"),
+		TXT_BG_SUCCESS("text-bg-success"),
+		TXT_BG_PRIMARY("text-bg-primary"),
+		TXT_BG_BLACK("text-bg-black"),
+		TXT_BG_WARNING("text-bg-warning");
 
-			try {
-
-				mpFile.transferTo(path);
-
-			} catch (IllegalStateException | IOException e) {
-				logger.catching(e);
-			}
-		};
+		@JsonValue
+		private String value;
 	}
 }

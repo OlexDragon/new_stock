@@ -24,7 +24,7 @@ import lombok.Setter;
 import lombok.ToString;
 
 @Entity
-@Table(name="rma_comments")
+@Table(name = "rma_comments")
 @NoArgsConstructor @AllArgsConstructor @Getter @Setter @ToString
 public class RmaComment {
 

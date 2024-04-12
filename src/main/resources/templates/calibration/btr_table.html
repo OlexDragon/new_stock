@@ -128,7 +128,7 @@
 					$('#gainOffset').val(cookies);
 				$('#gainOffset').focusout(function(){
 					var val = $(this).val();
-					Cookies.set("gainOffset", val, { expires: 999 });
+					Cookies.set("gainOffset", val, { expires: 999, path: '' });
 				})
 
 				var hasP1db			 =  /*[[${settings.hasP1db}]]*/ true;
