@@ -11,6 +11,8 @@ import java.util.function.Consumer;
 
 import javax.annotation.PostConstruct;
 
+import org.apache.logging.log4j.LogManager;
+import org.apache.logging.log4j.Logger;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.data.domain.Sort.Direction;
@@ -33,6 +35,7 @@ import irt.components.controllers.rma.RmaController.RmaFilter;
 
 @Service
 public class RmaServiceWeb implements RmaService {
+	final static Logger logger = LogManager.getLogger();
 
 	@Value("${irt.onRender}") 					private String onRender;
 	@Value("${irt.onRender.rma.change.status}") private String changeStatus;

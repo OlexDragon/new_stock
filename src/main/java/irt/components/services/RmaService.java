@@ -4,8 +4,6 @@ import java.util.List;
 import java.util.Optional;
 import java.util.function.Consumer;
 
-import org.apache.logging.log4j.LogManager;
-import org.apache.logging.log4j.Logger;
 import org.springframework.web.multipart.MultipartFile;
 
 import irt.components.beans.RmaData;
@@ -13,7 +11,6 @@ import irt.components.beans.jpa.rma.Rma;
 import irt.components.beans.jpa.rma.Rma.Status;
 
 public interface RmaService {
-	final static Logger logger = LogManager.getLogger();
 
 	/**
 	 * 
@@ -30,9 +27,10 @@ public interface RmaService {
 	Consumer<? super MultipartFile> saveFile(Long commentId);
 	List<RmaData> 					rmaByStatus(Status status);
 
+//	final static Logger logger = LogManager.getLogger();
 	final static long MARINA_ID = 10L;
 	public static Rma.Status determineStatus(Rma.Status currentStatus, Boolean shipped, Boolean ready, Long userId){
-		logger.traceEntry("currentStatus: {}; shipped: {}; ready: {}; userId: {}", currentStatus, shipped, ready, userId);
+//		logger.traceEntry("currentStatus: {}; shipped: {}; ready: {}; userId: {}", currentStatus, shipped, ready, userId);
 
 		final Rma.Status status;
 
@@ -48,6 +46,6 @@ public interface RmaService {
 		else
 			status = currentStatus;
 
-		return logger.traceExit(status);
+		return status;
 	}
 }

@@ -9,6 +9,8 @@ import java.util.stream.Collectors;
 
 import javax.annotation.PostConstruct;
 
+import org.apache.logging.log4j.LogManager;
+import org.apache.logging.log4j.Logger;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
@@ -24,6 +26,7 @@ import irt.components.controllers.FileRestController;
 
 @Service
 public class RmaServiceLocal implements RmaService {
+	final static Logger logger = LogManager.getLogger();
 
 	@Autowired private RmaRepository rmaRepository;
 	@Autowired private RmaCommentsRepository rmaCommentsRepository;
@@ -49,15 +52,28 @@ public class RmaServiceLocal implements RmaService {
 
 	@Override
 	public Boolean changeStatus(Long rmaId, Rma.Status status) {
+		logger.traceEntry("rmaId: {}; status: {};", rmaId, status);
 
-		final Rma rma = rmaRepository.findById(rmaId).get();
-		rma.setStatus(status);
+		return rmaRepository.findById(rmaId)
+				.map(
+						rma->{
+							logger.error(rma);
+							try {
 
-		if(rma.getStatus()==status)
-			return false;
+								if(rma.getStatus()==status)
+									return false;
 
-		rmaRepository.save(rma);
-		return true;
+								rma.setStatus(status);
+
+								rmaRepository.save(rma);
+								return true;
+
+							} catch (Exception e) {
+								logger.catching(e);
+								return false;
+							}
+						})
+				.orElse(false);
 	}
 
 	@Override
