@@ -153,7 +153,7 @@ public class CalibrationController {
     					getHomePageInfo(s)
     					.ifPresent(home->{
     						final SysInfo sysInfo = home.getSysInfo();
-    						logger.error(sysInfo);
+//    						logger.error(sysInfo);
     						final Info info = new Info();
     						info.setSerialNumber(sysInfo.getSn());
     						info.setName(sysInfo.getDesc());

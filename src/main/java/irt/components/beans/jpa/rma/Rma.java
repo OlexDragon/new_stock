@@ -25,6 +25,7 @@ import irt.components.beans.jpa.User;
 import lombok.AllArgsConstructor;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
+import lombok.RequiredArgsConstructor;
 import lombok.Setter;
 import lombok.ToString;
 
@@ -56,12 +57,18 @@ public class Rma implements DateContainer{
 	@JoinColumn(name = "rmaId", referencedColumnName = "id", insertable = false, updatable = false)
 	private List<RmaComment> rmaComments;
 
+	@RequiredArgsConstructor @Getter
 	public enum Status{
-		IN_WORK,
-		SHIPPED,
-		READY,
-		CREATED,
-		CLOSED,
-		FIXED;
+		IN_WORK		("Unit in work"							, ""),
+		SHIPPED		("Shipped Units"						, "border border-5 border-dark"),
+		READY		("Ready To Ship"						, "bg-warning-subtle border border-5 border-success"),
+		CREATED		("Created RMA Number"					, "border border-5 border-warning"),
+		CLOSED		("Units that cannot be repaired."		, "bg-danger-subtle border border-5 border-dark"),
+		FIXED		("Repaired units"						, "border border-5 border-success"),
+		WAITTING	("Waiting for the manager's decision."	, "bg-warning-subtle border border-5 border-danger"),
+		FINALIZED	("Finalized"							, "bg-light-subtle border border-5 border-success");
+
+		private final String description;
+		private final String bootstrapCalsses;
 	}
 }

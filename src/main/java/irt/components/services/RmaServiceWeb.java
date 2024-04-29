@@ -67,6 +67,9 @@ public class RmaServiceWeb implements RmaService {
 	@Override
 	public Boolean changeStatus(Long rmaId, Rma.Status status) {
 
+		if(status==null)
+			return false;
+
 		return getClientIp()
 				.map(this::createCientWithClientIp)
 				.map(WebClient::post)

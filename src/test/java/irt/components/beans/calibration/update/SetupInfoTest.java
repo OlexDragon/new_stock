@@ -4,12 +4,16 @@ import static org.junit.jupiter.api.Assertions.assertEquals;
 
 import java.net.InetAddress;
 import java.net.UnknownHostException;
+import java.util.Calendar;
+import java.util.Date;
 
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 import org.junit.jupiter.api.Test;
 
+import irt.components.beans.DateContainer;
 import irt.components.beans.irt.update.SetupInfo;
+import irt.components.services.SerialNumberScaner;
 
 public class SetupInfoTest {
 	private final static Logger logger = LogManager.getLogger();
@@ -31,5 +35,23 @@ public class SetupInfoTest {
 	public void testIp() throws UnknownHostException {
 		final byte[] address = InetAddress.getLocalHost().getAddress();
 		logger.error("{}", address);
+	}
+
+	@Test
+	void accumulatedDaysTest(){
+
+		final DateContainer dateContainer = new DateContainer() {
+			
+			@Override
+			public Date getDate() {
+				Calendar cal = Calendar.getInstance();
+				cal.set(Calendar.YEAR, 2023);
+				cal.set(Calendar.MONTH, Calendar.SEPTEMBER);
+				cal.set(Calendar.DAY_OF_MONTH, 5);
+				return cal.getTime();
+			}
+		};
+		final long accumulatedDays = SerialNumberScaner.accumulatedDays(dateContainer);
+		logger.error(accumulatedDays);
 	}
 }

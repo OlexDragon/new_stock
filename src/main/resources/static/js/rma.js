@@ -8,6 +8,8 @@ if(!clientIP)
 const $accordion = $('#accordion');
 const $sortBy = $('input[name=sort_by]');
 const $rmaFilter = $('#rmaFilter');
+const $rmaTextarea = $('#rmaTextarea');
+const $saveComment = $('#saveComment');
 
 // Used in rmaComments.js script on rma.html
 let clicked = false;
@@ -47,10 +49,8 @@ $(window).on('popstate',()=>{
 
 function search($this, saveCookies){
 
-	if($addRMA.length){
-		$addRMA.removeClass('btn-outline-primary');
-		$addRMA.addClass('disabled btn-secondary');
-	}
+	if($addRMA.length)
+		$addRMA.removeClass('btn-outline-primary').addClass('btn-secondary').prop('disabled', true);
 
 	var tmp = $.trim($this.val());
 	if(!tmp)
@@ -106,7 +106,7 @@ function search($this, saveCookies){
 		$.get('/rma/rest/ready-to-add', { sn: val})
 		.done(readyToAdd=>{
 			if(readyToAdd)
-				$addRMA.removeClass('disabled btn-secondary').addClass('btn-outline-primary');
+				$addRMA.removeClass('btn-secondary').addClass('btn-outline-primary').prop('disabled', false);
 		})
 		.fail(function(error) {
 			if(error.statusText!='abort')
@@ -142,7 +142,7 @@ function search($this, saveCookies){
 function showModal(rmaId, serialNumber){
 
 	$('#modal_title').text(serialNumber);
-	$('#saveComment').val(rmaId);
+	$saveComment.val(rmaId);
 	$('#modal').modal('show');
 }
 
@@ -159,8 +159,7 @@ const $addRMA = $('#addRMA').click(function(e){		// Button "Add" RMA Unit
 	confirmAddRmaModal(val);
 });
 
-$('#saveComment').click(function(e){
-	e.preventDefault();
+$saveComment.click(e=>{
 
 	// return if file size is to large.
 	let $maxSize = $('#maxSize');
@@ -169,13 +168,14 @@ $('#saveComment').click(function(e){
 		return;
 	}
 
+	$saveComment.prop('disabled', true);
+
 	let fd = new FormData();
 
 	let files = $('#attachFiles').prop('files');
 	for(const f of files)
 		fd.append("fileToAttach[]", f);
 
-	var $rmaTextarea = $('#rmaTextarea');
 	var comment = $.trim($rmaTextarea.val());
 
 	if(comment){
@@ -184,20 +184,15 @@ $('#saveComment').click(function(e){
 		document.execCommand("copy");
 	}
 
-	let shipped = $('#shipping').prop('checked');
-	if(shipped)
-		fd.append("shipped", true);
-	else{
-		let ready = $('#ready').prop('checked');
-		if(ready)
-			fd.append("ready", true);
-	}
+	const $checked = $rmaStatus.filter((i,el)=>el.checked);
+	if($checked.length)
+		fd.append("status", $checked.prop('id'));
 
 // Return if values are not set.
 	if(fd.keys().next().done)
 		return;
 
-	fd.append('rmaId', this.value);
+	fd.append('rmaId', e.currentTarget.value);
 
 	$.ajax({
     	url: '/rma/rest/add_comment',
@@ -299,7 +294,7 @@ $rmaFilter.click(function(e){
 	Cookies.set("rmaFilter", text, { expires: 999, path: '' });
 	$this.text(text);
 
-	let $input = $searchRma.filter((i,el)=>el.value);
+	let $input = $searchRma.filter((i,el)=>el.value.length>0);
 	if($searchField.length){
  	   clearTimeout(timer);
  	   timer = setTimeout(search, 500, $input);
@@ -309,36 +304,23 @@ $rmaFilter.click(function(e){
 });
 var timer;
 
-$('#shipping').change(function(){
+const $rmaStatus = $('input[name=rmaStatus]').change(e=>{
 
-	let $ready = $('#ready').prop('disabled', this.checked);
+	if(!e.currentTarget.checked)
+		return;
 
-	if(this.checked){
-		$('#rmaTextarea').val('Shipped');
-		$ready.prop('checked', false);
-	}else
-		$('#rmaTextarea').val('');
+	const text = $rmaTextarea.val() + '\n\n' + e.currentTarget.ariaLabel;
+	$rmaTextarea.val(text);
 });
 
-$('#ready').change(function(){
+$('.modal-footer .btn-group').click(e=>{
 
-	const readyToShip = 'Ready to Ship.';
-	let $rmaTextarea = $('#rmaTextarea');
-	let text = $.trim($rmaTextarea.val());
-	let includs = text.includes(readyToShip);
+	if(e.target.tagName != 'LABEL' || !e.target.previousElementSibling.checked)
+		return;
 
-	if(this.checked){
-		if(!includs)
-			if(text.length)
-				$rmaTextarea.val(text + '\n\n' + readyToShip);
-			else
-				$rmaTextarea.val(text + readyToShip);
-	}else{
-		if(includs){
-			let t = text.split('\n').filter(l=>l != readyToShip).join("\n");
-			$rmaTextarea.val(t);
-		}
-	}
+	e.preventDefault();
+
+	e.target.previousElementSibling.checked = false;
 });
 
 function addToRma(rmaNumber){
@@ -381,7 +363,7 @@ $sortBy.change(function(){
 $('#readyToShip').click(function(e){
 	e.preventDefault();
 
-	let rmaId = $('#saveComment').val();
+	let rmaId = $saveComment.val();
 
 	$.post('/rma/rest/ready_to_ship', { rmaId: rmaId})
 	.fail(function(error) {
@@ -494,7 +476,7 @@ function confirmAddRmaModal(sn){
 	const $textarea = $('<textarea>', {id: sn, class: 'form-control', rows: 3, style: 'height:100%;', placeholder: 'Description of the malfunction'}).on('input', e=>$btn.prop('disabled', e.currentTarget.value.length==0));
 	$btn.click(()=>{
 
-		$addRMA.prop('disabled', true);
+		$addRMA.removeClass('btn-outline-primary').addClass('btn-secondary').prop('disabled', true);
 
 		$.post('/rma/rest/add_rma', { serialNumber: sn, cause: $textarea.val()})
 		.done(message=>{

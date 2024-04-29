@@ -57,10 +57,9 @@ public class RmaServiceLocal implements RmaService {
 		return rmaRepository.findById(rmaId)
 				.map(
 						rma->{
-							logger.error(rma);
 							try {
 
-								if(rma.getStatus()==status)
+								if(status==null || rma.getStatus()==status)
 									return false;
 
 								rma.setStatus(status);

@@ -20,6 +20,7 @@ public interface RmaRepository extends CrudRepository<Rma, Long> {
 	List<Rma> findByRmaNumberContainingAndStatusIn	(String value, Pageable page, Rma.Status... status);
 	List<Rma> findByRmaNumberContainingAndStatusNot	(String value, Rma.Status status, Pageable page);
 
+	List<Rma> findBySerialNumberContaining				(String desired);
 	List<Rma> findBySerialNumberContaining				(String desired, Pageable page);
 	List<Rma> findBySerialNumberContainingAndStatus		(String desired, Pageable page, Rma.Status... status);
 	List<Rma> findBySerialNumberContainingAndStatusIn	(String desired, Pageable page, Rma.Status... status);

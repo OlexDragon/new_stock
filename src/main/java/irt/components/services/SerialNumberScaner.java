@@ -7,7 +7,6 @@ import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.util.ArrayList;
-import java.util.Calendar;
 import java.util.Date;
 import java.util.List;
 import java.util.Optional;
@@ -157,7 +156,7 @@ public class SerialNumberScaner {
 						rma.setStatus(Status.CLOSED);
 						rmaRepository.save(rma);
 
-						mailSender.send(rma.getRmaNumber() + " automatically CLOSED", " RMA was created more than six months ago.\\r\\nThis RMA is CLOSED as it was never delivered.", rma.getId(), false);
+						mailSender.send(rma.getRmaNumber() + " automatically CLOSED", " RMA was created more than six months ago.\r\nThis RMA is CLOSED as it was never delivered.", rma.getId(), false);
 
 						final RmaComment comment = new RmaComment();
 						comment.setComment("This RMA is automatically CLOSED because it was never delivered.");
@@ -177,7 +176,7 @@ public class SerialNumberScaner {
 
 						web.changeStatus(rma.getId(), Status.CLOSED);
 
-						mailSender.send(rma.getRmaNumber() + " automatically CLOSED", " RMA was created more than six months ago.\\r\\nThis RMA is CLOSED as it was never delivered.", rma.getId(), true);
+						mailSender.send(rma.getRmaNumber() + " automatically CLOSED", " RMA was created more than six months ago.\r\nThis RMA is CLOSED as it was never delivered.", rma.getId(), true);
 
 						final RmaCommentWeb comment = new RmaCommentWeb();
 						comment.setComment("This RMA is automatically CLOSED because it was never delivered.");
@@ -213,10 +212,11 @@ public class SerialNumberScaner {
 				.onErrorReturn(onErrorReturn(new Throwable("SerialNumberScaner.sendRequest.onErrorReturn")), false).block();
 	}
 
-	private long accumulatedDays(DateContainer dateContainer) {
-		final long time = new Date().getTime() - dateContainer.getDate().getTime();
-		Calendar c = Calendar.getInstance();
-		c.setTimeInMillis(time);
-		return TimeUnit.DAYS.convert(time, TimeUnit.DAYS);
+	public static long accumulatedDays(DateContainer dateContainer) {
+		final Date date = new Date();
+		final long now = date.getTime();
+		final long before = dateContainer.getDate().getTime();
+		final long time = now - before;
+		return TimeUnit.DAYS.convert(time, TimeUnit.MILLISECONDS);
 	}
 }

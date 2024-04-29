@@ -9,10 +9,12 @@ import java.nio.file.Paths;
 import java.security.Principal;
 import java.util.ArrayList;
 import java.util.Arrays;
+import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
 import java.util.Objects;
 import java.util.Optional;
+import java.util.Set;
 import java.util.function.Function;
 import java.util.function.Predicate;
 import java.util.stream.Collectors;
@@ -52,6 +54,7 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 import irt.components.beans.RmaBy;
 import irt.components.beans.RmaData;
 import irt.components.beans.UserPrincipal;
+import irt.components.beans.UserRoles;
 import irt.components.beans.jpa.User;
 import irt.components.beans.jpa.repository.UserRepository;
 import irt.components.beans.jpa.repository.rma.RmaCommentsRepository;
@@ -77,7 +80,6 @@ public class RmaController {
 	public static final String TEST_PATH_TO_RMA_FILES = "c:\\irt\\rma\\files";
 
 	private static final int MAX_RMA_PAGE_SIZE = 1000;
-	private static final String[] BOOTSTRAP_CALSSES = {"", "bg-secondary text-white bg-opacity-75 border border-white", "bg-info", "bg-warning", "bg-secondary text-warning bg-opacity-75 border border-warning"};
 
 	@Value("${irt.onRender}") 						private String onRender;
 	@Value("${irt.onRender.rma.by-serial}")			private String bySerial;
@@ -103,9 +105,52 @@ public class RmaController {
 	}
 
 	@GetMapping
-    String getRmas( @RequestParam(required = false) Map<String, String> rmaParam, Model model) {
+    String getRmas( @RequestParam(required = false) Map<String, String> rmaParam, Principal principal, Model model) {
 		logger.traceEntry("rmaParam: {};", rmaParam);
 		model.addAllAttributes(rmaParam);
+
+
+		Optional.ofNullable(principal)
+		.filter(UsernamePasswordAuthenticationToken.class::isInstance)
+		.map(UsernamePasswordAuthenticationToken.class::cast)
+		.map(UsernamePasswordAuthenticationToken::getPrincipal)
+		.map(UserPrincipal.class::cast)
+		.map(UserPrincipal::getUser)
+		.map(User::getPermission)
+		.map(UserRoles::getAuthorities)
+		.ifPresent(
+				aut->{
+					Set<Rma.Status> statuses = new HashSet<>();
+					aut.parallelStream().map(UserRoles.class::cast)
+					.forEach(
+							ur->{
+								switch(ur) {
+
+								case SHIPPING:
+									statuses.add(Rma.Status.READY);
+									statuses.add(Rma.Status.SHIPPED);
+									break;
+
+								case PRODUCTION:
+									statuses.add(Rma.Status.FIXED);
+									statuses.add(Rma.Status.WAITTING);
+									break;
+
+								case FINALIZE:
+									statuses.add(Rma.Status.FINALIZED);
+									break;
+
+								case ADD_RMA:
+									statuses.add(Rma.Status.CLOSED);
+									break;
+
+								default:
+								}
+							});
+
+					model.addAttribute("rmaStatuses", statuses);
+				});
+
 		return "rma";
     }
 
@@ -169,8 +214,6 @@ public class RmaController {
 											Model model) throws IOException {
 
 		logger.traceEntry("id: {}; value: {}; sortBy: {}; rmaFilter:{}", id, value, sortBy, rmaFilter);
-
-		model.addAttribute("bsClass", BOOTSTRAP_CALSSES);
 
 		final RmaFilter filter = Optional.ofNullable(rmaFilter).orElse(RmaFilter.ALL);
 		final Optional<String> oSortBy = Optional.ofNullable(sortBy);
@@ -329,7 +372,7 @@ public class RmaController {
 
 			rmaDatas.addAll(collect);
 		}
-		return rmaDatas;
+		return logger.traceExit(rmaDatas);
 	}
 
 	private List<RmaData> byComment(String value, RmaFilter rmaFilter, String name) {
@@ -381,13 +424,11 @@ public class RmaController {
 	public static PageRequest getPageRequest(String sortBy, int size) {
 		logger.traceEntry("sortBy: {}; size: {};", sortBy, size);
 //		logger.catching(new Throwable());
-
-		String name = sortBy.replace("rmaOrderBy", "");
-		name = name.substring(0, 1).toLowerCase() + name.substring(1);
-		final Direction direction = sortBy.equals("rmaOrderByRmaNumber") ? Sort.Direction.DESC : Sort.Direction.ASC;
+		String name = Optional.ofNullable(sortBy).map(sb->sb.replace("rmaOrderBy", "")).map(sb->sb.substring(0, 1).toLowerCase() + sb.substring(1)).orElse("rmaNumber");
+		final Direction direction = name.equals("rmaNumber") ? Sort.Direction.DESC : Sort.Direction.ASC;
 		final Sort sort = Sort.by(direction, name);
 
-		return logger.traceExit(PageRequest.of(0, size, sort));
+		return logger.traceExit(PageRequest.of(0, size<1 ? 1 : size, sort));
 	}
 
 	public static Predicate<? super Throwable> onErrorReturn(Throwable throwable) {
@@ -400,36 +441,39 @@ public class RmaController {
 
 	protected Function<UriBuilder, URI> buildUri(String path, String value, String sortBy, RmaFilter rmaFilter) {
 		logger.traceEntry("path: {}; value: {}; sortBy: {}; rmaFilter: {};", path, value, sortBy, rmaFilter);
-		return builder->{
 
-			final Direction direction;
-			final String name;
-			switch(sortBy) {
-			case "rmaOrderBySerialNumber":
-				name = "SerialNumberSerialNumber";	// field in irt.web.bean.jpa.Rma (onRender)
-				direction = Direction.ASC;
-				break;
-			default:
-				name = "rmaNumber";					// field in irt.web.bean.jpa.Rma (onRender)
-				direction = Direction.DESC;
-			}
+		return logger.traceExit(
 
-			return logger.traceExit(builder.path(path)
-					.queryParam("like", value)
-					.queryParam("name", name)
-					.queryParam("size", MAX_RMA_PAGE_SIZE)
-					.queryParam("status", (Object[])rmaFilter.getStatus())
-					.queryParam("direction", direction)
-					.build());
-		};
+				builder->{
+
+					final Direction direction;
+					final String name;
+					switch(sortBy) {
+					case "rmaOrderBySerialNumber":
+						name = "SerialNumberSerialNumber";	// field in irt.web.bean.jpa.Rma (onRender)
+						direction = Direction.ASC;
+						break;
+					default:
+						name = "rmaNumber";					// field in irt.web.bean.jpa.Rma (onRender)
+						direction = Direction.DESC;
+					}
+
+					return builder.path(path)
+							.queryParam("like", value)
+							.queryParam("name", name)
+							.queryParam("size", MAX_RMA_PAGE_SIZE)
+							.queryParam("status", (Object[])rmaFilter.getStatus())
+							.queryParam("direction", direction)
+							.build();
+				});
 	}
 
 	@Getter 
 	public enum RmaFilter{
 		ALL(Rma.Status.values()),					// Show all RMAs
 		SHI(Rma.Status.SHIPPED, Rma.Status.CLOSED),	// Show shipped RMAs
-		REA(Rma.Status.READY, Rma.Status.FIXED),	// Show RMAs ready to ship
-		WOR(Rma.Status.IN_WORK, Rma.Status.CREATED);// Show RMAs in work
+		REA(Rma.Status.READY, Rma.Status.FIXED, Rma.Status.FINALIZED),	// Show RMAs ready to ship
+		WOR(Rma.Status.IN_WORK, Rma.Status.CREATED, Rma.Status.WAITTING);// Show RMAs in work
 
 		private Status[] status;
 

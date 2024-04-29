@@ -1,7 +1,6 @@
 package irt.components.controllers.rma;
 
 import static irt.components.controllers.rma.RmaController.onErrorReturn;
-import static irt.components.services.RmaService.determineStatus;
 
 import java.io.IOException;
 import java.security.Principal;
@@ -13,8 +12,6 @@ import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
-import org.springframework.http.HttpHeaders;
-import org.springframework.http.MediaType;
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
 import org.springframework.web.bind.annotation.CookieValue;
 import org.springframework.web.bind.annotation.GetMapping;
@@ -23,7 +20,6 @@ import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
 import org.springframework.web.multipart.MultipartFile;
-import org.springframework.web.reactive.function.BodyInserters;
 import org.springframework.web.reactive.function.client.WebClient;
 
 import com.fasterxml.jackson.annotation.JsonValue;
@@ -115,27 +111,28 @@ public class RmaRestController {
 		rmaRequest.setEmail(user.getEmail());
 		rmaRequest.setName("IRT User Id " + user.getId());
 
-		return WebClient.builder().baseUrl(onRender).defaultCookie("clientIP", clientIP).defaultHeader(HttpHeaders.CONTENT_TYPE, MediaType.APPLICATION_JSON_VALUE).build()
+		return new ResponseMessage("For test only", BootstapClass.TXT_BG_SUCCESS);
 
-				.post().uri(createRma).body(BodyInserters.fromValue(rmaRequest)).retrieve().toEntity(ResponseMessage.class).block().getBody();
+//		return WebClient.builder().baseUrl(onRender).defaultCookie("clientIP", clientIP).defaultHeader(HttpHeaders.CONTENT_TYPE, MediaType.APPLICATION_JSON_VALUE).build()
+//
+//				.post().uri(createRma).body(BodyInserters.fromValue(rmaRequest)).retrieve().toEntity(ResponseMessage.class).block().getBody();
 	}
 
 	@PostMapping(path = "add_comment", consumes = {"multipart/form-data"})
 	public String addComment(
 								@RequestParam String rmaId,
 								@RequestParam(required = false) String comment,
-								@RequestParam(required = false) Boolean ready,
-								@RequestParam(required = false) Boolean shipped,
+								@RequestParam(required = false) Rma.Status status,
 								@RequestParam(name = "fileToAttach[]", required = false) List<MultipartFile> files,
 								Principal principal) throws IOException {
 
-		logger.traceEntry("rmaId: {}; ready: {}; shipped: {};\n\tcomment:\n{}", rmaId, ready, shipped, comment);
+		logger.traceEntry("rmaId: {}; status: {};\n\tcomment:\n{}", rmaId, status, comment);
 
 
 		final Optional<String> oComment = Optional.ofNullable(comment).map(String::trim);
 		final Optional<List<MultipartFile>> oFiles = Optional.ofNullable(files).filter(f->!f.isEmpty());
 
-		if(!(principal instanceof UsernamePasswordAuthenticationToken && rmaId!=null && (oComment.isPresent() || ready!=null || shipped !=null || oFiles.isPresent())))
+		if(!(principal instanceof UsernamePasswordAuthenticationToken && rmaId!=null && (oComment.isPresent() || oFiles.isPresent())))
 			return "Not all variables are present.";
 
 		final RmaService rmaService = rmaId.startsWith("web") ? web : local;
@@ -155,10 +152,7 @@ public class RmaRestController {
 								final User user = ((UserPrincipal)pr).getUser();
 								final Long userId = user.getId();
 								// Change RMA Status.
-								final Status determineStatus = determineStatus(rma.getStatus(), shipped, ready, userId);
-								final Status status = rma.getStatus();
-								if(determineStatus!=status)
-									rmaService.changeStatus(id, determineStatus);
+								Optional.ofNullable(status).filter(st->st!=rma.getStatus()).ifPresent(st->rmaService.changeStatus(id, st));
 
 								// Save Comment
 								final String c = oComment.orElse("");

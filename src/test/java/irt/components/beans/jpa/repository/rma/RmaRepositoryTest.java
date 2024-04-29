@@ -18,6 +18,7 @@ import org.springframework.test.context.junit4.SpringRunner;
 
 import irt.components.ComponentsApp;
 import irt.components.beans.jpa.rma.Rma;
+import irt.components.beans.jpa.rma.Rma.Status;
 import irt.components.controllers.rma.RmaController.RmaFilter;
 
 @RunWith(SpringRunner.class)
@@ -49,4 +50,12 @@ class RmaRepositoryTest {
 		assertFalse(rmas.isEmpty());
 	}
 
+	@Test
+	void test2() {
+		final String sn = "IRT-2122005";
+		final List<Rma> s = rmaRepository.findBySerialNumberAndStatusIn(sn, Status.SHIPPED);
+		assertFalse(s.isEmpty());
+
+		assertFalse(rmaRepository.existsBySerialNumberAndStatusNotIn(sn, Status.SHIPPED, Status.CLOSED));
+	}
 }

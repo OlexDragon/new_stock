@@ -51,7 +51,7 @@
 <!-- 		<logger name="irt.components.beans.irt.update.Profile" level="all" /> -->
 <!-- 		<logger name="irt.components.workers.ProfileWorker" level="all" /> -->
 
-		<logger name="irt.components.services.RmaServiceLocal" level="all" />
+<!-- 		<logger name="irt.components.services.RmaServiceLocal" level="all" /> -->
 
         <Root level="info">
             <AppenderRef ref="ConsoleAppender" />
