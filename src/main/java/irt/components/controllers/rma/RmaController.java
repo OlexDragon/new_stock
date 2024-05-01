@@ -107,7 +107,6 @@ public class RmaController {
 	@GetMapping
     String getRmas( @RequestParam(required = false) Map<String, String> rmaParam, Principal principal, Model model) {
 		logger.traceEntry("rmaParam: {};", rmaParam);
-		model.addAllAttributes(rmaParam);
 
 
 		Optional.ofNullable(principal)
@@ -207,7 +206,7 @@ public class RmaController {
 
 	@PostMapping("search")
 	public String searchRma(
-			@CookieValue(required = false)	RmaFilter rmaFilter,
+			@RequestParam(required=false)	RmaFilter rmaFilter,
 			@RequestParam(required=false) 	String id,		// RMA field ID on the RMA search page
 			@RequestParam(required=false) 	String value,	// Value of this field
 			@CookieValue(required = false) 	String sortBy,

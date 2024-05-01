@@ -35,26 +35,26 @@
   			<div class="input-group col">
 				<input type="radio" class="btn-check" name="sort_by" id="rmaOrderByRmaNumber" autocomplete="off">
       			<label for="rmaOrderByRmaNumber" class="input-group-text btn btn-outline-secondary" data-bs-toggle="tooltip" title="RMA Number">RMA</label>
-      			<input id="rmaNumber" type="text" class="form-control searchRma" placeholder="RMA Number" aria-label="RMA Number" th:value="${rmaNumber}">
+      			<input id="rmaNumber" type="text" class="form-control searchRma" placeholder="RMA Number" aria-label="RMA Number">
     		</div>
 
 <!-- Serial Number search-->
   			<div class="input-group col">
 				<input type="radio" class="btn-check" name="sort_by" id="rmaOrderBySerialNumber" autocomplete="off">
       			<label for="rmaOrderBySerialNumber" class="input-group-text btn btn-outline-secondary" title="Unit Serial Number" data-bs-toggle="tooltip">SN</label>
-      			<input id="rmaSerialNumber" type="text" class="form-control searchRma" placeholder="UNIT Serial Number" aria-label="UNIT Serial Number" th:value="${rmaSerialNumber}">
+      			<input id="rmaSerialNumber" type="text" class="form-control searchRma" placeholder="UNIT Serial Number" aria-label="UNIT Serial Number">
     		</div>
 
  <!--  Description search -->
   			<div class="input-group ml-1 col">
       			<label for="rmaDescription" class="input-group-text" title="Description" data-bs-toggle="tooltip">D</label>
-      			<input id="rmaDescription" type="text" class="form-control searchRma" placeholder="Description" aria-label="Description" aria-describedby="descriptionLbl" th:value="${rmaDescription}">
+      			<input id="rmaDescription" type="text" class="form-control searchRma" placeholder="Description" aria-label="Description" aria-describedby="descriptionLbl">
     		</div>
 
  <!--  Comment search -->
   			<div class="input-group ml-1 col">
       			<label for="rmaDescription" class="input-group-text" title="Comments" data-bs-toggle="tooltip">C</label>
-      			<input id="rmaComments" type="text" class="form-control searchRma" placeholder="Comments" aria-label="Comments" aria-describedby="commentsLbl" th:value="${rmaComments}">
+      			<input id="rmaComments" type="text" class="form-control searchRma" placeholder="Comments" aria-label="Comments" aria-describedby="commentsLbl">
     		</div>
 
   			<div sec:authorize="hasAuthority('ADD_RMA')" class="ml-1 col-auto">

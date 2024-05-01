@@ -12,6 +12,8 @@ import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
+import org.springframework.http.HttpHeaders;
+import org.springframework.http.MediaType;
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
 import org.springframework.web.bind.annotation.CookieValue;
 import org.springframework.web.bind.annotation.GetMapping;
@@ -20,6 +22,7 @@ import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
 import org.springframework.web.multipart.MultipartFile;
+import org.springframework.web.reactive.function.BodyInserters;
 import org.springframework.web.reactive.function.client.WebClient;
 
 import com.fasterxml.jackson.annotation.JsonValue;
@@ -111,11 +114,9 @@ public class RmaRestController {
 		rmaRequest.setEmail(user.getEmail());
 		rmaRequest.setName("IRT User Id " + user.getId());
 
-		return new ResponseMessage("For test only", BootstapClass.TXT_BG_SUCCESS);
+		return WebClient.builder().baseUrl(onRender).defaultCookie("clientIP", clientIP).defaultHeader(HttpHeaders.CONTENT_TYPE, MediaType.APPLICATION_JSON_VALUE).build()
 
-//		return WebClient.builder().baseUrl(onRender).defaultCookie("clientIP", clientIP).defaultHeader(HttpHeaders.CONTENT_TYPE, MediaType.APPLICATION_JSON_VALUE).build()
-//
-//				.post().uri(createRma).body(BodyInserters.fromValue(rmaRequest)).retrieve().toEntity(ResponseMessage.class).block().getBody();
+				.post().uri(createRma).body(BodyInserters.fromValue(rmaRequest)).retrieve().toEntity(ResponseMessage.class).block().getBody();
 	}
 
 	@PostMapping(path = "add_comment", consumes = {"multipart/form-data"})

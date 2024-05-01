@@ -11,20 +11,22 @@ const $rmaFilter = $('#rmaFilter');
 const $rmaTextarea = $('#rmaTextarea');
 const $saveComment = $('#saveComment');
 
-// Used in rmaComments.js script on rma.html
-let clicked = false;
+const urlParams = new URLSearchParams(window.location.search);
 
-// Get RMA filter text from the cookies
-let filterCookie = Cookies.get("rmaFilter")
-if(filterCookie){
-	$rmaFilter.text(filterCookie);
-}
+// RMA Filter
+let rmaFilter = urlParams.get('rmaFilter');
+if(!rmaFilter)
+	// Get RMA filter text from the cookies
+	rmaFilter = Cookies.get('rmaFilter')
+if(rmaFilter)
+	$rmaFilter.text(rmaFilter);
 
 // Get RMA sort by
-let sortBy = Cookies.get('sortBy')
-if(sortBy){
+let sortBy = urlParams.get('sortBy');
+if(!sortBy)
+	sortBy = Cookies.get('sortBy')
+if(sortBy)
 	$('#' + sortBy).prop('checked', true);
-}
 
 // Input listener
 timer = 0;
@@ -56,14 +58,10 @@ function search($this, saveCookies){
 	if(!tmp)
 		return;
 
-	var val;
-	var id = $this.prop('id');
+	let val = id = $this.prop('id');
 
 // Remove extra whitespaces
-	if(id=='rmaDescription' || id=='rmaComments')
-		val = tmp.replace(/\s+/g, ' ');
-
-	else
+	if(id!='rmaDescription' && id!='rmaComments')
 		val = tmp.replace(/\s+/g, '');
 
 
@@ -74,16 +72,17 @@ function search($this, saveCookies){
 
 	if(saveCookies || typeof saveCookies === 'undefined'){
 
-// Add to history
-		let state = { field_id: id, field_value: val };
-		let url = new URL(window.location.origin + window.location.pathname);
-		url.searchParams.set(id, val);
-		history.pushState(state, "", url);
-
 // Save Cookies
 		let json = JSON.stringify([attrId, val]);
 		Cookies.set('rmaSearch', json, { expires: 7, path: '' });
+		urlParams.set('searchName', attrId);
+		urlParams.set('searchValue', val);
 		$searchRma.filter(':not(#' + attrId + ')').val('');
+
+// Add to history
+		let state = { field_id: id, field_value: val };
+		let url = new URL(`${window.location.origin}${window.location.pathname}?${urlParams}`);
+		history.pushState(state, '', url);
 	}
 
 // Sort By
@@ -91,16 +90,17 @@ function search($this, saveCookies){
 	if(!$radio.length)	// If no one checked.
 		$radio = $('#rmaOrderByRmaNumber').prop('checked', true);
 
-	var sortBy = $radio.prop('id');
+	const sortBy = $radio.prop('id');
+	const rmaFilter = $rmaFilter.text();
 
 // Load RMAs
-	$accordion.load('/rma/search', {id : attrId, value : val, sortBy: sortBy}, function(responseText){
+	$accordion.load('/rma/search', {id : attrId, value : val, sortBy: sortBy, rmaFilter: rmaFilter}, function(responseText){
 
 		$('.tooltip').remove();
 		tooltipTriggerList = document.querySelectorAll('[data-bs-toggle="tooltip"]')
 		tooltipList = [...tooltipTriggerList].map(tooltipTriggerEl => new bootstrap.Tooltip(tooltipTriggerEl))
 
-		if(!$addRMA.length || attrId != "rmaSerialNumber" || $(responseText).filter('.accordion-item').length>1 || val.replace(/\D+/g, '').length!=7)
+		if(!$addRMA.length || attrId != 'rmaSerialNumber' || $(responseText).filter('.accordion-item').length>1 || val.replace(/\D+/g, '').length!=7)
 			return;
 
 		$.get('/rma/rest/ready-to-add', { sn: val})
@@ -174,19 +174,19 @@ $saveComment.click(e=>{
 
 	let files = $('#attachFiles').prop('files');
 	for(const f of files)
-		fd.append("fileToAttach[]", f);
+		fd.append('fileToAttach[]', f);
 
 	var comment = $.trim($rmaTextarea.val());
 
 	if(comment){
-		fd.append("comment", comment);
+		fd.append('comment', comment);
 		$rmaTextarea.select();
-		document.execCommand("copy");
+		document.execCommand('copy');
 	}
 
 	const $checked = $rmaStatus.filter((i,el)=>el.checked);
 	if($checked.length)
-		fd.append("status", $checked.prop('id'));
+		fd.append('status', $checked.prop('id'));
 
 // Return if values are not set.
 	if(fd.keys().next().done)
@@ -212,36 +212,48 @@ $saveComment.click(e=>{
         }
 	});
 });
-$accordion.on('shown.bs.collapse', function (e) {
 
-	let $accordionItem = $(this).children().filter(function(i,a){
+const height = $('nav').height();
+$accordion.on('shown.bs.collapse', function() {
+
+	const $accordionItem = $(this).children().filter(function(){
 		const $button = $(this).find('button');
 		return $button.length && !$button.hasClass('collapsed');
 	});
-  	let $accordionBody = $accordionItem.find('.content');
-  	let $children = $accordionBody.children();
+  	const $accordionBody = $accordionItem.find('.content');
+  	const $children = $accordionBody.children();
 
-	if($children.length)
+	if($children.length){
+
+		const offset = $accordionItem.offset();
+		window.scrollTo({ top: offset.top - height , behavior: 'smooth'});
  		return;
+ 	}
 
-	let id = $accordionItem.attr('id');
-	$accordionBody.load('/rma/comments', {rmaId: id});
+	const id = $accordionItem.attr('id');
+	$accordionBody.load('/rma/comments', {rmaId: id}, ()=>{
+
+		const offset = $accordionItem.offset();
+		window.scrollTo({ top: offset.top - height , behavior: 'smooth'});
+	});
 });
 
-const $searchField = $searchRma.filter((i,el)=>el.value);
-if($searchField.length)
-		search($searchField, false);
-
-else{
+let searchName = urlParams.get('searchName');
+let searchValue = urlParams.get('searchValue');
+if(!(searchName && searchValue)){
 	// Get Part Number, Mfr PN or Description from the cookies
-	let cookie = Cookies.get("rmaSearch");
-	if(cookie){
-		let rmaSearch = JSON.parse(cookie);
-		let $input = $("#" + rmaSearch[0]).val(rmaSearch[1]);
-		search($input, false);
-	}else
-		search($('#rmaNumber').val('RMA'), false);	
+	const rmaSearch = Cookies.get('rmaSearch');
+	if(rmaSearch){
+		const s = JSON.parse(rmaSearch);
+		searchName = s[0];
+		searchValue = s[1]
+	}
 }
+if(searchName && searchValue){
+	let $input = $('#' + searchName).val(searchValue);
+	search($input, false);
+}else
+	search($('#rmaNumber').val('RMA'), false);	
 
 // Filter RMA units by shipping status
 $rmaFilter.click(function(e){
@@ -288,14 +300,19 @@ $rmaFilter.click(function(e){
 		}else{
 			text = 'ALL';
 			$this.prop('title', 'Click to show RMA units in work.<br>Press CTRL to change direction.')
-	}
+		}
 	}
 
-	Cookies.set("rmaFilter", text, { expires: 999, path: '' });
+	Cookies.set('rmaFilter', text, { expires: 999, path: '' });
+	urlParams.set('rmaFilter', text);
 	$this.text(text);
 
+	// Add to history
+	const url = new URL(`${window.location.origin}${window.location.pathname}?${urlParams}`);
+	history.pushState({}, '', url);
+
 	let $input = $searchRma.filter((i,el)=>el.value.length>0);
-	if($searchField.length){
+	if($input.length){
  	   clearTimeout(timer);
  	   timer = setTimeout(search, 500, $input);
 	}
@@ -326,7 +343,7 @@ $('.modal-footer .btn-group').click(e=>{
 function addToRma(rmaNumber){
 
 	var serialNumber = prompt('Enter the Unit Serial Number');
-	if (serialNumber == null || serialNumber == "")
+	if (serialNumber == null || serialNumber == '')
 		return;
 
 	$.post('/rma/rest/add_to_rma', { rmaNumber: rmaNumber, serialNumber: serialNumber})
@@ -336,7 +353,8 @@ function addToRma(rmaNumber){
 			alert(message);
 
 		else{
-			Cookies.set("rmaSearch", JSON.stringify(['rmaNumber', rmaNumber]), { expires: 7, path: '' });
+			const json = JSON.stringify(['rmaNumber', rmaNumber]);
+			Cookies.set('rmaSearch', json, { expires: 7, path: '' });
 			location.reload();
 		}
 	})
@@ -347,13 +365,14 @@ function addToRma(rmaNumber){
 }
 
 $sortBy.change(function(){
-	var id = $(this).prop('id');
+	const id = $(this).prop('id');
 	Cookies.set('sortBy', id, { expires: 7, path: '' });
+	urlParams.set('sortBy', id);
 
-	var cookie = Cookies.get('rmaSearch')
+	const cookie = Cookies.get('rmaSearch')
 	if(cookie){
 		var rmaSearch = JSON.parse(cookie);
-		var $input = $("#" + rmaSearch[0]);
+		var $input = $('#' + rmaSearch[0]);
  	   clearTimeout(timer);
  	   timer = setTimeout(search, 500, $input);
 	}
@@ -430,19 +449,19 @@ function showThumbnails(index, commentId, onWeb){
 	$imgModal = $('#imgModal');
 	$imgModal.load('/rma/show_img', {commentID: commentId, imgIndex: index, onWeb: onWeb}, function(){$imgModal.modal('show');})
 }
-
 // Copy content to the clipboard
 $('.accordion').click(e=>{
 
 	if(!e.ctrlKey || e.target.localName != 'strong')
 		return;
+
 	let input = document.createElement('input');
     input.setAttribute('value', e.target.innerText);
     document.body.appendChild(input);
     input.select();
 	document.execCommand('copy');
     document.body.removeChild(input);
-	showToast("Copy to Clipboard", `The text '${e.target.innerText}' has been copied to the clipboard.`, 'text-bg-success');
+	showToast('Copy to Clipboard', `The text '${e.target.innerText}' has been copied to the clipboard.`, 'text-bg-success');
 });
 
 let $toastContaner = $('#toast-container');
@@ -506,7 +525,7 @@ function confirmAddRmaModal(sn){
 					$('<div>', {class: 'modal-content'})
 					.append(
 						$('<div>', {class: 'modal-header'})
-						.append($('<h5>', {class: 'modal-title', text: "Create an RMA for " + sn + '?'}))
+						.append($('<h5>', {class: 'modal-title', text: 'Create an RMA for ' + sn + '?'}))
 						.append($('<button >', {type: 'button', class: 'btn-close', 'data-bs-dismiss': 'modal', 'aria-label': 'Close'})))
 					.append(
 						$('<div>', {class: 'modal-body'})

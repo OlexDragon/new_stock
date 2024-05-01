@@ -5,6 +5,12 @@ let $btrMeasurement	 = $('#btrMeasurement');
 let $serialNumber	 = $('#serialNumber');
 let $spServers		 = $('#spServers');
 
+const sn = new URLSearchParams(window.location.search).get('sn');
+if(sn && !sn.includes('.'))
+	Cookies.set("rmaSearch", JSON.stringify(['rmaSerialNumber', sn]), { expires: 7});
+
+const serialNumber = $serialNumber.text();
+
 // Variables Used in modals
 const urlCalibrationInfo = '/calibration/rest/calibrationInfo';
 let loFrequencty;
@@ -86,7 +92,7 @@ let $LD_PREC;
 let $LD_COUNT;
 
 // Get HTTP Serial Port Server from the cookies
-var cookie = Cookies.get("spServers");
+const cookie = Cookies.get("spServers");
 if(cookie){
 	try {
 		$('option[value=' + cookie + ']').prop('selected', true);
@@ -223,7 +229,7 @@ function setAccordionHeaderText($parent){
 
 	$message.text(port + toolMessage + toolAdderss);
 }
-if(!$serialNumber.text())
+if(!serialNumber)
 	new bootstrap.Modal('#modal').show();
 
 var calibrateId = undefined;
@@ -460,8 +466,6 @@ $('#dropdownCalibrateButton').on('show.bs.dropdown', function(){
 
 	$menuGain.addClass('disabled list-group-item-light');
 
-	let serialNumber = $serialNumber.text();
-
 	if(!serialNumber)
 		return;
 
@@ -505,8 +509,6 @@ function calibrationModeError(error) {
 $('#calMode').click(function(e){
 	e.preventDefault();
 
-	var serialNumber = $serialNumber.text();
-
 	$.post('/calibration/rest/calibration_mode_toggle', { ip: serialNumber })
 	.fail(conectionFail);
 });
@@ -534,9 +536,8 @@ function toArray($inputs){
 $('#currents').click(function(e){
 	e.preventDefault();
 
-	let serialNumber = $serialNumber.text();
 	let href = '/calibration/currents?sn=' + serialNumber;
-	let modal = $modal.load(href);
+	$modal.load(href);
 })
 
 $('#profile').click(function(e){
@@ -681,8 +682,6 @@ $('.modules').click(function(){
 	let length = $menu.children().length;
 
 	if(length>1) return;
-
-	var serialNumber = $serialNumber.text();
 
 	$.get('/calibration/modules_menu', {sn: serialNumber, fragment: this.id})
 	.done(function(data){
