@@ -37,7 +37,7 @@
 <!-- 		<logger name="irt.components.controllers.rma.RmaController" level="ALL" /> -->
 <!-- 		<logger name="irt.components.controllers.rma.RmaRestController" level="ALL" /> -->
 
-<!-- 		<logger name="irt.components.controllers.calibration.CalibrationController" level="debug" /> -->
+<!-- 		<logger name="irt.components.controllers.calibration.CalibrationController" level="all" /> -->
 <!-- 		<logger name="irt.components.controllers.calibration.CalibrationRestController" level="all" /> -->
 <!-- 		<logger name="irt.components.controllers.rma.RmaController" level="all" /> -->
 

@@ -38,7 +38,6 @@
   		<script th:inline="javascript">
 			/*<![CDATA[*/
 
-			var serialNumber = /*[[${serialNumber}]]*/ irt-2301001;
 			// Calibrate
 			$('.current_offset').click(function(e){
 				e.preventDefault();
@@ -79,7 +78,7 @@
 						return;
 					}
 
-					let b = $('<button>', {text: 'Save All', class: 'btn btn-outline-primary btn-save'}).click(function(e){
+					let b = $('<button>', {type: 'button', text: 'Save All', class: 'btn btn-outline-primary btn-save'}).click(function(e){
 						e.preventDefault();
 
 						$('.btn-save').addClass('disabled');
@@ -95,7 +94,7 @@
 					data.forEach(currentOffset=>{
 
 						let $cadrBody = $('<div>', {class: 'card-body'});
-						let $cardButton = $('<button>', {class: 'btn btn-outline-info btn-save', text: 'Save'})
+						let $cardButton = $('<button>', {type: 'button', class: 'btn btn-outline-info btn-save', text: 'Save'})
 												.click(function(e){
 													e.preventDefault();
 
@@ -135,11 +134,11 @@
 				});
 			}
 			function showUploadButton(pair){
-				let id = '#' + pair.key.replace('.', '\\.');
+				let id = '#' + pair.first.replace('.', '\\.');
 				let $div = $(id);
-				let module = pair.key.split('.')[0];
+				let module = pair.first.split('.')[0];
 
-				if(pair.value=='Saved'){
+				if(pair.second=='Saved'){
 					let btnUpload = $('<a>', {class: "btn btn-outline-success", href: '/calibration/rest/upload?sn=' + serialNumber + '&module=' + module, text: 'Upload'})
 					$div.append(btnUpload.click(function(e){
 								e.preventDefault();
@@ -150,7 +149,7 @@
 							$('<a>', {class: "btn btn-outline-secondary", href: '/calibration/rest/package/' + (module==null ? serialNumber : module), target: '_blank', text: 'Get Package'}));
 				}else{
 					$div.attr('class', 'text-center text-danger');
-					$div.text(pair.value);
+					$div.text(pair.second);
 					$div.parents('.card').find('.btn-save').removeClass('disabled');
 				}
 			}

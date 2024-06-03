@@ -152,8 +152,21 @@ public class RmaRestController {
 								final Object pr = ((UsernamePasswordAuthenticationToken)principal).getPrincipal();
 								final User user = ((UserPrincipal)pr).getUser();
 								final Long userId = user.getId();
+
 								// Change RMA Status.
-								Optional.ofNullable(status).filter(st->st!=rma.getStatus()).ifPresent(st->rmaService.changeStatus(id, st));
+								final Boolean changed = Optional.ofNullable(status).filter(st->st!=rma.getStatus())
+
+										.map(st->rmaService.changeStatus(id, st))
+										.orElseGet(
+												()->{
+
+													if(rma.getStatus()==Status.CREATED)
+														return rmaService.changeStatus(id, Rma.Status.IN_WORK);
+
+													return false;
+												});
+								if(!changed)
+									logger.info("The RMA status has not changed. RMA.Status = {}; Request = {}", rma.getStatus(), status);
 
 								// Save Comment
 								final String c = oComment.orElse("");

@@ -392,7 +392,7 @@ public class HttpRequest {
 						sb.append(nextLine).append("\n");
 					}
 				}
-//				logger.error(sb);
+				logger.debug(sb);
 
 				final ObjectMapper mapper = new ObjectMapper(new YAMLFactory());
 				mapper.configure(DeserializationFeature.FAIL_ON_UNKNOWN_PROPERTIES, false);

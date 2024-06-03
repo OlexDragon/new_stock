@@ -40,7 +40,6 @@ import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestParam;
 
-import irt.components.beans.HttpSerialPortServersKeeper;
 import irt.components.beans.ProductionOrder;
 import irt.components.beans.ProductionOrderResponse;
 import irt.components.beans.irt.CalibrationInfo;
@@ -68,6 +67,7 @@ import irt.components.beans.jpa.repository.calibration.BtrSettingRepository;
 import irt.components.beans.jpa.repository.calibration.CalibrationGainSettingRepository;
 import irt.components.beans.jpa.repository.calibration.CalibrationOutputPowerSettingRepository;
 import irt.components.beans.jpa.repository.calibration.CalibrationPowerOffsetSettingRepository;
+import irt.components.services.HttpSerialPortServersKeeper;
 import irt.components.workers.HttpRequest;
 import irt.components.workers.ProfileWorker;
 import irt.components.workers.ThreadRunner;
@@ -75,13 +75,13 @@ import irt.components.workers.ThreadRunner;
 @Controller
 @RequestMapping("calibration")
 public class CalibrationController {
+	private final static Logger logger = LogManager.getLogger();
+
 	private static final int WORK_ORDER = 3;
 
 	private static final int SERIAL_NUMBER = 1;
 
 	private static final String WO_NOT_FOUND = "WO Not Found";
-
-	private final static Logger logger = LogManager.getLogger();
 
 	@Value("${irt.url.protocol}")
 	private String protocol;
@@ -109,7 +109,7 @@ public class CalibrationController {
 
 	@GetMapping
     String calibration(@RequestParam(required = false) String sn, Model model) {
-//    	logger.error(sn);
+    	logger.traceEntry(sn);
 
 		final Map<String, String> httpSerialPortServers = httpSerialPortServersCollector.getHttpSerialPortServers();
 		model.addAttribute("serialPortServers", httpSerialPortServers);
@@ -137,8 +137,7 @@ public class CalibrationController {
     					model.addAttribute("info", info);
     					model.addAttribute("ip", s);
     					model.addAttribute("devid", devid);
-    					model.addAttribute("devid", devid);
-//    					logger.error(info);
+    					logger.debug(info);
 
     					return;
 
@@ -153,12 +152,14 @@ public class CalibrationController {
     					getHomePageInfo(s)
     					.ifPresent(home->{
     						final SysInfo sysInfo = home.getSysInfo();
-//    						logger.error(sysInfo);
     						final Info info = new Info();
     						info.setSerialNumber(sysInfo.getSn());
     						info.setName(sysInfo.getDesc());
     						info.setPartNumber(sysInfo.getHw_id());
     						info.setSoftVertion(sysInfo.getFw_version());
+    						info.setDeviceId(sysInfo.getDevid());
+    						logger.debug("{}; {};", sysInfo, info);
+
     						model.addAttribute("info", info);
     						model.addAttribute("ip", home.getNetInfo().getAddr());
     					});
@@ -168,6 +169,10 @@ public class CalibrationController {
     			});
 
 		return "calibration/calibration";
+    }
+    @GetMapping("input-power/converter")
+    String inputPower() throws ExecutionException {
+		return "calibration/input_power :: converter";
     }
 
     @GetMapping("output_power")
@@ -252,6 +257,7 @@ public class CalibrationController {
 															new BasicNameValuePair("devid", index.toString()),
 															new BasicNameValuePair("command", "config")).get(5, TimeUnit.SECONDS);
    						   							logger.debug(converterInfo);
+
    						   							Optional.ofNullable(converterInfo).map(ConverterInfo::getLoFrequency).map(IrtFrequency::new).flatMap(IrtFrequency::getValue).ifPresent(lo->model.addAttribute("loFrequencty", lo));
 
    						   						} catch (MalformedURLException | InterruptedException | ExecutionException | TimeoutException e) {
@@ -271,7 +277,7 @@ public class CalibrationController {
 									()->{
 
 										// Get Power table from the profile
-										profileWorker.getTable(ProfileTableDetails.OUTPUT_POWER.getDescription()).map(CalibrationTable::getTable).ifPresent(table->model.addAttribute("table", table));//TODO
+										profileWorker.getTable(ProfileTableDetails.OUTPUT_POWER.getDescription()).map(CalibrationTable::getTable).ifPresent(table->model.addAttribute("table", table));
 
 										// Get Power detector source
 										final PowerDetectorSource powerDetectorSource = profileWorker.scanForPowerDetectorSource();
@@ -338,6 +344,7 @@ public class CalibrationController {
     							new BasicNameValuePair("devid", devid.toString()),
     							new BasicNameValuePair("command", "regs"),
     							new BasicNameValuePair("groupindex", "100"));
+    					logger.debug(httpDeviceDebug);
 
     					final CalibrationInfo calibrationInfo = httpUpdate.get(10, TimeUnit.SECONDS);
     					final Dacs dacs = httpDeviceDebug.get(10, TimeUnit.SECONDS);

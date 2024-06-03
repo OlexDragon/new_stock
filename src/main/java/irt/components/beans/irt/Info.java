@@ -1,5 +1,7 @@
 package irt.components.beans.irt;
 
+import java.util.Optional;
+
 import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 import com.fasterxml.jackson.annotation.JsonProperty;
 
@@ -32,4 +34,16 @@ public class Info {
 	private String uptimeCounter;
 
 	private Integer moduleId;
+
+	public int getDeviceType() {
+		return getDeviceIdPart(0);
+	}
+
+	public int getTypeVersion() {
+		return getDeviceIdPart(1);
+	}
+
+	private int getDeviceIdPart(int index) {
+		return Optional.ofNullable(deviceId).map(id->id.split("\\.")).filter(split->split.length>index).map(id->id[index].replaceAll("\\D", "")).filter(id->!id.isEmpty()).map(Integer::parseInt).orElse(-1);
+	}
 }

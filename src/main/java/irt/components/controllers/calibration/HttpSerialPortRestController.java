@@ -19,9 +19,9 @@ import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
 
-import irt.components.beans.HttpSerialPortServersKeeper;
 import irt.components.beans.irt.calibration.Command;
 import irt.components.beans.irt.calibration.CommandRequest;
+import irt.components.services.HttpSerialPortServersKeeper;
 import irt.components.workers.HttpRequest;
 
 @RestController

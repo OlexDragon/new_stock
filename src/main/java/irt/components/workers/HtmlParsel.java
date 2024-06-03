@@ -10,8 +10,9 @@ import javax.swing.text.html.HTML.Tag;
 import javax.swing.text.html.HTMLEditorKit.ParserCallback;
 import javax.swing.text.html.parser.ParserDelegator;
 
+import org.springframework.data.util.Pair;
+
 import irt.components.services.exception.HtmlParsingException;
-import javafx.util.Pair;
 
 public class HtmlParsel extends ParserCallback {
 
@@ -42,7 +43,7 @@ public class HtmlParsel extends ParserCallback {
 
 	public Pair<Integer, Integer> getPositions(int index){
 		throwIfError();
-		return new Pair<>(startPositin.get(index), stopPositin.get(index));
+		return Pair.of(startPositin.get(index), stopPositin.get(index));
 	}
 
 	private void throwIfError() throws HtmlParsingException {
@@ -60,8 +61,8 @@ public class HtmlParsel extends ParserCallback {
         	new ParserDelegator().parse(reader, this, true);
         	if(size()>0) {
         		final Pair<Integer, Integer> positions = getPositions(0);
-           		final Integer start = positions.getKey();
-           		final Integer stop = positions.getValue();
+           		final Integer start = positions.getFirst();
+           		final Integer stop = positions.getSecond();
 
            		return html.substring(start, stop);
          	}
@@ -80,8 +81,8 @@ public class HtmlParsel extends ParserCallback {
         	for(int i=0; i<size; i++) {
 
         		final Pair<Integer, Integer> positions = getPositions(i);
-           		final Integer start = positions.getKey();
-           		final Integer stop = positions.getValue();
+           		final Integer start = positions.getFirst();
+           		final Integer stop = positions.getSecond();
            		list.add(html.substring(start, stop));
          	}
         }

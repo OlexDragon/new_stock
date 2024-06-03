@@ -17,4 +17,5 @@ public class SysInfo {
 	private String hw_id;
 	private String contact;
 	private String uptime;
+	private String devid;
 }

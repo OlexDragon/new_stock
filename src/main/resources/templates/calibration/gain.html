@@ -501,7 +501,7 @@
 				$('#dropdownSettingsButton').on('hidden.bs.dropdown', function () {
 					if(confirm('Do you want to save your changes to the database?')){
 
-						var pn = $('#partNumber').val();
+						var pn = $serialNumber.prop('title');
 						var min = $('#minValue').val();
 						var max = $('#maxValue').val();
 

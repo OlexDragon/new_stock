@@ -80,11 +80,23 @@ public class FileRestController {
 		final InputStream is = session.readRaw(path);
 		final InputStreamResource body = new InputStreamResource(is);
 		final HttpHeaders headers = getHeader();
-		headers.add("Content-Disposition", "attachment; filename=\"" + new File(path).getName() + "\"");
+		final String name = new File(path).getName();
+
+		final MediaType mediaType;
+		if(name.toLowerCase().endsWith(".pdf")) {
+
+			headers.add("Content-Disposition", "inline; filename=\"" + name + "\"");
+			mediaType = MediaType.APPLICATION_PDF;
+
+		}else {
+
+			headers.add("Content-Disposition", "attachment; filename=\"" + name + "\"");
+			mediaType = MediaType.APPLICATION_OCTET_STREAM;
+		}
 
 		return ResponseEntity.ok()
 				.headers(headers)
-				.contentType(MediaType.APPLICATION_OCTET_STREAM)
+				.contentType(mediaType)
 				.body(body);
 	}
 

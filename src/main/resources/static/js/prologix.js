@@ -13,13 +13,16 @@ function prologixElements($comPorts, $toolAddress, $buttons){
 		sendPrologixCommands(toSend, function(response){
 
 			if(!response.getAnswer){
-				if(response.command.startsWith('++')){
-					let split = response.command.split(' ');
-					if(split.length==2){
-						let toSend = getToSend(prologixComPorts, '["' + split[0] + '"]', true);
-						sendPrologixCommands(toSend, response=>responseToButton(e.currentTarget, response));
+				if(response.command)
+					if(response.command.startsWith('++')){
+						let split = response.command.split(' ');
+						if(split.length==2){
+							let toSend = getToSend(prologixComPorts, '["' + split[0] + '"]', true);
+							sendPrologixCommands(toSend, response=>responseToButton(e.currentTarget, response));
+						}
 					}
-				}
+				else
+					alert("The HTTP serial port returned an incorrect response.");
 				return;
 			}
 
@@ -27,7 +30,7 @@ function prologixElements($comPorts, $toolAddress, $buttons){
 
 			if(!answer){
 				console.log("No Answer.");
-				alert('No Answer.');
+				alert(response.command + ' - No Answer.');
 				return;
 			}
 

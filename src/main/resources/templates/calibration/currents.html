@@ -42,7 +42,7 @@
      					<td><strong id="current3" class="txt_blue bg_white" th:text="''">3.0 A</strong></td>
       					<td style="width: 15%;"></td>
       				</tr>
-       				<tr><td><div class="mt-5"></div></td><td></td><td></td><td></td><td></td><td></td><td></td><td></td><td></td></tr>
+       				<tr><td><div class="mt-5"></div></td><td></td><td></td><td><strong id="drivers1" class="txt_blue bg_white"></strong></td><td></td><td><strong id="drivers2" class="txt_blue bg_white"></strong></td><td></td><td></td><td></td></tr>
      				<tr id="blink2" class="dashed_border">
        					<td></td>
       					<td><strong id="current1" class="txt_blue bg_white" th:text="''">1.0 A</strong></td>
@@ -66,7 +66,7 @@
      					<td><strong id="current5" class="txt_blue bg_white" th:text="''">5.0 A</strong></td>
        					<td></td>
       				</tr>
-       				<tr><td><div class="mt-5"></div></td><td></td><td></td><td></td><td></td><td></td><td></td><td></td><td></td></tr>
+       				<tr><td><div class="mt-5"></div></td><td></td><td></td><td><strong id="drivers4" class="txt_blue bg_white"></strong></td><td></td><td><strong id="drivers3" class="txt_blue bg_white"></strong></td><td></td><td></td><td></td></tr>
       				<tr>
       					<td></td>
       					<td><strong id="current7" class="txt_blue bg_white" th:text="''">7.0 A</strong></td>
@@ -89,7 +89,7 @@
     		</div>
 <!-- Modal Footer -->
       			<div class="modal-footer">
-      				<input id="currentAlarm" type="number" title="Alarm Value." class="col-2" val="6.5">
+      				<input id="currentAlarm" type="number" title="Alarm Value." class="col-2" value="6.5">
       				<div class="col"></div>
 	        		<button type="button" class="btn btn-outline-secondary col-auto" data-bs-dismiss="modal">Close</button>
 	    		</div>
@@ -101,6 +101,22 @@
 //  				timeout: 2000
 // 			});
 
+			var version = $('#typeVersion').val();
+			var device1;
+			var regUrl;
+			var run = true;
+			if(version=='21'){
+				device1 = 1001;
+				regUrl = '/calibration/rest/hpbm_register_v21';
+			}else if(version=='31'){
+				device1 = 1003;
+				regUrl = '/calibration/rest/hpbm_register_v31';
+			}else{
+				alert('Unknown Unit Version: ' + version);
+				run = false;
+			}
+
+			if(run){
 // Currenr Alarm setting.
 			$currentAlarm = $('#currentAlarm');
 
@@ -114,8 +130,10 @@
 			});
 			$currentAlarm.on('input', function(){
 				let v = $(this).val();
-				if(!v)
+				if(!v){
 					$(this).val('6.5').select();
+					Cookies.remove("currentAlarm");
+				}
 			});
 // END - Currenr Alarm setting.
 
@@ -131,48 +149,24 @@
 				intervalCurrent = undefined;
 			});
 
-			var devid = 1001
+			}
+			var devid = device1
 			function getCurrents(){
 
 				let mShow = $('#modal.show');
 				if(!mShow) return;
 
-				if(devid==1001)
-					devid = 1002;
+				if(devid==1002)
+					devid = device1;
 				else
-					devid = 1001;
+					devid = 1002;
 /*[+
-				$.post('/calibration/rest/hpbm_register', {sn: unitSerialNumber, devid: devid})
+				$.post(regUrl, {sn: unitSerialNumber, devid: devid})
 				.done(function(properties, t){
-
-+]*/
-	// First properties
-/*[+
-					let devid_1001 = properties['1001'];
-					if(devid_1001){
-						showCurrent('#current1', '#current2', '#current3', '#current4', devid_1001);
-						blinkBorder($('#blink1'))
-					}
-						
-
-+]*/
-	// Second properties
-/*[+
-					let devid_1002 = properties['1002'];
-					if(devid_1002){
-						showCurrent('#current5', '#current6', '#current7', '#current8', devid_1002);
-						blinkBorder($('#blink2'))
-					}
-
-					if(intervalCurrent && !devid_1001 && !devid_1002){
-
-						if(!properties){
-							clearInterval(intervalCurrent);
-							intervalCurrent = setInterval(getCurrents, ++delay);
-							$currentDelay.text('Delay: ' + delay + ' ms');
-							return;
-						}
-					}
+					if(version=='21')
+						currentV21(properties, t);
+					else
+						currentV31(properties, t)
 				})
 				.fail(function(error) {
 
@@ -192,8 +186,55 @@
 				});
 +]*/
 			}
+			function currentV21(properties, t){
+				// First properties
+				let hpbm2 = properties['1001'];
+				if(devid_1001){
+					showCurrentV21('#current1', '#current2', '#current3', '#current4', devid_1001);
+					blinkBorder($('#blink1'))
+				}
+// Second properties
+				let devid_1002 = properties['1002'];
+				if(devid_1002){
+					showCurrentV21('#current5', '#current6', '#current7', '#current8', devid_1002);
+					blinkBorder($('#blink2'))
+				}
 
-			function showCurrent(id1, id2, id3, id4, properties){
+				if(intervalCurrent && !devid_1001 && !devid_1002){
+
+					if(!properties){
+						clearInterval(intervalCurrent);
+						intervalCurrent = setInterval(getCurrents, ++delay);
+						$currentDelay.text('Delay: ' + delay + ' ms');
+						return;
+					}
+				}
+			}
+			function currentV31(properties, t){
+				// First properties
+				let hpbm1 = properties['1002'];
+				if(hpbm1){
+					showCurrentV31('#current1', '#current2', '#current3', '#current4', '#drivers1', '#drivers2', hpbm1);
+					blinkBorder($('#blink1'))
+				}
+// Second properties
+				let hpbm2 = properties['1003'];
+				if(hpbm2){
+					showCurrentV31('#current5', '#current6', '#current7', '#current8', '#drivers3', '#drivers4', hpbm2);
+					blinkBorder($('#blink2'))
+				}
+
+				if(intervalCurrent && !hpbm1 && !hpbm2){
+
+					if(!properties){
+						clearInterval(intervalCurrent);
+						intervalCurrent = setInterval(getCurrents, ++delay);
+						$currentDelay.text('Delay: ' + delay + ' ms');
+						return;
+					}
+				}
+			}
+			function showCurrentV21(id1, id2, id3, id4, properties){
 
 				//ePSU_2_42V 
 				let ePSU_2_42V = properties['epsu_2_42V'];
@@ -216,6 +257,32 @@
 				let c4 = ePSU_3_42V['I_HS2 (0x05)']
 				let $c4 = $(id4);
 				fillFields($c4, c4)
+			}
+			function showCurrentV31(output1, output2, output3, output4, drivers1, drivers2, values){
+
+				let c1 = values.switch1;
+				let $c1 = $(output1);
+				fillFields($c1, c1)
+
+				let c2 = values.switch2;
+				let $c2 = $(output2);
+				fillFields($c2, c2)
+
+				let c3 = values.switch3;
+				let $c3 = $(output3);
+				fillFields($c3, c3)
+
+				let c4 = values.switch4;
+				let $c4 = $(output4);
+				fillFields($c4, c4)
+
+				let dr1 = values.switch5;
+				let $dr1 = $(drivers1);
+				fillFields($dr1, dr1)
+
+				let dr2 = values.switch6;
+				let $dr2 = $(drivers2);
+				fillFields($dr2, dr2)
 			}
 
 			function fillFields($c, c){

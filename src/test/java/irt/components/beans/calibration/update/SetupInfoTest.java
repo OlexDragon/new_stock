@@ -1,8 +1,13 @@
 package irt.components.beans.calibration.update;
 
+import static org.junit.Assert.assertTrue;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 
+import java.io.IOException;
+import java.net.HttpURLConnection;
 import java.net.InetAddress;
+import java.net.URL;
+import java.net.URLConnection;
 import java.net.UnknownHostException;
 import java.util.Calendar;
 import java.util.Date;
@@ -35,6 +40,15 @@ public class SetupInfoTest {
 	public void testIp() throws UnknownHostException {
 		final byte[] address = InetAddress.getLocalHost().getAddress();
 		logger.error("{}", address);
+	}
+
+	@Test
+	public void testInetAddress() throws IOException {
+		HttpURLConnection connection = (HttpURLConnection) new URL("http://chamber-tps:8088/ping").openConnection();
+		connection.setRequestMethod("POST");
+		connection.setReadTimeout(100);
+		int responseCode = connection.getResponseCode();
+		assertEquals(responseCode, 200);
 	}
 
 	@Test

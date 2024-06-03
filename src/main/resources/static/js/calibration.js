@@ -1,9 +1,10 @@
 $('#miCalibration').addClass('active');
 
-let $modal = $('#modal').on('shown.bs.modal', e=>$('#sn').focus());
-let $btrMeasurement	 = $('#btrMeasurement');
-let $serialNumber	 = $('#serialNumber');
-let $spServers		 = $('#spServers');
+const $modal = $('#modal').on('shown.bs.modal', e=>$('#sn').focus());
+const $btrMeasurement	 = $('#btrMeasurement');
+const $serialNumber		 = $('#serialNumber');
+const $spServers		 = $('#spServers');
+const $menuInputPower	 = $('#menuInputPower');
 
 const sn = new URLSearchParams(window.location.search).get('sn');
 if(sn && !sn.includes('.'))
@@ -95,27 +96,35 @@ let $LD_COUNT;
 const cookie = Cookies.get("spServers");
 if(cookie){
 	try {
-		$('option[value=' + cookie + ']').prop('selected', true);
-		gerSerialPorts();
+		const $toSelect = $('option[value=' + cookie + ']');
+		if($toSelect.length){
+			$toSelect.prop('selected', true);
+			$menuInputPower.removeClass('disabled');
+		}
+		gerSerialPorts(setToolsSerialPorts);
 	}catch(err) {}
 }
 
 $spServers.change(function(){
 
-	var spServers = $(this).val();
+	const spServers = $(this).val();
 
-	if(!spServers)
+	if(!spServers){
+		$menuInputPower.addClass('disabled');
 		return;
+	}
+
+	$menuInputPower.removeClass('disabled');
 
 	Cookies.set("spServers", spServers, { expires: 7, path: '' });
-	gerSerialPorts();
+	gerSerialPorts(setToolsSerialPorts);
 });
 
 let $saveToCookies = $('.save-to-cookies')
 .change(function(){
 	Cookies.set(this.id, $(this).find('option:selected').text(), { expires: 7, path: '' });
 });
-$.each($saveToCookies, function(index, tool){
+$.each($saveToCookies, function(i, tool){
 	let cookie = Cookies.get(tool.id)
 	if(cookie){
 		let $tool = $(tool);
@@ -127,41 +136,40 @@ $('.tool').change(function(){
 	setAccordionHeaderText($parent);
 });
 
-function gerSerialPorts(){
+function gerSerialPorts(setSerialPorts){
 
 	var spHost = $spServers.val();
 	if(!spHost)
 		return;
 
 	$.post('/serial_port/rest/serial-ports', {hostName: spHost})
-	.done(function(ports){
-
-		var $comPorts = $('.com-ports').empty();
-		if(!ports){
-			alert('It looks like the Serial Port Server is down.');
-			return;
-		}
-
-		$('<option>', {selected: 'selected', disabled: 'disabled', hidden: 'hidden', title:'Remote Serial Port.'}).text('Select Remote Serial Port.').appendTo($comPorts);
-
-		$.each(ports, function(index, portName){
-			$('<option>', {value: portName}).text(portName).appendTo($comPorts);
-		});
-
-		$.each($comPorts, function(index, select){
-			var value = Cookies.get(select.id)
-			if(value){
-				var $option = $(select).children('[value=' + value + ']');
-				$option.prop('selected', true);
-				comPortSelected(select);
-				disableMenuItens();
-			}
-		});
-	})
+	.done(setSerialPorts)
 	.fail(conectionFail);
 }
+function setToolsSerialPorts(ports){
 
-$('.com-ports').on('change', function(){
+	if(!ports){
+		alert('It looks like the Serial Port Server is down.');
+		return;
+	}
+
+	$('<option>', {selected: 'selected', disabled: 'disabled', hidden: 'hidden', title:'Remote Serial Port.'}).text('Select Remote Serial Port.').appendTo($comPorts);
+
+	$.each(ports, function(i, portName){
+		$('<option>', {value: portName}).text(portName).appendTo($comPorts);
+	});
+
+	$.each($comPorts, (i, select)=>{
+		var value = Cookies.get(select.id)
+		if(value){
+			var $option = $(select).children('[value=' + value + ']');
+			$option.prop('selected', true);
+			comPortSelected(select);
+			disableMenuItens();
+		}
+	});
+}
+const $comPorts = $('.com-ports').on('change', function(){
 
 	comPortSelected(this);
 	Cookies.set(this.id, this.value, { expires: 999, path: '' });
@@ -238,7 +246,7 @@ var calibrateId = undefined;
 $('.calibrate').click(function(e){
 	e.preventDefault();
 
-	let id = e.target.id;
+	const id = e.target.id;
 
 // Load for first time or when the serial number is changed 
 	if(calibrateId!=id){
@@ -250,7 +258,7 @@ $('.calibrate').click(function(e){
 
 		$modal.off('.bs.modal');
 		calibrateId = id;
-		$modal.load(this.href, function(body,error,c){
+		$modal.load(this.href, function(body,error){
 			if(error=='error')
 				alert('Unable to connect to the Unit.');
 		});
@@ -314,9 +322,10 @@ function loginWhithHref(href){
 
 // Scan IP Addresses
 var scanIpInterval;
-var $scan = $('#scan');
+const $scan = $('#scan');
 $scan.click(function(e){
 	e.preventDefault();
+	calibrateId = 'Network Scan';
 
 	$modal.empty();
 	$modalBody = $('<div>', {class:'modal-body'});
@@ -477,7 +486,6 @@ $('#dropdownCalibrateButton').on('show.bs.dropdown', function(){
 
 		var status = calMode["Calibration mode"];
 		var $calMode = $('#calMode').removeClass('text-primary text-success');
-		var text;
 
 		switch(status){
 
@@ -517,10 +525,8 @@ $('#calMode').click(function(e){
 function hasValue(inputs){
 
 	for(let s of inputs){
-		if(s.value){
+		if(s.value)
 			return true;
-			break;
-						}
 	}
 
 	return false;
@@ -531,12 +537,16 @@ function toArray($inputs){
 	$inputs.map((i, v)=>v.value).filter((i, v)=>v).map((i, v)=>parseFloat(v)).sort().each((i, v)=>values.push(v));
 	return values;
 }
-
+const typeVersion = $('#typeVersion').val();
 //Created for TROPOSCAT to see currents of output devices
 $('#currents').click(function(e){
 	e.preventDefault();
 
-	let href = '/calibration/currents?sn=' + serialNumber;
+	if(!typeVersion){
+		alert('Unoun type Device ID Vertion');
+		return;
+	}
+	let href = `/calibration/currents?sn=${serialNumber}`;
 	$modal.load(href);
 })
 
@@ -706,7 +716,7 @@ $('.dump_devices').click(function(e){
 	})
 	.fail(conectionFail);
 });
-$('#btn-http-comport').click(e=>{
+$('#btn-http-comport').click(()=>{
 	let httpServer = $spServers.val();
 	if(httpServer){
 		let url = 'http://' + httpServer + ':8088'
@@ -769,7 +779,7 @@ function sendPrologixCommands(commands, responseProcessing){
     })
 	.done(function(data){
 
-		$.each(data.commands, function(index, c){
+		$.each(data.commands, function(i, c){
 			responseProcessing(c);
 		});
 	})

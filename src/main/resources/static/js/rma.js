@@ -44,9 +44,33 @@ $(window).on('popstate',()=>{
 		return;
 
 	$searchRma.val('');
-	let $input = $('#' + history.state.field_id).val(history.state.field_value);
-	clearTimeout(timer);
-	timer = setTimeout(search, 500, $input);
+
+	// RMA Filter
+	let rmaFilter = urlParams.get('rmaFilter');
+	if(rmaFilter)
+		$rmaFilter.text(rmaFilter);
+
+	// Get RMA sort by
+	let sortBy = urlParams.get('sortBy');
+	if(sortBy)
+		$('#' + sortBy).prop('checked', true);
+
+	let searchName = urlParams.get('searchName');
+	let searchValue = urlParams.get('searchValue');
+	let $input;
+
+	if(searchName && searchValue){
+		$input = $('#' + searchName).val(searchValue);
+		search($input, false);
+	}else{
+		if(history.state.field_id && history.state.field_value)
+			$input = $('#' + history.state.field_id).val(history.state.field_value);
+	}
+
+	if($input){
+		clearTimeout(timer);
+		timer = setTimeout(search, 500, $input);
+	}
 });
 
 function search($this, saveCookies){
@@ -54,11 +78,11 @@ function search($this, saveCookies){
 	if($addRMA.length)
 		$addRMA.removeClass('btn-outline-primary').addClass('btn-secondary').prop('disabled', true);
 
-	var tmp = $.trim($this.val());
+	var val = tmp = $.trim($this.val());
 	if(!tmp)
 		return;
 
-	let val = id = $this.prop('id');
+	let id = $this.prop('id');
 
 // Remove extra whitespaces
 	if(id!='rmaDescription' && id!='rmaComments')

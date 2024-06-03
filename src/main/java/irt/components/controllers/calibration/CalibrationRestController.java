@@ -45,6 +45,7 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.core.io.ByteArrayResource;
 import org.springframework.core.io.FileSystemResource;
+import org.springframework.data.util.Pair;
 import org.springframework.http.ContentDisposition;
 import org.springframework.http.HttpHeaders;
 import org.springframework.http.MediaType;
@@ -63,7 +64,8 @@ import irt.components.beans.irt.CalibrationInfo;
 import irt.components.beans.irt.Info;
 import irt.components.beans.irt.MonitorInfo;
 import irt.components.beans.irt.calibration.CalibrationMode;
-import irt.components.beans.irt.calibration.HPBMRegister;
+import irt.components.beans.irt.calibration.HPBMRegisterV21;
+import irt.components.beans.irt.calibration.HPBMRegisterV31;
 import irt.components.beans.irt.calibration.PLLRegister;
 import irt.components.beans.irt.calibration.ProfileTableTypes;
 import irt.components.beans.irt.update.Profile;
@@ -80,7 +82,6 @@ import irt.components.workers.HtmlParsel;
 import irt.components.workers.HttpRequest;
 import irt.components.workers.ProfileWorker;
 import irt.components.workers.ThreadRunner;
-import javafx.util.Pair;
 import lombok.AllArgsConstructor;
 import lombok.Getter;
 import lombok.Setter;
@@ -306,6 +307,7 @@ public class CalibrationRestController {
 
     @PostMapping("current_offset")
     List<CurrentOffset> currentOffset(@RequestParam String sn, @RequestParam Boolean local) throws UnknownHostException {
+    	logger.traceEntry("Serial Number: {}; local: {}", sn, local);
 
     	final InetAddress byName = InetAddress.getByName(sn);
     	final byte[] bytes = byName.getAddress();
@@ -315,11 +317,13 @@ public class CalibrationRestController {
     	if(length!=4) {
     		final CurrentOffset co = new CurrentOffset("ERROR");
     		co.getOffsets().add("Unable to get an IP address.");
+    		logger.warn("{} - Unable to get an IP address. {}", sn, bytes);
 			offsets.add(co);
     		return offsets;
     	}
 
     	final String ipAddress = IntStream.range(0, length).map(index->bytes[index]&0xff).mapToObj(Integer::toString).collect(Collectors.joining("."));
+		logger.debug("ipAddress: {}", ipAddress);
 
     	 try {
 
@@ -330,6 +334,8 @@ public class CalibrationRestController {
     		 if(local)
     			 commands.add("--local=1");
 
+    		 logger.debug("{}", commands);
+ 
     		 final ProcessBuilder builder = new ProcessBuilder(commands);
     		 builder.redirectErrorStream(true);
 
@@ -357,7 +363,7 @@ public class CalibrationRestController {
     			            					offsets.add(co);
     			            				}
     			            			}
-    			            		}else if(line.startsWith("pm-vmon-offset")) {
+    			            		}else if(line.startsWith("pm-vmon-offset") || line.startsWith("device-vmon")) {
     			            			final String l = line;
     			            			Optional.ofNullable(offset).ifPresent(os->os.getOffsets().add(l));
     			            		}
@@ -406,12 +412,13 @@ public class CalibrationRestController {
 
     @PostMapping(path = "save_current_offset", consumes = MediaType.APPLICATION_JSON_VALUE)
     Pair<String, String> saveCurrentOffset(@RequestBody CurrentOffset offset) {
+    	logger.traceEntry("{}", offset);
 
     	final File file = new File(offset.getPath());
     	final String name = file.getName();
 
     	if(!file.exists())
-    		return new Pair<>(name, "File isn't exists.");
+    		return Pair.of(name, "File isn't exists.");
 
     	StringBuilder sb = new StringBuilder();
     	try(Scanner scanner = new Scanner(file);) {
@@ -420,8 +427,9 @@ public class CalibrationRestController {
 
     			final String line = scanner.nextLine();
 
-    			if(line.startsWith("pm-vmon-offset"))
+    			if(line.startsWith("pm-vmon-offset") || (line.startsWith("device-vmon") && hasIndex(line))) {
     				continue;
+    			}
 
     			sb.append(line).append(LINE_SEPARATOR);
     		}
@@ -430,20 +438,30 @@ public class CalibrationRestController {
 
     	} catch (FileNotFoundException e) {
 			logger.catching(e);
-    		return new Pair<>(name, e.getLocalizedMessage());
+    		return Pair.of(name, e.getLocalizedMessage());
 		}
 
 		try {
 			Files.write(file.toPath(), sb.toString().getBytes());
 		} catch (IOException e) {
 			logger.catching(e);
-    		return new Pair<>(name, e.getLocalizedMessage());
+    		return Pair.of(name, e.getLocalizedMessage());
 		}
 
-		return new Pair<>(name, "Saved");
+		return Pair.of(name, "Saved");
     }
 
-    @GetMapping("profile")
+    private final static String[] indexis = new String[] {"101", "103", "105", "107", "109", "111"};
+    private boolean hasIndex(String line) {
+
+    	final String[] split = line.split("\\s+");
+    	if(split.length<5)
+    		return false;
+
+    	return Arrays.stream(indexis).filter(split[2]::equals).findAny().map(i->true).orElse(false);
+	}
+
+	@GetMapping("profile")
     String profile(@RequestParam String sn, @RequestParam(required = false) Integer moduleId) throws IOException, URISyntaxException {
     	logger.traceEntry("{}; {};", sn, moduleId);
 
@@ -628,8 +646,9 @@ public class CalibrationRestController {
 		return calibrationBtrSettingRepository.save(calibrationBtrSetting);
     }
 
-    @PostMapping("hpbm_register")
-    SimpleEntry<String, HPBMRegister> hpbmRegister(@RequestParam String sn, @RequestParam String devid) throws MalformedURLException, InterruptedException, ExecutionException{
+    @PostMapping("hpbm_register_v21")
+    SimpleEntry<String, HPBMRegisterV21> hpbmRegisterV21(@RequestParam String sn, @RequestParam String devid) throws MalformedURLException, InterruptedException, ExecutionException{
+    	logger.traceEntry("sn: {}, devid: {}", sn, devid);
 
 		final URL url = new URL("http", sn, "/device_debug_read.cgi");
 		List<NameValuePair> params = new ArrayList<>();
@@ -637,19 +656,48 @@ public class CalibrationRestController {
 
 		params.addAll(Arrays.asList(new BasicNameValuePair[]{new BasicNameValuePair("command", "regs"), deviceId, new BasicNameValuePair("groupindex", "20")}));
 
-		final FutureTask<HPBMRegister> postForIrtObgect1 = HttpRequest.postForIrtYaml(url.toString(), HPBMRegister.class, params);
+		final FutureTask<HPBMRegisterV21> postForIrtObgect1 = HttpRequest.postForIrtYaml(url.toString(), HPBMRegisterV21.class, params);
 
-		SimpleEntry<String, HPBMRegister> entry = null;
+		SimpleEntry<String, HPBMRegisterV21> entry = null;
 		try {
 
-			HPBMRegister object1 = postForIrtObgect1.get(2, TimeUnit.SECONDS);
+			HPBMRegisterV21 object1 = postForIrtObgect1.get(2, TimeUnit.SECONDS);
+//			logger.debug(object1);
 			entry = new AbstractMap.SimpleEntry<>(devid, object1);
 
 		} catch (TimeoutException e) {
 			logger.catching(Level.DEBUG, e);
 		}
 
-//		logger.error(entry);
+		logger.debug(entry);
+
+		return entry;
+    }
+
+    @PostMapping("hpbm_register_v31")
+    SimpleEntry<String, HPBMRegisterV31> hpbmRegisterV31(@RequestParam String sn, @RequestParam String devid) throws MalformedURLException, InterruptedException, ExecutionException{
+    	logger.traceEntry("sn: {}, devid: {}", sn, devid);
+
+		final URL url = new URL("http", sn, "/device_debug_read.cgi");
+		List<NameValuePair> params = new ArrayList<>();
+		final BasicNameValuePair deviceId = new BasicNameValuePair("devid", devid);
+
+		params.addAll(Arrays.asList(new BasicNameValuePair[]{new BasicNameValuePair("command", "regs"), deviceId, new BasicNameValuePair("groupindex", "20")}));
+
+		final FutureTask<HPBMRegisterV31> postForIrtObgect1 = HttpRequest.postForIrtObgect(url.toString(), HPBMRegisterV31.class, params);
+
+		SimpleEntry<String, HPBMRegisterV31> entry = null;
+		try {
+
+			HPBMRegisterV31 object1 = postForIrtObgect1.get(2, TimeUnit.SECONDS);
+//			logger.debug(object1);
+			entry = new AbstractMap.SimpleEntry<>(devid, object1);
+
+		} catch (TimeoutException e) {
+			logger.catching(Level.DEBUG, e);
+		}
+
+		logger.debug(entry);
 
 		return entry;
     }

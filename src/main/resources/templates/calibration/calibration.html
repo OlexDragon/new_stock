@@ -15,6 +15,7 @@
 </head>
 <body th:with="partNumber = ${info==null ? '' : info.partNumber}">
 	<input id="devid" type="hidden" th:value="${devid}">
+	<input id="typeVersion" type="hidden" th:value="${info.getTypeVersion()}">
 
 	<nav class="navbar fixed-top navbar-light bg-light row">
  
@@ -64,7 +65,7 @@
   			<div class="dropdown-menu" aria-labelledby="dropdownUnitButton">
     			<a class="dropdown-item" th:classappend="${info==null ? 'disabled list-group-item-light' : ''}" th:href="@{${info==null} ? '#' : 'http://' + ${info.serialNumber}}" target="_blank">Web</a>
     			<a id="unitLogin" class="dropdown-item unitLogin" th:classappend="${info==null ? 'disabled list-group-item-light' : ''}" th:href="@{${info==null} ? '#' : '/calibration/rest/login?sn=' + ${info.serialNumber}}">Login</a>
-    			<a id="currents" class="dropdown-item" th:classappend="${info==null ? 'disabled list-group-item-light' : ''}" href="#">Currents</a>
+    			<a id="currents" class="dropdown-item" th:classappend="${(info==null or info.getDeviceType()<250) ? 'disabled list-group-item-light' : ''}" href="#">Currents</a>
 <!-- Profile  -->
 				<div class="btn-group" style="width:100%;">
 					<div class="btn-group dropstart" role="group">
@@ -145,6 +146,10 @@
 		<div class="nav-item dropstart col-auto">
   			<button id="dropdownCalibrateButton" class="btn dropdown-toggle" type="button" data-bs-toggle="dropdown" aria-haspopup="true" aria-expanded="false">Calibrate</button>
   			<div id="calMenu" class="dropdown-menu" aria-labelledby="dropdownCalibrateButton">
+<!-- Input Power -->
+    			<a	id="menuInputPower"
+    				class="dropdown-item calibrate disabled list-group-item-light"
+    				th:href="@{${(info==null or info.deviceId==null)} ? '/calibration/input-power/converter' : '/calibration/input-power?sn=' + ${info.serialNumber} + '&pn=' + ${partNumber} + '&deviceId=' + ${#strings.substring(info.deviceId, 1, info.deviceId.length()-1)}}">Input Power</a>
 <!-- Output Power -->
 				<div class="btn-group" style="width:100%;">
 					<div class="btn-group dropstart" role="group">
@@ -499,7 +504,6 @@
             						<div class="input-group-append">
             							<input type="submit" value="Submit">
     								</div>
-            						
             					</div>
             				</div>
           				</div>
@@ -523,7 +527,8 @@
 	<script type="application/javascript" src="../../static/js/prologix.js" th:src="@{/js/prologix.js}"></script>
 	<script type="application/javascript" src="../../static/js/inputTool.js" th:src="@{/js/inputTool.js}"></script>
 	<script type="application/javascript" src="../../static/js/outputTool.js" th:src="@{/js/outputTool.js}"></script>
-	<script th:inline="javascript">
+	<script type="application/javascript" src="../../static/js/irt_packet.js" th:src="@{/js/irt_packet.js}"></script>
+	<script type="application/javascript" th:inline="javascript">
 	/*<![CDATA[*/
 
 		let unitSerialNumber =  $('#serialNumber').text();
