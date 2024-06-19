@@ -1,19 +1,18 @@
 package irt.components.beans.irt.calibration;
 
-import java.util.List;
-
 import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 
+import irt.components.beans.Baudrate;
 import lombok.Getter;
 import lombok.Setter;
 import lombok.ToString;
-import lombok.experimental.Accessors;
 
 @Getter @Setter @ToString @JsonIgnoreProperties(ignoreUnknown = true)
-public class CommandRequest extends RequestData{
+public class RequestData {
 
-	private List<Command> commands;
-	@Accessors(chain = true)
-	private String error;
-	private int addr;
+	private String hostName;
+	private String spName;
+	/** baudrate - This variable is not used with NI GPIB  */
+	private Baudrate baudrate;
+	private int timeout = 100;
 }

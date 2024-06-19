@@ -1,8 +1,10 @@
 package irt.components.controllers.calibration;
 
 import java.net.MalformedURLException;
+import java.net.URISyntaxException;
 import java.net.URL;
 import java.util.ArrayList;
+import java.util.Collections;
 import java.util.List;
 import java.util.Optional;
 import java.util.concurrent.ExecutionException;
@@ -12,15 +14,24 @@ import java.util.concurrent.TimeoutException;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.http.HttpEntity;
+import org.springframework.http.HttpHeaders;
+import org.springframework.http.HttpMethod;
+import org.springframework.http.MediaType;
+import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.ExceptionHandler;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
+import org.springframework.web.client.RestClientException;
+import org.springframework.web.client.RestTemplate;
 
 import irt.components.beans.irt.calibration.Command;
+import irt.components.beans.irt.calibration.CommandBytesRequest;
 import irt.components.beans.irt.calibration.CommandRequest;
+import irt.components.beans.irt.calibration.RequestData;
 import irt.components.services.HttpSerialPortServersKeeper;
 import irt.components.workers.HttpRequest;
 
@@ -106,8 +117,62 @@ public class HttpSerialPortRestController {
 		}
 	}
 
+	@PostMapping( value = "send-bytes")
+	CommandBytesRequest sendBytes(@RequestBody CommandBytesRequest commandRequest){
+    	logger.traceEntry("{}", commandRequest );
+
+    	final String hostName = commandRequest.getHostName();
+		final String port = serversKeeper.getPort(hostName);
+    	if(port==null) {
+    		commandRequest.setErrorMessage("No connection to the HTTP Serial Port. Host Name: " + hostName);
+    		return commandRequest;
+    	}
+
+		try {
+
+			final URL url =  new URL("http", hostName, ":" + port + "/bytes");
+			logger.debug(url);
+
+			CommandBytesRequest result = new RestTemplate().postForObject(url.toURI(), commandRequest, CommandBytesRequest.class);
+			return result;
+
+		} catch (MalformedURLException | RestClientException | URISyntaxException e) {
+			logger.catching(e);
+			commandRequest.setErrorMessage(e.getLocalizedMessage());
+		}
+		return commandRequest;
+	}
+
 	@ExceptionHandler(TimeoutException.class)
 	  public void conflict(Exception e) {
 		logger.catching(e);
 	  }
+
+	@PostMapping( value = "read-bytes")
+	CommandBytesRequest readBytes(@RequestBody RequestData requestData){
+    	logger.traceEntry("{}", requestData );
+
+    	final String hostName = requestData.getHostName();
+		final String port = serversKeeper.getPort(hostName);
+    	if(port==null) {
+    		final CommandBytesRequest commandRequest = new CommandBytesRequest();
+    		commandRequest.setErrorMessage("No connection to the HTTP Serial Port. Host Name: " + hostName);
+    		return commandRequest;
+    	}
+
+		try {
+
+			final URL url =  new URL("http", hostName, ":" + port + "/read");
+			logger.debug(url);
+
+			CommandBytesRequest result = new RestTemplate().postForObject(url.toURI(), requestData, CommandBytesRequest.class);
+			return result;
+
+		} catch (MalformedURLException | RestClientException | URISyntaxException e) {
+			logger.catching(e);
+			final CommandBytesRequest commandRequest = new CommandBytesRequest();
+			commandRequest.setErrorMessage(e.getLocalizedMessage());
+			return commandRequest;
+		}
+	}
 }

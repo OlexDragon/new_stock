@@ -47,6 +47,7 @@
 
 <!-- 		<logger name="irt.components.workers.HttpRequest" level="all" /> -->
 <!-- 		<logger name="irt.components.controllers.calibration.HttpSerialPortRestController" level="all" /> -->
+<!-- 		<logger name="irt.components.services.HttpSerialPortServersKeeper" level="all" /> -->
 
 <!-- 		<logger name="irt.components.beans.irt.update.Profile" level="all" /> -->
 <!-- 		<logger name="irt.components.workers.ProfileWorker" level="all" /> -->

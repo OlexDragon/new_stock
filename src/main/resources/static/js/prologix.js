@@ -5,7 +5,7 @@ function prologixElements($comPorts, $toolAddress, $buttons){
 	$buttons.click(e=>{
 
 		let prologixComPorts = $comPorts.val();
-		let toSend = getToSend(prologixComPorts, e.currentTarget.dataset.commands, e.currentTarget.dataset.getAnswer);
+		let toSend = getToSendPrologix(prologixComPorts, e.currentTarget.dataset.commands, e.currentTarget.dataset.getAnswer);
 
 		if(!toSend)
 			return;
@@ -17,7 +17,7 @@ function prologixElements($comPorts, $toolAddress, $buttons){
 					if(response.command.startsWith('++')){
 						let split = response.command.split(' ');
 						if(split.length==2){
-							let toSend = getToSend(prologixComPorts, '["' + split[0] + '"]', true);
+							let toSend = getToSendPrologix(prologixComPorts, '["' + split[0] + '"]', true);
 							sendPrologixCommands(toSend, response=>responseToButton(e.currentTarget, response));
 						}
 					}
@@ -169,7 +169,7 @@ $.each($address, function(index, addr){
 	}
 });
 
-function getToSend(prologixComPorts, commands, getAnswer){
+function getToSendPrologix(prologixComPorts, commands, getAnswer){
 
 	if(!prologixComPorts){
 		console.log('Serial Port is not selected.');
@@ -209,8 +209,8 @@ function getToSend(prologixComPorts, commands, getAnswer){
 $('.accordion-collapse').on('show.bs.collapse', e=>{
 	let $parent = $(e.currentTarget);
 	let comPort = $parent.find('.com-ports').val();
-	if(comPort){
-		let $btns = $parent.find('.btn-prologix');
+	if(comPort && comPort!='NI GPIB'){
+		let $btns = $parent.find('.btn-prologix').filter((i,el)=>!el.dataset.commands.includes(' '));
 		$btns.not('.btn-outline-secondary')
 		.each((i,el)=>{
 			let commands = JSON.parse(el.dataset.commands);

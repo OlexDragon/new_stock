@@ -162,7 +162,7 @@ function setToolsSerialPorts(ports){
 	$.each($comPorts, (i, select)=>{
 		var value = Cookies.get(select.id)
 		if(value){
-			var $option = $(select).children('[value=' + value + ']');
+			var $option = $(select).children('[value="' + value + '"]');
 			$option.prop('selected', true);
 			comPortSelected(select);
 			disableMenuItens();
@@ -205,17 +205,20 @@ function comPortSelected(select){
 
 function setAccordionHeaderText($parent){
 
-	let $port = $parent.find('.com-ports');
-	let messageId = $port.attr('data-info-message');
-	let $message = $('#' + messageId);
+	const $port = $parent.find('.com-ports');
+	const messageId = $port.attr('data-info-message');
+	const $message = $('#' + messageId);
+	const $toDisable = $parent.find('.to-disable');
 
-	let port = '';
-	if($port.length && $port.val() && !$port.val().startsWith('Select'))
-		port = $port.val();
-	else{
+	let port = $port.length ? $port.val() : '';
+	if(port && !port.startsWith('Select')){
+		if(port!='NI GPIB')
+			$toDisable.addClass('disabled');
+	}else{
+		port = '';
 		$message.text(' Serial Port is not selected');
 		$message.addClass('text-danger');
-		$parent.find('.to-disable').addClass('disabled');
+		$toDisable.addClass('disabled');
 		return;
 	}
 
@@ -225,10 +228,11 @@ function setAccordionHeaderText($parent){
 	let toolMessage = '';
 
 	if(!$tool.length || $tool.val()){
-		$parent.find('.to-disable').removeClass('disabled');
+		if(port!='NI GPIB')
+			$toDisable.removeClass('disabled');
 		if($tool.length) toolMessage = ', ' + $tool.find('option:selected').text();
 	}else
-		$parent.find('.to-disable').addClass('disabled');
+		$toDisable.addClass('disabled');
 
 	let $address = $parent.find('.address');
 	let toolAdderss = '';

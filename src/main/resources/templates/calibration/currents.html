@@ -105,7 +105,7 @@
 			var device1;
 			var regUrl;
 			var run = true;
-			if(version=='21'){
+			if(version=='11'){
 				device1 = 1001;
 				regUrl = '/calibration/rest/hpbm_register_v21';
 			}else if(version=='31'){
@@ -163,8 +163,8 @@
 /*[+
 				$.post(regUrl, {sn: unitSerialNumber, devid: devid})
 				.done(function(properties, t){
-					if(version=='21')
-						currentV21(properties, t);
+					if(version=='11')
+						currentV11(properties, t);
 					else
 						currentV31(properties, t)
 				})
@@ -186,17 +186,17 @@
 				});
 +]*/
 			}
-			function currentV21(properties, t){
+			function currentV11(properties, t){
 				// First properties
-				let hpbm2 = properties['1001'];
+				const devid_1001 = properties['1001'];
 				if(devid_1001){
-					showCurrentV21('#current1', '#current2', '#current3', '#current4', devid_1001);
+					showCurrentV11('#current1', '#current2', '#current3', '#current4', devid_1001);
 					blinkBorder($('#blink1'))
 				}
 // Second properties
-				let devid_1002 = properties['1002'];
+				const devid_1002 = properties['1002'];
 				if(devid_1002){
-					showCurrentV21('#current5', '#current6', '#current7', '#current8', devid_1002);
+					showCurrentV11('#current5', '#current6', '#current7', '#current8', devid_1002);
 					blinkBorder($('#blink2'))
 				}
 
@@ -234,10 +234,10 @@
 					}
 				}
 			}
-			function showCurrentV21(id1, id2, id3, id4, properties){
+			function showCurrentV11(id1, id2, id3, id4, properties){
 
 				//ePSU_2_42V 
-				let ePSU_2_42V = properties['epsu_2_42V'];
+				let ePSU_2_42V = properties.switch1;
 
 				let c1 = ePSU_2_42V['I_HS1 (0x03)']
 				let $c1 = $(id1);
@@ -248,7 +248,7 @@
 				fillFields($c2, c2)
 
 				//ePSU_3_42V
-				let ePSU_3_42V = properties['epsu_3_42V'];
+				let ePSU_3_42V = properties.switch2;
 
 				let c3 = ePSU_3_42V['I_HS1 (0x03)']
 				let $c3 = $(id3);

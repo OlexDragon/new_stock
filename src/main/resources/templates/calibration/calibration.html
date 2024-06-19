@@ -15,7 +15,7 @@
 </head>
 <body th:with="partNumber = ${info==null ? '' : info.partNumber}">
 	<input id="devid" type="hidden" th:value="${devid}">
-	<input id="typeVersion" type="hidden" th:value="${info.getTypeVersion()}">
+	<input id="typeVersion" type="hidden" th:if="${info}!=null" th:value="${info.getTypeVersion()}">
 
 	<nav class="navbar fixed-top navbar-light bg-light row">
  
@@ -401,7 +401,7 @@
 							</div>
 							<div class="col-lg input-group flex-nowrap">
 								<div class="form-floating">
-		        					<input id="inputFrequency" type="number" class="input-value form-control" title="Frequency" placeholder="Frequency" data-for="#inputFrequencyBtn"  data-bs-content="Bottom popover">
+		        					<input id="inputFrequency" type="number" class="input-value form-control" title="Frequency" placeholder="Frequency" data-for="#inputFrequencyBtn"  data-bs-content="Bottom popover" data-step="250">
 	        						<label for="inputFrequency">Frequency</label>
 		        				</div>
 	        					<select id="inputFrequencyUnit" class="form-select save-to-cookies" title="Frequensy Unit" style="max-width:30%;">
@@ -414,7 +414,7 @@
 							<div class="col input-group flex-nowrap">
 								<input id="inputPowerUnit" type="hidden">
 								<div class="form-floating">
-		        					<input id="inputPower" type="number" class="input-value form-control" title="Power" placeholder="Power" data-for="#inputPowerBtn"  data-bs-content="Bottom popover">
+		        					<input id="inputPower" type="number" class="input-value form-control" title="Power" placeholder="Power" data-for="#inputPowerBtn"  data-bs-content="Bottom popover" data-step="1">
 	        						<label for="inputPower">Power Level</label>
 		        				</div>
 								<button id="inputPowerBtn" class="input-group-text btn btn-outline-secondary input-tool-buton tool-btn disabled" value="2">Get</button>
@@ -527,7 +527,7 @@
 	<script type="application/javascript" src="../../static/js/prologix.js" th:src="@{/js/prologix.js}"></script>
 	<script type="application/javascript" src="../../static/js/inputTool.js" th:src="@{/js/inputTool.js}"></script>
 	<script type="application/javascript" src="../../static/js/outputTool.js" th:src="@{/js/outputTool.js}"></script>
-	<script type="application/javascript" src="../../static/js/irt_packet.js" th:src="@{/js/irt_packet.js}"></script>
+	<script type="application/javascript" src="../../static/js/packet.js" th:src="@{/js/packet.js}"></script>
 	<script type="application/javascript" th:inline="javascript">
 	/*<![CDATA[*/
 

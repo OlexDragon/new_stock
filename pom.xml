@@ -12,7 +12,7 @@
 
 	<groupId>irt</groupId>
 	<artifactId>components</artifactId>
-	<version>2.7.38</version>
+	<version>2.7.41</version>
 	<packaging>jar</packaging>
 
 	<name>ITR Components, RMAs, Calibration, ext.</name>

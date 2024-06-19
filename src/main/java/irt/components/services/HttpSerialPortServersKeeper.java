@@ -2,8 +2,6 @@ package irt.components.services;
 
 import static java.util.concurrent.TimeUnit.MINUTES;
 
-import java.io.IOException;
-import java.net.HttpURLConnection;
 import java.net.MalformedURLException;
 import java.net.URL;
 import java.util.ArrayList;
@@ -17,6 +15,7 @@ import java.util.concurrent.ScheduledFuture;
 
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
+import org.springframework.web.client.RestTemplate;
 
 import lombok.Getter;
 
@@ -62,15 +61,11 @@ public class HttpSerialPortServersKeeper {
 					entry->{
 						try {
 
-							HttpURLConnection connection = (HttpURLConnection) new URL("http", entry.getKey(), ":" + entry.getValue() + "/ping/").openConnection();
-							connection.setRequestMethod("POST");
-							connection.setReadTimeout(100);
-							int responseCode = connection.getResponseCode();
+							final URL url = new URL("http", entry.getKey(), ":" + entry.getValue() + "/ping/");
+							new RestTemplate().getForObject(url.toURI(), Boolean.class);
 
-							if(responseCode !=200)
-								toRemove.add(entry.getKey());
-
-						} catch (IOException e) {
+						} catch (Exception e) {
+							logger.info("Can not connect  to http://{}:{}/ping", entry.getKey(), entry.getValue());
 							logger.catching(e);
 							toRemove.add(entry.getKey());
 						}

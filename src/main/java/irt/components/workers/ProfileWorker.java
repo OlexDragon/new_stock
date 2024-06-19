@@ -134,6 +134,7 @@ public class ProfileWorker {
 				.map(
 						names->{
 
+							logger.debug(names);
 							try(final Scanner scanner = new Scanner(path);) {
 
 								while(scanner.hasNextLine()) {

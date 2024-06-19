@@ -1,10 +1,13 @@
 
-let $inputComPorts		 = $('#inputComPorts');
-let $inputButtons		 = $inputComPorts.parents('.accordion-body').find('button').filter((i,el)=>!el.classList.contains('tool-btn'));
-let $inputToolAddress 	 = $('#inputToolAddress');
-let $inputPowerUnit		 = $('#inputPowerUnit');
-let $inputToolAuto		 = $('#inputToolAuto');
-let $inputFrequencyUnit	 = $('#inputFrequencyUnit');
+const $inputComPorts		 = $('#inputComPorts');
+const $inputButtons			 = $inputComPorts.parents('.accordion-body').find('button').filter((i,el)=>!el.classList.contains('tool-btn'));
+const $inputToolAddress 	 = $('#inputToolAddress');
+const $inputPowerUnit		 = $('#inputPowerUnit');
+const $inputToolAuto		 = $('#inputToolAuto');
+const $inputFrequencyUnit	 = $('#inputFrequencyUnit');
+const $collapseInput		 = $('#collapseInput');
+const $inputPower			 = $('#inputPower');
+const $inputPowerBtn		 = $('#inputPowerBtn');
 
 let $inputTool			 = $('#inputTool')
 .change(function(){
@@ -14,9 +17,9 @@ let $inputTool			 = $('#inputTool')
 .trigger('change');
 
 // Control Input 
-$('.input-value').on('input', function(){
-	let btnID = this.dataset.for;
-	if(this.value)
+$('.input-value').on('input', e=>{
+	let btnID = e.currentTarget.dataset.for;
+	if(e.currentTarget.value)
 		$(btnID).text('Set');
 	else
 		$(btnID).text('Get');
@@ -27,14 +30,14 @@ $('.input-value').on('input', function(){
 	if(!e.ctrlKey || e.currentTarget.localName != 'input' || $toastContaner.html().trim())
 		return;
 
-	sowSetupToast(e.currentTarget)
+	showSetupToast(e.currentTarget)
 })
 .each((i,el)=>{
 
 	if(el.localName != 'input')
 		return;
 
-	let step = Cookies.set(el.id + "Step", { path: '' });
+	let step = Cookies.get(el.id + "Step");
 	el.dataset.step = step;
 })
 .on('keydown', e=>{
@@ -95,91 +98,10 @@ function showStepValue(e){
 		$toast.find('input').val(e.currentTarget.dataset.step);
 		return;
 	}else
-		sowSetupToast(e.currentTarget);
+		showSetupToast(e.currentTarget);
 }
 prologixElements($inputComPorts, $inputToolAddress, $inputButtons);
-
-$('.input-tool-buton').click(function(){
-
-	let inputComPorts = $inputComPorts.val();
-	if(!inputComPorts){
-		console.log("The Serial Port is not selected.");
-		alert('The Serial Port is not selected.');
-		return;
-	}
-
-	let toolCommands = $inputTool.val();
-	if(!toolCommands){
-		console.log("Input Tool not selected.");
-		alert('Tool not selected.');
-		return;
-	}
-
-	let address = $inputToolAddress.val();
-
-	if(!address){
-		console.log("Type the Input Tool Address.");
-		alert('Type the Tool Address.');
-		return;
-	}
-
-	let command = toolCommands.split(' ')[this.value];
-	if(!command){
-		let title = 'Not Supported.'
-		let message = 'This command is not supported.';
-		console.log(title + ' : ' + message);
-		showToast(title, message, 'text-bg-danger');
-		return;
-	}
-
-	let $optionSelected = $inputTool.find('option:selected');
-	let valueID = this.id.replace('Btn', '');
-	let $valueField = $('#' + valueID);
-	let $unit = $('#' + valueID + 'Unit');
-	let getAnswer = true;
-
-	let value = $valueField.val();
-	if(value){
-		value = ' ' + value;
-		let unit = $unit.val();
-		getAnswer = false;
-		if(unit){
-			let tName = $optionSelected.text();
-			if(tName=='ANRITSU68047C')
-				unit = unit.replace('Z', '');
-			value += ' ' + unit;
-		}
-		command += value;
-	}else{
-			
-		let format = $optionSelected.attr('data-read-format');
-		command = format.replace('{V}', command);
-	}
-
-	let $button = $(this);
-// Prepare the data to send
-	let toSend = {}
-	toSend.spName = inputComPorts;
-	toSend.commands = [];
-	toSend.commands.push({command: '++addr ' + address, getAnswer: false})
-	let isAouto = $inputToolAuto.attr('data-commands').includes('++auto 0');// Prologix is in AUTO mode
-	toSend.commands.push({command: command, getAnswer: isAouto ? getAnswer : false});
-
-	if(!isAouto && getAnswer)
-		toSend.commands.push({command: '++read eoi', getAnswer: true}); // READ id prologix mode isn't AUTO
-
-	let divider = 1; 
-	if($button.prop('id').includes('Freq')){
-		divider = parseInt($inputFrequencyUnit.find('option:selected').attr('data-divider'));
-		let factor = $optionSelected.data('freqFactor');
-		divider /= factor;
-	}
-
-// Send data
-	sendPrologixCommands(toSend, data=>inputAction(data, $valueField, divider, $button));	// See calibration.js
-});
-
-function inputAction(data, $valueField, divider, $button){
+function inputAction(data, $valueField, divider){
 
 	if(!data.getAnswer)
 		return;
@@ -194,10 +116,9 @@ function inputAction(data, $valueField, divider, $button){
 	}
 	let fl = parseFloat(answer);
 	$valueField.val(fl/divider);
-	$valueField.trigger('change');
- 	$button.text('Set');
+	$valueField.trigger('input');
 }
-function sowSetupToast(target){
+function showSetupToast(target){
 
 	let $input = $('<input>', {type: 'number', class: 'form-control', style: 'text-align:center;', value: target.dataset.step !== 'undefined' ? target.dataset.step : 1})
 	.on('focusout', e=>{
@@ -228,4 +149,87 @@ function sowSetupToast(target){
 	.on('hide.bs.toast', function(){this.remove();});
 
 	new bootstrap.Toast($toast).show();
+}
+
+$('.input-tool-buton').click(e=>{
+
+	const valueID = e.currentTarget.id.replace('Btn', '');
+	const $valueField = $('#' + valueID);
+	const value = $valueField.val();
+	const $unit = $('#' + valueID + 'Unit');
+	const unit = $unit.val();
+
+	const toSend = getToSendIT(e.currentTarget.value, value, unit);
+	if(!checkInputTool(toSend))
+		return;
+
+	let divider = 1;
+	if(valueID.includes('Freq')){
+		const $optionSelected = $inputTool.find('option:selected');
+		divider = parseInt($inputFrequencyUnit.find('option:selected').attr('data-divider'));
+		let factor = $optionSelected.data('freqFactor');
+		divider /= factor;
+	}
+
+// Send data
+	sendPrologixCommands(toSend, data=>inputAction(data, $valueField, divider));	// See calibration.js
+});
+function getToSendIT(commandIndex, value, unit){
+
+	// Prepare the data to send
+	const toSend = {}
+	toSend.spName = $inputComPorts.val();
+	toSend.commands = [];
+	toSend.addr = $inputToolAddress.val();
+	const notNiGPIB = toSend.spName!='NI GPIB';
+	if(notNiGPIB)
+		toSend.commands.push({command: '++addr ' + toSend.addr, getAnswer: false});
+
+	const $optionSelected = $inputTool.find('option:selected');
+	const toolCommands = $inputTool.val();
+	let getAnswer = true;
+	let command = toolCommands.split(' ')[commandIndex];
+	if(value){
+		value = ' ' + value;
+		getAnswer = false;
+		if(unit){
+			let tName = $optionSelected.text();
+			if(tName=='ANRITSU68047C')
+				unit = unit.replace('Z', '');
+			value += ' ' + unit;
+		}
+		command += value;
+	}else{
+		let format = $optionSelected.attr('data-read-format');
+		command = format.replace('{V}', command);
+	}
+	const isAouto = !notNiGPIB || $inputToolAuto.attr('data-commands').includes('++auto 0');// Prologix is in AUTO mode
+	toSend.commands.push({command: command, getAnswer: isAouto ? getAnswer : isAouto});
+
+	if(!isAouto && getAnswer)
+		toSend.commands.push({command: '++read eoi', getAnswer: true}); // READ id prologix mode isn't AUTO
+
+	return toSend;
+}
+function checkInputTool(toSend){
+
+	if(!toSend.spName){
+		console.log("The Serial Port is not selected.");
+		alert('The Serial Port is not selected.');
+		return false;
+	}
+
+	let toolCommands = $inputTool.val();
+	if(!toolCommands){
+		console.log("Input Tool not selected.");
+		alert('Tool not selected.');
+		return false;
+	}
+
+	if(!toSend.addr){
+		console.log("Type the Input Tool Address.");
+		alert('Type the Tool Address.');
+		return false;
+	}
+	return true;
 }

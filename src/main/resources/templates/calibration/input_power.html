@@ -23,116 +23,47 @@
 <!-- Calibration settings -->
   					<div class="dropdown col-auto">
   						<button class="btn dropdown-toggle" type="button" id="dropdownSettingsButton" data-bs-toggle="dropdown" aria-expanded="false"></button>
-  						<div class="dropdown-menu" aria-labelledby="dropdownSettingsButton">
-  							<div class="form-group row">
-    							<label class="col-sm-5 col-form-label text-end" for="minValue">Min.:</label>
-    							<div class="col-sm-7">
-    								<input type="number" class="form-control settings" id="minValue" placeholder="Minimum Value" value="-60">
-    							</div>
-  							</div>
-  							<div class="form-group row">
-    							<label class="col-sm-5 col-form-label text-end" for="maxValue">Max.:</label>
-    							<div class="col-sm-7">
-    								<input type="number" class="form-control settings" id="maxValue" placeholder="Maximum Value" value="0">
-    							</div>
-  							</div>
-  							<div class="form-group row">
-    							<label class="col-sm-5 col-form-label text-end" for="step">Step:</label>
-    							<div class="col-sm-7">
-    								<input type="number" class="form-control settings" id="step" placeholder="Step" value="1">
-    							</div>
-  							</div>
-   						</div>
 					</div>
 <!-- X Button -->
         			<button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
       			</div>
  <!-- Modal Body -->
       			<div id="modal-body" class="modal-body">
+      				<canvas id="ipChart"></canvas>
       			</div>
  <!-- Modal Footer -->
       			<div class="modal-footer">
-      				<select id="ipComPorts" class="form-select col"></select>
-	        		<button type="button" id="ipStart" class="btn btn-outline-primary disabled">Start</button>
-	        		<button type="button" id="ipCalc" class="btn btn-outline-secondary disabled">Stop</button>
-	        		<button type="button" id="ipClear" class="btn btn-outline-secondary disabled">Clear</button>
-	        		<button type="button" class="btn btn-outline-secondary" data-bs-dismiss="modal">Close</button>
+      				<div class="row">
+      					<div class="form-floating col">
+      						<select id="ipComPorts" class="form-select col"></select>
+      						<label for="ipComPorts">Unit Serial Port</label>
+      					</div>
+      					<div class="form-floating col">
+ 	     					<input id="ipTool" type="number" class="form-control" placeholder="Tool">
+      						<label for="ipTool">Tool Value</label>
+      					</div>
+      					<div class="form-floating col">
+	      					<input id="ipUnit" type="number" class="form-control-plaintext" placeholder="Unit" readonly="readonly">
+      						<label for="ipUnit">Unit Value</label>
+      					</div>
+      					<div class="form-floating col">
+	      					<input id="ipStep" type="number" class="form-control" placeholder="Step" value="1">
+      						<label for="ipUnit">Step</label>
+      					</div>
+      					<div class="form-floating col">
+	      					<input id="ipMax" type="number" class="form-control" placeholder="Max Value" value="0">
+      						<label for="ipMax">Max. Cal. Value</label>
+      					</div>
+      				</div>
+	        		<button type="button" id="ipStart" class="col btn btn-outline-success form-control disabled">Start</button>
+	        		<button type="button" id="ipInfo" class="col btn btn-outline-primary form-control disabled">Info</button>
+	        		<button type="button" class="col btn btn-outline-secondary form-control" data-bs-dismiss="modal">Close</button>
 	    		</div>
     		</div>
   		</div>
-  		<script th:inline="javascript">
-			/*<![CDATA[*/
-
-			$modalBody	 = $('#modal-body');
-			$btnStart	 = $('#ipStart');
-			$btnStop	 = $('#ipStop');
-			var $btnClear= $('#ipClear');
-			$minValue= $('#minValue');
-			var $maxValue= $('#maxValue');
-			var $ipComPorts = $('#ipComPorts');
-
-			// Min. Value
-			var inputPowerMinVal = Cookies.get("inputPowerMinVal");
-			if(inputPowerMinVal)
-				$minValue.val(inputPowerMinVal);
-
-			// Max. Value
-			var inputPowerMaxVal = Cookies.get("inputPowerMaxVal");
-			if(inputPowerMaxVal)
-				$maxValue.val(inputPowerMaxVal);
-
-			gerSerialPorts(ports=>{
-
-				if(!ports){
-					alert('It looks like the Serial Port Server is down.');
-					return;
-				}
-
-				$('<option>', {selected: 'selected', disabled: 'disabled', hidden: 'hidden', title:'Remote Serial Port.', text:'Select Remote Serial Port.'}).appendTo($ipComPorts);
-
-				$.each(ports, function(i, portName){
-					$('<option>', {value: portName, text: portName}).appendTo($ipComPorts);
-				});
-			});
-			$ipComPorts.change(e=>{
-				const packet = new Packet();
-				const bytes = packetToSend(packet);
-				$.post('')
-			});
-		    $('#dropdownSettingsButton').on('hidden.bs.dropdown', function () {
-				if(confirm('Do you want to save your changes to the cookies?')){
-
-					const min = $minValue.val();
-					if(min)
-						Cookies.set("inputPowerMinVal", min);
-					else {
-						alert('Min. value is missing.');
-						$minValue.val(-60);
-						return;
-					}
-
-					const max = $maxValue.val();
-					if(max)
-						Cookies.set("inputPowerMaxVal", max);
-					else {
-						alert('Max. value is missing.');
-						$minValue.val(0);
-						return;
-					}
-
-				}
-			});
-
-			$modal.modal('show');
-			$modal.on('hidden.bs.modal', function () {
-				clearInterval(interval);
-				interval = undefined;
-				err = null;
-			});
-
-			/*]]>*/
-			//# sourceURL=converterInputPower.js
-  		</script>
+  		 <script type="module" src="../../static/js/modules/calInputPower.mjs" th:src="@{/js/modules/calInputPower.mjs}"></script>
+  		 <script type="module" src="../../static/js/modules/calInputPowerE.mjs" th:src="@{/js/modules/calInputPowerE.mjs}"></script>
+  		 <script type="module" src="../../static/js/modules/calInputPowerF.mjs" th:src="@{/js/modules/calInputPowerF.mjs}"></script>
 	</th:block>
 	</div>
 
