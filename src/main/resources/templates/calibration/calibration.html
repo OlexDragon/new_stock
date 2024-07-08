@@ -187,7 +187,7 @@
     				th:classappend="${(info==null or info.deviceId==null) ? 'disabled list-group-item-light' : ''}"
     				th:href="@{${(info==null or info.deviceId==null)} ? '#' : '/calibration/power_offset?sn=' + ${info.serialNumber} + '&pn=' + ${partNumber} + '&deviceId=' + ${#strings.substring(info.deviceId, 1, info.deviceId.length()-1)}}">Power Offset</a>
 <!-- Gain -->
-    			<a id="menuGain" class="dropdown-item calibrate disabled" th:classappend="${info==null ? 'disabled list-group-item-light' : ''}" th:href="@{${info==null} ? '#' : '/calibration/gain?sn=' + ${info.serialNumber} + '&pn=' + ${partNumber}}">Gain</a>
+    			<a id="menuGain" class="dropdown-item calibrate disabled" th:classappend="${info==null ? 'disabled list-group-item-light' : ''}" th:href="@{${info==null} ? '/calibration/gain/converter' : '/calibration/gain?sn=' + ${info.serialNumber} + '&pn=' + ${partNumber}}">Gain</a>
     			<div><hr class="dropdown-divider"></div>
 <!-- Calibration Mode -->
     			<a class="dropdown-item" id="calMode" th:classappend="${info==null ? 'disabled list-group-item-light' : ''}" href="#">Calibration Mode</a>
@@ -265,6 +265,46 @@
 					<a	class="dropdown-item"
 						th:classappend="${info==null ? 'disabled list-group-item-light' : ''}"
 						th:href="@{${info==null} ? '#' : '/calibration/rest/package?sn=' + ${info.serialNumber}}">Download Package</a>
+ 				</div>
+    			<div><hr class="dropdown-divider"></div>
+<!-- Profile Editor: Biasing Sequence -->
+				<div class="btn-group" style="width:100%;">
+					<div class="btn-group dropstart" role="group">
+ 						<button id="menuModuleBiasing"
+ 								type="button"
+ 								class="btn dropdown-toggle dropdown-toggle-split submenu modules"
+ 								th:classappend="${info==null ? 'disabled list-group-item-light' : ''}"
+ 								data-bs-toggle="dropdown"
+ 								aria-expanded="false">
+    						<span class="visually-hidden">Toggle Dropdown</span>
+  						</button>
+   						<div class="dropdown-menu " aria-labelledby="menuModuleBiasing">
+
+    						<a class="dropdown-item disabled">Modules:</a>
+<!--  Modules Biasing Sequence -->
+<th:block th:remove="all">
+<th:block th:fragment="menuModuleBiasing">
+    						<a	th:each="info, stat : ${modules}"
+    							th:id="'menuModuleBiasing' + ${stat.count}"
+    							th:text="${info.serialNumber}"
+    							th:title="${info.name}"
+    							class="dropdown-item"
+    							th:href="@{${info==null} ? '#' : '/calibration/biasing?sn=' + ${serialNumber} + '&module=' + ${info.serialNumber}}">Module Serial Number</a>
+  		<script th:inline="javascript">
+			/*<![CDATA[*/
+				$('div[aria-labelledby=menuModuleBiasing]').find('a').click(showCalibrationModal);
+			/*]]>*/
+			//# sourceURL=menuModuleBiasing.js
+  		</script>
+</th:block>
+</th:block>
+    					</div>
+					</div>
+<!-- System Biasing Sequence-->
+					<a	id="manuBiasingSequence"
+						class="dropdown-item calibrate"
+						th:classappend="${info==null ? 'disabled list-group-item-light' : ''}"
+						th:href="@{${info==null} ? '#' : '/calibration/biasing?sn=' + ${info.serialNumber}}">Biasing Sequence</a>
  				</div>
     			<div><hr class="dropdown-divider"></div>
     			<a class="dropdown-item" href="../static/files/http.serial_port.jar" th:href="@{/files/http.serial_port.jar}">Download HTTP Serial Port App.</a>
@@ -485,7 +525,8 @@
       				</div>
 				</div>
 			</div>
-
+		</div>
+	</div>
 <!-- Modal Message -->
 	<div id="modal" class="modal fade" tabindex="-1">
   		<div class="modal-dialog">
@@ -517,23 +558,25 @@
 	</div>	
 
 <th:block th:replace="components :: scripts">
-    <script type="application/javascript" src="https://ajax.googleapis.com/ajax/libs/jquery/3.5.1/jquery.min.js"></script>
-    <script type="application/javascript" src="https://cdnjs.cloudflare.com/ajax/libs/popper.js/2.9.2/umd/popper.min.js"></script>
-    <script type="application/javascript" src="https://stackpath.bootstrapcdn.com/bootstrap/4.4.1/js/bootstrap.min.js"></script>
-	<script type="application/javascript" src="https://cdn.jsdelivr.net/npm/js-cookie@2/src/js.cookie.min.js"></script>
+    <script src="https://ajax.googleapis.com/ajax/libs/jquery/3.5.1/jquery.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/popper.js/2.9.2/umd/popper.min.js"></script>
+    <script src="https://stackpath.bootstrapcdn.com/bootstrap/4.4.1/js/bootstrap.min.js"></script>
+	<script src="https://cdn.jsdelivr.net/npm/js-cookie@2/src/js.cookie.min.js"></script>
 </th:block>
-  	<script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
-	<script type="application/javascript" src="../../static/js/calibration.js" th:src="@{/js/calibration.js}"></script>
-	<script type="application/javascript" src="../../static/js/prologix.js" th:src="@{/js/prologix.js}"></script>
-	<script type="application/javascript" src="../../static/js/inputTool.js" th:src="@{/js/inputTool.js}"></script>
-	<script type="application/javascript" src="../../static/js/outputTool.js" th:src="@{/js/outputTool.js}"></script>
-	<script type="application/javascript" src="../../static/js/packet.js" th:src="@{/js/packet.js}"></script>
-	<script type="application/javascript" th:inline="javascript">
+	<script th:inline="javascript">
 	/*<![CDATA[*/
-
-		let unitSerialNumber =  $('#serialNumber').text();
+		let serialNumber =  /*[[${serialNumber}]]*/ 'IRT-2121021';
+		console.log(serialNumber);
 	/*]]>*/
-	//# unitSerialNumber=Pll.js
+	//# sourceURL=sn.js
 	</script>
+  	<script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+	<script src="../../static/js/calibration.js" th:src="@{/js/calibration.js}"></script>
+	<script src="../../static/js/prologix.js" th:src="@{/js/prologix.js}"></script>
+	<script src="../../static/js/inputTool.js" th:src="@{/js/inputTool.js}"></script>
+	<script src="../../static/js/outputTool.js" th:src="@{/js/outputTool.js}"></script>
+	<script src="../../static/js/serial/packet.js" th:src="@{/js/serial/packet.js}"></script>
+	<script src="../../static/js/serial/chart.js" th:src="@{/js/serial/chart.js}"></script>
+  	<script src="../../static/js/serial/calModalInit.js" th:src="@{/js/serial/calModalInit.js}"></script>
 </body>
 </html>

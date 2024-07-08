@@ -90,8 +90,8 @@ function controlEscape(bytes){
 function parsePackets(bytes){
 
 	if(!bytes){
-		alert();
-		return
+		console.warn('Nothing to parse');
+		return 0;
 	}
 
 	const indexes = [];
@@ -103,8 +103,9 @@ function parsePackets(bytes){
 			indexes.push(index++);
 	}
 	if(indexes.length<2){
+		console.warn("Wrong data to parse");
 		alert("Wrong data to parse");
-		return;
+		return 0;
 	}
 	const pairs = [];
 	for(let i=0; i<indexes.length;){
@@ -143,14 +144,51 @@ function parseToString(data){
 		
 	return String.fromCharCode.apply(String, data);
 }
-const registerFields = ['addr', 'index', 'value'];
-function parseIrtRegister(bytes){
-	const register = {};
-	for(let i=0; i<3; i++){
-		const fourBytes = bytes.splice(0, 4);
-		register[registerFields[i]] = bytesToInt(fourBytes);
+function toIrtRegister(bytes, packetId){
+	const packets = parsePackets(bytes);
+	if(!packets || !packets.length){
+		console.warn('Something went wrong.');
+		alert('Something went wrong.');
+		return 0;
 	}
-	return register;
+	//remove acknowledgement
+	if(packets[0].header.type==packetType.acknowledgement)
+		packets.shift();
+
+	let index = -1;
+	if(packetId){
+		for(let i=0; i<packets.length; i++)
+			if(packets[i].header.packetId == packetId){
+				index = i;
+				break;
+			}
+	}else
+		index = 0;
+	if(index<0 || !packets.length){
+		console.warn('index=' + index + '; packets.length=' + packets.length + '; packetId=' + packetId + '; packets: ' + JSON.stringify(packets))
+		return 0;
+	}
+	const packet = packets[index];
+	// Send Acknowledgement
+	const acknowledgement = packet.getAcknowledgement();
+	command = getCommand(acknowledgement);
+	sendCommand(command, ()=>{});
+
+	if(packet.header.error){
+		f_stop();
+		alert(PACKET_ERROR[packet.header.error]);
+		return 0;
+	}
+	return packet.getData();
+}
+function parseIrtRegister(bytes){
+	const register = [];
+	const b = [...bytes];
+	for(let i=0; i<3 && i<b.length; i++){
+		const fourBytes = b.splice(0, 4);
+		register.push(bytesToInt(fourBytes));
+	}
+	return new Register(...register);
 }
 const shiftSize = 8;
 function bytesToInt(bytes){
@@ -163,6 +201,11 @@ function bytesToInt(bytes){
 	}
 	return intValue;
 }
+function intToBytes(intValue){
+	if(typeof intValue === 'undefined') return;
+    return [(intValue>>shiftSize*3) & 0xff, (intValue>>shiftSize*2) & 0xff, (intValue>>shiftSize) & 0xff, intValue & 0xff];
+}
+
 // *** Packet
 const FLAG_SEQUENCE	= 0x7E;
 const CONTROL_ESCAPE = 0x7D;
@@ -232,8 +275,8 @@ packetGroupId.deviceDebug	 = 61;
 packetGroupId.production	 = 100;
 packetGroupId.developer		 = 120;
 const PACKET_GROUP_ID = {};
-PACKET_GROUP_ID[packetGroupId.alarm]			 = 'alarm';
-PACKET_GROUP_ID[packetGroupId.configuration]	 = 'configuration';
+PACKET_GROUP_ID[packetGroupId.alarm]		 = 'alarm';
+PACKET_GROUP_ID[packetGroupId.configuration] = 'configuration';
 PACKET_GROUP_ID[packetGroupId.filetransfer]	 = 'filetransfer';
 PACKET_GROUP_ID[packetGroupId.measurement]	 = 'measurement';
 PACKET_GROUP_ID[packetGroupId.reset]			 = 'reset';
@@ -272,6 +315,7 @@ class Packet{
 		// From bytes
 		if(Array.isArray(header)){
 			const bytes = header;
+			console.log(bytes);
 			const packetArray = bytes.splice(0,bytes.length-2);
 			const chcksm = checksumToBytes(packetArray);
 			if(chcksm[0]==(bytes[0]&0xff) && chcksm[1]==(bytes[1]&0xff)){
@@ -283,13 +327,15 @@ class Packet{
 					console.error('Byte parsing error.');
 			}else{
 				this.header = new Header(packetType.error, packetArray[2] * 256 + packetArray[1], 'The packet checksum is incorrect');
-				console.warn('The packet checksum is incorrect; received: ' + int8Array[int8Array.length-2] +',' + int8Array[int8Array.length-1] + '; calculated: ' + chcksm + '; bytes: ' + header);
+				console.warn('The packet checksum is incorrect; received: ' + header[header.length-2] +',' + header[header.length-1] + '; calculated: ' + chcksm + '; bytes: ' + header);
 			}
+			console.log(this);
 			return;
 		}
 		this.header = (header == undefined ? new Header() : header);
 		if(this.header.type!=packetType.acknowledgement)
 			this.payloads = payloads == undefined ? [new Payload()] : Array.isArray(payloads) ? payloads : [payloads];
+		console.log(this);
 	}
 	getAcknowledgement(){
 		const header = new Header(packetType.acknowledgement, this.header.packetId);
@@ -381,8 +427,6 @@ class Header{
 		return 'type = ' + PACKET_TYPE[this.type] + ', ID = ' + this.packetId + ', groupId = ' + PACKET_GROUP_ID[this.groupId] + ', error = ' + ((typeof this.error != "number") ? this.error : PACKET_ERROR[this.error]);
 	}
 }
-
-const DATA_FCM_ADC_INPUT_POWER = [0, 0, 0, 10, 0, 0, 0, 0];
 class Payload{
 	constructor(parameter, data){
 		// From bytes
@@ -464,3 +508,26 @@ class Parameter{
 		return 'code: ' + this.code  + str + ', size: ' + this.size;
 	}
 }
+const IS_FCM = true;
+const IS_BUC = !IS_FCM;
+class Register{
+	constructor(index, addr, value){
+		this.index = index;
+		this.addr = addr;
+		this.value = value;
+	}
+	toBytes(){
+		if(typeof this.index === 'undefined' || typeof this.addr === 'undefined')
+			return;
+		const indexAddr = intToBytes(this.index).concat(intToBytes(this.addr));
+		if(typeof this.value === 'undefined')
+			return indexAddr;
+		return indexAddr.concat(intToBytes(this.value));
+	}
+}
+const DEVICE_FCM_ADC_INPUT_POWER	 = ()=>new Register(10,0);
+const DEVICE_FCM_ADC_OUTPUT_POWER	 = ()=>new Register(10,1);
+const DEVICE_CONVERTER_DAC1		 = ()=>new Register(1,0);
+const DEVICE_CONVERTER_DAC2		 = ()=>new Register(2,0);
+const DEVICE_CONVERTER_DAC3		 = ()=>new Register(3,0);
+const DEVICE_CONVERTER_DAC4		 = ()=>new Register(4,0);

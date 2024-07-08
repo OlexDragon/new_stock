@@ -37,7 +37,7 @@ public interface RmaRepository extends CrudRepository<Rma, Long> {
 	List<Rma> findBySerialNumberAndStatusIn					(String serialNumber, Rma.Status... status);
 	List<Rma> findBySerialNumberAndStatusNotIn				(String serialNumber, Rma.Status... status);
 
-	@Query("SELECT new irt.components.beans.jpa.rma.RmaCountByStatus(status, COUNT(*)) FROM Rma r WHERE r.status != 1 GROUP By r.status")
+	@Query("SELECT new irt.components.beans.jpa.rma.RmaCountByStatus(status, COUNT(*)) FROM Rma r WHERE r.status != 1 and r.status != 4 GROUP By r.status")
 	List<RmaCountByStatus> countByStatus();
 
 	boolean existsBySerialNumberAndStatusIn		(String sn, Status... status);

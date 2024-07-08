@@ -83,7 +83,7 @@
 			$input		 = $('#opInputValue');
 			$out		 = $('#op_outputValue');
 
-			table = Cookies.get(unitSerialNumber + "_opTable");
+			table = Cookies.get(serialNumber + "_opTable");
 			if(table){
 				var array = JSON.parse(table);
 				array.forEach( row => addRow(row.input, row.output));
@@ -103,7 +103,7 @@
 
 					buzy = true;
 
-					$.post('/calibration/rest/calibrationInfo', {sn : unitSerialNumber})
+					$.post('/calibration/rest/calibrationInfo', {sn : serialNumber})
 							.done(function(calInfo){
 
 								if(!calInfo){	// No connection
@@ -343,7 +343,7 @@
 		    			return;
 			    	}
 
-	    			table = { serialNumber: unitSerialNumber, name: 'Output Power', values: array };
+	    			table = { serialNumber: serialNumber, name: 'Output Power', values: array };
 		    		$.ajax({
 						url: '/calibration/rest/to_profile',
 						type: 'POST',
@@ -362,7 +362,7 @@
 		    	$minValue.blur(e=>{
 		    		$out.val(e.currentTarget.value);
 		    	})
-// 		    	$.post('/calibration/rest/login?sn=' + unitSerialNumber);
+// 		    	$.post('/calibration/rest/login?sn=' + serialNumber);
 
 		    	/*[# sec:authorize="hasAuthority('CALIBRATION_SETTINGS')"]*/
 					$('#dropdownSettingsButton').on('hidden.bs.dropdown', function () {
@@ -424,7 +424,7 @@
 	    			return;
 
 	    		var json = JSON.stringify(array);
-				Cookies.set(unitSerialNumber + "_opTable", json, { expires: 30, path: '' });
+				Cookies.set(serialNumber + "_opTable", json, { expires: 30, path: '' });
 			})
 
 			$modal.on('hidden.bs.modal', function () {

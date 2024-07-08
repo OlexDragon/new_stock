@@ -2,6 +2,7 @@ package irt.components.workers;
 
 import java.io.File;
 import java.io.IOException;
+import java.net.InetAddress;
 import java.nio.file.FileSystems;
 import java.nio.file.FileVisitResult;
 import java.nio.file.FileVisitor;
@@ -10,11 +11,17 @@ import java.nio.file.Path;
 import java.nio.file.PathMatcher;
 import java.nio.file.Paths;
 import java.nio.file.SimpleFileVisitor;
+import java.nio.file.StandardOpenOption;
 import java.nio.file.attribute.BasicFileAttributes;
+import java.text.DateFormat;
 import java.text.ParseException;
+import java.text.SimpleDateFormat;
 import java.util.ArrayList;
 import java.util.Arrays;
+import java.util.Calendar;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 import java.util.Optional;
 import java.util.Scanner;
 import java.util.concurrent.atomic.AtomicReference;
@@ -116,7 +123,7 @@ public class ProfileWorker {
 				break;
 		}
 
-		return oPath = Optional.ofNullable(arPath.get());
+		return logger.traceExit(oPath = Optional.ofNullable(arPath.get()));
 	}
 
 	public void reset() {
@@ -153,7 +160,7 @@ public class ProfileWorker {
 												final String index = split[1];
 												final ProfileTable profileTable = new ProfileTable(ProfileTableTypes.NEW, name);
 												profileTable.setIndex(index);
-												return profileTable;
+												return logger.traceExit(profileTable);
 											}
 										}
 									}
@@ -163,7 +170,7 @@ public class ProfileWorker {
 								logger.catching(e);
 							}
 
-							return new ProfileTable(ProfileTableTypes.UNKNOWN, null);
+							return logger.traceExit(new ProfileTable(ProfileTableTypes.UNKNOWN, null));
 						});
 	}
 
@@ -176,6 +183,7 @@ public class ProfileWorker {
 		final StringBuilder sb = new StringBuilder();
 		final Path path = oPath.get();
 		final String table = profileTable.toString(values);
+		logger.debug("\n", table);
 		boolean addTable = true;
 
 		try(final Scanner scanner = new Scanner(path);) {
@@ -191,7 +199,44 @@ public class ProfileWorker {
 					sb.append(line).append("\r\n");
 			}
 
-			Files.write(path, sb.toString().getBytes());
+			logger.debug("Save profile: {}", path);
+			Files.write(path, sb.toString().getBytes(), StandardOpenOption.TRUNCATE_EXISTING);
+			logger.info("Profile {} saved.", serialNumber);
+
+			return true;
+
+		} catch (IOException e) {
+			logger.catching(e);
+		}
+
+		return false;
+	}
+
+	private DateFormat dateFormat = new SimpleDateFormat("MMMM dd, yyyy HH:mm");
+	public boolean saveProperty(String properyName, String value) {
+		logger.traceEntry();
+
+		if(!oPath.isPresent())
+			throw new RuntimeException("The profile does not exist.");
+
+		final StringBuilder sb = new StringBuilder();
+		final Path path = oPath.get();
+
+		try(final Scanner scanner = new Scanner(path);) {
+
+			while(scanner.hasNextLine()) {
+				final String line = scanner.nextLine();
+
+				if(line.startsWith(properyName)) {
+					Calendar cal = Calendar.getInstance();
+					sb.append(properyName).append(' ').append(value).append(" \t# ").append("Property changed by Calibration App. - ").append(dateFormat.format(cal.getTime())).append("\r\n");
+				}else
+					sb.append(line).append("\r\n");
+			}
+
+			logger.debug("Save profile: {}", path);
+			Files.write(path, sb.toString().getBytes(), StandardOpenOption.TRUNCATE_EXISTING);
+			logger.info("Profile {} saved.", serialNumber);
 
 			return true;
 
@@ -378,7 +423,7 @@ public class ProfileWorker {
 		return Optional.empty();
 	}
 
-	public List<String> getProperties(String propertyName) {
+	public List<String> getProperties(String propertyStartsWith) {
 
 		if(!oPath.isPresent())
 			throw new RuntimeException("The profile does not exist.");
@@ -392,10 +437,10 @@ public class ProfileWorker {
 			while(scanner.hasNextLine()) {
 				final String line = scanner.nextLine();
 
-				if(line.startsWith(propertyName)) {
+				if(line.startsWith(propertyStartsWith)) {
 
 					final String[] split = line.split("\\s+", 2);
-					if(split[0].equals(propertyName))
+					if(split[0].equals(propertyStartsWith))
 						properties.add(split[1].split("#",2)[0].trim());
 				}
 			}
@@ -403,5 +448,32 @@ public class ProfileWorker {
 			logger.catching(e);
 		}
 		return properties;
+	}
+
+	public Map<String, String> getLinesStartsWith(String... lineStartsWith) {
+
+		if(!oPath.isPresent())
+			throw new RuntimeException("The profile does not exist.");
+
+		final Path path = oPath.get();
+
+		Map<String, String> lines = new HashMap<>();
+
+		try(final Scanner scanner = new Scanner(path);) {
+
+			while(scanner.hasNextLine()) {
+				final String line = scanner.nextLine();
+
+				for(String s:lineStartsWith) {
+					if(line.startsWith(s))
+						lines.put(s, line);
+				}
+				if(lines.size()==lineStartsWith.length)
+					break;
+			}
+		} catch (Exception e) {
+			logger.catching(e);
+		}
+		return lines;
 	}
 }

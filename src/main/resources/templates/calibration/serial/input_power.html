@@ -1,0 +1,174 @@
+<!DOCTYPE html>
+<html 	xmlns="http://www.w3.org/1999/xhtml"
+		xmlns:th="https://www.thymeleaf.org"
+      	xmlns:sec="https://www.thymeleaf.org/thymeleaf-extras-springsecurity5"
+      	lang="en">
+<head>
+    <meta charset="UTF-8" />
+    <title>IRT Bom.</title>
+    <link rel="shortcut icon" href="http://irttechnologies.com/favicon.ico">
+    <link rel="stylesheet" href="https://stackpath.bootstrapcdn.com/bootstrap/4.4.1/css/bootstrap.min.css" data-integrity="sha384-Vkoo8x4CGsO3+Hhxv8T/Q5PaXtkKtu6ug5TOeNV6gBiFeWPGFN9MuhOf23Q9Ifjh" data-crossorigin="anonymous">
+    <link rel="stylesheet" href="../../static/css/components.css" th:href="@{/css/components.css}">
+</head>
+<body>
+
+<!-- Modal Message -->
+	<div id="modal" class="modal" tabindex="-1" role="dialog">
+	<th:block th:fragment="converter">
+  		<div class="modal-dialog modal-xl" data-prefix="ip" data-command-index="2" data-default-tool-val="-50">
+    		<div class="modal-content">
+<!-- Modal Header -->
+      			<div class="modal-header">
+        			<h5 class="modal-title ml-3 text-primary col">Input Power</h5>
+<!-- X Button -->
+        			<button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+      			</div>
+ <!-- Modal Body -->
+      			<div id="modal-body" class="modal-body">
+      				<canvas id="ipChart"></canvas>
+      			</div>
+ <!-- Modal Footer -->
+      			<div class="modal-footer">
+      				<div class="col">
+      					<div class="row mb-2">
+      						<div class="form-floating col">
+      							<select id="unitSerialPort" class="form-select col"></select>
+	      						<label for="unitSerialPort">Unit Serial Port</label>
+    	  					</div>
+      						<div class="form-floating col">
+ 	     						<input id="toolVal" type="number" class="form-control" placeholder="Tool">
+      							<label for="toolVal">Tool Value</label>
+      						</div>
+      						<div class="form-floating col">
+	      						<input id="unitVal" type="number" class="form-control-plaintext" placeholder="Unit" readonly="readonly">
+	      						<label for="unitVal">Unit Value</label>
+    	  					</div>
+      						<div class="form-floating col">
+	      						<input id="stepVal" type="number" class="form-control" placeholder="Step" value="1">
+      							<label for="stepVal">Step</label>
+      						</div>
+      						<div class="form-floating col">
+	      						<input id="maxVal" type="number" class="form-control" placeholder="Max Value" value="0">
+	      						<label for="maxVal">Max. Cal. Value</label>
+    	  					</div>
+      					</div>
+      					<div class="row">
+      						<div class="col">
+	        					<button type="button" id="btnStart" class="btn btn-outline-success form-control disabled">Start</button>
+	        				</div>
+	      					<div class="col">
+			        			<button type="button" id="btnInfo" class="btn btn-outline-primary form-control disabled">Info</button>
+			        		</div>
+	      					<div class="col">
+	        					<button type="button" class="btn btn-outline-secondary form-control" data-bs-dismiss="modal">Close</button>
+	        				</div>
+	        			</div>
+	        		</div>
+	    		</div>
+    		</div>
+  		</div>
+  			<script>
+			/*<![CDATA[*/
+
+			init();
+  			setRun(run);
+
+  			var calRun = false;
+  			var doNxt = true;
+  			var stack = 0;
+  			function run(){
+  				if(stack>10){
+  					stack = 0;
+  					cinsole.warn('stackoverflow');
+  					f_stop();
+   					alert('Stackover Flow');
+ 					return;
+  				}
+  				++stack;
+  				doNxt = true;
+  				if(calRun)
+  					return;
+  				calRun = true;
+  				const toolV = $inputPower.val();
+  				if(!toolV){
+  					console.warn('No Input Tool Value.');
+  					calRun = false;
+  					return;
+  				}
+  				if($toolVal.val())
+  					$toolVal.val(toolV);
+  				if(x.length && x[x.length-1] == toolV){
+  					f_nextStep();
+  					calRun = false;
+  					return;
+  				}
+  				stack = 0;
+  				x.push(parseFloat(toolV).toFixed(1));
+  				const packet = new Packet(new Header(packetType.request, undefined, packetGroupId.deviceDebug), new Payload(new Parameter(PARAMETER_READ_WRITE), DEVICE_FCM_ADC_INPUT_POWER().toBytes()));
+  				const command = getCommand(packet);
+  				sendCommand(command, inputPower);
+  				if(doNxt)
+  					f_nextStep();
+  			}
+  			function inputPower(command){
+				const register =  commandToRegister(command);
+  				if(!register){
+  					f_stop();
+  					doNxt = false;
+  	  				calRun = false;
+  					return;
+  				}
+  				if(x.length>y.length){
+  					y.push(register.value);
+  					$unitVal.val(register.value);
+  					calChart.update();
+  				}
+  				calRun = false;
+  			 }
+  			function f_nextStep(){
+  				let tmp = $maxVal.val();
+  				let max;
+  				if(tmp)
+  					max = parseFloat(tmp);
+  				else
+  					max = 0;
+  				const toolV = parseFloat($inputPower.val());
+  				if(!startToolValue)
+  					startToolValue = toolV;
+  				if(toolV == max){
+  					f_stop();
+  					$btnStart.text('Restart')
+  					$btnInfo.removeClass('disabled').text('Optimize');
+  					reset();
+  					alert('Calibration completes.');
+  					return;
+  				}
+  				tmp = $stepVal.val();
+  				let step;
+  				if(tmp)
+  					step = parseFloat(tmp);
+  				else{
+  					step = 1;
+  					$stepVal.val(step);
+  				}
+
+  				let newValue = (toolV + step).toFixed(1);
+  				if(newValue>max)
+  					newValue = max;
+
+  				$toolVal.val(newValue);
+  				f_toolValue();
+  			}
+  			/*]]>*/
+  			//# sourceURL=fcm-input-power.js
+  			</script>
+	</th:block>
+	</div>
+
+    <script type="application/javascript" src="https://ajax.googleapis.com/ajax/libs/jquery/3.5.1/jquery.min.js"></script>
+    <script type="application/javascript" src="https://cdnjs.cloudflare.com/ajax/libs/popper.js/2.10.2/umd/popper.min.js"></script>
+    <script type="application/javascript" src="https://stackpath.bootstrapcdn.com/bootstrap/4.4.1/js/bootstrap.min.js"></script>
+	<script type="application/javascript" src="https://cdn.jsdelivr.net/npm/js-cookie@2/src/js.cookie.min.js"></script>
+	<script type="application/javascript" src="../../static/js/irt.js" th:src="@{/js/irt.js}"></script>
+</body>
+</html>

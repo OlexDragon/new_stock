@@ -541,7 +541,7 @@
 			let $PFD_DEL = $('#PFD_DEL');
 			let $N = $('#N');
 
-			if(!unitSerialNumber){
+			if(!serialNumber){
 				alert("Unknown serial number.");
 			}else{
 				getReg(102);
@@ -1107,7 +1107,7 @@
 				let addr = id.replace(/\D/g, '');
 				let newValue = $strong.text();
 
-				$.post('/calibration/rest/pll_register', {sn: unitSerialNumber, addr: addr, value: newValue})
+				$.post('/calibration/rest/pll_register', {sn: serialNumber, addr: addr, value: newValue})
 				.done(function(reg){
 					let value = reg[id.toUpperCase()];
 					setTitle($strong, value)
@@ -1233,7 +1233,7 @@
 			}
 			function getReg(index){
 
-				$.post('/calibration/rest/pll_registers', {sn: unitSerialNumber, index: index})
+				$.post('/calibration/rest/pll_registers', {sn: serialNumber, index: index})
 				.done(function(reg){
 					if(!reg){
 						alert('Can not get PLL Registers.');

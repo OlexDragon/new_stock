@@ -98,7 +98,7 @@ public class HttpRequestTest {
 
 		switch(className) {
 
-		case "Array":
+		case "IrtArray":
 		    scriptEngine.eval("json= JSON.stringify(count);");
 		    final String json =  (String) scriptEngine.get("json");
 

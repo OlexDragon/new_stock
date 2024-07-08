@@ -1,0 +1,82 @@
+<!DOCTYPE html>
+<html 	xmlns="http://www.w3.org/1999/xhtml"
+		xmlns:th="https://www.thymeleaf.org"
+      	xmlns:sec="https://www.thymeleaf.org/thymeleaf-extras-springsecurity5"
+      	lang="en">
+<head>
+    <meta charset="UTF-8" />
+    <title>IRT Bom.</title>
+    <link rel="shortcut icon" href="http://irttechnologies.com/favicon.ico">
+    <link rel="stylesheet" href="https://stackpath.bootstrapcdn.com/bootstrap/4.4.1/css/bootstrap.min.css" data-integrity="sha384-Vkoo8x4CGsO3+Hhxv8T/Q5PaXtkKtu6ug5TOeNV6gBiFeWPGFN9MuhOf23Q9Ifjh" data-crossorigin="anonymous">
+    <link rel="stylesheet" href="../../static/css/components.css" th:href="@{/css/components.css}">
+</head>
+<body>
+
+<!-- Modal Message -->
+	<div id="modal" class="modal modal-lg" tabindex="-1" role="dialog">
+	<th:block th:fragment="modal">
+  		<div class="modal-dialog modal-xl">
+    		<div class="modal-content">
+<!-- Modal Header -->
+      			<div class="modal-header row">
+        			<h5 class="modal-title ml-3 text-primary col-auto" th:text="(${module}==null ? ${sn} : ${module}) + ' - Biasing Sequence'">biasing-sequence</h5>
+<!-- X Button -->
+        			<button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+      			</div>
+ <!-- Modal Body -->
+      			<div id="modal-body" class="modal-body row">
+      				<div th:each="b: ${biasing}" class="col-1 mb-1">
+						<input type="checkbox" class="btn-check" th:id="${b.name}" th:checked="${b.enable}" autocomplete="off">
+						<label class="btn btn-outline-success" th:for="${b.name}" th:text="${b.name}">Checked</label><br>
+					</div>
+     			</div>
+ <!-- Modal Footer -->
+      			<div class="modal-footer">
+	        		<a class="btn btn-outline-primary biasingUpload" th:href="${module==null} ? @{'/calibration/rest/upload?sn=' + ${sn}} : @{'/calibration/rest/upload?sn=' + ${sn} + '&module=' + ${module}}">Upload</a>
+	        		<button type="button" id="btnSave" class="btn btn-outline-primary disabled">Save Change</button>
+	        		<button type="button" id="btnDefault" class="btn btn-outline-secondary " th:classappend="${biasing.isEmpty() ? 'disabled' : ''}">Default</button>
+	        		<button type="button" class="btn btn-outline-secondary" data-bs-dismiss="modal">Close</button>
+	    		</div>
+    		</div>
+  		</div>
+  		<script th:inline="javascript">
+			/*<![CDATA[*/
+
+			$modal.modal('show');
+			var module = /*[[${module}]]*/ 'irt-2401001';
+			var $inputs = $('#modal-body').find('input').change(()=>$btnSave.removeClass('disabled'));
+			$('#btnDefault').click(()=>{
+				$btnSave.removeClass('disabled');
+				$inputs.prop('checked', true);
+			});
+			$btnSave = $('#btnSave').click(()=>{
+				let ids = $inputs.filter((i,el)=>el.checked).map((i,el)=>el.id).get();
+				$.post('/calibration/biasing/rest/save', {sn: module ? module : serialNumber, values: ids})
+				.done(done=>{
+					if(done===''){
+						alert('Profile not found.');
+					}else if(done){
+						alert('The changes have been saved.');
+					}else
+						alert('Failed to save changes.');
+				})
+				.fail(conectionFail);
+			});
+			$('.biasingUpload').click(function(e){
+				e.preventDefault();
+				upload(this);
+			});
+
+			/*]]>*/
+			//# sourceURL=biasing-sequence.js
+  		</script>
+	</th:block>
+	</div>
+
+    <script type="application/javascript" src="https://ajax.googleapis.com/ajax/libs/jquery/3.5.1/jquery.min.js"></script>
+    <script type="application/javascript" src="https://cdnjs.cloudflare.com/ajax/libs/popper.js/2.10.2/umd/popper.min.js"></script>
+    <script type="application/javascript" src="https://stackpath.bootstrapcdn.com/bootstrap/4.4.1/js/bootstrap.min.js"></script>
+	<script type="application/javascript" src="https://cdn.jsdelivr.net/npm/js-cookie@2/src/js.cookie.min.js"></script>
+	<script type="application/javascript" src="../../static/js/irt.js" th:src="@{/js/irt.js}"></script>
+</body>
+</html>

@@ -5,12 +5,11 @@ const $btrMeasurement	 = $('#btrMeasurement');
 const $serialNumber		 = $('#serialNumber');
 const $spServers		 = $('#spServers');
 const $menuInputPower	 = $('#menuInputPower');
+const $menuGain			 = $('#menuGain');
 
 const sn = new URLSearchParams(window.location.search).get('sn');
 if(sn && !sn.includes('.'))
 	Cookies.set("rmaSearch", JSON.stringify(['rmaSerialNumber', sn]), { expires: 7});
-
-const serialNumber = $serialNumber.text();
 
 // Variables Used in modals
 const urlCalibrationInfo = '/calibration/rest/calibrationInfo';
@@ -100,9 +99,12 @@ if(cookie){
 		if($toSelect.length){
 			$toSelect.prop('selected', true);
 			$menuInputPower.removeClass('disabled');
+			$menuGain.removeClass('disabled');
 		}
 		gerSerialPorts(setToolsSerialPorts);
-	}catch(err) {}
+	}catch(err) {
+		console.error(err);
+	}
 }
 
 $spServers.change(function(){
@@ -111,10 +113,12 @@ $spServers.change(function(){
 
 	if(!spServers){
 		$menuInputPower.addClass('disabled');
+		$menuGain.addClass('disabled');
 		return;
 	}
 
 	$menuInputPower.removeClass('disabled');
+	$menuGain.removeClass('disabled');
 
 	Cookies.set("spServers", spServers, { expires: 7, path: '' });
 	gerSerialPorts(setToolsSerialPorts);
@@ -247,7 +251,8 @@ if(!serialNumber)
 var calibrateId = undefined;
 
 // Show Calibration message
-$('.calibrate').click(function(e){
+$('.calibrate').click(showCalibrationModal);
+function showCalibrationModal(e){
 	e.preventDefault();
 
 	const id = e.target.id;
@@ -268,8 +273,7 @@ $('.calibrate').click(function(e){
 		});
 	}else
 		$modal.modal('show');
-});
-
+}
 // Upload the profile
 $('.upload').click(function(e){
 	e.preventDefault();
@@ -474,8 +478,10 @@ function getHostName(){
 	return null;
 }
 
-let $menuGain = $('#menuGain');
 $('#dropdownCalibrateButton').on('show.bs.dropdown', function(){
+
+	if($menuGain.attr('href')=='/calibration/gain/converter')
+		return;
 
 	$menuGain.addClass('disabled list-group-item-light');
 
@@ -577,7 +583,7 @@ function getProfile(e, link){
 	});
 }
 
-$('.profilePath').click(function(e){
+const $profilePath = $('.profilePath').click(function(e){
 	getProfilePath(e, this);
  });
  

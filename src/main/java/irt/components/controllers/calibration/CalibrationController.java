@@ -129,7 +129,6 @@ public class CalibrationController {
     	.filter(s->!s.trim().isEmpty())
     	.ifPresent(
     			s->{
-    				model.addAttribute("serialNumber", s);
     				try {
 
      					final Integer devid = getSystemIndex(s);
@@ -137,6 +136,7 @@ public class CalibrationController {
     					model.addAttribute("info", info);
     					model.addAttribute("ip", s);
     					model.addAttribute("devid", devid);
+        				model.addAttribute("serialNumber", info.getSerialNumber());
     					logger.debug(info);
 
     					return;
@@ -162,6 +162,7 @@ public class CalibrationController {
 
     						model.addAttribute("info", info);
     						model.addAttribute("ip", home.getNetInfo().getAddr());
+            				model.addAttribute("serialNumber", info.getSerialNumber());
     					});
     				} catch (IOException e) {
     					logger.catching(Level.DEBUG, e);
@@ -170,9 +171,17 @@ public class CalibrationController {
 
 		return "calibration/calibration";
     }
-    @GetMapping("input-power/converter")
+
+	@GetMapping("input-power/converter")
     String inputPower() throws ExecutionException {
-		return "calibration/input_power :: converter";
+		logger.traceEntry();
+		return "calibration/serial/input_power :: converter";
+    }
+
+    @GetMapping("gain/converter")
+    String gain() throws ExecutionException {
+		logger.traceEntry();
+		return "calibration/serial/fcm_gain :: converter";
     }
 
     @GetMapping("output_power")

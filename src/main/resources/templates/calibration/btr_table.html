@@ -186,7 +186,7 @@
 						if(err || document.hidden || document.msHidden || document.webkitHidden || document.mozHidden)
 							return;
 
-						$.post('/calibration/rest/monitorInfo', {sn : unitSerialNumber})
+						$.post('/calibration/rest/monitorInfo', {sn : serialNumber})
 						.done(function(monitorInfo){
 
 							if(monitorInfo && monitorInfo.data){
@@ -254,7 +254,7 @@
 				});
 
 				$('#show-settings').click(function(){
-					 $modal.load('/calibration/btr?sn=' + unitSerialNumber + '&setting=true');
+					 $modal.load('/calibration/btr?sn=' + serialNumber + '&setting=true');
 				});
 
 				$outputComPorts.change(()=>enableButton());	// 

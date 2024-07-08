@@ -105,7 +105,7 @@
 			var device1;
 			var regUrl;
 			var run = true;
-			if(version=='11'){
+			if(version=='11' || version=='21'){
 				device1 = 1001;
 				regUrl = '/calibration/rest/hpbm_register_v21';
 			}else if(version=='31'){
@@ -161,9 +161,9 @@
 				else
 					devid = 1002;
 /*[+
-				$.post(regUrl, {sn: unitSerialNumber, devid: devid})
+				$.post(regUrl, {sn: serialNumber, devid: devid})
 				.done(function(properties, t){
-					if(version=='11')
+					if(version=='11' || version=='21')
 						currentV11(properties, t);
 					else
 						currentV31(properties, t)

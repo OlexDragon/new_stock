@@ -1,0 +1,285 @@
+<!DOCTYPE html>
+<html 	xmlns="http://www.w3.org/1999/xhtml"
+		xmlns:th="https://www.thymeleaf.org"
+      	xmlns:sec="https://www.thymeleaf.org/thymeleaf-extras-springsecurity5"
+      	lang="en">
+<head>
+    <meta charset="UTF-8" />
+    <title>IRT Bom.</title>
+    <link rel="shortcut icon" href="http://irttechnologies.com/favicon.ico">
+    <link rel="stylesheet" href="https://stackpath.bootstrapcdn.com/bootstrap/4.4.1/css/bootstrap.min.css" data-integrity="sha384-Vkoo8x4CGsO3+Hhxv8T/Q5PaXtkKtu6ug5TOeNV6gBiFeWPGFN9MuhOf23Q9Ifjh" data-crossorigin="anonymous">
+    <link rel="stylesheet" href="../../static/css/components.css" th:href="@{/css/components.css}">
+</head>
+<body>
+
+<!-- Modal Message -->
+	<div id="modal" class="modal" tabindex="-1" role="dialog">
+	<th:block th:fragment="converter">
+  		<div class="modal-dialog modal-xl" data-prefix="g" data-command-index="2" data-default-tool-val="-50">
+    		<div class="modal-content">
+<!-- Modal Header -->
+      			<div class="modal-header">
+        			<h5 class="modal-title ml-3 text-primary col">Converter Gain</h5>
+<!-- X Button -->
+        			<button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+      			</div>
+ <!-- Modal Body -->
+      			<div id="modal-body" class="modal-body">
+      				<canvas id="ipChart"></canvas>
+      			</div>
+ <!-- Modal Footer -->
+      			<div class="modal-footer">
+      				<div class="col">
+      					<div class="row mb-2">
+      						<div class="form-floating col">
+      							<select id="unitSerialPort" class="form-select col"></select>
+	      						<label for="unitSerialPort">Unit Serial Port</label>
+    	  					</div>
+      						<div class="form-floating col">
+ 	     						<input id="toolVal" type="number" class="form-control" placeholder="Tool">
+      							<label for="toolVal">Tool Value</label>
+      						</div>
+      						<div class="form-floating col">
+	      						<input id="unitVal" type="number" class="form-control-plaintext" placeholder="Unit" readonly="readonly">
+	      						<label for="unitVal">DAC1 Value</label>
+    	  					</div>
+      						<div class="form-floating col">
+	      						<input id="unitAdc" type="number" class="form-control-plaintext" placeholder="Output ADC" readonly="readonly">
+	      						<label for="unitAdc">Output ADC</label>
+    	  					</div>
+      						<div class="form-floating col">
+	      						<input id="stepVal" type="number" class="form-control" placeholder="Step" value="0.5">
+      							<label for="stepVal">Step</label>
+      						</div>
+      						<div class="form-floating col">
+	      						<input id="maxVal" type="number" class="form-control" placeholder="Max Value" value="0">
+	      						<label for="maxVal">Max. Cal. Value</label>
+    	  					</div>
+      					</div>
+      					<div class="row">
+      						<div class="col">
+	        					<button type="button" id="btnStart" class="btn btn-outline-success form-control disabled">Start</button>
+	        				</div>
+	      					<div class="col">
+			        			<button type="button" id="btnInfo" class="btn btn-outline-primary form-control disabled">Info</button>
+			        		</div>
+	      					<div class="col">
+	        					<button type="button" class="btn btn-outline-secondary form-control" data-bs-dismiss="modal">Close</button>
+	        				</div>
+	        			</div>
+	        		</div>
+	    		</div>
+    		</div>
+  		</div>
+  			<script>
+			/*<![CDATA[*/
+
+			var $unitAdc = $('#unitAdc');
+			var calRun = false;
+  			var outputAdcValue;
+  			var savedToolVal;
+  			var promise;
+  			var presetAdc;
+
+  			init(()=>{
+  				calRun = false;
+  				outputAdcValue = undefined;
+  				promise = undefined;
+  				savedToolVal = undefined;
+  				presetAdc = undefined;
+  				setRun(preset);
+  			});
+
+  			// Run functions
+  			function preset(){
+  				if(calRun || v_stop)
+  					return;
+  				calRun = true;
+  				console.log('+');
+  				outputAdcValue = undefined;
+  				$toolVal.val('');
+  				f_toolValue();
+  				sendPacket(setPoint, DEVICE_CONVERTER_DAC1());
+				f_run(calibration);
+ 			}
+  			function calibration(){
+  				if(calRun || v_stop)
+  					return;
+  				calRun = true;
+  				console.log('+');
+  				sendPacket(macthAdc, DEVICE_FCM_ADC_OUTPUT_POWER());
+ 			}
+  			// Helpers functions
+  			function setPoint(command){
+  				if(v_stop)
+  					return;
+  				const register = commandToRegister(command);
+  				if(!register){
+  	  				if(register==0 && readCount<5){
+  	  					++readCount;
+  	  					read(adcChanged);
+  	  					return;
+  	  				}
+  	  				calRun = false;
+  					console.log('-');
+  					return;
+  				}
+  				readCount = 0;
+  				
+  				const tv = $inputPower.val();
+  				if(!tv){
+  					if(!promise){
+  						console.log('Wait for input power update.');
+  						promise = new Promise(resolve => setTimeout(resolve, 500));
+  						promise.then(() => setPoint(command));
+  						return;
+  					}
+  	  				f_stop();
+  	  				console.log('stop');
+  	  				alert('The signal generator value was not updated.');
+  	  				calRun = false;
+  					console.log('-');
+  					return;
+  				}
+  				promise = undefined;
+  				const toolVal = parseFloat(tv);
+  				if(!savedToolVal)
+  					savedToolVal = toolVal;
+  				$toolVal.val(toolVal.toFixed(1));
+  				x.push(toolVal - savedToolVal);
+  				y.push(register.value);
+  				calChart.update();
+  				$unitVal.val(register.value);
+  				nextStep();
+  			}
+  			function nextStep(){
+  				if(v_stop)
+  					return;
+  				const toolVal = parseFloat($toolVal.val());
+  				const step = parseFloat($stepVal.val());
+				if(toolVal){
+					$toolVal.val(toolVal + step);
+					f_toolValue();
+				}else{
+  	  				f_stop();
+  	  				console.log('stop');
+  	  				alert('No signal generator value.')
+				}
+	  			calRun = false;
+				console.log('-');
+  			}
+ 			function macthAdc(command){
+  				if(v_stop)
+  					return;
+  	  			const register = commandToRegister(command);
+  	  			if(!register){
+  	  				if(register==0 && readCount<1){
+  	  					++readCount;
+  	  					read(adcChanged);
+  	  					return;
+  	  				}
+  	  	  			calRun = false;
+  					console.log('-');
+  	  				return;
+  	  			}
+  	  			readCount = 0;
+				$unitAdc.val(register.value);
+  	  			if(!presetAdc){
+  	  				presetAdc = register.value;
+  	  				nextStep();
+					return;
+  	  			}
+  	  			if(presetAdc==register.value){
+  	  				sendPacket(setPoint, DEVICE_CONVERTER_DAC1());
+  	  				return
+  	  			}
+  	  			nextDac(register.value);
+   			}
+ 			var readCount = 0;
+ 			function adcChanged(command){
+  				if(v_stop)
+  					return;
+  	  			const register = commandToRegister(command);
+  	  			if(!register){
+  	  				if(register==0 && readCount<5){
+  	  					++readCount;
+  	  					read(adcChanged);
+  	  					f_stop();
+  	  					return;
+  	  				}
+  	  	  			calRun = false;
+  					console.log('-');
+  	  				return;
+  	  			}
+  	  			readCount = 0;
+				$unitAdc.val(register.value);
+   			}
+  			var direction;
+  			function nextDac(adc){
+  				if(v_stop)
+  					return;
+  	  			console.log('nextDac(); adc=' + adc + '; presetAdc=' + presetAdc + '; direction=' + direction);
+  	  			let step = direction ? presetAdc - adc : adc - presetAdc;
+  	  			if(step<1)
+  	  				step = 1;
+  	  			const dac = parseInt($unitVal.val());
+  	  			let newVal = dac + step;
+  	  			if(typeof direction === 'undefined')
+  	  				if(newVal<0){
+  	  					direction = true;
+  						calRun = false;
+  						console.log('-');
+  						return
+  	  				}else
+  	  					direction = false;
+  	  			
+  	  			console.log('dac=' + dac + '; step=' + step + '; newVal='+ newVal);
+  				sendPacket(dacChanged, DEVICE_CONVERTER_DAC1(), newVal);
+  			}
+  			function dacChanged(command){
+  				if(v_stop)
+  					return;
+  				const register = commandToRegister(command);
+  				console.log(register);
+  				if(!register){
+  	  				if(register==0 && readCount<5){
+  	  					++readCount;
+  	  					read(adcChanged);
+  	  					return;
+  	  				}
+  	  				calRun = false;
+  					console.log('-');
+  					return;
+  				}
+  				readCount = 0;
+  				$unitVal.val(register.value);
+
+				calRun = false;
+				console.log('-');
+  			}
+  			$unitAdc.dblclick(()=>{
+  				sendPacket(adcChanged, DEVICE_FCM_ADC_OUTPUT_POWER());
+  			});
+  			$unitVal.dblclick(()=>{
+  				sendPacket(dacChanged, DEVICE_CONVERTER_DAC1(), direction ? 4095 : 0);
+  			});
+  			$toolVal.dblclick(()=>{
+  				f_toolValue();
+				setTimeout(()=>{
+					$toolVal.val($inputPower.val());
+	  				sendPacket(adcChanged, DEVICE_FCM_ADC_OUTPUT_POWER());
+	  			}, 500);
+  			});
+  			/*]]>*/
+  			//# sourceURL=fcm-attenuation.js
+  			</script>
+	</th:block>
+	</div>
+
+    <script src="https://ajax.googleapis.com/ajax/libs/jquery/3.5.1/jquery.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/popper.js/2.10.2/umd/popper.min.js"></script>
+    <script src="https://stackpath.bootstrapcdn.com/bootstrap/4.4.1/js/bootstrap.min.js"></script>
+	<script src="https://cdn.jsdelivr.net/npm/js-cookie@2/src/js.cookie.min.js"></script>
+	<script src="../../static/js/irt.js" th:src="@{/js/irt.js}"></script>
+</body>
+</html>

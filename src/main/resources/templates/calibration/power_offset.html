@@ -86,7 +86,7 @@
 			$input		 = $('#op_InputValue');
 			$out				 = $('#rf_outputValue');
 
-			table = Cookies.get(unitSerialNumber + "_frTable");
+			table = Cookies.get(serialNumber + "_frTable");
 			if(table){
 				var array = JSON.parse(table);
 				array.forEach( row => addRow(row.input, row.output, row.comment));
@@ -121,7 +121,7 @@
 
 					buzy = true;
 
-					$.post('/calibration/rest/calibrationInfo', {sn : unitSerialNumber})
+					$.post('/calibration/rest/calibrationInfo', {sn : serialNumber})
 							.done(function(calInfo){
 
 								if(!calInfo){	// No connection
@@ -315,7 +315,7 @@
 	    			return;
 		    	}
 
-		    	table = { serialNumber: unitSerialNumber, name: 'Power Offset', values: array };
+		    	table = { serialNumber: serialNumber, name: 'Power Offset', values: array };
 
 		    	$.ajax({
 					url: '/calibration/rest/to_profile',
@@ -396,7 +396,7 @@
     			return;
 
     		var json = JSON.stringify(array);
-			Cookies.set(unitSerialNumber + "_frTable", json, { expires: 30, path: '' });
+			Cookies.set(serialNumber + "_frTable", json, { expires: 30, path: '' });
 		});
 
 		$modal.on('hidden.bs.modal', function () {

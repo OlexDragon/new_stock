@@ -62,7 +62,7 @@ public class WebSecurityConfig {
 											"/calibration/rest/**",
 											"/inventory",
 											"/create/rest/**",
-											"/serial_port/rest/**",
+											"/calibration/biasing/rest/save",
 											"/wo/**")
 			.permitAll()
 
