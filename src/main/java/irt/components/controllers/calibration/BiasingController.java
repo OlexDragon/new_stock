@@ -72,6 +72,7 @@ public class BiasingController {
 		line = lines.get(BiasingController.DEFAULT_BIASING_SEQUENCE);
 		final Optional<String> oDValue = getValue(line);
 
+		// The Value from DB or Default from the profile
 		final Optional<String> oDbValue = oIrtArray.map(IrtArray::getDescription).filter(d->!d.isEmpty())
 				// If Exist Default, use it
 				.map(d->oDValue.orElse(d))
@@ -95,20 +96,22 @@ public class BiasingController {
 					return oDValue;
 				});
 		final List<Biasing> dBiasing = toBiasing(oDbValue);
+		logger.debug("\n\t{}\n\t{}", dBiasing, biasing);
 
-		if(dBiasing.isEmpty())
-			biasing.forEach(b->b.setEnable(true));
-		else
-			dBiasing.forEach(
+		if(dBiasing.isEmpty()) {
+			dBiasing.addAll(biasing);
+			dBiasing.forEach(b->b.setEnable(true));
+		}else
+			biasing.forEach(
 					b->{
-						int index = biasing.indexOf(b);
+						int index = dBiasing.indexOf(b);
 						if(index<0)
-							biasing.add(b);
+							dBiasing.add(b);
 						else
-							biasing.get(index).setEnable(true);
+							dBiasing.get(index).setEnable(true);
 					});
 
-    	model.addAttribute("biasing", biasing);
+    	model.addAttribute("biasing", dBiasing);
 		return "calibration/biasing_sequence :: modal";
     }
 
@@ -123,6 +126,7 @@ public class BiasingController {
 				.map(sp->sp.split("-"))
 				.map(Arrays::stream)
 				.orElse(Stream.empty())
+				.filter(name->!name.isEmpty())
 				.map(Biasing::new)
 				.collect(Collectors.toList());
 	}
