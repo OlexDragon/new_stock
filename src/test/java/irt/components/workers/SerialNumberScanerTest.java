@@ -17,5 +17,4 @@ class SerialNumberScanerTest {
 	void test() throws IOException {
 		scaner.scan();
 	}
-
 }

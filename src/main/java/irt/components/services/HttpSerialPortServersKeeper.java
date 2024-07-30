@@ -27,14 +27,17 @@ public class HttpSerialPortServersKeeper {
 	private final Map<String, String> httpSerialPortServers = new HashMap<>();
 
 	public synchronized String getPort(String hostName) {
+		logger.traceEntry("hostName: {}; {}", hostName, httpSerialPortServers);
     	return httpSerialPortServers.get(hostName);
 	}
 
 	public synchronized void put(String hostName, String port) {
+		logger.traceEntry("hostName: {}; port: {}", hostName, port);
     	httpSerialPortServers.put(hostName, port);
 	}
 
 	public URL getUrl(String hostName) {
+		logger.traceEntry("hostName: {};", hostName);
 		final String port = httpSerialPortServers.get(hostName);
 		return Optional.ofNullable(port).map(p->{
 			try {

@@ -43,7 +43,7 @@ public class HttpSerialPortRestController {
 
     	serversKeeper.put(hostName, port);
 
-    	return "Yee";
+    	return "Host '" + hostName + ":" + port + "received.";
     }
 
 	@PostMapping( value = "serial-ports", produces = "application/json;charset=utf-8")

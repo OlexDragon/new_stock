@@ -8,7 +8,7 @@ import lombok.Getter;
 import lombok.ToString;
 
 @Getter @ToString @JsonIgnoreProperties(ignoreUnknown = true)
-public class PLLRegister {
+public class RegisterPLL implements Register {
 
 	@JsonProperty("ST0")
 	@JsonAlias("ST0 Register (0x00)")

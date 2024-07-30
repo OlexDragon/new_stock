@@ -66,6 +66,11 @@
     			<a class="dropdown-item" th:classappend="${info==null ? 'disabled list-group-item-light' : ''}" th:href="@{${info==null} ? '#' : 'http://' + ${info.serialNumber}}" target="_blank">Web</a>
     			<a id="unitLogin" class="dropdown-item unitLogin" th:classappend="${info==null ? 'disabled list-group-item-light' : ''}" th:href="@{${info==null} ? '#' : '/calibration/rest/login?sn=' + ${info.serialNumber}}">Login</a>
     			<a id="currents" class="dropdown-item" th:classappend="${(info==null or info.getDeviceType()<250) ? 'disabled list-group-item-light' : ''}" href="#">Currents</a>
+    			<a 	id="initialize"
+    				class="dropdown-item calibrate"
+    				th:classappend="${info==null ? 'disabled list-group-item-light' : ''}"
+    				th:href="@{${info==null} ? '#' : '/calibration/initialize?sn=' + ${info.serialNumber}}" href="#">Initialize</a>
+    			<div><hr class="dropdown-divider"></div>
 <!-- Profile  -->
 				<div class="btn-group" style="width:100%;">
 					<div class="btn-group dropstart" role="group">
@@ -129,6 +134,102 @@
 					</div>
 <!-- System Profile Path -->
    					<a class="dropdown-item profilePath" th:href="@{'/calibration/rest/profile_path?sn=' + ${info==null ? serialNumber : info.serialNumber}}" target="_blank">Profile Path</a>
+ 				</div>
+<!-- Upload Profile-->
+				<div class="btn-group" style="width:100%;">
+					<div class="btn-group dropstart" role="group">
+ 						<button id="menuUploadModule"
+ 								type="button"
+ 								class="btn dropdown-toggle dropdown-toggle-split submenu modules"
+ 								th:classappend="${info==null ? 'disabled list-group-item-light' : ''}"
+ 								data-bs-toggle="dropdown"
+ 								aria-expanded="false">
+    						<span class="visually-hidden">Toggle Dropdown</span>
+  						</button>
+   						<div class="dropdown-menu" aria-labelledby="menuUploadModule">
+
+    						<a class="dropdown-item disabled">Modules:</a>
+<!--  Upload Modules Profile -->
+<th:block th:remove="all">
+<th:block th:fragment="menuUploadModule">
+    						<a	th:each="info : ${modules}"
+    							th:text="${info.serialNumber}"
+    							th:title="${info.name}"
+    							class="dropdown-item"
+    							onclick=" upload(event, this);"
+    							th:href="@{${info==null} ? '#' : '/calibration/rest/upload?sn=' + ${serialNumber} + '&module=' + ${info.serialNumber}}">Module Serial Number</a>
+</th:block>
+</th:block>
+    					</div>
+					</div>
+<!-- Upload System Profile-->
+					<a	class="dropdown-item upload"
+						th:classappend="${info==null ? 'disabled list-group-item-light' : ''}"
+						th:href="@{${info==null} ? '#' : '/calibration/rest/upload?sn=' + ${info.serialNumber}}">Profile Upload</a>
+ 				</div>
+<!-- Package -->
+				<div class="btn-group" style="width:100%;">
+					<div class="btn-group dropstart" role="group">
+ 						<button id="menuModulePackage"
+ 								type="button"
+ 								class="btn dropdown-toggle dropdown-toggle-split submenu modules"
+ 								th:classappend="${info==null ? 'disabled list-group-item-light' : ''}"
+ 								data-bs-toggle="dropdown"
+ 								aria-expanded="false">
+    						<span class="visually-hidden">Toggle Dropdown</span>
+  						</button>
+   						<div class="dropdown-menu " aria-labelledby="menuModulePackage">
+
+    						<a class="dropdown-item disabled">Modules:</a>
+<!--  Modules Package -->
+<th:block th:remove="all">
+<th:block th:fragment="menuModulePackage">
+    						<a	th:each="info : ${modules}"
+    							th:text="${info.serialNumber}"
+    							th:title="${info.name}"
+    							class="dropdown-item"
+    							th:href="@{${info==null} ? '#' : '/calibration/rest/package?sn=' + ${serialNumber} + '&module=' + ${info.serialNumber}}">Module Serial Number</a>
+</th:block>
+</th:block>
+    					</div>
+					</div>
+<!-- System Package-->
+					<a	class="dropdown-item"
+						th:classappend="${info==null ? 'disabled list-group-item-light' : ''}"
+						th:href="@{${info==null} ? '#' : '/calibration/rest/package?sn=' + ${info.serialNumber}}">Download Package</a>
+ 				</div>
+    			<div><hr class="dropdown-divider"></div>
+<!-- Upload Soft-->
+				<div class="btn-group" style="width:100%;">
+					<div class="btn-group dropstart" role="group">
+ 						<button id="menuUploadModuleSoft"
+ 								type="button"
+ 								class="btn dropdown-toggle dropdown-toggle-split submenu modules"
+ 								th:classappend="${info==null ? 'disabled list-group-item-light' : ''}"
+ 								data-bs-toggle="dropdown"
+ 								aria-expanded="false">
+    						<span class="visually-hidden">Toggle Dropdown</span>
+  						</button>
+   						<div class="dropdown-menu" aria-labelledby="menuUploadModuleSoft">
+
+    						<a class="dropdown-item disabled">Modules:</a>
+<!--  Upload Modules Soft -->
+<th:block th:remove="all">
+<th:block th:fragment="menuUploadModuleSoft">
+    						<a	th:each="info : ${modules}"
+    							th:text="${info.serialNumber}"
+    							th:title="${info.name}"
+    							class="dropdown-item"
+    							onclick=" upload(event, this);"
+    							th:href="@{${info==null} ? '#' : '/calibration/rest/upload-soft?sn=' + ${serialNumber} + '&module=' + ${info.serialNumber}}">Module Serial Number</a>
+</th:block>
+</th:block>
+    					</div>
+					</div>
+<!-- Upload System Soft-->
+					<a	class="dropdown-item upload"
+						th:classappend="${info==null ? 'disabled list-group-item-light' : ''}"
+						th:href="@{${info==null} ? '#' : '/calibration/rest/upload-soft?sn=' + ${info.serialNumber}}">Soft Upload</a>
  				</div>
     			<div><hr class="dropdown-divider"></div>
 <!-- Power Chart -->
@@ -203,72 +304,9 @@
 	   			<div><hr class="dropdown-divider"></div>
 <!-- Gain From -->
     			<a class="dropdown-item" id="gain_from_cookies" th:classappend="${serialNumber==null ? 'disabled list-group-item-light' : ''}" href="#" data-th-data-sn="${serialNumber} + '_gainTable'">Gain from Cookies</a>
-<!-- Upload -->
-				<div class="btn-group" style="width:100%;">
-					<div class="btn-group dropstart" role="group">
- 						<button id="menuUploadModule"
- 								type="button"
- 								class="btn dropdown-toggle dropdown-toggle-split submenu modules"
- 								th:classappend="${info==null ? 'disabled list-group-item-light' : ''}"
- 								data-bs-toggle="dropdown"
- 								aria-expanded="false">
-    						<span class="visually-hidden">Toggle Dropdown</span>
-  						</button>
-   						<div class="dropdown-menu" aria-labelledby="menuUploadModule">
-
-    						<a class="dropdown-item disabled">Modules:</a>
-<!--  Upload Modules -->
-<th:block th:remove="all">
-<th:block th:fragment="menuUploadModule">
-    						<a	th:each="info : ${modules}"
-    							th:text="${info.serialNumber}"
-    							th:title="${info.name}"
-    							class="dropdown-item"
-    							onclick=" moduleUpload(event, this);"
-    							th:href="@{${info==null} ? '#' : '/calibration/rest/upload?sn=' + ${serialNumber} + '&module=' + ${info.serialNumber}}">Module Serial Number</a>
-</th:block>
-</th:block>
-    					</div>
-					</div>
-<!-- Upload System Profile-->
-					<a	class="dropdown-item upload"
-						th:classappend="${info==null ? 'disabled list-group-item-light' : ''}"
-						th:href="@{${info==null} ? '#' : '/calibration/rest/upload?sn=' + ${info.serialNumber}}">Upload Profile</a>
- 				</div>
-<!-- Package -->
-				<div class="btn-group" style="width:100%;">
-					<div class="btn-group dropstart" role="group">
- 						<button id="menuModulePackage"
- 								type="button"
- 								class="btn dropdown-toggle dropdown-toggle-split submenu modules"
- 								th:classappend="${info==null ? 'disabled list-group-item-light' : ''}"
- 								data-bs-toggle="dropdown"
- 								aria-expanded="false">
-    						<span class="visually-hidden">Toggle Dropdown</span>
-  						</button>
-   						<div class="dropdown-menu " aria-labelledby="menuModulePackage">
-
-    						<a class="dropdown-item disabled">Modules:</a>
-<!--  Modules Package -->
-<th:block th:remove="all">
-<th:block th:fragment="menuModulePackage">
-    						<a	th:each="info : ${modules}"
-    							th:text="${info.serialNumber}"
-    							th:title="${info.name}"
-    							class="dropdown-item"
-    							th:href="@{${info==null} ? '#' : '/calibration/rest/package?sn=' + ${serialNumber} + '&module=' + ${info.serialNumber}}">Module Serial Number</a>
-</th:block>
-</th:block>
-    					</div>
-					</div>
-<!-- System Package-->
-					<a	class="dropdown-item"
-						th:classappend="${info==null ? 'disabled list-group-item-light' : ''}"
-						th:href="@{${info==null} ? '#' : '/calibration/rest/package?sn=' + ${info.serialNumber}}">Download Package</a>
- 				</div>
     			<div><hr class="dropdown-divider"></div>
 <!-- Profile Editor: Biasing Sequence -->
-				<div class="btn-group" style="width:100%;">
+				<div class="btn-group w=100 biasing">
 					<div class="btn-group dropstart" role="group">
  						<button id="menuModuleBiasing"
  								type="button"
@@ -288,6 +326,7 @@
     							th:id="'menuModuleBiasing' + ${stat.count}"
     							th:text="${info.serialNumber}"
     							th:title="${info.name}"
+    							th:data-device-id="${info.moduleId}"
     							class="dropdown-item"
     							th:href="@{${info==null} ? '#' : '/calibration/biasing?sn=' + ${serialNumber} + '&module=' + ${info.serialNumber}}">Module Serial Number</a>
   		<script th:inline="javascript">
@@ -304,6 +343,7 @@
 					<a	id="manuBiasingSequence"
 						class="dropdown-item calibrate"
 						th:classappend="${info==null ? 'disabled list-group-item-light' : ''}"
+    					th:data-device-id="${devid}"
 						th:href="@{${info==null} ? '#' : '/calibration/biasing?sn=' + ${info.serialNumber}}">Biasing Sequence</a>
  				</div>
     			<div><hr class="dropdown-divider"></div>

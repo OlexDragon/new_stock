@@ -544,7 +544,7 @@
 			if(!serialNumber){
 				alert("Unknown serial number.");
 			}else{
-				getReg(102);
+				getPllReg();
 				$modal.modal('show');
 			}
 
@@ -1231,9 +1231,9 @@
 				}
 				
 			}
-			function getReg(index){
+			function getPllReg(){
 
-				$.post('/calibration/rest/pll_registers', {sn: serialNumber, index: index})
+				$.post('/calibration/rest/pll_registers', {sn: serialNumber})
 				.done(function(reg){
 					if(!reg){
 						alert('Can not get PLL Registers.');

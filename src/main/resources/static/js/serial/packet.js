@@ -292,7 +292,14 @@ const deviceInfo = {};
 deviceInfo.serialNumber	 = 5;
 deviceInfo.description	 = 6;
 const deviceDebug = {};
-deviceDebug.readWrite	 = 3;
+deviceDebug.parameter = {};
+deviceDebug.parameter.debugInfo = 1;		/* device information: parts, firmware and etc. */
+deviceDebug.parameter.debugDump = 2;		/* dump of registers for specified device index */
+deviceDebug.parameter.readWrite = 3;		/* registers read/write operations */
+deviceDebug.parameter.index		= 4;		/* device index information print */
+deviceDebug.parameter.calibrationMode = 5;	/* calibration mode */
+deviceDebug.parameter.environmentIo = 10;	/* operations with environment variables */
+deviceDebug.parameter.devices	= 30;
 const parameterCode = {};
 parameterCode[packetGroupId.deviceInfo] = {};
 parameterCode[packetGroupId.deviceInfo][deviceInfo.serialNumber] = {}
@@ -303,15 +310,14 @@ parameterCode[packetGroupId.deviceInfo][deviceInfo.description].description	 = '
 parameterCode[packetGroupId.deviceInfo][deviceInfo.description].parseFunction = parseToString; // Description
 
 parameterCode[packetGroupId.deviceDebug] = {};
-parameterCode[packetGroupId.deviceDebug][deviceDebug.readWrite] = {};
-parameterCode[packetGroupId.deviceDebug][deviceDebug.readWrite].description	 = 'Device Debug Register Read/Write'
-parameterCode[packetGroupId.deviceDebug][deviceDebug.readWrite].parseFunction = parseIrtRegister; // IRT Register
-
+parameterCode[packetGroupId.deviceDebug][deviceDebug.parameter.readWrite] = {};
+parameterCode[packetGroupId.deviceDebug][deviceDebug.parameter.readWrite].description	 = 'Device Debug Register Read/Write'
+parameterCode[packetGroupId.deviceDebug][deviceDebug.parameter.readWrite].parseFunction = parseIrtRegister; // IRT Register
 
 // Default InfoPacket
 class Packet{
 	// Default constuctor converter INFO Packet
-	constructor(header, payloads){
+	constructor(header, payloads, unitAddr){
 		// From bytes
 		if(Array.isArray(header)){
 			const bytes = header;
@@ -335,6 +341,10 @@ class Packet{
 		this.header = (header == undefined ? new Header() : header);
 		if(this.header.type!=packetType.acknowledgement)
 			this.payloads = payloads == undefined ? [new Payload()] : Array.isArray(payloads) ? payloads : [payloads];
+
+		if(unitAddr!=undefined)
+			this.linkHeader = new LinkHeader(unitAddr);
+
 		console.log(this);
 	}
 	getAcknowledgement(){
@@ -383,7 +393,17 @@ class Packet{
 			return this.payloads[0].getData(this.header.groupId);
 	}
 }
-
+class LinkHeader{
+	constructor(unitAddr){
+		this.unitAddr = unitAddr;
+	}
+	toBytes(){
+		return [this.unitAddr, 0, 0];
+	}
+	toString(){
+		return this.unitAddr;
+	}
+}
 class Header{
 	constructor(type, packetId, groupId, error){
 		// From bytes

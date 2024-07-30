@@ -276,21 +276,14 @@ function showCalibrationModal(e){
 }
 // Upload the profile
 $('.upload').click(function(e){
-	e.preventDefault();
-	upload(this);
+	upload(e, this);
 });
 
-function upload(link){
-
-	$.post(link.href)
-	.done(function(data){
-		alert(data);
-	})
-	.fail(conectionFail);
-}
-
-function moduleUpload(e, link){
-	e.preventDefault();
+function upload(e, link){
+	if(link)
+		e.preventDefault();
+	else
+		link = e;
 
 	$.post(link.href)
 	.done(function(data){
@@ -556,14 +549,15 @@ $('#currents').click(function(e){
 		alert('Unoun type Device ID Vertion');
 		return;
 	}
-	let href = `/calibration/currents?sn=${serialNumber}`;
-	$modal.load(href);
-})
-
+	loadModal(`/calibration/currents?sn=${serialNumber}`);
+});
+function loadModal(href){
+	$modal.modal('hide')
+	$modal.load(href, ()=>setTimeout(()=>$modal.modal('show'), 500));
+}
 $('#profile').click(function(e){
 	getProfile(e, this);
  });
-
 function getProfile(e, link){
 	e.preventDefault();
 
@@ -631,9 +625,10 @@ function selectAndCopy(element) {
  
  function conectionFail(error) {
 	if(error.statusText!='abort'){
-		let responseText = error.responseText;
-		if(responseText)
+		if(error.responseText)
 			alert(error.responseText);
+		if(error.statusText)
+		alert(error.statusText);
 		else{
 			let status;
 			switch(error.status){
@@ -777,16 +772,7 @@ function sendPrologixCommands(commands, responseProcessing){
 	}
 
 	commands.hostName = hostName;
-
-	var json = JSON.stringify(commands);
-
-	$.ajax({
-		url: '/serial_port/rest/send',
-		type: 'POST',
-		contentType: "application/json",
-		data: json,
-        dataType: 'json'
-    })
+	postObject('/serial_port/rest/send', commands)
 	.done(function(data){
 
 		$.each(data.commands, function(i, c){
@@ -802,4 +788,16 @@ function sendPrologixCommands(commands, responseProcessing){
 				alert("Server error. Status = " + error.status)
 		}
 	});
+}
+function postObject(url, object){
+	var json = JSON.stringify(object);
+
+	return $.ajax({
+		url: url,
+		type: 'POST',
+		contentType: "application/json",
+		data: json,
+	    dataType: 'json'
+	})
+	
 }

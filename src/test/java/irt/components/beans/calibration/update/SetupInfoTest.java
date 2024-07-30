@@ -17,7 +17,7 @@ import org.apache.logging.log4j.Logger;
 import org.junit.jupiter.api.Test;
 
 import irt.components.beans.DateContainer;
-import irt.components.beans.irt.update.SetupInfo;
+import irt.components.beans.irt.update.SetupInfoProfile;
 import irt.components.services.SerialNumberScaner;
 
 public class SetupInfoTest {
@@ -26,7 +26,7 @@ public class SetupInfoTest {
 	@Test
 	public void test() {
 
-		final SetupInfo setupInfo = new SetupInfo("irt-2201001");
+		final SetupInfoProfile setupInfo = new SetupInfoProfile("irt-2201001");
 		assertEquals("system any.any.any.irt-2201001 { profile { path { irt-2201001.bin }}}", setupInfo.toString());
 
 		setupInfo.setModule(true);

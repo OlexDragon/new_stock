@@ -26,6 +26,7 @@ public class HtmlParsel extends ParserCallback {
 
 	@Override
 	public void handleStartTag(Tag tag, MutableAttributeSet a, int pos) {
+
 		if(tag.toString().equals(tagName)) 
 			startPositin.add(pos);
 	}
@@ -33,7 +34,7 @@ public class HtmlParsel extends ParserCallback {
 	@Override
 	public void handleEndTag(Tag tag, int pos) {
 		if(tag.toString().equals(tagName)) 
-			stopPositin.add(0, pos);
+			stopPositin.add(pos);
 	}
 
 	public int size() {

@@ -34,11 +34,11 @@
      				<tr id="blink1" class="dashed_border">
        					<td style="width: 15%"></td>
       					<td ><strong id="current2" class="txt_blue bg_white" th:text="''">2.0 A</strong></td>
-      					<td style="width: 10%;"><strong class="bg_white">1G2</strong></td>
-      					<td style="width: 10%;"><strong class="bg_white">1G4</strong></td>
+      					<td style="width: 10%;"><button class="btn btn-outline-dark btn-lg gate" data-channel="1001" data-switch="switch2">1G2</button></td>
+      					<td style="width: 10%;"><button class="btn btn-outline-dark btn-lg gate" data-channel="1001" data-switch="switch5">1G4</button></td>
       					<td style="width: 14%;"></td>
-      					<td style="width: 10%;"><strong class="bg_white">2G3</strong></td>
-      					<td style="width: 10%;"><strong class="bg_white">2G1</strong></td>
+      					<td style="width: 10%;"><button class="btn btn-outline-dark btn-lg gate" data-channel="1001" data-switch="switch6">2G3</button></td>
+      					<td style="width: 10%;"><button class="btn btn-outline-dark btn-lg gate" data-channel="1001" data-switch="switch3">2G1</button></td>
      					<td><strong id="current3" class="txt_blue bg_white" th:text="''">3.0 A</strong></td>
       					<td style="width: 15%;"></td>
       				</tr>
@@ -46,11 +46,11 @@
      				<tr id="blink2" class="dashed_border">
        					<td></td>
       					<td><strong id="current1" class="txt_blue bg_white" th:text="''">1.0 A</strong></td>
-      					<td><strong class="bg_white">1G1</strong></td>
-      					<td><strong class="bg_white">1G3</strong></td>
+      					<td><button class="btn btn-outline-dark btn-lg gate" data-channel="1001" data-switch="switch1">1G1</button></td>
+      					<td><button class="btn btn-outline-dark btn-lg gate" data-channel="1001" data-switch="switch5">1G3</button></td>
       					<td></td>
-      					<td><strong class="bg_white">2G4</strong></td>
-      					<td><strong class="bg_white">2G2</strong></td>
+      					<td><button class="btn btn-outline-dark btn-lg gate" data-channel="1001" data-switch="switch6">2G4</button></td>
+      					<td><button class="btn btn-outline-dark btn-lg gate" data-channel="1001" data-switch="switch4">2G2</button></td>
      					<td><strong id="current4" class="txt_blue bg_white" th:text="''">4.0 A</strong></td>
        					<td></td>
       				</tr>
@@ -58,11 +58,11 @@
      				<tr>
        					<td></td>
       					<td><strong id="current8" class="txt_blue bg_white" th:text="''">8.0 A</strong></td>
-      					<td><strong class="bg_white">2G2</strong></td>
-      					<td><strong class="bg_white">2G4</strong></td>
+      					<td><button class="btn btn-outline-dark btn-lg gate" data-channel="1002" data-switch="switch4">2G2</button></td>
+      					<td><button class="btn btn-outline-dark btn-lg gate" data-channel="1002" data-switch="switch6">2G4</button></td>
       					<td></td>
-      					<td><strong class="bg_white">1G3</strong></td>
-      					<td><strong class="bg_white">1G1</strong></td>
+      					<td><button class="btn btn-outline-dark btn-lg gate" data-channel="1002" data-switch="switch5">1G3</button></td>
+      					<td><button class="btn btn-outline-dark btn-lg gate" data-channel="1002" data-switch="switch1">1G1</button></td>
      					<td><strong id="current5" class="txt_blue bg_white" th:text="''">5.0 A</strong></td>
        					<td></td>
       				</tr>
@@ -70,11 +70,11 @@
       				<tr>
       					<td></td>
       					<td><strong id="current7" class="txt_blue bg_white" th:text="''">7.0 A</strong></td>
-      					<td><strong class="bg_white">2G1</strong></td>
-      					<td><strong class="bg_white">2G3</strong></td>
+      					<td><button class="btn btn-outline-dark btn-lg gate" data-channel="1002" data-switch="switch3">2G1</button></td>
+      					<td><button class="btn btn-outline-dark btn-lg gate" data-channel="1002" data-switch="switch6">2G3</button></td>
       					<td></td>
-      					<td><strong class="bg_white">1G4</strong></td>
-      					<td><strong class="bg_white">1G2</strong></td>
+      					<td><button class="btn btn-outline-dark btn-lg gate" data-channel="1002" data-switch="switch5">1G4</button></td>
+      					<td><button class="btn btn-outline-dark btn-lg gate" data-channel="1002" data-switch="switch2">1G2</button></td>
      					<td><strong id="current6" class="txt_blue bg_white" th:text="''">6.0 A</strong></td>
        					<td></td>
       				</tr>
@@ -88,13 +88,14 @@
    				</div>
     		</div>
 <!-- Modal Footer -->
-      			<div class="modal-footer">
-      				<input id="currentAlarm" type="number" title="Alarm Value." class="col-2" value="6.5">
-      				<div class="col"></div>
-	        		<button type="button" class="btn btn-outline-secondary col-auto" data-bs-dismiss="modal">Close</button>
-	    		</div>
+      		<div class="modal-footer">
+      			<input id="currentAlarm" type="number" title="Alarm Value." class="col-2" value="6.5">
+      			<div class="col"></div>
+	        	<button type="button" class="btn btn-outline-secondary col-auto" data-bs-dismiss="modal">Close</button>
+	    	</div>
+  			</div>
   		</div>
-  		<script type="application/javascript" th:inline="javascript">
+		<script th:inline="javascript">
 		/*<![CDATA[*/
 
 // 			$.ajaxSetup({
@@ -111,47 +112,85 @@
 			}else if(version=='31'){
 				device1 = 1003;
 				regUrl = '/calibration/rest/hpbm_register_v31';
+				const map = {_1G1:'G0', _1G2: 'G1', _1G3: 'G2', _1G4: 'G3', _1G4: 'G3', _2G1: 'G8', _2G2: 'G9', _2G3: 'G10', _2G4: 'G11'};
+				$('.gate').each((i,el)=>{
+					const t = map['_' + el.innerText];
+					if(t)
+						el.innerText = t;
+					let channel = parseInt(el.dataset.channel);
+					el.dataset.channel = ++channel;
+				})
 			}else{
 				alert('Unknown Unit Version: ' + version);
 				run = false;
 			}
-
+			var $currentDelay = $('#currentDelay').text('Delay: ' + delay + ' ms').dblclick(e=>{
+				e.preventDefault();
+				let mill = prompt('Enter the delay time in milliseconds.')
+				if(!mill) return;
+				mill = parseInt(mill);
+				while(isNaN(mill)){
+					mill = prompt('You entered an incorrect value.\nEnter the delay time in milliseconds.');
+					if(!mill) return;
+					mill = parseInt(mill);
+				}
+				Cookies.set('currentDelay', mill);
+				setDelay(mill);
+			});
+			var intervalCurrent;
 			if(run){
 // Currenr Alarm setting.
-			$currentAlarm = $('#currentAlarm');
+				$currentAlarm = $('#currentAlarm');
 
-			cookies = Cookies.get("currentAlarm");
-			if(cookies)
-				$currentAlarm.val(cookies);
+				cookies = Cookies.get("currentAlarm");
+				if(cookies)
+					$currentAlarm.val(cookies);
 
-			$currentAlarm.focusout(function(){
-				let v = $(this).val();
-				Cookies.set("currentAlarm", v, { expires: 999, path: '' });
-			});
-			$currentAlarm.on('input', function(){
-				let v = $(this).val();
-				if(!v){
-					$(this).val('6.5').select();
-					Cookies.remove("currentAlarm");
-				}
-			});
+				$currentAlarm.focusout(function(){
+					let v = $(this).val();
+					Cookies.set("currentAlarm", v, { expires: 999, path: '' });
+				});
+				$currentAlarm.on('input', function(){
+					let v = $(this).val();
+					if(!v){
+						$(this).val('6.5').select();
+						Cookies.remove("currentAlarm");
+					}
+				});
 // END - Currenr Alarm setting.
 
-			var delay = 200;
-			$('#resetBtn').click(function(){delay = 200; })
+				var delay;
+				setDelay();
+				function setDelay(d){
+					clearInterval(intervalCurrent);
+					if(d)
+						delay = d;
+					else{
+						let cookiesDelay = Cookies.get('currentDelay');
+						if(cookiesDelay)
+							delay = parseInt(cookiesDelay);
+						else
+							delay = 200;
+					}
+					$currentDelay.text('Delay: ' + delay + ' ms');
+					intervalCurrent = setInterval(getCurrents, delay);
+				}
+				$('#resetBtn').click(setDelay)
 
-			var $currentDelay = $('#currentDelay').text('Delay: ' + delay + ' ms');
 
-			var intervalCurrent = setInterval(getCurrents, delay);
-			$modal.on('hidden.bs.modal', function () {
-				err = true;
-				clearInterval(intervalCurrent);
-				intervalCurrent = undefined;
-			});
+				$modal.on('hide.bs.modal', function () {
+					err = true;
+					clearInterval(intervalCurrent);
+					intervalCurrent = undefined;
+				});
 
 			}
 			var devid = device1
+			var busy = false;
 			function getCurrents(){
+				if(busy)
+					return;
+				busy = true;
 
 				let mShow = $('#modal.show');
 				if(!mShow) return;
@@ -163,12 +202,14 @@
 /*[+
 				$.post(regUrl, {sn: serialNumber, devid: devid})
 				.done(function(properties, t){
+					busy = false;
 					if(version=='11' || version=='21')
 						currentV11(properties, t);
 					else
 						currentV31(properties, t)
 				})
 				.fail(function(error) {
+					busy = false;
 
 					if(err) return;
 
@@ -203,9 +244,7 @@
 				if(intervalCurrent && !devid_1001 && !devid_1002){
 
 					if(!properties){
-						clearInterval(intervalCurrent);
-						intervalCurrent = setInterval(getCurrents, ++delay);
-						$currentDelay.text('Delay: ' + delay + ' ms');
+						setDelay();
 						return;
 					}
 				}
@@ -227,9 +266,7 @@
 				if(intervalCurrent && !hpbm1 && !hpbm2){
 
 					if(!properties){
-						clearInterval(intervalCurrent);
-						intervalCurrent = setInterval(getCurrents, ++delay);
-						$currentDelay.text('Delay: ' + delay + ' ms');
+						setDelay();
 						return;
 					}
 				}
@@ -313,11 +350,446 @@
 				$c.addClass('border_gray').removeClass('border_white');
 				setTimeout(function(){ $c.removeClass('border_gray').addClass('border_white'); }, 100);
 			}
+
+		$('.modal-body table button').click(e=>{
+			let href = '/calibration/current?channel=' + e.currentTarget.dataset.channel + '&pot=' + e.currentTarget.innerText + '&switchName=' + e.currentTarget.dataset.switch;
+			loadModal(href);
+		});
+
 		/*]]>*/
-
-		$modal.modal('show');
-
 		//# sourceURL=currents.js
+  		</script>
+	</th:block>
+	<th:block th:fragment="current">
+  		<div class="modal-dialog">
+    		<div class="modal-content">
+<!-- Modal Header -->
+      			<div class="modal-header row">
+        			<h5 class="modal-title ml-3 text-primary col-auto" th:text="'The currents of ' + ${channel} + '.' + ${potName}">The currents of IRT-2234005</h5>
+<!-- X Button -->
+        			<button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+      			</div>
+ <!-- Modal Body -->
+      			<div id="modal-body" class="modal-body">
+      				<div class="row">
+	     				<div class="form-floating col">
+  	    					<input id="currentValue" type="number" class="form-control" placeholder="Pot.Value" readonly>
+  	    					<label for="currentValue">Pot. Value</label>
+  	    				</div>
+	     				<div class="form-floating col">
+  	    					<input id="currentSetValue" type="number" class="form-control" placeholder="Value to set" disabled>
+  	    					<label for="currentSetValue">Value to set</label>
+  	    				</div>
+	     				<div class="form-floating col">
+  	    					<input id="currentToShow" type="text" class="form-control" placeholder="Current" readonly>
+  	    					<label for="currentToShow">Current</label>
+  	    				</div>
+  	    			</div>
+     				<div class="row">
+     					<button id="currentDefault" class="btn btn-outline-info form-control mt-2">Default</button>
+     				</div>
+    				<div class="row">
+     					<button id="currentSave" class="btn btn-outline-warning form-control mt-2" disabled>Save</button>
+     				</div>
+     			</div>
+<!-- Modal Footer -->
+ 	     		<div class="modal-footer">
+ 	     			<div class="form-floating col-2">
+  	    				<input id="currentFactor" type="number" class="form-control currentSetting" placeholder="Step multiplier" value="10">
+  	    				<label for="currentFactor">Factor</label>
+  	    			</div>
+ 	     			<div class="form-floating col-2">
+  	    				<input id="currentStep" type="number" class="form-control currentSetting" placeholder="Change Step" value="1">
+  	    				<label for="currentStep">Step</label>
+  	    			</div>
+ 	     			<div class="form-floating col-2">
+  	    				<input id="currentMin" type="number" class="form-control currentSetting" placeholder="Minimum Value" value="1400">
+  	    				<label for="currentMin">Min.</label>
+  	    			</div>
+ 	     			<div class="form-floating col-2">
+  	    				<input id="currentMax" type="number" class="form-control currentSetting" placeholder="Maximum Value" value="4095">
+  	    				<label for="currentMax">Max</label>
+  	    			</div>
+					<input type="checkbox" class="btn-check" name="options-outlined" id="calibration-mode" autocomplete="off">
+					<label class="btn btn-outline-success disabled col-2" for="calibration-mode">Cal.</label>
+		    	</div>
+      		</div>
+      	</div>
+		<script th:inline="javascript">
+		/*<![CDATA[*/
+
+			var channel = /*[[${channel}]]*/ 1001;
+			var potName = /*[[${potName}]]*/ 'G01';
+			var switchName =  /*[[${switchName}]]*/ 'SWITCH1';
+
+			var $currentToShow =  $('#currentToShow');
+			var $currentValue = $('#currentValue');
+			var setDefault = false;
+			var $currentDefault = $('#currentDefault').click(()=>{
+				if(setDefault)
+					return;
+				setDefault = true;
+				gateStartupValues(saved=>{
+					if(!saved){
+						alert('Something went wrong.\nTry again.');
+						return;
+					}
+					$currentSetValue.val(saved);
+					setValue($currentSetValue[0], false, gateStartupValues);
+				});
+			})
+			var $currentSetValue = $('#currentSetValue').change(e=>{
+				if(parseInt(e.currentTarget.value)<0)
+					e.currentTarget.value = 0;
+				
+			});
+			var $currentSave = $('#currentSave').click(()=>{
+				setValue($currentSetValue[0], true, gateStartupValues);
+			});
+			var $setting = $('.currentSetting').focusout(e=>{
+				checkSetting()
+				Cookies.set(e.currentTarget.id, e.currentTarget.value, { expires: 999});
+			});
+			$setting.each((i,el)=>{
+				const cookies = Cookies.get(el.id);
+				if(cookies)
+					el.value = cookies;
+			});
+			var $currentSetValue = $('#currentSetValue').keydown(e=>{
+				if(e.ctrlKey){
+					if(e.keyCode==37){	//(e.key=='ArrowLeft'){
+						e.preventDefault();
+						changeStep(true);
+
+					}else if(e.keyCode==39){//(e.key=='ArrowRight'){
+						e.preventDefault();
+						changeStep(false);
+					}
+					return;
+				}
+
+				const step = parseInt($currentStep.val());
+				let val = parseInt(e.currentTarget.value);
+				if(e.keyCode==38){	//(e.key=='ArrowUp'){
+					e.currentTarget.value = val + step;
+					const max = parseInt($currentMax.val());
+					if(e.currentTarget.value>max){
+						e.currentTarget.value = max;
+						alert('You have reached the maximum value.')
+					}
+					e.preventDefault();
+					setValue(e.currentTarget);
+
+				}else if(e.keyCode==40){//(e.key=='ArrowDown'){
+					e.currentTarget.value = val - step;
+					const min = parseInt($currentMin.val());
+					if(e.currentTarget.value<min){
+						e.currentTarget.value = min;
+						alert('You have reached the minimum value.')
+					}
+					e.preventDefault();
+					setValue(e.currentTarget);
+				}
+			})
+			.change(setValue);
+			var saving = false;
+			var postSetValue = false;
+			function setValue(el, save, action){
+				if(saving || postSetValue)
+					return;
+
+				postSetValue = true;
+
+				if(!el)
+					el = $currentSetValue[0];
+				else if(el.currentTarget)
+					el = el.currentTarget;
+
+				if(save)
+					saving = true;
+				const min = parseInt($currentMin.val());
+				const max = parseInt($currentMax.val());
+				if(el.value<min)
+					el.value = min;
+				else if(el.value>max)
+					el.value = max;
+				const toSend = {sn : serialNumber, channel: channel, index: potIndex, value: el.value};
+				if(save)
+					toSend.save = save;
+				xhrInfo = $.post('/calibration/rest/dac', toSend)
+				.done(done=>{
+					postSetValue = false;
+					if(!done){
+						if(confirm('The value is not set.\nIf you want to repeat, click OK.'))
+							setTimeout(setValue(), 200);
+						return;
+					}
+					if(action)
+						action();
+					else
+						gateStartupValues();
+				})
+				.fail(error=>{
+					postSetValue = false;
+					conectionFail(error);
+				});
+			}
+			var $currentStep = $('#currentStep');
+			var $currentFactor = $('#currentFactor');
+			var $currentMin = $('#currentMin');
+			var $currentMax = $('#currentMax');
+			var $calibrationMode = $('#calibration-mode').click(e=>{
+					$.post('/calibration/rest/calibration_mode_toggle', {ip: serialNumber})
+					.done(getRwInfo)
+					.fail(conectionFail);
+				});
+			function changeStep(arrowLeft){
+				checkSetting();
+				let step = parseInt($currentStep.val());
+				const factor = parseInt($currentFactor.val());
+				let val;
+				if(arrowLeft)
+					step *=factor;
+				else
+					step /=factor;
+				if(step<1)
+					step = 1;
+				$currentStep.val(step);
+			}
+			function checkSetting(){
+
+				let max = parseInt(fillEmpty($currentMax, 4095));
+				if(max<1){
+					max = 1;
+					$currentMax.val(max);
+				}else if(max>4095){
+					max = 4095;
+					$currentMax.val(max);
+				}
+
+				let min = parseInt(fillEmpty($currentMin, 1400));
+				if(min>max){
+					min = max - 1;
+					$currentMin.val(min);
+				}else if(min<0){
+					min = 0;
+					$currentMin.val(min);
+				}
+
+				const step = parseInt(fillEmpty($currentStep, 1));
+				const difference = max - min;
+				if(step<1)
+					$currentStep.val(1);
+				else if(step>difference)
+					$currentStep.val(difference);
+
+				const factor = parseInt(fillEmpty($currentFactor, 2));
+				if(factor<2)
+					$currentFactor.val(2);
+			}
+			function fillEmpty($input, toFill){
+				let val = $input.val();
+				if(!val){
+					val = toFill;
+					$input.val(val);
+				}
+				return val;
+			}
+			var potIndex;
+			var postRwInfo = false;
+			function getRwInfo(){
+				if(postRwInfo || saving)
+						return;
+				postRwInfo = true;
+				xhrInfo = $.post('/calibration/rest/calibration-rw-info', {sn: serialNumber})
+				.done(function(data){
+					postRwInfo = false;
+					if(!data){
+						disableAll();
+						return;
+					}
+					if(data.digitalPotentiometers)
+						$calibrationMode.next().removeClass('disabled');
+					else{
+						disableAll();
+						login();
+						return;
+					}
+
+					if(data.digitalPotentiometers.calMode){
+						$calibrationMode.prop('checked', true);
+						$currentSetValue.prop('disabled', false);
+						$currentSave.prop('disabled', false);
+					}else{
+						$calibrationMode.prop('checked', false);
+						$currentSetValue.prop('disabled', true);
+						$currentSave.prop('disabled', true);
+					}
+
+					const pts = data.digitalPotentiometers.list.filter(pt=>pt.index==channel);
+					if(!pts || !pts.length){
+						return;
+					}
+					const p = pts[0].vars.filter(pt=>pt.name==potName);
+					if(!p || !p.length){
+						return;
+
+					}
+					potIndex = p[0].index;
+					const value = p[0].value;
+					$currentValue.val(value);
+					if(!$currentSetValue.val())
+						$currentSetValue.val(value);
+					setMinMax(p[0].range);
+				})
+				.fail(error=>{
+					$modal.modal('hide');
+					conectionFail(error);
+					postRwInfo = false;
+				});
+			}
+			var postShowCurrent = false;
+			function showCurrent(){
+				if(saving)
+					return;
+				if(postShowCurrent){
+					if(!timestamp){
+						timestamp = Date.now();
+						return;
+					}
+					const tmp = Date.now();
+					if((tmp-timestamp)<15000)	//15 sec
+						return;
+					timestamp = false;
+				}
+				postShowCurrent = true;
+				if(version=='11' || version=='21')
+					regUrl = '/calibration/rest/hpbm_register_v21';
+				else if(version=='31')
+					regUrl = '/calibration/rest/hpbm_register_v31';
+				xhrCurrent = $.post(regUrl, {sn: serialNumber, devid: channel})
+				.done(data=>{
+					postShowCurrent = false;
+					if(data && data[channel] && data[channel][switchName])
+						$currentToShow.val(data[channel][switchName]);
+				})
+				.fail(error=>{
+					postShowCurrent = false;
+					$modal.modal('hide');
+					conectionFail(error);
+					console.log(error);
+				});
+			}
+			function setMinMax(range){
+				if(!range)
+					return;
+				let check;
+				if(parseInt($currentMin.val())<range.min){
+					$currentMin.val(range.min);
+					check = true;
+				}
+				if(parseInt($currentMax.val())>range.max){
+					$currentMax.val(range.max);
+					check = true;
+				}
+				if(check)
+					checkSetting();
+			}
+			var postStartupValues = false;
+			function gateStartupValues(action){
+				if(postStartupValues)
+					return;
+				postStartupValues = true;
+				xhrStartup = $.get('/calibration/rest/register-gates', {sn: serialNumber, deviceId: channel, index: 27})
+				.done(register=>{
+					postStartupValues = false;
+
+					if(!potIndex)
+						return;
+
+					const name = 'gate' + potIndex;
+					const saved = register[name];
+					if(action){
+						action(saved);
+						return;
+					}
+					const val = $currentSetValue.val();
+					if(!val || !saved){
+						console.warn(`One of two values for ${name} ​​is missing: val = ${val}; saved = ${saved}`);
+						console.log(register);
+						return;
+					}
+
+					const btnText = $currentDefault.text();
+					const newText = 'Default: ' + saved;
+					if(btnText != newText)
+						$currentDefault.text(newText);
+
+					if(parseInt(val) != saved){
+						$currentSave.removeClass('btn-outline-warning').addClass('btn-outline-danger');
+						if(saving){
+							alert('The value was not saved, please try again.');
+							saving = false;
+						}
+					}else{
+						$currentSave.removeClass('btn-outline-danger').addClass('btn-outline-warning');
+						if(saving){
+							alert('Yes! The value has been saved.');
+							saving = false;
+						}
+					}
+				})
+				.fail(error=>{
+					postStartupValues = false;
+					conectionFail(error)
+				});
+
+			}
+			// Modal Start/Stop
+			var intervalCalibrationMode;
+			var intervalShowCurrent;
+			var intervalGateStartupValues;
+// 			$modal.on('shown.bs.modal', startAll);
+			$modal.on('hide.bs.modal', switchToCurrensModal);
+			function switchToCurrensModal(){
+				stopAll();
+				setTimeout(()=>$modal.off('hide.bs.modal', switchToCurrensModal), 100);
+				setTimeout(()=>loadModal(`/calibration/currents?sn=${serialNumber}`), 200);
+				setTimeout(()=>getCurrents(), 500);
+			}
+			function startAll(){
+				stopAll()
+				intervalCalibrationMode = setInterval(getRwInfo, 1600);
+				intervalShowCurrent = setInterval(showCurrent, 1000);
+				intervalGateStartupValues = setInterval(gateStartupValues, 10001);
+			}
+			var xhrInfo;
+			var xhrStartup;
+			var xhrCurrent;
+			function stopAll(){
+				intervalCalibrationMode = clearInterval(intervalCalibrationMode);
+				intervalShowCurrent = clearInterval(intervalShowCurrent);
+				intervalGateStartupValues = clearInterval(intervalGateStartupValues);
+				abortAll();
+			}
+			function abortAll(){
+				if(xhrInfo)
+					xhrInfo.abort();
+				if(xhrStartup)
+					xhrStartup.abort();
+				if(xhrCurrent)
+					xhrCurrent.abort();
+			}
+			function disableAll(notCalMod){
+				$currentSetValue.prop('disabled', true);
+				$currentSave.prop('disabled', true);
+				if(notCalMod)
+					return;
+				$calibrationMode.next().addClass('disabled');
+			}
+			startAll();
+		/*]]>*/
+		//# sourceURL=current.js
   		</script>
 	</th:block>
 	</div>

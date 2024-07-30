@@ -11,17 +11,19 @@ import org.apache.commons.compress.archivers.tar.TarArchiveOutputStream;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 
-public class Profile implements ToUpload{
+public class Soft implements ToUpload{
 	private final Logger logger = LogManager.getLogger();
 
 	private final Path path;
+	private final String typeRev;
 
-	public Profile(Path path) {
+	public Soft(String typeRev, Path path) {
 
 		if(!path.toFile().isFile())
-			throw new IllegalArgumentException(path.getFileName() + " Profile file does not exists.");
+			throw new IllegalArgumentException(path.getFileName() + " software file does not exists.");
 
 		this.path = path;
+		this.typeRev = typeRev;
 	}
 
 	/**
@@ -31,25 +33,21 @@ public class Profile implements ToUpload{
 	@Override
 	public byte[] toBytes() throws IOException {
 
-		final boolean isModule = isModule();
-
 		try(	ByteArrayOutputStream byteArrayOutputStream = new ByteArrayOutputStream();
 				TarArchiveOutputStream tarArchiveOutputStream = new TarArchiveOutputStream(byteArrayOutputStream);){
 
 			final String fileName = path.getFileName().toString();
 
 			// Profile
-			 final byte[] profile = Files.readAllBytes(path);
+			 final byte[] soft = Files.readAllBytes(path);
 			 final TarArchiveEntry ieProfile = new TarArchiveEntry(fileName);
-			 ieProfile.setSize(profile.length);
+			 ieProfile.setSize(soft.length);
 			 tarArchiveOutputStream.putArchiveEntry(ieProfile);
-			 tarArchiveOutputStream.write(profile);
+			 tarArchiveOutputStream.write(soft);
 			 tarArchiveOutputStream.closeArchiveEntry();
 
 			// setup.info
-			final String serialNumber = fileName.split("\\.")[0];
-			final SetupInfoProfile si = new SetupInfoProfile(serialNumber);
-			si.setModule(isModule);
+			final SetupInfoSoft si = new SetupInfoSoft(typeRev);
 			logger.debug(si);
 			byte[] setupInfo = si.toString().getBytes();
 			final TarArchiveEntry ieSetupInfo = new TarArchiveEntry("setup.info");
@@ -62,7 +60,7 @@ public class Profile implements ToUpload{
 			final String setupInfoMd5 = new Md5(setupInfo).toString();
 			StringBuilder sbSetupMd5 = new StringBuilder(setupInfoMd5).append(" *").append("setup.info").append('\n');
 
-			final String profileMd5 = new Md5(profile).toString();
+			final String profileMd5 = new Md5(soft).toString();
 			sbSetupMd5.append(profileMd5).append(" *").append(fileName);
 
 			final byte[] setupMd5 = sbSetupMd5.toString().getBytes();
@@ -74,26 +72,5 @@ public class Profile implements ToUpload{
 
 			return byteArrayOutputStream.toByteArray();
 		}
-	}
-
-	private boolean isModule() throws IOException {
-
-		try(final Scanner scanner = new Scanner(path);){
-
-			while(scanner.hasNextLine()) {
-
-				final String line = scanner.nextLine();
-
-				if(line.startsWith("product-description"))
-					return line.contains("BUC-RM system");
-
-				if(line.startsWith("device-type")) {
-					final String[] split = line.split("\\s+", 3);
-					if(Integer.parseInt(split[1])>=1000)
-						return true;	//converter
-				}
-			}
-		}
-		return false;
 	}
 }

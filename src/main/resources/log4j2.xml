@@ -27,6 +27,7 @@
     <Loggers>
 		<logger name="org.apache.http.client.protocol.ResponseProcessCookies" level="error" />
 
+
 <!-- 		<logger name="irt.components.services.RmaService" level="TRACE" /> -->
 <!-- 		<logger name="irt.components.services.IrtUrlAuthenticationSuccessHandler" level="TRACE" /> -->
 
@@ -49,6 +50,7 @@
 <!-- 		<logger name="irt.components.controllers.calibration.HttpSerialPortRestController" level="all" /> -->
 <!-- 		<logger name="irt.components.services.HttpSerialPortServersKeeper" level="all" /> -->
 
+<!-- 		<logger name="irt.components.beans.irt.update.Soft" level="TRACE" /> -->
 <!-- 		<logger name="irt.components.beans.irt.update.Profile" level="all" /> -->
 <!-- 		<logger name="irt.components.workers.ProfileWorker" level="all" /> -->
 

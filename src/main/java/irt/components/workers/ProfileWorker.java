@@ -2,7 +2,6 @@ package irt.components.workers;
 
 import java.io.File;
 import java.io.IOException;
-import java.net.InetAddress;
 import java.nio.file.FileSystems;
 import java.nio.file.FileVisitResult;
 import java.nio.file.FileVisitor;
@@ -450,6 +449,34 @@ public class ProfileWorker {
 		return properties;
 	}
 
+	public Map<String, String> getProperties(String... propertyStartsWith) {
+
+		if(!oPath.isPresent())
+			throw new RuntimeException("The profile does not exist.");
+
+		final Path path = oPath.get();
+
+		Map<String, String> properties = new HashMap<>();
+
+		try(final Scanner scanner = new Scanner(path);) {
+
+			while(scanner.hasNextLine()) {
+				final String line = scanner.nextLine();
+				for(int i=0; i<propertyStartsWith.length; i++) {
+					if(line.startsWith(propertyStartsWith[i])) {
+						final String[] split = line.split("\\s+", 2);
+						properties.put(propertyStartsWith[i], split[1].split("#",2)[0].trim());
+						break;
+					}
+
+				}
+			}
+		} catch (Exception e) {
+			logger.catching(e);
+		}
+		return properties;
+	}
+
 	public Map<String, String> getLinesStartsWith(String... lineStartsWith) {
 
 		if(!oPath.isPresent())
@@ -475,5 +502,75 @@ public class ProfileWorker {
 			logger.catching(e);
 		}
 		return lines;
+	}
+
+	public String removeLine(String properyName) {
+		logger.traceEntry();
+
+		if(!oPath.isPresent())
+			return "The profile does not exist.";
+
+		final StringBuilder sb = new StringBuilder();
+		final Path path = oPath.get();
+		int removedLines = 0;
+
+		try(final Scanner scanner = new Scanner(path);) {
+
+			while(scanner.hasNextLine()) {
+				final String line = scanner.nextLine();
+
+				if(line.startsWith(properyName)) {
+					++removedLines;
+				}else
+					sb.append(line).append("\r\n");
+			}
+
+			switch(removedLines) {
+			case 0:
+				return "The required parameter was not found.\nThe profile has not been changed.";
+			default:
+				Files.write(path, sb.toString().getBytes(), StandardOpenOption.TRUNCATE_EXISTING);
+				return removedLines + " line(s) has been removed.";
+			}
+
+		} catch (IOException e) {
+			logger.catching(e);
+
+		return e.getLocalizedMessage();
+		}
+	}
+
+	public String saveLineBefore(String properyName, String befareThisPropery, String string) {
+		logger.traceEntry();
+
+		if(!oPath.isPresent())
+			return "The profile does not exist.";
+
+		final StringBuilder sb = new StringBuilder();
+		final Path path = oPath.get();
+		boolean found = false;
+
+		try(final Scanner scanner = new Scanner(path);) {
+
+			while(scanner.hasNextLine()) {
+				final String line = scanner.nextLine();
+
+				if(line.startsWith(befareThisPropery)) {
+					if(!found)
+						sb.append(string).append("\r\n").append(line).append("\r\n");
+					found = true;
+				}else if(!line.startsWith(properyName))
+					sb.append(line).append("\r\n");
+//				else
+//					remove Lines;
+			}
+
+			Files.write(path, sb.toString().getBytes(), StandardOpenOption.TRUNCATE_EXISTING);
+			return "The default biasing sequence has been saved.";
+
+		} catch (IOException e) {
+			logger.catching(e);
+			return e.getLocalizedMessage();
+		}
 	}
 }

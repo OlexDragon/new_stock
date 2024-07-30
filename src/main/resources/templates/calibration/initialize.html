@@ -1,0 +1,442 @@
+<!DOCTYPE html>
+<html 	xmlns="http://www.w3.org/1999/xhtml"
+		xmlns:th="https://www.thymeleaf.org"
+      	xmlns:sec="https://www.thymeleaf.org/thymeleaf-extras-springsecurity5"
+      	lang="en">
+<head>
+    <meta charset="UTF-8" />
+    <title>IRT Bom.</title>
+    <link rel="shortcut icon" href="http://irttechnologies.com/favicon.ico">
+    <link rel="stylesheet" href="https://stackpath.bootstrapcdn.com/bootstrap/4.4.1/css/bootstrap.min.css" data-integrity="sha384-Vkoo8x4CGsO3+Hhxv8T/Q5PaXtkKtu6ug5TOeNV6gBiFeWPGFN9MuhOf23Q9Ifjh" data-crossorigin="anonymous">
+    <link rel="stylesheet" href="../../static/css/components.css" th:href="@{/css/components.css}">
+</head>
+<body>
+
+<!-- Modal Message -->
+	<div id="modal" class="modal" tabindex="-1" role="dialog">
+	<th:block th:fragment="modal">
+  		<div class="modal-dialog modal-lg">
+    		<div class="modal-content">
+<!-- Modal Header -->
+      			<div class="modal-header">
+        			<h5 class="modal-title ml-3 text-primary" th:text="'Initialize - ' + ${serialNumber}"></h5>
+<!-- X Button -->
+        			<button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+      			</div>
+ <!-- Modal Body -->
+      			<div id="modal-body" class="modal-body">
+      				<div class="card mb-3" th:each="info: ${infos}">
+      					<div class="card-header" th:text="${info.serialNumber}"></div>
+   						<div class="card-body">
+      						<div class="row">
+   	   							<div class="col">
+      								<div class="row">
+      									<div class="col" >Description:</div>
+      									<div class="col" th:text="${info.name}">Description:</div>
+      								</div>
+     								<div class="row">
+      									<div class="col" >Part Number:</div>
+      									<div class="col" th:text="${info.partNumber}">Part Number:</div>
+      								</div>
+     								<div class="row">
+      									<div class="col" >Device ID:</div>
+      									<div class="col" th:text="${info.deviceId}">Device ID:</div>
+      								</div>
+     								<div class="row">
+      									<div class="col" >Build Date:</div>
+      									<div class="col" th:text="${info.buildDate}">Build Date:</div>
+	   								</div>
+	   							</div>
+   	   							<div class="col-2">
+   	   								<a class="btn btn-outline-success form-control initialize disabled"
+   	   									th:href="@{'/calibration/rest/initialize/reg-addr-val?sn=' + ${serialNumber} + '&moduleId=' + ${info.moduleId}} + '&deviceId=' + ${info.deviceId}"
+   	   									data-th-data-device-id="${info.deviceId}"
+   	   									data-th-data-module-id="${info.moduleId}">Initialize</a>
+   	   								<button sec:authorize="hasAuthority('EDIT_PROFILE_PROPERTY')" class="btn btn-outline-warning form-control mt-3 initialize" data-th-data-device-id="${info.deviceId}">Setting</button>
+   	   							</div>
+	   						</div>
+	   					</div>
+	   				</div>
+      			</div>
+ <!-- Modal Footer -->
+      			<div class="modal-footer">
+	        		<button type="button" id="btnInitializeAll" class="btn btn-outline-primary" disabled>Initialize All</button>
+					<input type="checkbox" class="btn-check" name="options-outlined" id="calibration-mode" autocomplete="off">
+					<label class="btn btn-outline-success disabled col-2 disabled" for="calibration-mode">Cal.</label>
+	        		<button type="button" class="btn btn-outline-secondary" data-bs-dismiss="modal">Close</button>
+	    		</div>
+      		</div>
+    	</div>
+  		<script th:inline="javascript">
+		/*<![CDATA[*/
+			const $noConverter = $('.card-header').filter((i,el)=>{const innerText = el.innerText;return innerText[innerText.length-1]!=='C';});
+			console.log($noConverter);
+			const topSN = $noConverter.map((i,el)=>el.innerText).filter((i,text)=>text.length==11).get();
+			if(topSN.length){
+				const sn = topSN[0];
+				$noConverter.filter((i,el)=>!el.innerText.startsWith(sn)).each((i,el)=>el.classList.add('text-bg-danger'));
+			}
+		console.log(topSN);
+			var $initializeLinks = $('.initialize').click(e=>{
+				if(e.currentTarget.localName == 'button')
+					setting(e);
+				else
+					initialize(e);
+			}).filter((i,el)=>el.localName == 'a');
+			function setting(e){
+				let deviceId = e.currentTarget.dataset.deviceId;
+				$modal.modal('hide');
+				setTimeout(()=>$modal.load('/calibration/initialize/setting?deviceId=' + deviceId), 300);
+			}
+			var postWriteTimeout;
+			function initialize(e){
+				e.preventDefault();
+				const classList = e.currentTarget.classList;
+				if(classList.contains('disabled'))
+					return;
+				classList.add('disabled');
+				classList.remove('btn-outline-success');
+				classList.add('btn-success');
+				$.post(e.currentTarget.href)
+				.done(message=>{
+					if(!message){
+						const classList = e.currentTarget.classList;
+						classList.remove('disabled');
+						classList.remove('btn-success');
+						classList.add('btn-outline-success');
+						e.currentTarget.innerText = 'Done';
+						return;
+					}
+					if(!message.regIndex){
+						alert(message);
+						return;
+					}
+
+					if(postWriteTimeout)
+						postWriteDelay(message, e.currentTarget);
+					else
+						postWrite(message, e.currentTarget);
+				})
+				.fail(conectionFail);
+			}
+			function postWrite(data, button){
+
+				if(!data.addrVal.length){
+					postWriteTimeout = null;
+					const classList = button.classList;
+					classList.remove('disabled');
+					classList.remove('btn-success');
+					classList.add('btn-outline-success');
+					button.innerText = 'Done';
+					return;
+				}
+
+				const pair = data.addrVal.shift();
+
+				postWriteTimeout = setTimeout(postWrite, 6000, button.dataset.moduleId, data);
+				$.post('/calibration/rest/register/write', {sn: serialNumber, moduleId: button.dataset.moduleId, index: data.regIndex, address: pair.first, value: pair.second})
+				.done(d=>{
+					clearTimeout(postWriteTimeout);
+					postWrite(data, button);
+				})
+				.fail(conectionFail);
+			}
+			function postWriteDelay(data, button){
+				console.log('postWriteDelay');
+				if(postWriteTimeout){
+					setTimeout(postWriteDelay, 3000, data, button);
+					return;
+				}
+				postWrite(data, button);
+			}
+			var $btnInitializeAll = $('#btnInitializeAll').click(()=>{
+				$initializeLinks.click();
+			})
+			var $calibrationMode = $('#calibration-mode').click(e=>{
+					$.post('/calibration/rest/calibration_mode_toggle', {ip: serialNumber})
+					.fail(conectionFail);
+			});
+			var postRwInfo = false;
+			function getRwInfo(){
+				if(postWriteTimeout)
+						return;
+				postRwInfo = true;
+				$.post('/calibration/rest/calibration-rw-info', {sn: serialNumber})
+				.done(function(data){
+					postRwInfo = false;
+					if(!data){
+						disableAll();
+						$calibrationMode.next().addClass('disabled');
+						return;
+					}
+					if(data.digitalPotentiometers)
+						$calibrationMode.next().removeClass('disabled');
+					else{
+						disableAll();
+						login();
+						return;
+					}
+
+					if(data.digitalPotentiometers.calMode){
+						$calibrationMode.prop('checked', true);
+						enableAll();
+					}else{
+						$calibrationMode.prop('checked', false);
+						disableAll();
+					}
+				})
+				.fail(error=>{
+					$modal.modal('hide');
+					conectionFail(error);
+					postRwInfo = false;
+				});
+			}
+			function readRegisters(){
+				$initializeLinks.filter((i,el)=>el.innerText!='NA').each((i,el)=>{
+	 				$.post('/calibration/rest/initialize/data', {sn: serialNumber, moduleId: el.dataset.moduleId, deviceId: el.dataset.deviceId })
+	 				.done(function(data){
+	 					if(!data.setting){
+	 						const classList = el.classList;
+							classList.remove('btn-outline-success');
+							classList.add('btn-danger');
+							el.innerText = 'Not Set';
+	 						return;
+	 					}
+	 					if(!data.regs){
+	 						const classList = el.classList;
+							classList.remove('btn-outline-success');
+							classList.add('btn-secondary');
+							classList.add('disabled');
+							el.innerText = 'NA';
+	 						return;
+	 					}
+
+	 					const lines = data.regs.split('\n').map(line=>line.trim());
+	 					const nameValue = data.setting.nameValue;
+	 					let initialized = true;
+	 					for(let i=0; i<lines.length; i++){
+	 						for(let nv in nameValue)
+	 							if(lines[i].startsWith(nv)){
+	 			 					if(parseInt(lines[i].split('0x')[2], 16)!==nameValue[nv]){
+	 			 						initialized = false;
+	 			 						break;
+	 			 					}	 								
+	 							}
+	 					}
+	 					if(initialized){
+	 						const classList = el.classList;
+							classList.add('btn-outline-success');
+							classList.remove('btn-danger');
+							classList.remove('btn-secondary');
+	 						el.innerText = 'Done';
+	 					}
+	 				})
+	 				.fail(conectionFail);
+				});
+			}
+			function enableAll(){
+				$initializeLinks.filter((i,el)=>!el.classList.contains('btn-secondary')).removeClass('disabled');
+				$btnInitializeAll.prop('disabled', false);
+			}
+			function disableAll(){
+				$initializeLinks.addClass('disabled');
+				$btnInitializeAll.prop('disabled', true);
+			}
+			var intervalCalibrationMode
+			var intervalReadRegisters
+			function startModal(){
+				stopModal();
+				getRwInfo();
+				readRegisters();
+				intervalCalibrationMode = setInterval(getRwInfo, 3000);
+				intervalReadRegisters = setInterval(readRegisters, 5000);
+			}
+			function stopModal(){
+				clearInterval(intervalCalibrationMode);
+				clearInterval(intervalReadRegisters);
+			}
+			$modal.on('shown.bs.modal', startModal);
+			$modal.on('hide.bs.modal', stopModal);
+			$modal.modal('show');
+		/*]]>*/
+		//# sourceURL=initialize.js
+  		</script>
+	</th:block>
+	<th:block th:fragment="setting">
+  		<div class="modal-dialog">
+    		<div class="modal-content">
+<!-- Modal Header -->
+      			<div class="modal-header">
+        			<h5 id="op_InputValue" class="modal-title ml-3 text-primary" th:text="'Setting for - ' + ${deviceId}"></h5>
+<!-- X Button -->
+        			<button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+      			</div>
+ <!-- Modal Body -->
+      			<div id="modal-body" class="modal-body">
+	   				<div class="row mb-3 reg-index">
+	   					<div class="form-floating col">
+      						<input id="regIndex" type="text" class="form-control value" placeholder="Enter the Register Address" th:value="${setting}==null ? '' : ${setting.regIndex}">
+							<label for="regIndex">Register Index</label>
+      					</div>
+      				</div>
+      				<th:block th:if="${setting}!=null">
+					<div class="row mb-3 start-with" th:each="nv, stat: ${setting.nameValue.entrySet()}">
+      					<div class="form-floating col">
+      						<input th:id="'name' + ${stat.count}" type="text" class="form-control reg-name" placeholder="Enter the Register Name start with" th:value="${nv.key}">
+							<label th:for="'name' + ${stat.count}">Name Start With</label>
+						</div>
+	   					<div class="form-floating col">
+      						<input th:id="'nameVal' + ${stat.count}" type="text" class="form-control value" placeholder="Enter the Register Value to enter" th:value="${nv.value}">
+							<label th:for="'nameVal' + ${stat.count}">Value</label>
+      					</div>
+      				</div>
+      				</th:block>
+					<div class="row mb-3 start-with to-clone">
+      					<div class="form-floating col">
+      						<input id="name" type="text" class="form-control reg-name" placeholder="Enter the Register Name start with">
+							<label for="name">Name Start With</label>
+						</div>
+	   					<div class="form-floating col">
+      						<input id="nameVal" type="text" class="form-control value" placeholder="Enter the Register Value to enter">
+							<label for="nameVal">Value</label>
+      					</div>
+      				</div>
+      			</div>
+<!-- Modal Footer -->
+      			<div class="modal-footer">
+	        		<button type="button" id="btnInitializeSave" class="btn btn-outline-primary" data-th-data-device-id="${deviceId}">Save</button>
+	        		<button type="button" class="btn btn-outline-secondary" data-bs-dismiss="modal">Close</button>
+	    		</div>
+      		</div>
+      	</div>
+  		<script th:inline="javascript">
+		/*<![CDATA[*/
+			$modalBody = $('.modal-body');
+			var $regIndex = $('#regIndex');
+			var $toClone = $('.to-clone');
+			$('.modal-body .value').on('input', valueInput);
+			$('.reg-name').change(appendNewFields);
+			function valueInput(e){
+				let newVal = e.currentTarget.value.toLowerCase().replace(/[^xa-f0-9]/gi, '');
+				const split = newVal.split('x');
+				if(split.length>1)
+					newVal = '0x' + split[1];
+				if(newVal===e.currentTarget.value)
+					e.currentTarget.classList.remove('border-danger');
+				else{
+					e.currentTarget.classList.add('border-danger');
+					e.currentTarget.value = newVal;
+				}
+			}
+			function appendNewFields(e){
+
+				const $regNames = $modalBody.find('.reg-name').removeClass('border-danger').sort((a,b)=>a.value.localeCompare(b.value));
+				const results = getDuplicated($regNames);
+				results.forEach(el=>el.classList.add('border-danger'));
+
+				const length = $regNames.filter((i,el)=>!el.value).length;
+				if(length)
+					return;
+
+				const $clone = $toClone.clone().appendTo($modalBody);
+				const index = $modalBody.children().length;
+				console.log(index);
+				$clone.find('.reg-name').change(appendNewFields).val('').prop('id', 'name' + index).removeClass('border-danger').next().prop('for', 'name' + index);
+				$clone.find('.value').on('input', valueInput).val('').prop('id', 'nameVal' + index).next().prop('for', 'nameVal' + index);
+			}
+			function getDuplicated($els){
+				$els.sort((a,b)=>a.value.localeCompare(b.value));
+				const results = [];
+				for (let i = 0; i < $els.length - 1; i++) {
+					if ($els[i + 1].value == $els[i].value){
+						results.push($els[i]);
+						results.push($els[i + 1]);
+					}
+				}
+				return results;
+			}
+			$('#btnInitializeSave').click(e=>{
+				e.currentTarget.disabled = true;
+				const setting = {regIndex: $regIndex.val()};
+				setting.deviceId = /*[[${deviceId}]]*/ '250.31';
+				setting.nameValue = {};
+				const regIndex = strToInt($('#regIndex').val());
+				if(isNaN(regIndex)){
+					alert('You have an error.\nCheck all fields.');
+					e.currentTarget.disabled = false;
+					return;
+				}
+
+				if(regIndex){
+					setting.regIndex = regIndex;
+
+					let hasError = false;
+					$modalBody.find('.start-with')
+					.each((i,el)=>{
+
+						if(hasError)
+							return;
+
+						if(!el.children[0].children[0].value && !el.children[1].children[0].value)
+							return;
+
+						const key = el.children[0].children[0].value;
+						if(!key || el.children[0].children[0].classList.contains('border-danger')){
+							hasError = true;
+							return;
+						}
+						const val = strToInt(el.children[1].children[0].value);
+						hasError = !val || isNaN(val);
+						setting.nameValue[key] = val;
+					});
+					
+					if(hasError){
+						alert('You have an error.\nCheck all fields.');
+						e.currentTarget.disabled = false;
+						return;
+					}
+				}
+				if(setting.regIndex && !Object.keys(setting.nameValue).length){
+					alert('You have an error.\nCheck all fields.');
+					e.currentTarget.disabled = false;
+					return;
+				}
+				postObject('/calibration/rest/initialize/save', setting)
+				.done(message=>{
+					if(message.content){
+						alert(message.content);
+						return;
+					}
+					alert('The settings have been saved.');
+					e.currentTarget.disabled = false;
+				})
+				.fail(conectionFail);
+			});
+			function strToInt(value){
+
+				if(!value)
+					return null;
+
+				const split = value.split('x');
+				if(split.length>1 && split[1])
+					return parseInt(split[1], 16);
+
+				if(value.replace(/[0-9]/gi, '').length)
+					return parseInt(value, 16);
+
+				return parseInt(value);
+			}
+			$modal.modal('show');
+		/*]]>*/
+		//# sourceURL=initializeSetting.js
+  		</script>
+	</th:block>
+	</div>
+
+    <script type="application/javascript" src="https://ajax.googleapis.com/ajax/libs/jquery/3.5.1/jquery.min.js"></script>
+    <script type="application/javascript" src="https://cdnjs.cloudflare.com/ajax/libs/popper.js/2.10.2/umd/popper.min.js"></script>
+    <script type="application/javascript" src="https://stackpath.bootstrapcdn.com/bootstrap/4.4.1/js/bootstrap.min.js"></script>
+	<script type="application/javascript" src="https://cdn.jsdelivr.net/npm/js-cookie@2/src/js.cookie.min.js"></script>
+	<script type="application/javascript" src="../../static/js/irt.js" th:src="@{/js/irt.js}"></script>
+</body>
+</html>

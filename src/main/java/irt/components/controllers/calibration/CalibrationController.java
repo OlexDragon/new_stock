@@ -55,12 +55,14 @@ import irt.components.beans.irt.calibration.CalibrationTable;
 import irt.components.beans.irt.calibration.NameIndexPair;
 import irt.components.beans.irt.calibration.PowerDetectorSource;
 import irt.components.beans.irt.calibration.ProfileTableDetails;
+import irt.components.beans.jpa.IrtArrayId;
 import irt.components.beans.jpa.btr.BtrSerialNumber;
 import irt.components.beans.jpa.btr.BtrSetting;
 import irt.components.beans.jpa.btr.BtrWorkOrder;
 import irt.components.beans.jpa.calibration.CalibrationGainSettings;
 import irt.components.beans.jpa.calibration.CalibrationOutputPowerSettings;
 import irt.components.beans.jpa.calibration.CalibrationPowerOffsetSettings;
+import irt.components.beans.jpa.repository.IrtArrayRepository;
 import irt.components.beans.jpa.repository.btr.BtrSerialNumberRepository;
 import irt.components.beans.jpa.repository.btr.BtrWorkOrderRepository;
 import irt.components.beans.jpa.repository.calibration.BtrSettingRepository;
@@ -68,6 +70,7 @@ import irt.components.beans.jpa.repository.calibration.CalibrationGainSettingRep
 import irt.components.beans.jpa.repository.calibration.CalibrationOutputPowerSettingRepository;
 import irt.components.beans.jpa.repository.calibration.CalibrationPowerOffsetSettingRepository;
 import irt.components.services.HttpSerialPortServersKeeper;
+import irt.components.services.InitializeSettingConverter;
 import irt.components.workers.HttpRequest;
 import irt.components.workers.ProfileWorker;
 import irt.components.workers.ThreadRunner;
@@ -98,7 +101,7 @@ public class CalibrationController {
 	@Value("${irt.log.file}")
 	private String logFile;
 
-	@Autowired private HttpSerialPortServersKeeper			 httpSerialPortServersCollector;
+	@Autowired private HttpSerialPortServersKeeper			 	 httpSerialPortServersKeeper;
 	@Autowired private CalibrationOutputPowerSettingRepository	 calibrationOutputPowerSettingRepository;
 	@Autowired private CalibrationPowerOffsetSettingRepository	 calibrationPowerOffsetSettingRepository;
 	@Autowired private CalibrationGainSettingRepository			 calibrationGainSettingRepository;
@@ -107,15 +110,18 @@ public class CalibrationController {
 	@Autowired private BtrWorkOrderRepository		workOrderRepository;
 	@Autowired private BtrSerialNumberRepository	serialNumberRepository;
 
+	@Autowired private IrtArrayRepository	arrayRepository;
+
 	@GetMapping
     String calibration(@RequestParam(required = false) String sn, Model model) {
     	logger.traceEntry(sn);
 
-		final Map<String, String> httpSerialPortServers = httpSerialPortServersCollector.getHttpSerialPortServers();
+		final Map<String, String> httpSerialPortServers = httpSerialPortServersKeeper.getHttpSerialPortServers();
 		model.addAttribute("serialPortServers", httpSerialPortServers);
 
 		Optional.ofNullable(sn)
 		.map(String::trim)
+		.filter(s->!s.isEmpty())
 		.map(String::toUpperCase)
 		.map(
 				s->{
@@ -182,6 +188,33 @@ public class CalibrationController {
     String gain() throws ExecutionException {
 		logger.traceEntry();
 		return "calibration/serial/fcm_gain :: converter";
+    }
+
+    @GetMapping("initialize")
+    String initialize(@RequestParam String sn, Model model) throws ExecutionException, IOException {
+		logger.traceEntry("sn: {}", sn);
+
+		model.addAttribute("serialNumber", sn);
+
+		List<NameValuePair> params = new ArrayList<>();
+		params.addAll(Arrays.asList(new BasicNameValuePair("command", "devices" )));
+
+		final Map<String, Integer> devices = HttpRequest.getAllDevices(sn);
+		final List<Info> infos = getInfos(sn, devices);
+		infos.sort((a,b)->b.getDeviceId().compareTo(a.getDeviceId()));
+		model.addAttribute("infos", infos);
+
+		return "calibration/initialize :: modal";
+    }
+
+    @GetMapping("initialize/setting")
+    String initializeSetting(@RequestParam String deviceId, Model model) throws ExecutionException, IOException {
+		logger.traceEntry("deviceId: ", deviceId);
+
+		model.addAttribute("deviceId", deviceId);
+		arrayRepository.findById(new IrtArrayId("initialize", deviceId)).ifPresent(irtArray->model.addAttribute("setting", new InitializeSettingConverter().convertToEntityAttribute(irtArray.getDescription())));
+
+		return "calibration/initialize :: setting";
     }
 
     @GetMapping("output_power")
@@ -615,6 +648,17 @@ public class CalibrationController {
 		return "calibration/currents :: modal";
 	}
 
+	@GetMapping("current")
+    String modalCurrent(Integer channel, String pot, String switchName, Model model) {
+		logger.traceEntry("channel: {}; pot: {}; switchName: {}", channel, pot, switchName);
+
+		model.addAttribute("channel", channel);
+		model.addAttribute("potName", pot);
+		model.addAttribute("switchName", switchName);
+
+		return "calibration/currents :: current";
+	}
+
 	public FutureTask<Void> gainFromProfile(String sn, Model model) {
 		FutureTask<Void> ftProfile = new FutureTask<>(()->null);
 
@@ -688,18 +732,26 @@ public class CalibrationController {
 		final Map<String, Integer> allDevices = HttpRequest.getAllDevices(sn);
     	allDevices.remove("System");
 
-    	return allDevices.entrySet().stream()
+    	return getInfos(sn, allDevices);
+	}
+
+	private List<Info> getInfos(String sn, final Map<String, Integer> allDevices) {
+		return allDevices.entrySet().stream()
     			.map(
     					es->{
     						try {
 
     							final URL url = new URL("http", sn, "/device_debug_read.cgi");
     							List<NameValuePair> params = new ArrayList<>();
-								final Integer modulId = es.getValue();
-    							params.addAll(Arrays.asList(new BasicNameValuePair[]{new BasicNameValuePair("devid", modulId.toString()), new BasicNameValuePair("command", "info")}));
+								final Integer moduleId = es.getValue();
+    							params.addAll(Arrays.asList(new BasicNameValuePair[]{new BasicNameValuePair("devid", moduleId.toString()), new BasicNameValuePair("command", "info")}));
 
     							final Info info = HttpRequest.postForIrtObgect(url.toString(), Info.class, params).get(1, TimeUnit.SECONDS);
-    							Optional.ofNullable(info).ifPresent(inf->inf.setModuleId(modulId));
+    							logger.debug(info);
+    							Optional.ofNullable(info).ifPresent(inf->{
+    								inf.setModuleId(moduleId);
+        							Optional.ofNullable(inf.getDeviceId()).map(s->s.replace("{", "")).map(s->s.split("\\.")).filter(s->s.length==3).map(s->s[0] + '.' + s[1]).ifPresent(info::setDeviceId);
+    							});
 								return info;
 
     						} catch (InterruptedException | ExecutionException | TimeoutException | MalformedURLException e) {

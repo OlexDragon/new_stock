@@ -48,7 +48,7 @@ import com.fasterxml.jackson.databind.DeserializationFeature;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.dataformat.yaml.YAMLFactory;
 
-import irt.components.beans.irt.update.Profile;
+import irt.components.beans.irt.update.ToUpload;
 
 public class HttpRequest {
 	private final static Logger logger = LogManager.getLogger();
@@ -138,6 +138,7 @@ public class HttpRequest {
 	}
 
 	private static <T> T httpForIrtObject(Class<T> classToReturn, HttpPost uriRequest) throws IOException, ScriptException {
+		logger.traceEntry("classToReturn: {};", classToReturn);
 
 		uriRequest.addHeader("Accept", "text/html,application/json;metadata=full;charset=utf-8;");
 
@@ -152,13 +153,12 @@ public class HttpRequest {
 			if (entity != null) {
 
 				text = EntityUtils.toString(entity);
-				logger.debug(text);
 
 				if(classToReturn==null || text.isEmpty() || text.matches(".*\\<[^>]+>.*"))	// If HTML page
 					return null;
 
 				json = text.contains("=") ? javaScriptToJSon(text) : textToJSON(text);
-				logger.trace("classToReturn: {}; json: {}", classToReturn, json);
+				logger.debug("classToReturn: {}; json: {}", classToReturn, json);
 
 				final ObjectMapper mapper = new ObjectMapper();
 				mapper.configure(DeserializationFeature.FAIL_ON_UNKNOWN_PROPERTIES, false);
@@ -178,6 +178,7 @@ public class HttpRequest {
 
 	public static String javaScriptToJSon(String javaScript) throws ScriptException, JsonProcessingException {
 		logger.traceEntry(javaScript);
+		javaScript = javaScript.replace("var ", ""); 
 
 		final ScriptEngineManager scriptEngineManager = new ScriptEngineManager();
 		final ScriptEngine scriptEngine = scriptEngineManager.getEngineByName("JavaScript");
@@ -247,7 +248,7 @@ public class HttpRequest {
 	}
 
 	private static final String lineEnd = "\r\n";
-	public static void upload(String sn, Profile profile) {
+	public static void upload(String sn, ToUpload profile) {
 		logger.traceEntry(sn);
 
 		HttpURLConnection connection = null;
@@ -309,7 +310,6 @@ public class HttpRequest {
 	}
 
 	public static String postForString(String url, List<NameValuePair> params) throws IOException {
-
 		logger.traceEntry("{}; {}", url, params);
 
 		final HttpPost httpPost = new HttpPost(url);
