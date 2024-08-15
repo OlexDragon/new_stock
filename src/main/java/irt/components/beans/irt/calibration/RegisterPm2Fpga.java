@@ -8,7 +8,7 @@ import lombok.Getter;
 import lombok.ToString;
 
 @Getter @ToString @JsonIgnoreProperties(ignoreUnknown = true)
-public class RegisterPm2Fpga implements Register{
+public class RegisterPm2Fpga implements Diagnostics{
 
 	@JsonProperty("version")
 	@JsonAlias("VERSION         (0x01)")

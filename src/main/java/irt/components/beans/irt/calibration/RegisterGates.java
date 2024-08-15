@@ -11,7 +11,7 @@ import lombok.Getter;
 import lombok.ToString;
 
 @Getter @ToString
-public class RegisterGates implements Register{
+public class RegisterGates implements Diagnostics{
 	private final static Logger logger = LogManager.getLogger();
 
 	private Integer gate0;

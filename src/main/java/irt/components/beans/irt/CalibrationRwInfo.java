@@ -12,12 +12,25 @@ import lombok.ToString;
 @Getter @ToString @JsonIgnoreProperties(ignoreUnknown = true)
 public class CalibrationRwInfo {
 
-	@JsonProperty("fcmDacs")
-	@JsonAlias("fcm_dacs")
-	private DigitalPotentiometers fcmDacs;
+	// 250.31 Controller
+
 	@JsonProperty("digitalPotentiometers")
 	@JsonAlias("dp")
-	private DigitalPotentiometers dp;
+	private DigitalPotentiometers digitalPotentiometers;
 	private List<UnitModule> linearizer;
 	private List<UnitModule> fan;
+	@JsonProperty("fcm")
+	@JsonAlias("fcm_dacs")
+	private Fcm fcm;
+
+	// 100.21 Controller
+	@JsonProperty("calMode")
+	@JsonAlias("enable")
+	private Boolean calMode;
+	@JsonProperty("calibrationRwInfo")
+	@JsonAlias("gates")
+	private CalibrationRwInfo calibrationRwInfo;
+	@JsonProperty("dacs")
+	@JsonAlias("dac")
+	DacsDP dacs;
 }

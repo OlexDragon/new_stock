@@ -10,15 +10,12 @@ import lombok.Getter;
 import lombok.ToString;
 
 @Getter @ToString @JsonIgnoreProperties(ignoreUnknown = true)
-public class DigitalPotentiometers {
+public class Fcm {
 
-	// 250.31 Controller
 	@JsonProperty("calMode")
 	@JsonAlias("enable")
 	private Boolean calMode;
-	private List<UnitModule> list;
-	private List<DigitalPotentiometer> vars;
-
-	// 100.21 Controller
-	Range range;
+	@JsonProperty("dacs")
+	@JsonAlias({"dac", "list"})
+	List<DigitalPotentiometer> dacs;
 }

@@ -25,7 +25,7 @@ class CalibrationRwInfoTest {
 
 		 final CalibrationRwInfo info = mapper.readValue(json, CalibrationRwInfo.class);
 		 logger.error(info);
-		 final DigitalPotentiometers potentiometers = info.getDp();
+		 final DigitalPotentiometers potentiometers = info.getDigitalPotentiometers();
 		 assertTrue(potentiometers.getCalMode());
 		 final List<UnitModule> list = potentiometers.getList();
 		 assertFalse(list.isEmpty());

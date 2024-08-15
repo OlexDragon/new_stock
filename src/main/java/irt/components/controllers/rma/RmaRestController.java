@@ -61,15 +61,22 @@ public class RmaRestController {
 	@Autowired private MailSender mailSender;
 
 	@GetMapping("ready-to-add")
-	public boolean snExists(@RequestParam String sn){
+	public boolean readyToAdd(@RequestParam String sn){
 		logger.traceEntry(sn);
+
+		if(sn.replaceAll("\\D", "").length()!=7)
+			return false;
+
 		final Boolean onRenderReady = WebClient.builder().baseUrl(onRender).build().get().uri(uriBuilder -> uriBuilder.path(readyToAdd).queryParam("sn", sn).build()).retrieve()
 				.bodyToMono(Boolean.class)
 				.onErrorReturn(onErrorReturn(new Throwable("RmaRestController.snExists.onErrorReturn")), false)
 				.block();
-		// If onRender is ready check local DB.
+		// If onRender is not ready check local DB.
 		if(!onRenderReady)
 			return false;
+
+		if(sn.length()==7)
+			return !rmaRepository.existsBySerialNumberEndsWithAndStatusNotIn(sn, Status.SHIPPED, Status.CLOSED);
 
 		return !rmaRepository.existsBySerialNumberAndStatusNotIn(sn, Status.SHIPPED, Status.CLOSED);
 	}

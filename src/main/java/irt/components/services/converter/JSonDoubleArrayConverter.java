@@ -1,4 +1,4 @@
-package irt.components.services;
+package irt.components.services.converter;
 
 public class JSonDoubleArrayConverter extends JSonConverter<Double[]>{
 }

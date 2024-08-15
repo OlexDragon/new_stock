@@ -3,7 +3,6 @@ package irt.components.controllers.calibration;
 import java.io.BufferedReader;
 import java.io.File;
 import java.io.FileInputStream;
-import java.io.FileNotFoundException;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.InputStreamReader;
@@ -17,7 +16,6 @@ import java.net.MalformedURLException;
 import java.net.URISyntaxException;
 import java.net.URL;
 import java.net.UnknownHostException;
-import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.util.AbstractMap;
@@ -38,8 +36,6 @@ import java.util.concurrent.FutureTask;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.TimeoutException;
 import java.util.concurrent.atomic.AtomicInteger;
-import java.util.stream.Collectors;
-import java.util.stream.IntStream;
 
 import javax.script.ScriptException;
 import javax.servlet.http.HttpServletResponse;
@@ -58,6 +54,7 @@ import org.springframework.core.io.FileSystemResource;
 import org.springframework.data.util.Pair;
 import org.springframework.http.ContentDisposition;
 import org.springframework.http.HttpHeaders;
+import org.springframework.http.HttpStatus;
 import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
 import org.springframework.ui.Model;
@@ -68,18 +65,18 @@ import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
 
-import irt.components.beans.CurrentOffset;
 import irt.components.beans.irt.AlarmInfo;
 import irt.components.beans.irt.CalibrationInfo;
 import irt.components.beans.irt.CalibrationRwInfo;
+import irt.components.beans.irt.HWInfo;
 import irt.components.beans.irt.Info;
 import irt.components.beans.irt.MonitorInfo;
 import irt.components.beans.irt.calibration.CalibrationMode;
+import irt.components.beans.irt.calibration.Diagnostics;
 import irt.components.beans.irt.calibration.HPBMRegisterV21;
 import irt.components.beans.irt.calibration.HPBMRegisterV31;
 import irt.components.beans.irt.calibration.InitializeSetting;
 import irt.components.beans.irt.calibration.ProfileTableTypes;
-import irt.components.beans.irt.calibration.Register;
 import irt.components.beans.irt.calibration.RegisterEmpty;
 import irt.components.beans.irt.calibration.RegisterGates;
 import irt.components.beans.irt.calibration.RegisterPLL;
@@ -98,11 +95,10 @@ import irt.components.beans.jpa.repository.calibration.BtrSettingRepository;
 import irt.components.beans.jpa.repository.calibration.CalibrationGainSettingRepository;
 import irt.components.beans.jpa.repository.calibration.CalibrationOutputPowerSettingRepository;
 import irt.components.beans.jpa.repository.calibration.CalibrationPowerOffsetSettingRepository;
-import irt.components.services.InitializeSettingConverter;
+import irt.components.services.converter.InitializeSettingConverter;
 import irt.components.workers.HtmlParsel;
 import irt.components.workers.HttpRequest;
 import irt.components.workers.ProfileWorker;
-import irt.components.workers.ThreadRunner;
 import lombok.AllArgsConstructor;
 import lombok.Getter;
 import lombok.RequiredArgsConstructor;
@@ -113,19 +109,9 @@ import lombok.ToString;
 @RequestMapping("calibration/rest")
 public class CalibrationRestController {
 	private final static Logger logger = LogManager.getLogger();
-	private static final String LINE_SEPARATOR = System.getProperty("line.separator");
 
 	@Value("${irt.profile.path}")
 	private String profileFolder;
-
-	@Value("${irt.perl.path}")
-	private String perlPath;
-
-	@Value("${irt.perl.script.path}")
-	private String perlScriptPath;
-
-	@Value("${irt.perl.script.argument}")
-	private String perlScriptArgument;
 
 	@Value("${irt.flash.file}")
 	private File flashFile;
@@ -180,7 +166,7 @@ public class CalibrationRestController {
     			.orElse(null);
     }
 
-	@PostMapping(path="calibration-rw-info", produces = "application/json;charset=utf-8")
+	@PostMapping(path="calib_rw_info", produces = "application/json;charset=utf-8")
 	CalibrationRwInfo calibrationRwInfo(@RequestParam(required = false) String sn) {
 //    	logger.error(sn);
     	return Optional.ofNullable(sn)
@@ -479,162 +465,6 @@ public class CalibrationRestController {
 	            .body(resource);
 	}
 
-    @PostMapping("current_offset")
-    List<CurrentOffset> currentOffset(@RequestParam String sn, @RequestParam Boolean local) throws UnknownHostException {
-    	logger.traceEntry("Serial Number: {}; local: {}", sn, local);
-
-    	final InetAddress byName = InetAddress.getByName(sn);
-    	final byte[] bytes = byName.getAddress();
-    	final int length = bytes.length;
-    	final List<CurrentOffset> offsets = new ArrayList<>();
-
-    	if(length!=4) {
-    		final CurrentOffset co = new CurrentOffset("ERROR");
-    		co.getOffsets().add("Unable to get an IP address.");
-    		logger.warn("{} - Unable to get an IP address. {}", sn, bytes);
-			offsets.add(co);
-    		return offsets;
-    	}
-
-    	final String ipAddress = IntStream.range(0, length).map(index->bytes[index]&0xff).mapToObj(Integer::toString).collect(Collectors.joining("."));
-		logger.debug("ipAddress: {}", ipAddress);
-
-    	 try {
-
-    		 List<String> commands = new ArrayList<>();
-    		 commands.add(perlPath);
-    		 commands.add(perlScriptPath);
-    		 commands.add(perlScriptArgument + ipAddress);
-    		 if(local)
-    			 commands.add("--local=1");
-
-    		 logger.debug("{}", commands);
- 
-    		 final ProcessBuilder builder = new ProcessBuilder(commands);
-    		 builder.redirectErrorStream(true);
-
-    		 final Process process = builder.start();
-
-    		 final FutureTask<Void> ft = new FutureTask<>(()->null);
-
-    		 ThreadRunner.runThread(
-    				 ()->{
-    					 final BufferedReader reader = new BufferedReader(new InputStreamReader(process.getInputStream()));
-    			            String line;
-    			            try {
-
-    			            	CurrentOffset offset = null;
-    			            	while ((line = reader.readLine()) != null) {
-    			            		logger.debug(line);
-    			            		if(!ft.isDone())
-    			            			ThreadRunner.runThread(ft);
-
-    			            		if(line.startsWith("[psu_offset.pl->psu_offset.pl")) {
-    			            			if(line.endsWith(".bin:")) {
-    			            				final CurrentOffset co = Optional.of(line.split("\\s+")).filter(arr->arr.length==2).map(arr->arr[1].substring(0, arr[1].length()-1)).map(CurrentOffset::new).orElse(null);
-    			            				if(co!=null) {
-    			            					offset = co;
-    			            					offsets.add(co);
-    			            				}
-    			            			}
-    			            		}else if(line.startsWith("pm-vmon-offset") || line.startsWith("device-vmon")) {
-    			            			final String l = line;
-    			            			Optional.ofNullable(offset).ifPresent(os->os.getOffsets().add(l));
-    			            		}
-								}
-
-    			            } catch (IOException e) {
-								logger.catching(e);
-							}
-    				 });
-
-    		 // Wait for script to start
-    		 try {
-
-    			 ft.get(5, TimeUnit.SECONDS);
-
-    		 } catch (ExecutionException | TimeoutException e) {
-				logger.catching(Level.DEBUG, e);
-			}
-
-
-    		 try(final OutputStream os = process.getOutputStream();){
-    			 while(process.isAlive()) {
-    				 os.write(("\n").getBytes());
-    				 os.flush();
-    	    		 Thread.sleep(3000);
-    			 }
-    		 }
-
-    		 return offsets.stream().filter(os->!os.getOffsets().isEmpty()).collect(Collectors.toList());
-
-    	 } catch (IOException | InterruptedException e) {
-			logger.catching(e);
-			final CurrentOffset co = new CurrentOffset("ERROR");
-			offsets.add(co);
-			final String localizedMessage = e.getLocalizedMessage();
-
-			if(localizedMessage.isEmpty()) {
-	    		co.getOffsets().add(e.getClass().getSimpleName());
-	    		return offsets;
-			}else {
-	    		co.getOffsets().add(localizedMessage);
-	    		return offsets;
-			}
-		}
-	}
-
-    @PostMapping(path = "save_current_offset", consumes = MediaType.APPLICATION_JSON_VALUE)
-    Pair<String, String> saveCurrentOffset(@RequestBody CurrentOffset offset) {
-    	logger.traceEntry("{}", offset);
-
-    	final File file = new File(offset.getPath());
-    	final String name = file.getName();
-
-    	if(!file.exists())
-    		return Pair.of(name, "File isn't exists.");
-
-    	StringBuilder sb = new StringBuilder();
-    	try(Scanner scanner = new Scanner(file);) {
-
-    		while(scanner.hasNextLine()) {
-
-    			final String line = scanner.nextLine();
-
-    			if(line.startsWith("pm-vmon-offset") || (line.startsWith("device-vmon") && hasIndex(line))) {
-    				continue;
-    			}
-
-    			sb.append(line).append(LINE_SEPARATOR);
-    		}
-
-    		offset.getOffsets().forEach(os->sb.append(os).append(LINE_SEPARATOR));
-
-    	} catch (FileNotFoundException e) {
-			logger.catching(e);
-    		return Pair.of(name, e.getLocalizedMessage());
-		}
-
-		try {
-			Files.write(file.toPath(), sb.toString().getBytes());
-		} catch (IOException e) {
-			logger.catching(e);
-    		return Pair.of(name, e.getLocalizedMessage());
-		}
-
-		return Pair.of(name, "Saved");
-    }
-
-    private final static String[] indexis = new String[] {"101", "103", "105", "107", "109", "111"};
-    private boolean hasIndex(String line) {
-
-    	final String[] split = line.split("\\s+");
-    	if(split.length<5)
-    		return false;
-
-    	return Arrays.stream(indexis).filter(split[2]::equals).findAny().map(i->true).orElse(false);
-	}
-
 	@GetMapping("profile")
     String profile(@RequestParam String sn, @RequestParam(required = false) Integer moduleId) throws IOException, URISyntaxException {
     	logger.traceEntry("{}; {};", sn, moduleId);
@@ -660,8 +490,6 @@ public class CalibrationRestController {
     		params.addAll(Arrays.asList(new BasicNameValuePair[]{new BasicNameValuePair("devid", moduleId.toString()), new BasicNameValuePair("command", "profile")}));
        		return HttpRequest.postForString(url.toString(), params);
     	}
-
-
 	}
 
     @GetMapping("profile_path")
@@ -782,34 +610,23 @@ public class CalibrationRestController {
     }
 
     @PostMapping("calibration_mode_toggle")
-    void setCalibrationMode(@RequestParam String ip) throws InterruptedException, ExecutionException, TimeoutException, MalformedURLException {
+    ResponseEntity<String> setCalibrationMode(@RequestParam String ip) throws MalformedURLException {
 
 		final URL url = new URL("http", ip, "/calibration.cgi");
 		List<NameValuePair> params = new ArrayList<>();
 		params.addAll(Arrays.asList(new BasicNameValuePair[]{new BasicNameValuePair("en_toggle", "1")}));
 
-		HttpRequest.postForIrtObgect(url.toString(), Object.class, params).get(5, TimeUnit.SECONDS);
-    }
-
-    @PostMapping("dac")
-    boolean setDac(@RequestParam String sn, Integer channel, Integer index, Integer value, Boolean save){
-    	logger.traceEntry("sn: {}; channel: {}; index: {}; value: {}", sn, channel, index, value);
-
+		final FutureTask<Object> ft = HttpRequest.postForIrtObgect(url.toString(), Object.class, params);
 		try {
 
-			final URL url = new URL("http", sn, "/calibration.cgi");
-			List<NameValuePair> params = new ArrayList<>();
-			final List<BasicNameValuePair> asList = new ArrayList<>(Arrays.asList(new BasicNameValuePair[]{new BasicNameValuePair("channel", channel.toString()), new BasicNameValuePair("index", index.toString())}));
-			Optional.ofNullable(save).ifPresent(s->asList.add(new BasicNameValuePair("save_dp", "1")));
-			Optional.ofNullable(value).ifPresent(s->asList.add(new BasicNameValuePair("value", value.toString())));
-			params.addAll(asList);
+			ft.get(5, TimeUnit.SECONDS);
 
-			HttpRequest.postForIrtObgect(url.toString(), Object.class, params).get(5, TimeUnit.SECONDS);
-			return true;
+			return new ResponseEntity<>(HttpStatus.OK);
 
-		} catch (MalformedURLException | InterruptedException | ExecutionException | TimeoutException e) {
-			logger.catching(e);
-			return false;
+		} catch (InterruptedException | ExecutionException | TimeoutException e) {
+			logger.catching(Level.DEBUG, e);
+
+			return new ResponseEntity<>("setCalibrationMode(@RequestParam String ip);\n" + e.getLocalizedMessage(), HttpStatus.GATEWAY_TIMEOUT);
 		}
     }
 
@@ -833,7 +650,7 @@ public class CalibrationRestController {
     }
 
     @PostMapping("hpbm_register_v21")
-    SimpleEntry<String, HPBMRegisterV21> hpbmRegisterV21(@RequestParam String sn, @RequestParam String devid) throws MalformedURLException, InterruptedException, ExecutionException{
+    SimpleEntry<String, HPBMRegisterV31> hpbmRegisterV21(@RequestParam String sn, @RequestParam String devid) throws MalformedURLException, InterruptedException, ExecutionException{
     	logger.traceEntry("sn: {}, devid: {}", sn, devid);
 
 		final URL url = new URL("http", sn, "/device_debug_read.cgi");
@@ -844,12 +661,15 @@ public class CalibrationRestController {
 
 		final FutureTask<HPBMRegisterV21> postForIrtObgect1 = HttpRequest.postForIrtYaml(url.toString(), HPBMRegisterV21.class, params);
 
-		SimpleEntry<String, HPBMRegisterV21> entry = null;
+		SimpleEntry<String, HPBMRegisterV31> entry = new AbstractMap.SimpleEntry<>(devid, null);
 		try {
 
-			HPBMRegisterV21 object1 = postForIrtObgect1.get(2, TimeUnit.SECONDS);
-//			logger.debug(object1);
-			entry = new AbstractMap.SimpleEntry<>(devid, object1);
+			HPBMRegisterV21 v21 = postForIrtObgect1.get(10, TimeUnit.SECONDS);
+			final HPBMRegisterV31 ps1 = v21.getPowerSupply1();
+			final HPBMRegisterV31 ps2 = v21.getPowerSupply2();
+			ps1.setSwitch3(ps2.getSwitch1());
+			ps1.setSwitch4(ps2.getSwitch2());
+			entry.setValue(ps1);
 
 		} catch (TimeoutException e) {
 			logger.catching(Level.DEBUG, e);
@@ -910,12 +730,6 @@ public class CalibrationRestController {
     			.orElse(null);
     }
 
-    @PostMapping("pll_registers")
-    RegisterPLL pllRegisters(@RequestParam String sn) throws MalformedURLException, InterruptedException, ExecutionException, ScriptException{
-//    	logger.error(sn);
-    	return unitRegister(RegisterPLL.class, sn, "1", "102", null, null, PostFor.IRT_OBJECT);
-    }
-
     @PostMapping("pll_register")
     RegisterPLL pllRegister(@RequestParam String sn, String addr, String value) throws MalformedURLException, InterruptedException, ExecutionException, ScriptException{
     	logger.traceEntry(sn);
@@ -939,25 +753,15 @@ public class CalibrationRestController {
     				    		logger.error(pllRegister);
 								return pllRegister;
 
-    						} catch (IOException | InterruptedException | ExecutionException | TimeoutException e) {
+    						} catch (IOException e) {
     							logger.catching(new Throwable(sn, e));
-    						}
+    						} catch (InterruptedException | ExecutionException | TimeoutException e) {
+    							logger.catching(Level.DEBUG, e);
+							}
 
     						return null;
     					})
     			.orElse(null);
-    }
-
-    @GetMapping("register-pm2-fpga")
-    RegisterPm2Fpga getRegisterPm2Fpga(@RequestParam String sn, Integer deviceId, @RequestParam(required = false) String address, @RequestParam(required = false) String value){
-    	logger.traceEntry("Serial Number: {}; deviceId: {}; address: {}; value: {}", sn, deviceId, address, value);
-		return unitRegister(RegisterPm2Fpga.class, sn, deviceId.toString(), "25", address, value, PostFor.IRT_OBJECT);
-    }
-
-    @GetMapping("register-gates")
-    RegisterGates getRegisterDacs(@RequestParam String sn, Integer deviceId, @RequestParam(required = false) String address, @RequestParam(required = false) String value){
-    	logger.traceEntry("Serial Number: {}; deviceId: {}; address: {}; value: {}", sn, deviceId, address, value);
-		return unitRegister(RegisterGates.class, sn, deviceId.toString(), "27", address, value, PostFor.STRING);
     }
 
     @GetMapping("mute")
@@ -1011,14 +815,47 @@ public class CalibrationRestController {
     	return sn;
     }
 
+	@PostMapping("all-modules")
+	Map<String, Integer> allModules(@RequestParam String sn) throws IOException {
+    	logger.traceEntry("{}", sn);
+		return HttpRequest.getAllModules(sn);
+    }
+
+    @PostMapping("pll_registers")
+    RegisterPLL pllRegisters(@RequestParam String sn) throws MalformedURLException, InterruptedException, ExecutionException, ScriptException{
+    	return diagnostics(RegisterPLL.class, sn, "regs", "1", "102", null, null, PostFor.IRT_OBJECT);
+    }
+
+	@PostMapping("module-info")
+	Info info(@RequestParam String sn, Integer moduleIndex) {
+		return diagnostics(Info.class, sn, "info", moduleIndex.toString(), null, null, null, PostFor.IRT_OBJECT);
+    }
+
+	@PostMapping("hw-info")
+	HWInfo hwInfo(@RequestParam String sn, Integer moduleIndex) {
+		final HWInfo hwInfo = diagnostics(HWInfo.class, sn, "hwinfo", moduleIndex.toString(), "4", null, null, PostFor.IRT_OBJECT);
+		Optional.ofNullable(hwInfo).ifPresent(hi->hi.setModuleIndex(moduleIndex)); 
+		return hwInfo;
+    }
+
+    @GetMapping("register-pm2-fpga")
+    RegisterPm2Fpga getRegisterPm2Fpga(@RequestParam String sn, Integer deviceId, @RequestParam(required = false) String address, @RequestParam(required = false) String value){
+		return diagnostics(RegisterPm2Fpga.class, sn, "regs", deviceId.toString(), "25", address, value, PostFor.IRT_OBJECT);
+    }
+
+    @RequestMapping("register-gates")
+    RegisterGates getRegisterDacs(@RequestParam String sn, Integer deviceId, @RequestParam(required = false) String address, @RequestParam(required = false) String value){
+		return diagnostics(RegisterGates.class, sn, "regs", deviceId.toString(), "27", address, value, PostFor.STRING);
+    }
+
     @PostMapping("register/write")
     String rwRegister(@RequestParam String sn, @RequestParam String moduleId, @RequestParam String index, @RequestParam String address, @RequestParam String value){
-    	logger.traceEntry("snL {}; moduleId: {}; index: {}; address: {}; value: {}", sn, moduleId, index, address, value);
-    	Register o = unitRegister(RegisterEmpty.class, sn, moduleId, index, address, value, PostFor.IRT_OBJECT);
+    	diagnostics(RegisterEmpty.class, sn, "regs", moduleId, index, address, value, PostFor.IRT_OBJECT);
     	return sn;
     }
 
-	private <T extends Register> T unitRegister(Class<T> registerClass, String sn, String deviceId, String index, String address, String value, PostFor postFor) {
+	private <T extends Diagnostics> T diagnostics(Class<T> registerClass, String sn, String command, String moduleIndex, String index, String address, String value, PostFor postFor) {
+    	logger.traceEntry("registerClass: {}; sn: {}; command: {}; moduleIndex: {}; index: {}; address: {}; value: {}; postFor: {}",  registerClass, sn, command, moduleIndex, index, address, value, postFor);
 		return Optional.ofNullable(sn)
 
     			.map(
@@ -1026,32 +863,36 @@ public class CalibrationRestController {
     						try {
 
     				    		List<NameValuePair> params = new ArrayList<>();
-    				    		params.addAll(Arrays.asList(new BasicNameValuePair[]{new BasicNameValuePair("devid", deviceId), new BasicNameValuePair("command", "regs")}));
+    				    		params.addAll(Arrays.asList(new BasicNameValuePair[]{new BasicNameValuePair("devid", moduleIndex), new BasicNameValuePair("command", command)}));
 
     				    		final URL url;
     				    		if(address==null || value == null) {
     				    			url = new URL("http", sn, "/device_debug_read.cgi");
-	    							params.add(new BasicNameValuePair("groupindex", index));
+    				    			Optional.ofNullable(index).ifPresent(i->params.add(new BasicNameValuePair("groupindex", i)));
     				    		}else {
     				    			url = new URL("http", sn, "/device_debug_write.cgi");
 	    							params.add(new BasicNameValuePair("group", index));
 	    							params.add(new BasicNameValuePair("address", address));
 	    							params.add(new BasicNameValuePair("value", value));
     				    		}
-
     				    		FutureTask<T> ft = getIrtObject(url, registerClass, params, postFor);
-    				    		return ft.get(5, TimeUnit.SECONDS);
+    				    		final T t = ft.get(10, TimeUnit.SECONDS);
+    				    		logger.debug(t);
+								return t;
 
-    						} catch (IOException | InterruptedException | ExecutionException | TimeoutException e) {
-    							logger.catching(new Throwable(sn, e));
-    						}
+    						} catch (IOException e) {
+    							logger.catching(e);
+    						} catch (InterruptedException | ExecutionException | TimeoutException e) {
+    							logger.catching(Level.DEBUG, e);
+							}
 
     						return null;
     					})
     			.orElse(null);
 	}
 
-	private <T extends Register> FutureTask<T> getIrtObject(final URL url, Class<T> registerClass, List<NameValuePair> params, PostFor postFor) throws IOException {
+	private <T extends Diagnostics> FutureTask<T> getIrtObject(final URL url, Class<T> registerClass, List<NameValuePair> params, PostFor postFor) throws IOException {
+		logger.traceEntry("url: {}; registerClass: {}; params: {};postFor postFor: {}", url, registerClass, params, postFor);
 		switch(postFor) {
 		case IRT_OBJECT:
 			return HttpRequest.postForIrtObgect(url.toString(), registerClass, params);

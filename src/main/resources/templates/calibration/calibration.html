@@ -65,7 +65,7 @@
   			<div class="dropdown-menu" aria-labelledby="dropdownUnitButton">
     			<a class="dropdown-item" th:classappend="${info==null ? 'disabled list-group-item-light' : ''}" th:href="@{${info==null} ? '#' : 'http://' + ${info.serialNumber}}" target="_blank">Web</a>
     			<a id="unitLogin" class="dropdown-item unitLogin" th:classappend="${info==null ? 'disabled list-group-item-light' : ''}" th:href="@{${info==null} ? '#' : '/calibration/rest/login?sn=' + ${info.serialNumber}}">Login</a>
-    			<a id="currents" class="dropdown-item" th:classappend="${(info==null or info.getDeviceType()<250) ? 'disabled list-group-item-light' : ''}" href="#">Currents</a>
+    			<a id="currents" class="dropdown-item" href="#">Currents</a>
     			<a 	id="initialize"
     				class="dropdown-item calibrate"
     				th:classappend="${info==null ? 'disabled list-group-item-light' : ''}"
@@ -605,8 +605,10 @@
 </th:block>
 	<script th:inline="javascript">
 	/*<![CDATA[*/
-		let serialNumber =  /*[[${serialNumber}]]*/ 'IRT-2121021';
-		console.log(serialNumber);
+		const serialNumber =  /*[[${serialNumber}]]*/ 'IRT-2121021';
+		const info =  /*[[${info}]]*/ '';
+		const topId = info ? info.deviceType + '.' + info.typeVersion : null;
+// 		let devid =  /*[[${devid}]]*/ 'IRT-2121021';
 	/*]]>*/
 	//# sourceURL=sn.js
 	</script>

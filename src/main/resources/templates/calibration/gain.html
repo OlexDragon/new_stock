@@ -141,7 +141,7 @@
 			function postNewValue(newValue){
 
 				let devid = /*[[${devid}]]*/ 1;
-				$.post('/calibration/rest/dac', {sn : serialNumber, devid: devid, value: newValue, channel: channel})
+				$.post('/calibration/rest/current/dac', {sn : serialNumber, devid: devid, value: newValue, channel: channel})
 				.fail(function(error) {
 					if(err)
 						return;

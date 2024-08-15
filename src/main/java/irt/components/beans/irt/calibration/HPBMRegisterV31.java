@@ -5,17 +5,18 @@ import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 import com.fasterxml.jackson.annotation.JsonProperty;
 
 import lombok.Getter;
+import lombok.Setter;
 import lombok.ToString;
 
-@Getter @ToString @JsonIgnoreProperties(ignoreUnknown = true)
+@Getter @Setter @ToString @JsonIgnoreProperties(ignoreUnknown = true)
 public class HPBMRegisterV31 {
 
 	@JsonProperty("switch1")
-	@JsonAlias("Current_mon_1 (101)")
+	@JsonAlias({"Current_mon_1 (101)", "I_HS1 (0x03)"})
 	String switch1;
 
 	@JsonProperty("switch2")
-	@JsonAlias("Current_mon_2 (103)")
+	@JsonAlias({"Current_mon_2 (103)", "I_HS2 (0x05)"})
 	String switch2;
 
 	@JsonProperty("switch3")

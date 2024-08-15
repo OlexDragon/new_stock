@@ -19,7 +19,7 @@ import com.fasterxml.jackson.annotation.JsonFormat;
 
 import irt.components.beans.irt.calibration.measurement.Measurement;
 import irt.components.beans.jpa.User;
-import irt.components.services.JSonMeasurementConverter;
+import irt.components.services.converter.JSonMeasurementConverter;
 import lombok.AllArgsConstructor;
 import lombok.Getter;
 import lombok.NoArgsConstructor;

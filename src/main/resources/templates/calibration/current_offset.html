@@ -56,7 +56,7 @@
 				let $currentOffset = $('.current_offset').addClass('disabled');
 
 				let local = this.dataset.local;
-				$.post('/calibration/rest/current_offset', {sn: serialNumber, local: local})
+				$.post('/calibration/rest/current/offset', {sn: serialNumber, local: local})
 				.done(function(data){
 
 					if(!data.length){
@@ -124,7 +124,7 @@
 
 			function saveOffset(currentOffset){
 				$.ajax({
-					url:'/calibration/rest/save_current_offset',
+					url:'/calibration/rest/current/save_offset',
 					type: 'POST',
 					contentType: "application/json",
 					data: JSON.stringify(currentOffset),

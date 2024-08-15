@@ -70,13 +70,11 @@
   		<script th:inline="javascript">
 		/*<![CDATA[*/
 			const $noConverter = $('.card-header').filter((i,el)=>{const innerText = el.innerText;return innerText[innerText.length-1]!=='C';});
-			console.log($noConverter);
 			const topSN = $noConverter.map((i,el)=>el.innerText).filter((i,text)=>text.length==11).get();
 			if(topSN.length){
 				const sn = topSN[0];
 				$noConverter.filter((i,el)=>!el.innerText.startsWith(sn)).each((i,el)=>el.classList.add('text-bg-danger'));
 			}
-		console.log(topSN);
 			var $initializeLinks = $('.initialize').click(e=>{
 				if(e.currentTarget.localName == 'button')
 					setting(e);
@@ -161,7 +159,7 @@
 				if(postWriteTimeout)
 						return;
 				postRwInfo = true;
-				$.post('/calibration/rest/calibration-rw-info', {sn: serialNumber})
+				$.post('/calibration/rest/calib-rw-info', {sn: serialNumber})
 				.done(function(data){
 					postRwInfo = false;
 					if(!data){
@@ -169,15 +167,20 @@
 						$calibrationMode.next().addClass('disabled');
 						return;
 					}
-					if(data.digitalPotentiometers)
+					let calMode = false;
+					if(data.calibrationRwInfo){
+						calMode = data.calibrationRwInfo.calMode;
 						$calibrationMode.next().removeClass('disabled');
-					else{
+					}else if(data.digitalPotentiometers){
+						calMode = data.digitalPotentiometers.calMode;
+						$calibrationMode.next().removeClass('disabled');
+					}else{
 						disableAll();
 						login();
 						return;
 					}
 
-					if(data.digitalPotentiometers.calMode){
+					if(calMode){
 						$calibrationMode.prop('checked', true);
 						enableAll();
 					}else{

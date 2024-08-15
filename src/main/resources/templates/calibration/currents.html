@@ -30,55 +30,75 @@
  <!-- Modal Body -->
       			<div id="modal-body" class="modal-body">
       			<table class="table table-sm table-borderless align-middle bg_tropo text-center">
-      				<tr><td><div class="mt-5 mb-5"></div></td><td></td><td></td><td></td><td></td><td></td><td></td><td></td><td></td></tr>
-     				<tr id="blink1" class="dashed_border">
-       					<td style="width: 15%"></td>
-      					<td ><strong id="current2" class="txt_blue bg_white" th:text="''">2.0 A</strong></td>
-      					<td style="width: 10%;"><button class="btn btn-outline-dark btn-lg gate" data-channel="1001" data-switch="switch2">1G2</button></td>
-      					<td style="width: 10%;"><button class="btn btn-outline-dark btn-lg gate" data-channel="1001" data-switch="switch5">1G4</button></td>
-      					<td style="width: 14%;"></td>
-      					<td style="width: 10%;"><button class="btn btn-outline-dark btn-lg gate" data-channel="1001" data-switch="switch6">2G3</button></td>
-      					<td style="width: 10%;"><button class="btn btn-outline-dark btn-lg gate" data-channel="1001" data-switch="switch3">2G1</button></td>
-     					<td><strong id="current3" class="txt_blue bg_white" th:text="''">3.0 A</strong></td>
-      					<td style="width: 15%;"></td>
+      				<tr><td id="toBlink1" class="border-start"></td><td><div class="mt-5 mb-5"></div></td><td></td><td></td>
+      					<td><button id="gate1" class="btn btn-outline-dark gate invisible" data-switch="switch5">1</button></td>
+      					<td></td><td></td><td></td><td></td><td></td></tr>
+     				<tr id="blink1" class="dashed_border gates_I">
+       					<td style="width: 10%"></td>
+      					<td><strong id="current1" class="form-control form-control-sm text-primary bg-white fw-bold current_I switch2"  th:text="''">1.0 A</strong></td>
+      					<td style="width: 10%;"><button id="gate2" class="btn btn-outline-dark gate invisible" data-switch="switch2">2</button></td>
+      					<td style="width: 10%;"><button id="gate3" class="btn btn-outline-dark gate invisible" data-switch="switch5">3</button></td>
+      					<td style="width: 10%;"><button id="gate4" class="btn btn-outline-dark gate invisible" data-switch="switch5">4</button></td>
+      					<td style="width: 10%;"><button id="gate5" class="btn btn-outline-dark gate invisible" data-switch="switch6">5</button></td>
+      					<td style="width: 10%;"><button id="gate6" class="btn btn-outline-dark gate invisible" data-switch="switch6">6</button></td>
+      					<td style="width: 10%;"><button id="gate7" class="btn btn-outline-dark gate invisible" data-switch="switch3">7</button></td>
+     					<td><strong id="current2" class="form-control form-control-sm text-primary bg-white fw-bold current_I switch3"  th:text="''">2.0 A</strong></td>
+      					<td style="width: 10%;"></td>
       				</tr>
-       				<tr><td><div class="mt-5"></div></td><td></td><td></td><td><strong id="drivers1" class="txt_blue bg_white"></strong></td><td></td><td><strong id="drivers2" class="txt_blue bg_white"></strong></td><td></td><td></td><td></td></tr>
-     				<tr id="blink2" class="dashed_border">
+       				<tr><td><div class="mt-5"></div></td><td></td><td></td><td><strong id="current3" class="form-control form-control-sm text-primary bg-white fw-bold current_I switch5"  th:text="''">9.0 A</strong></td>
+       					<td>><button id="gate8" class="btn btn-outline-dark gate invisible" data-switch="switch5">8</button></td>
+       					<td>><button id="gate9" class="btn btn-outline-dark gate invisible" data-switch="switch6">9</button></td>
+       					<td><strong id="current4" class="form-control form-control-sm text-primary bg-white fw-bold current_I switch6"  th:text="''">10.0 A</strong></td><td></td><td></td><td></td></tr>
+     				<tr id="blink2" class="dashed_border gates_I">
        					<td></td>
-      					<td><strong id="current1" class="txt_blue bg_white" th:text="''">1.0 A</strong></td>
-      					<td><button class="btn btn-outline-dark btn-lg gate" data-channel="1001" data-switch="switch1">1G1</button></td>
-      					<td><button class="btn btn-outline-dark btn-lg gate" data-channel="1001" data-switch="switch5">1G3</button></td>
-      					<td></td>
-      					<td><button class="btn btn-outline-dark btn-lg gate" data-channel="1001" data-switch="switch6">2G4</button></td>
-      					<td><button class="btn btn-outline-dark btn-lg gate" data-channel="1001" data-switch="switch4">2G2</button></td>
-     					<td><strong id="current4" class="txt_blue bg_white" th:text="''">4.0 A</strong></td>
+      					<td><strong id="switch1" class="form-control form-control-sm text-primary bg-white fw-bold current_I switch1"  th:text="''">3.0 A</strong></td>
+      					<td><button id="gate10" class="btn btn-outline-dark gate invisible" data-switch="switch1">10</button></td>
+      					<td><button id="gate11" class="btn btn-outline-dark gate invisible" data-switch="switch5">11</button></td>
+      					<td><button id="gate12" class="btn btn-outline-dark gate invisible" data-switch="switch5">12</button></td>
+      					<td><button id="gate13" class="btn btn-outline-dark gate invisible" data-switch="switch6">13</button></td>
+      					<td><button id="gate14" class="btn btn-outline-dark gate invisible" data-switch="switch6">14</button></td>
+      					<td><button id="gate15" class="btn btn-outline-dark gate invisible" data-switch="switch4">15</button></td>
+     					<td><strong id="current6" class="form-control form-control-sm text-primary bg-white fw-bold current_I switch4"  th:text="''">4.0 A</strong></td>
        					<td></td>
       				</tr>
-       				<tr><td><div class="mt-5 pt-5"></div></td><td></td><td></td><td></td><td></td><td></td><td></td><td></td><td></td></tr>
+       				<tr><td></td><td><div class="mt-5"></div></td><td></td><td>></td><td></td>
+       					<td>><button id="gate16" class="btn btn-outline-dark gate invisible" data-switch="switch6">16</button></td>
+       					<td></td><td></td><td></td><td></td></tr>
+       				<tr><td></td><td><div class="mt-5"></div></td><td></td><td></td>
+       					<td>><button id="gate17" class="btn btn-outline-dark gate invisible" data-switch="switch6">17</button></td>
+       					<td>></td>
+       					<td></td><td></td><td></td><td></td></tr>
      				<tr>
        					<td></td>
-      					<td><strong id="current8" class="txt_blue bg_white" th:text="''">8.0 A</strong></td>
-      					<td><button class="btn btn-outline-dark btn-lg gate" data-channel="1002" data-switch="switch4">2G2</button></td>
-      					<td><button class="btn btn-outline-dark btn-lg gate" data-channel="1002" data-switch="switch6">2G4</button></td>
-      					<td></td>
-      					<td><button class="btn btn-outline-dark btn-lg gate" data-channel="1002" data-switch="switch5">1G3</button></td>
-      					<td><button class="btn btn-outline-dark btn-lg gate" data-channel="1002" data-switch="switch1">1G1</button></td>
-     					<td><strong id="current5" class="txt_blue bg_white" th:text="''">5.0 A</strong></td>
+      					<td><strong id="current7" class="form-control form-control-sm text-primary bg-white fw-bold current_II switch4"  th:text="''">5.0 A</strong></td>
+       					<td><button id="gate18" class="btn btn-outline-dark gate invisible" data-switch="switch4">18</button></td>
+      					<td><button id="gate19" class="btn btn-outline-dark gate invisible" data-switch="switch6">19</button></td>
+      					<td><button id="gate20" class="btn btn-outline-dark gate invisible" data-switch="switch6">20</button></td>
+      					<td><button id="gate21" class="btn btn-outline-dark gate invisible" data-switch="switch5">21</button></td>
+      					<td><button id="gate22" class="btn btn-outline-dark gate invisible" data-switch="switch5">22</button></td>
+      					<td><button id="gate23" class="btn btn-outline-dark gate invisible" data-switch="switch1">23</button></td>
+     					<td><strong id="current8" class="form-control form-control-sm text-primary bg-white fw-bold current_II switch1"  th:text="''">6.0 A</strong></td>
        					<td></td>
       				</tr>
-       				<tr><td><div class="mt-5"></div></td><td></td><td></td><td><strong id="drivers4" class="txt_blue bg_white"></strong></td><td></td><td><strong id="drivers3" class="txt_blue bg_white"></strong></td><td></td><td></td><td></td></tr>
-      				<tr>
+       				<tr><td><div class="mt-5"></div></td><td></td><td></td><td><strong id="current9" class="form-control form-control-sm text-primary bg-white fw-bold current_II switch6"  th:text="''">11.0 A</strong></td>
+       					<td><button id="gate24" class="btn btn-outline-dark gate invisible" data-switch="switch6">24</button></td>
+       					<td><button id="gate25" class="btn btn-outline-dark gate invisible" data-switch="switch5">25</button></td>
+       					<td><strong id="current10" class="form-control form-control-sm text-primary bg-white fw-bold current_II switch5"  th:text="''">12.0 A</strong></td><td></td><td></td><td></td></tr>
+      				<tr data-channel="1002">
       					<td></td>
-      					<td><strong id="current7" class="txt_blue bg_white" th:text="''">7.0 A</strong></td>
-      					<td><button class="btn btn-outline-dark btn-lg gate" data-channel="1002" data-switch="switch3">2G1</button></td>
-      					<td><button class="btn btn-outline-dark btn-lg gate" data-channel="1002" data-switch="switch6">2G3</button></td>
-      					<td></td>
-      					<td><button class="btn btn-outline-dark btn-lg gate" data-channel="1002" data-switch="switch5">1G4</button></td>
-      					<td><button class="btn btn-outline-dark btn-lg gate" data-channel="1002" data-switch="switch2">1G2</button></td>
-     					<td><strong id="current6" class="txt_blue bg_white" th:text="''">6.0 A</strong></td>
+      					<td><strong id="current11" class="form-control form-control-sm text-primary bg-white fw-bold current_II switch3"  th:text="''">7.0 A</strong></td>
+      					<td><button id="gate26" class="btn btn-outline-dark gate invisible" data-switch="switch3">26</button></td>
+      					<td><button id="gate27" class="btn btn-outline-dark gate invisible" data-switch="switch6">27</button></td>
+      					<td><button id="gate28" class="btn btn-outline-dark gate invisible" data-switch="switch6">28</button></td>
+      					<td><button id="gate29" class="btn btn-outline-dark gate invisible" data-switch="switch5">29</button></td>
+      					<td><button id="gate30" class="btn btn-outline-dark gate invisible" data-switch="switch5">30</button></td>
+      					<td><button id="gate31" class="btn btn-outline-dark gate invisible" data-switch="switch2">31</button></td>
+     					<td><strong id="current12" class="form-control form-control-sm text-primary bg-white fw-bold current_II switch2"  th:text="''">8.0 A</strong></td>
        					<td></td>
       				</tr>
-       				<tr><td><div class="mt-5"></div></td><td></td><td></td><td></td><td></td><td></td><td></td><td></td><td></td></tr>
+       				<tr><td id="toBlink2" class="border-start"><div class="mt-5"></div></td><td></td><td></td><td></td><td></td>
+       					<td><button id="gate32" class="btn btn-outline-dark gate invisible" data-switch="switch5">32</button></td>
+       					<td></td><td></td><td></td><td></td></tr>
       			</table>
     			<div class="row mt-3" >
      				<div id="currentDelay" class="col"></div>
@@ -89,8 +109,16 @@
     		</div>
 <!-- Modal Footer -->
       		<div class="modal-footer">
-      			<input id="currentAlarm" type="number" title="Alarm Value." class="col-2" value="6.5">
-      			<div class="col"></div>
+      			<div class="col-2">
+      				<input id="currentAlarm" type="number" title="Alarm Value." class="form-control" value="6.5">
+      			</div>
+ 	        	<div id="specialText" class="col text-danger text-center fs-5"></div>
+	        	<div class="col-2">
+	        	<select id="currentLayout" class="form-control"></select>
+	        	</div>
+	        	<input  sec:authorize="hasAuthority('EDIT_PROFILE_PROPERTY')" id="currentShowAll" type="checkbox" class="btn-check" autocomplete="off"></input >
+				<label sec:authorize="hasAuthority('EDIT_PROFILE_PROPERTY')" class="btn btn-outline-primary" for="currentShowAll">Show All</label>
+	        	<button sec:authorize="hasAuthority('EDIT_PROFILE_PROPERTY')" id="currentSetup" type="button" class="btn btn-outline-warning col-auto" disabled>Setup</button>
 	        	<button type="button" class="btn btn-outline-secondary col-auto" data-bs-dismiss="modal">Close</button>
 	    	</div>
   			</div>
@@ -98,263 +126,315 @@
 		<script th:inline="javascript">
 		/*<![CDATA[*/
 
-// 			$.ajaxSetup({
-//  				timeout: 2000
-// 			});
+		var dbLayout;
+		var currentAlias;
+		var moduleId;
+		var channels = {};
 
-			var version = $('#typeVersion').val();
-			var device1;
-			var regUrl;
-			var run = true;
-			if(version=='11' || version=='21'){
-				device1 = 1001;
-				regUrl = '/calibration/rest/hpbm_register_v21';
-			}else if(version=='31'){
-				device1 = 1003;
-				regUrl = '/calibration/rest/hpbm_register_v31';
-				const map = {_1G1:'G0', _1G2: 'G1', _1G3: 'G2', _1G4: 'G3', _1G4: 'G3', _2G1: 'G8', _2G2: 'G9', _2G3: 'G10', _2G4: 'G11'};
-				$('.gate').each((i,el)=>{
-					const t = map['_' + el.innerText];
-					if(t)
-						el.innerText = t;
-					let channel = parseInt(el.dataset.channel);
-					el.dataset.channel = ++channel;
-				})
-			}else{
-				alert('Unknown Unit Version: ' + version);
-				run = false;
+		var regUrl;
+		if($('#typeVersion').val()>30)
+			regUrl = '/calibration/rest/hpbm_register_v31';
+		else
+			regUrl = '/calibration/rest/hpbm_register_v21';
+
+		var $current_I = $('.current_I');
+		var $current_II = $('.current_II');
+		var $specialText = $('#specialText');
+
+		$('#currentShowAll').change(e=>{
+			if(e.currentTarget.checked)
+				$gates.filter((i,el)=>Array.from(el.classList).filter(c=>c.includes('invisible')).length).removeClass('invisible').addClass('disabled');
+			else
+				$gates.filter((i,el)=>Array.from(el.classList).filter(c=>c.includes('disabled')).length).removeClass('disabled').addClass('invisible');
+		});
+		var $gates = $('.gate');
+		var layout;
+		var $currentLayout = $('#currentLayout').change(e=>{
+
+			if(!dbLayout)
+				return;
+
+			layout = dbLayout.filter(l=>l.creationDate == e.currentTarget.value);
+			if(!layout.length){
+				alert('something went wrong.\nNo settings.');
+				return;
 			}
-			var $currentDelay = $('#currentDelay').text('Delay: ' + delay + ' ms').dblclick(e=>{
-				e.preventDefault();
-				let mill = prompt('Enter the delay time in milliseconds.')
+			$gates.addClass('invisible');
+			showGates(layout[0].layouts);
+			showSpecial();
+		});
+
+		function showGates(layouts){
+			if(!layouts)
+				return;
+
+			layouts.forEach(l=>{
+				channels[l.value] = l.id;
+				Object.keys(l.gates).forEach(k=>$('#' + k).removeClass('invisible').text(l.gates[k]).val(l.gates[k]).attr('data-channel', l.value));
+			});
+
+			if(moduleId && dbLayout)
+				postWithParam('/calibration/rest/current/alias', {moduleId: moduleId}, f_alias, conectionFail);
+		}
+		function f_alias(alias){
+			currentAlias = alias;
+			if(!alias)
+				return;
+			$gates.filter((i,el)=>!Array.from(el.classList).includes('invisible')).each((i,el)=>{
+				alias.filter(a=>a.nameInProfile === el.value)
+				.forEach(a=>{
+					el.innerText = a.nameToShow;
+				});
+			});
+		}
+
+		$gates.click(e=>{
+			let href = '/calibration/current?channel=' + e.currentTarget.dataset.channel + '&pot=' + e.currentTarget.value + '&switchName=' + e.currentTarget.dataset.switch;
+			loadModal(href);
+		});
+		var delay;
+		var intervalCurrent;
+		function setDelay(d){
+			clearInterval(intervalCurrent);
+			if(d)
+				delay = d;
+			else{
+				let cookiesDelay = Cookies.get('currentDelay');
+				if(cookiesDelay)
+					delay = parseInt(cookiesDelay);
+				else
+					delay = 200;
+			}
+			$currentDelay.text('Delay: ' + delay + ' ms');
+			intervalCurrent = setInterval(getCurrents, delay);
+		}
+		$('#resetBtn').click(setDelay);
+
+		var $currentDelay = $('#currentDelay').text('Delay: ' + delay + ' ms').dblclick(e=>{
+			e.preventDefault();
+			let mill = prompt('Enter the delay time in milliseconds.')
+			if(!mill) return;
+			mill = parseInt(mill);
+			while(isNaN(mill)){
+				mill = prompt('You entered an incorrect value.\nEnter the delay time in milliseconds.');
 				if(!mill) return;
 				mill = parseInt(mill);
-				while(isNaN(mill)){
-					mill = prompt('You entered an incorrect value.\nEnter the delay time in milliseconds.');
-					if(!mill) return;
-					mill = parseInt(mill);
-				}
-				Cookies.set('currentDelay', mill);
-				setDelay(mill);
-			});
-			var intervalCurrent;
-			if(run){
-// Currenr Alarm setting.
-				$currentAlarm = $('#currentAlarm');
+			}
+			Cookies.set('currentDelay', mill);
+			setDelay(mill);
+		});
+// // Currenr Alarm setting.
+				var $currentAlarm = $('#currentAlarm');
 
 				cookies = Cookies.get("currentAlarm");
 				if(cookies)
 					$currentAlarm.val(cookies);
 
-				$currentAlarm.focusout(function(){
-					let v = $(this).val();
-					Cookies.set("currentAlarm", v, { expires: 999, path: '' });
+				$currentAlarm.focusout(e=>{
+					let v = e.currentTarget.value;
+					if(v)
+						Cookies.set("currentAlarm", v, { expires: 999, path: '' });
 				});
-				$currentAlarm.on('input', function(){
-					let v = $(this).val();
+				$currentAlarm.on('input', e=>{
+					let v = e.currentTarget.value
 					if(!v){
-						$(this).val('6.5').select();
+						e.currentTarget.value = 6.5;
+						e.currentTarget.select();
 						Cookies.remove("currentAlarm");
 					}
 				});
-// END - Currenr Alarm setting.
+// // END - Currenr Alarm setting.
 
-				var delay;
-				setDelay();
-				function setDelay(d){
-					clearInterval(intervalCurrent);
-					if(d)
-						delay = d;
-					else{
-						let cookiesDelay = Cookies.get('currentDelay');
-						if(cookiesDelay)
-							delay = parseInt(cookiesDelay);
-						else
-							delay = 200;
-					}
-					$currentDelay.text('Delay: ' + delay + ' ms');
-					intervalCurrent = setInterval(getCurrents, delay);
-				}
-				$('#resetBtn').click(setDelay)
-
-
-				$modal.on('hide.bs.modal', function () {
-					err = true;
-					clearInterval(intervalCurrent);
-					intervalCurrent = undefined;
-				});
-
-			}
-			var devid = device1
-			var busy = false;
+			var requestCount;
+			var selection = 0;
 			function getCurrents(){
-				if(busy)
+
+				if(!$modal.hasClass('show') || !dbLayout || !dbLayout.length) return;
+
+
+				const layout = dbLayout.filter(l=>l.creationDate == $currentLayout.val());
+				if(!layout.length){
+					console.log('Layout is not selected.');
 					return;
-				busy = true;
-
-				let mShow = $('#modal.show');
-				if(!mShow) return;
-
-				if(devid==1002)
-					devid = device1;
-				else
-					devid = 1002;
-/*[+
-				$.post(regUrl, {sn: serialNumber, devid: devid})
-				.done(function(properties, t){
-					busy = false;
-					if(version=='11' || version=='21')
-						currentV11(properties, t);
-					else
-						currentV31(properties, t)
-				})
-				.fail(function(error) {
-					busy = false;
-
-					if(err) return;
-
-					if(error.statusText!='abort'){
-
-						err = true;
-						$modal.modal('hide');
-
-						var responseText = error.responseText;
-						if(responseText)
-							alert(error.responseText);
-						else
-							alert("Server error. Status = " + error.status)
-					}
-				});
-+]*/
-			}
-			function currentV11(properties, t){
-				// First properties
-				const devid_1001 = properties['1001'];
-				if(devid_1001){
-					showCurrentV11('#current1', '#current2', '#current3', '#current4', devid_1001);
-					blinkBorder($('#blink1'))
-				}
-// Second properties
-				const devid_1002 = properties['1002'];
-				if(devid_1002){
-					showCurrentV11('#current5', '#current6', '#current7', '#current8', devid_1002);
-					blinkBorder($('#blink2'))
 				}
 
-				if(intervalCurrent && !devid_1001 && !devid_1002){
+				--selection;
+				if(selection<0)
+					selection = layout[0].layouts.length-1;
 
-					if(!properties){
-						setDelay();
+				devid = layout[0].layouts[selection].value;
+				if(!devid)
+					return;
+
+				if(requestCount<0)
+					requestCount = 0;
+				else if(requestCount>5){
+					if(noConnection)
 						return;
-					}
-				}
-			}
-			function currentV31(properties, t){
-				// First properties
-				let hpbm1 = properties['1002'];
-				if(hpbm1){
-					showCurrentV31('#current1', '#current2', '#current3', '#current4', '#drivers1', '#drivers2', hpbm1);
-					blinkBorder($('#blink1'))
-				}
-// Second properties
-				let hpbm2 = properties['1003'];
-				if(hpbm2){
-					showCurrentV31('#current5', '#current6', '#current7', '#current8', '#drivers3', '#drivers4', hpbm2);
-					blinkBorder($('#blink2'))
-				}
 
-				if(intervalCurrent && !hpbm1 && !hpbm2){
-
-					if(!properties){
-						setDelay();
-						return;
-					}
-				}
-			}
-			function showCurrentV11(id1, id2, id3, id4, properties){
-
-				//ePSU_2_42V 
-				let ePSU_2_42V = properties.switch1;
-
-				let c1 = ePSU_2_42V['I_HS1 (0x03)']
-				let $c1 = $(id1);
-				fillFields($c1, c1)
-
-				let c2 = ePSU_2_42V['I_HS2 (0x05)']
-				let $c2 = $(id2);
-				fillFields($c2, c2)
-
-				//ePSU_3_42V
-				let ePSU_3_42V = properties.switch2;
-
-				let c3 = ePSU_3_42V['I_HS1 (0x03)']
-				let $c3 = $(id3);
-				fillFields($c3, c3)
-
-				let c4 = ePSU_3_42V['I_HS2 (0x05)']
-				let $c4 = $(id4);
-				fillFields($c4, c4)
-			}
-			function showCurrentV31(output1, output2, output3, output4, drivers1, drivers2, values){
-
-				let c1 = values.switch1;
-				let $c1 = $(output1);
-				fillFields($c1, c1)
-
-				let c2 = values.switch2;
-				let $c2 = $(output2);
-				fillFields($c2, c2)
-
-				let c3 = values.switch3;
-				let $c3 = $(output3);
-				fillFields($c3, c3)
-
-				let c4 = values.switch4;
-				let $c4 = $(output4);
-				fillFields($c4, c4)
-
-				let dr1 = values.switch5;
-				let $dr1 = $(drivers1);
-				fillFields($dr1, dr1)
-
-				let dr2 = values.switch6;
-				let $dr2 = $(drivers2);
-				fillFields($dr2, dr2)
-			}
-
-			function fillFields($c, c){
-
-				let maxCurrent = $currentAlarm.val();
-				$c.text(c);
-				let hasClass = $c.hasClass('bg_alarm');
-				let v = c.split(" ")[0];
-
-				if(!v)
-					return;
-
-				if(parseFloat(v)>=maxCurrent){
-					if(!hasClass){
-						$c.addClass('bg_alarm');
-						$c.removeClass('bg_white');
-					}
+					setDelay(++delay);
+					clearInterval(intervalCurrent);
+					intervalCurrent = setInterval(getCurrents, delay);
 					return;
 				}
+				++requestCount;
+				postWithParam(regUrl, {sn: serialNumber, devid: devid}, f_showCurrent, f_showCurrentError);
+			}
+			var noConnection;
+			function f_showCurrent(data){
+				--requestCount
+				if(!data){
+					noConnection = true;
+					return;
+				}
+				noConnection = false;
+				const channel = Object.keys(data);
+				const channelId = channels[channel];
+				const $current = channelId == 'channel1' ? $current_I : $current_II;
+				const ch = data[channel];
+				if(!ch)
+					return;
 
-				if(parseFloat(v)<maxCurrent && hasClass){
-					$c.addClass('bg_white');
-					$c.removeClass('bg_alarm');
+				blinkBorder(channelId);
+				const switches = Object.keys(ch);
+				for(let i=0; i<switches.length; i++){
+					const sw = switches[i];
+					$current.filter((i,el)=>Array.from(el.classList).includes(sw))
+					.each((i,el)=>{
+						const toSet = ch[sw];
+						if(!toSet)
+							return;
+						el.innerText = toSet;
+
+		 				const v = toSet.split(" ")[0];
+		 				if(!v)
+	 						return;
+
+		 				const maxCurrent = $currentAlarm.val();
+
+		 				if(parseFloat(v)>=maxCurrent){
+	 						el.classList.add('bg-danger');
+	 						el.classList.add('text-white');
+	 						el.classList.remove('text-primary');
+	 						el.classList.remove('bg-white');
+	 					}else{
+	 						el.classList.add('text-primary');
+	 						el.classList.add('bg-white');
+	 						el.classList.remove('bg-danger');
+	 						el.classList.remove('text-white');
+	 					}
+		 			});
 				}
 			}
-
-			function blinkBorder($c){
-				$c.addClass('border_gray').removeClass('border_white');
-				setTimeout(function(){ $c.removeClass('border_gray').addClass('border_white'); }, 100);
+			function f_showCurrentError(data){
+				--requestCount
+				noConnection = true;
+console.log(data);
 			}
 
-		$('.modal-body table button').click(e=>{
-			let href = '/calibration/current?channel=' + e.currentTarget.dataset.channel + '&pot=' + e.currentTarget.innerText + '&switchName=' + e.currentTarget.dataset.switch;
-			loadModal(href);
-		});
+			var $toBlink1 = $('#toBlink1');
+			var $toBlink2 = $('#toBlink2');
+			function blinkBorder(channelId){
+				const $c = channelId==='channel1' ? $toBlink1 : $toBlink2;
+				$c.addClass('border-info');
+				setTimeout(function(){ $c.removeClass('border-info'); }, 100);
+			}
+
+		var $currentSetup = $('#currentSetup').click(()=>loadModal('/calibration/current-set-up?sn=' + serialNumber));
+		var timeoutInit;
+		var modulesLeft;
+		var initCount;
+		function init(){
+
+			if(modulesLeft){
+				timeoutInit = setTimeout(init, 100);
+				return;
+			}
+
+			if(!sequences.length){
+				alert('The device does not support current measurement.');
+				if($currentSetup)
+					$currentSetup.prop('disabled', false);
+				return;
+			}
+			postWithParam('/calibration/rest/module-info', {sn: serialNumber, moduleIndex: sequences[0].moduleIndex}, f_info, conectionFail);
+		}
+		function f_info(info){
+			moduleId = info.deviceType + '.' + info.typeVersion
+			postWithParam('/calibration/rest/current/layout', {sn: serialNumber, topId: topId, moduleId: moduleId}, f_layout, conectionFail);
+		}
+		function f_layout(layouts){
+
+			if(!layouts || !layouts.length){
+				if($currentSetup.length)
+					loadModal('/calibration/current-set-up?sn=' + serialNumber);
+				else{
+					alert('There are no settings for this device.\nCall Roman to fix this.');
+					$modal.modal('hide')
+				}
+				return;
+			}
+			dbLayout = layouts;
+			$currentSetup.prop('disabled', false);
+			fillCurrentLayout(layouts);
+		}
+		var sequences = [];
+		function f_allModules(modules){
+
+			if(!modules){
+				alert('Unable to read information from the unit.');
+				return;
+			}
+			const keys = Object.keys(modules);
+			if(!keys.length){
+				alert('Unable to obtain information about modules.');
+				return;
+			}
+			moduleExists(modules);
+		}
+		function moduleExists(modules){
+			const keys = Object.keys(modules);
+			modulesLeft = keys.length;
+			for(let i=0; i<keys.length; i++){
+				const moduleIndex = modules[keys[i]]
+				postWithParam('/calibration/rest/hw-info', {sn: serialNumber, moduleIndex: moduleIndex}, f_sequencesPush, f_error);
+			}
+			timeoutInit = setTimeout(init, 1000);
+		}
+		function f_sequencesPush(hwInfo){
+			--modulesLeft;
+
+			if(!hwInfo || !hwInfo.sequence)
+				return;
+
+			sequences.push({moduleIndex: hwInfo.moduleIndex, sequence: hwInfo.sequence});
+		}
+		function f_error(error){
+			conectionFail(error);
+			console.error('error.responseText: ' + error.responseText + '; error.statusText: ' + error.statusText + '; error.status: ' + error.status);
+			$modal.modal('hide')
+		}
+		function fillCurrentLayout(layout){
+			layout.forEach(l=>$currentLayout.append($('<option>', {text: l.creationDate, value: l.creationDate})));
+			if($currentLayout.val())
+				$currentLayout.change();
+		}
+		function showSpecial(){
+			if(dbLayout && dbLayout.length==1 && dbLayout[0].topId==serialNumber)
+				$specialText.text('Special')
+		}
+		function f_startModal(){
+			initCount = requestCount= 0;
+			postWithParam('/calibration/rest/all-modules', {sn: serialNumber}, f_allModules, conectionFail);
+		}
+		function f_stopModal(){
+// 			err = true;
+			intervalCurrent = clearInterval(intervalCurrent);
+		}
+		$modal.on('shown.bs.modal', f_startModal);
+		$modal.on('hide.bs.modal', f_stopModal);
+
+		setDelay();
 
 		/*]]>*/
 		//# sourceURL=currents.js
@@ -365,7 +445,7 @@
     		<div class="modal-content">
 <!-- Modal Header -->
       			<div class="modal-header row">
-        			<h5 class="modal-title ml-3 text-primary col-auto" th:text="'The currents of ' + ${channel} + '.' + ${potName}">The currents of IRT-2234005</h5>
+        			<h5 class="modal-title ml-3 text-primary col-auto" th:text="'The currents of ' + ${channel} + '.  : ' + ${potName}">The currents of IRT-2234005</h5>
 <!-- X Button -->
         			<button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
       			</div>
@@ -386,7 +466,7 @@
   	    				</div>
   	    			</div>
      				<div class="row">
-     					<button id="currentDefault" class="btn btn-outline-info form-control mt-2">Default</button>
+     					<button id="currentDefault" class="btn btn-outline-info form-control mt-2" disabled>Default</button>
      				</div>
     				<div class="row">
      					<button id="currentSave" class="btn btn-outline-warning form-control mt-2" disabled>Save</button>
@@ -410,8 +490,8 @@
   	    				<input id="currentMax" type="number" class="form-control currentSetting" placeholder="Maximum Value" value="4095">
   	    				<label for="currentMax">Max</label>
   	    			</div>
-					<input type="checkbox" class="btn-check" name="options-outlined" id="calibration-mode" autocomplete="off">
-					<label class="btn btn-outline-success disabled col-2" for="calibration-mode">Cal.</label>
+					<input type="checkbox" class="btn-check" name="options-outlined" id="calibrationMode" autocomplete="off">
+					<label class="btn btn-outline-success disabled col-2" for="calibrationMode">Cal.</label>
 		    	</div>
       		</div>
       	</div>
@@ -424,11 +504,8 @@
 
 			var $currentToShow =  $('#currentToShow');
 			var $currentValue = $('#currentValue');
-			var setDefault = false;
 			var $currentDefault = $('#currentDefault').click(()=>{
-				if(setDefault)
-					return;
-				setDefault = true;
+
 				gateStartupValues(saved=>{
 					if(!saved){
 						alert('Something went wrong.\nTry again.');
@@ -516,7 +593,7 @@
 				const toSend = {sn : serialNumber, channel: channel, index: potIndex, value: el.value};
 				if(save)
 					toSend.save = save;
-				xhrInfo = $.post('/calibration/rest/dac', toSend)
+				xhrInfo = $.post('/calibration/rest/current/dac', toSend)
 				.done(done=>{
 					postSetValue = false;
 					if(!done){
@@ -538,11 +615,7 @@
 			var $currentFactor = $('#currentFactor');
 			var $currentMin = $('#currentMin');
 			var $currentMax = $('#currentMax');
-			var $calibrationMode = $('#calibration-mode').click(e=>{
-					$.post('/calibration/rest/calibration_mode_toggle', {ip: serialNumber})
-					.done(getRwInfo)
-					.fail(conectionFail);
-				});
+			var $calibrationMode = $('#calibrationMode').click(e=>postWithParam('/calibration/rest/calibration_mode_toggle', {ip: serialNumber}, getRwInfo, conectionFail));
 			function changeStep(arrowLeft){
 				checkSetting();
 				let step = parseInt($currentStep.val());
@@ -598,55 +671,77 @@
 			var potIndex;
 			var postRwInfo = false;
 			function getRwInfo(){
-				if(postRwInfo || saving)
-						return;
-				postRwInfo = true;
-				xhrInfo = $.post('/calibration/rest/calibration-rw-info', {sn: serialNumber})
-				.done(function(data){
-					postRwInfo = false;
-					if(!data){
-						disableAll();
-						return;
-					}
-					if(data.digitalPotentiometers)
-						$calibrationMode.next().removeClass('disabled');
-					else{
-						disableAll();
-						login();
-						return;
-					}
-
-					if(data.digitalPotentiometers.calMode){
-						$calibrationMode.prop('checked', true);
-						$currentSetValue.prop('disabled', false);
-						$currentSave.prop('disabled', false);
-					}else{
-						$calibrationMode.prop('checked', false);
-						$currentSetValue.prop('disabled', true);
-						$currentSave.prop('disabled', true);
-					}
-
-					const pts = data.digitalPotentiometers.list.filter(pt=>pt.index==channel);
-					if(!pts || !pts.length){
-						return;
-					}
-					const p = pts[0].vars.filter(pt=>pt.name==potName);
-					if(!p || !p.length){
+				if(saving)
 						return;
 
-					}
-					potIndex = p[0].index;
-					const value = p[0].value;
-					$currentValue.val(value);
-					if(!$currentSetValue.val())
-						$currentSetValue.val(value);
-					setMinMax(p[0].range);
-				})
-				.fail(error=>{
-					$modal.modal('hide');
-					conectionFail(error);
-					postRwInfo = false;
-				});
+				postWithParam('/calibration/rest/calib_rw_info', {sn: serialNumber}, f_calibRwInfo, f_calibRwInfoError);
+			}
+			function f_calibRwInfo(data){
+				if(!data){
+					disableAll();
+					return;
+				}
+
+				let calMode = false;
+				if(data.calibrationRwInfo)
+					calMode = data.calibrationRwInfo.calMode;
+
+				else if(data.digitalPotentiometers)
+					calMode = data.digitalPotentiometers.calMode;
+
+				else{
+					disableAll();
+					login();
+					return;
+				}
+
+				$calibrationMode.next().removeClass('disabled');
+
+				if(calMode){
+					$calibrationMode.prop('checked', true);
+					$currentSetValue.prop('disabled', false);
+					$currentSave.prop('disabled', false);
+				}else{
+					$calibrationMode.prop('checked', false);
+					$currentSetValue.prop('disabled', true);
+					$currentSave.prop('disabled', true);
+				}
+
+				const pts = data.digitalPotentiometers.list.filter(pt=>pt.index==channel);
+				if(!pts || !pts.length){
+					return;
+				}
+				const p = pts[0].vars
+									.filter(pt=>{
+
+										if(!pt.name)
+											return;
+
+										let name
+										if(currentAlias && currentAlias.length){
+											const al = currentAlias.filter(a=>a.nameToShow===pt.name);
+											if(al.length)
+												name = al[0].nameInProfile;
+											else
+												name = pt.name;
+										}else
+											name = pt.name;
+
+										return name==potName;
+									});
+				if(!p || !p.length)
+					return;
+
+				potIndex = p[0].index;
+				const value = p[0].value;
+				$currentValue.val(value);
+				if(!$currentSetValue.val())
+					$currentSetValue.val(value);
+				setMinMax(p[0].range);
+			}
+			function f_calibRwInfoError(error){
+				$modal.modal('hide');
+				conectionFail(error);
 			}
 			var postShowCurrent = false;
 			function showCurrent(){
@@ -663,11 +758,7 @@
 					timestamp = false;
 				}
 				postShowCurrent = true;
-				if(version=='11' || version=='21')
-					regUrl = '/calibration/rest/hpbm_register_v21';
-				else if(version=='31')
-					regUrl = '/calibration/rest/hpbm_register_v31';
-				xhrCurrent = $.post(regUrl, {sn: serialNumber, devid: channel})
+				$.post(regUrl, {sn: serialNumber, devid: channel})
 				.done(data=>{
 					postShowCurrent = false;
 					if(data && data[channel] && data[channel][switchName])
@@ -700,50 +791,50 @@
 				if(postStartupValues)
 					return;
 				postStartupValues = true;
-				xhrStartup = $.get('/calibration/rest/register-gates', {sn: serialNumber, deviceId: channel, index: 27})
-				.done(register=>{
-					postStartupValues = false;
+				postWithParam('/calibration/rest/register-gates', {sn: serialNumber, deviceId: channel},
+						register=>{
+							postStartupValues = false;
 
-					if(!potIndex)
-						return;
+							if(typeof potIndex === 'undefined')
+								return;
 
-					const name = 'gate' + potIndex;
-					const saved = register[name];
-					if(action){
-						action(saved);
-						return;
-					}
-					const val = $currentSetValue.val();
-					if(!val || !saved){
-						console.warn(`One of two values for ${name} ​​is missing: val = ${val}; saved = ${saved}`);
-						console.log(register);
-						return;
-					}
+							const name = 'gate' + potIndex;
+							const saved = register[name];
+							if(action){
+								action(saved);
+								return;
+							}
 
-					const btnText = $currentDefault.text();
-					const newText = 'Default: ' + saved;
-					if(btnText != newText)
-						$currentDefault.text(newText);
+							const val = $currentSetValue.val();
+							if(!val || !saved){
+								console.warn(`One of two values for ${name} ​​is missing: val = ${val}; saved = ${saved}`);
+								return;
+							}
 
-					if(parseInt(val) != saved){
-						$currentSave.removeClass('btn-outline-warning').addClass('btn-outline-danger');
-						if(saving){
-							alert('The value was not saved, please try again.');
-							saving = false;
-						}
-					}else{
-						$currentSave.removeClass('btn-outline-danger').addClass('btn-outline-warning');
-						if(saving){
-							alert('Yes! The value has been saved.');
-							saving = false;
-						}
-					}
-				})
-				.fail(error=>{
-					postStartupValues = false;
-					conectionFail(error)
-				});
+							const btnText = $currentDefault.text();
+							const newText = 'Default: ' + saved;
+							if(btnText != newText)
+								$currentDefault.text(newText).prop('disabled', false);
 
+							if(parseInt(val) != saved){
+								$currentSave.removeClass('btn-outline-warning').addClass('btn-outline-danger');
+								if(saving){
+									alert('The value was not saved, please try again.');
+									saving = false;
+								}
+							}else{
+								$currentSave.removeClass('btn-outline-danger').addClass('btn-outline-warning');
+								if(saving){
+									alert('Yes! The value has been saved.');
+									saving = false;
+								}
+							}
+						}, f_gatesError);
+			}
+			function f_gatesError(error){
+				postStartupValues = false;
+				conectionFail(error)
+				console.log(error);
 			}
 			// Modal Start/Stop
 			var intervalCalibrationMode;
@@ -763,22 +854,10 @@
 				intervalShowCurrent = setInterval(showCurrent, 1000);
 				intervalGateStartupValues = setInterval(gateStartupValues, 10001);
 			}
-			var xhrInfo;
-			var xhrStartup;
-			var xhrCurrent;
 			function stopAll(){
 				intervalCalibrationMode = clearInterval(intervalCalibrationMode);
 				intervalShowCurrent = clearInterval(intervalShowCurrent);
 				intervalGateStartupValues = clearInterval(intervalGateStartupValues);
-				abortAll();
-			}
-			function abortAll(){
-				if(xhrInfo)
-					xhrInfo.abort();
-				if(xhrStartup)
-					xhrStartup.abort();
-				if(xhrCurrent)
-					xhrCurrent.abort();
 			}
 			function disableAll(notCalMod){
 				$currentSetValue.prop('disabled', true);
@@ -790,6 +869,542 @@
 			startAll();
 		/*]]>*/
 		//# sourceURL=current.js
+  		</script>
+	</th:block>
+	<th:block th:fragment="setUp">
+  		<div class="modal-dialog modal-lg">
+    		<div class="modal-content">
+<!-- Modal Header -->
+      			<div class="modal-header row text-bg-primary">
+        			<h5 class="modal-title ml-3 col-auto" th:text="'Currents Set Up for ' + ${serialNumber}">Set Up for IRT-2234005</h5>
+<!-- X Button -->
+        			<button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+      			</div>
+ <!-- Modal Body -->
+      			<div id="modal-body" class="modal-body">
+      			<table class="table table-sm table-borderless align-middle bg_tropo text-center">
+      				<tr class="gates_I"><td><select id="channel1" class="form-control border border-success channel"></select></td><td><div class="mt-5 mb-5"></div></td><td></td>
+      					<td><select id="gate1" class="form-control border border-primary gate" disabled></select></td>
+      					<td></td><td></td><td></td><td></td><td></td></tr>
+     				<tr class="dashed_border gates_I">
+       					<td style="width: 20%"></td>
+      					<td style="width: 10%;"><select id="gate2" class="form-control border border-primary gate" disabled></select></td>
+      					<td style="width: 10%;"><select id="gate3" class="form-control border border-primary gate" disabled></select></td>
+      					<td style="width: 10%;">><select id="gate4" class="form-control border border-primary gate" disabled></select></td>
+      					<td style="width: 10%;">><select id="gate5" class="form-control border border-primary gate" disabled></select></td>
+      					<td style="width: 10%;"><select id="gate6" class="form-control border border-primary gate" disabled></select></td>
+      					<td style="width: 10%;"><select id="gate7" class="form-control border border-primary gate" disabled></select></td>
+     					<td style="width: 10%"><strong id="current3" class="text-primary bg-white" th:text="''">3.0 A</strong></td>
+      					<td style="width: 10%;"></td>
+      				</tr>
+       				<tr class="gates_I"><td><div class="mt-5"></div></td><td></td><td><strong id="drivers1" class="text-primary bg-white"></strong></td>
+       					<td>><select id="gate8" class="form-control border border-primary gate" disabled></select></td>
+       					<td>><select id="gate9" class="form-control border border-primary gate" disabled></select></td>
+       					<td><strong id="drivers2" class="text-primary bg-white"></strong></td><td></td><td></td><td></td></tr>
+     				<tr id="blink2" class="dashed_border gates_I">
+       					<td></td>
+      					<td><select id="gate10" class="form-control border border-primary gate" disabled></select></td>
+      					<td><select id="gate11" class="form-control border border-primary gate" disabled></select></td>
+      					<td>><select id="gate12" class="form-control border border-primary gate" disabled></select></td>
+     					<td>><select id="gate13" class="form-control border border-primary gate" disabled></select></td>
+      					<td><select id="gate14" class="form-control border border-primary gate" disabled></select></td>
+      					<td><select id="gate15" class="form-control border border-primary gate" disabled></select></td>
+     					<td><strong id="current4" class="text-primary bg-white" th:text="''">4.0 A</strong></td>
+       					<td></td>
+      				</tr>
+       				<tr class="gates_I"><td></td><td><div class="mt-5"></div></td><td></td><td>></td>
+       					<td>><select id="gate16" class="form-control border border-primary gate" disabled></select></td>
+       					<td></td><td></td><td></td><td></td></tr>
+       				<tr class="gates_II"><td><select id="channel2" class="form-control border border-success channel"></select></td><td><div class="mt-5"></div></td><td></td>
+       					<td>><select id="gate17" class="form-control border border-primary gate  gate16" disabled></select></td>
+       					<td>></td>
+       					<td></td><td></td><td></td><td></td></tr>
+     				<tr class="gates_II">
+       					<td></td>
+      					<td><select id="gate18" class="form-control border border-primary gate gate15" disabled></select></td>
+      					<td><select id="gate19" class="form-control border border-primary gate gate14" disabled></select></td>
+      					<td>><select id="gate20" class="form-control border border-primary gate gate13" disabled></select></td>
+     					<td>><select id="gate21" class="form-control border border-primary gate gate12" disabled></select></td>
+      					<td><select id="gate22" class="form-control border border-primary gate gate11" disabled></select></td>
+      					<td><select id="gate23" class="form-control border border-primary gate gate10" disabled></select></td>
+     					<td><strong id="current5" class="text-primary bg-white" th:text="''">5.0 A</strong></td>
+       					<td></td>
+      				</tr>
+       				<tr class="gates_II"><td><div class="mt-5"></div></td><td></td><td><strong id="drivers4" class="text-primary bg-white"></strong></td>
+       					<td><select id="gate24" class="form-control border border-primary gate gate9" disabled></select></td>
+       					<td><select id="gate25" class="form-control border border-primary gate gate8" disabled></select></td>
+       					<td><strong id="drivers3" class="text-primary bg-white"></strong></td><td></td><td></td><td></td></tr>
+      				<tr class="gates_II">
+      					<td></td>
+      					<td><select id="gate26" class="form-control border border-primary gate gate7" disabled></select></td>
+      					<td><select id="gate27" class="form-control border border-primary gate gate6" disabled></select></td>
+      					<td>><select id="gate28" class="form-control border border-primary gate gate5" disabled></select></td>
+     					<td>><select id="gate29" class="form-control border border-primary gate gate4" disabled></select></td>
+      					<td><select id="gate30" class="form-control border border-primary gate gate3" disabled></select></td>
+      					<td><select id="gate31" class="form-control border border-primary gate gate2" disabled></select></td>
+     					<td><strong id="current6" class="text-primary bg-white" th:text="''">6.0 A</strong></td>
+       					<td></td>
+      				</tr>
+       				<tr class="gates_II"><td><div class="mt-5"></div></td><td></td><td></td><td></td>
+       					<td><select id="gate32" class="form-control border border-primary gate gate1" disabled></select></td>
+       					<td></td><td></td><td></td><td></td></tr>
+      			</table>
+    		</div>
+<!-- Modal Footer -->
+      		<div class="modal-footer">
+	        	<button id="save" type="button" class="btn btn-outline-primary col-auto current-save">Save</button>
+	        	<button id="special" type="button" class="btn btn-outline-warning col-auto current-save" th:title="'Save only for ' + ${serialNumber}">Special</button>
+	        	<div id="specialText" class="col text-danger text-center fs-5"></div>
+	        	<div class="col-2">
+	        	<select id="currentLayout" class="form-control"></select>
+	        	</div>
+				<input type="checkbox" class="btn-check" id="cbAlias" autocomplete="off">
+				<label class="btn btn-outline-info" for="cbAlias">Alias</label><br>
+	        	<button id="mapGates" type="button" class="btn btn-outline-primary col-auto">Map Gates</button>
+	        	<button id="reset" type="button" class="btn btn-outline-secondary col-auto">Reset</button>
+	        	<button type="button" class="btn btn-outline-secondary col-auto" data-bs-dismiss="modal">Close</button>
+	    	</div>
+  			</div>
+  		</div>
+		<script th:inline="javascript">
+		/*<![CDATA[*/
+
+		var copyToGates_II;
+
+		$('#mapGates').click(()=>loadModal('/calibration/current-map'))
+		var $specialText = $('#specialText');
+		var $allSelects = $modal.find('select');
+		var $channel1 = $('#channel1');
+		var $channel2 = $('#channel2');
+		var $gates = $('.gate');
+		var $gates_I = $('.gates_I .gate');
+		var $gates_II = $('.gates_II .gate');
+		var $cbAlias = $('#cbAlias')
+		.change(e=>{
+
+			if(!e.currentTarget.checked){
+				$('.gate').children().filter((i,el)=>el.value).each((i,el)=>el.innerText = el.value);
+				return;
+			}
+
+			const moduleIndex = $channels.map((i,el)=>el.value).filter((i,v)=>v).get();
+			if(!moduleIndex.length)
+				return;
+
+			if(currentAlias)
+				showAlias()
+			else
+				postWithParam('/calibration/rest/module-info', {sn: serialNumber, moduleIndex: moduleIndex[0]}, f_infoAlias, conectionFail);
+		});
+		function f_infoAlias(info){
+			moduleId = info.deviceType +'.' + info.typeVersion;
+			console.log(moduleId);
+			postWithParam('/calibration/rest/current/alias', {moduleId: moduleId}, f_alias, conectionFail);
+		}
+		function f_alias(alias){
+
+			currentAlias = alias;
+			showAlias();
+		}
+		function showAlias(){
+			if(!currentAlias.length)
+				return;
+
+			const $options = $('.gate').children();
+			if(!$options.length)
+				return;
+
+			const checked = $cbAlias.prop('checked');
+			$options.each((i,el)=>{
+
+				const val = el.value;
+				if(!val)
+					return;
+
+				currentAlias.filter(a=>a.nameInProfile===val).forEach(a=>el.innerText = a.nameToShow);
+			});
+		}
+		var $gates_I = $('.gates_I .gate')
+		.change(e=>{
+			checkAnotherGates(e.currentTarget);
+			if(!$channel2.val())
+				return;
+			if(typeof copyToGates_II == 'undefined')
+				copyToGates_II = confirm('Do you want to copy channel #1 to channel #2 ?\nIf yes press OK.');
+			if(!copyToGates_II)
+				return;
+			const $anotherTarget = $('.' +e.currentTarget.id).val(e.currentTarget.value);
+			checkAnotherGates($anotherTarget[0]);
+		});
+		var $gates_II = $('.gates_II .gate').change(e=>checkAnotherGates(e.currentTarget));
+		var $channels = $('.channel')
+		.change(e=>{
+
+			const $channel = $(e.currentTarget);
+			const $gates = relatedGates($channel);
+			$gates.empty().prop('disabled', true);
+			if(!e.currentTarget.value){
+				checkAnotherChannel(e.currentTarget);
+				return;
+			}
+
+			postWithParam('/calibration/rest/hw-info', {sn: serialNumber, moduleIndex: e.currentTarget.value}, f_hwInfo, conectionFail);
+		});
+		function f_hwInfo(hwInfo){
+			if(!hwInfo || !hwInfo.sequence){
+				alert('The device does not support current measurement.');
+				disableOption(e.currentTarget);
+				return;
+			}
+
+			$gates.append($('<option>', {value: '', text: '--'})).prop('disabled', false);
+			hwInfo.sequence.split(/(\s+)/).filter(s=>s.includes('G') || s.includes('P')).sort().forEach(s=>$gates.append($('<option>', {value: s, text: s})));
+			const $ch = $channels.filter((i,el)=>el.value==hwInfo.moduleIndex);
+			if($ch.length)
+				checkAnotherChannel($ch[0]);
+
+			const channel = $ch.val();
+			if(channel)
+				setGates(channel, $gates);
+		}
+		var $currentLayout = $('#currentLayout').change(e=>{
+			if(!dbLayout)
+				return;
+
+			const layout = dbLayout.filter(l=>l.creationDate == e.currentTarget.value);
+			if(!layout.length){
+				alert('something went wrong.\nNo settings.');
+				return;
+			}
+			$gates_I.val('');
+			$gates_II.val('');
+			selectChannel(layout[0].layouts);
+			showSpecial();
+		});
+		var $btnSpecial = $('#special');
+		new bootstrap.Tooltip($btnSpecial);
+		$('#reset').click(()=>{
+
+			$currentLayout.val('');
+
+			const $gates = $('.gate');
+			if($gates.filter((i,el)=>el.value).length){
+				$gates.val('').children().prop('disabled', false);
+				return;
+			}
+			$channels.val('').children().prop('disabled', false);
+		});
+		$btnSave = $('.current-save').click(e=>{
+
+			e.currentTarget.disabled = true;
+
+			const toSend = {};
+			toSend.layouts = [];
+			$channels.each((i, el)=>{
+				if(!el.value)
+					return;
+				const c = {id: el.id, value: el.value};
+				c.gates = {};
+				const g = relatedGates($(el)).filter((i,el)=>el.value)
+				if(!g.length)
+					return;
+				g.each((i,el)=>c.gates[el.id] = el.value);
+				toSend.layouts.push(c);
+			});
+			if(!toSend.layouts.length){
+				alert('There is nothing to save.')
+				return;
+			}
+
+			$btnSave.prop('disabled', true);
+			$btnSpecial.prop('disabled', true);
+
+			dbLayout = null;
+			$.post('/calibration/rest/module-info', {sn: serialNumber, moduleIndex: toSend.layouts[0].value})
+			.done(i=>{
+				toSend.serialNumber = serialNumber;
+				toSend.topId = info.deviceType + '.' + info.typeVersion;
+				toSend.moduleId = i.deviceType + '.' + i.typeVersion;
+				toSend.special = e.currentTarget.id === 'special';
+
+				postObject('/calibration/rest/current/save', toSend)
+	 			.done(response=>{
+	 				console.log(response);
+	 				$modal.modal('hide');
+	 			})
+				.fail(error=>{
+					conectionFail(error);
+					console.error(error);
+					$btnSave.prop('disabled', false);
+					$btnSpecial.prop('disabled', false);
+				});
+ 			})
+			.fail(error=>{
+				conectionFail(error);
+				console.error(error);
+				$btnSave.prop('disabled', false);
+				$btnSpecial.prop('disabled', false);
+			});
+		});
+
+		function relatedGates($channel){
+			const g1 = $channel.parents('tr').hasClass('gates_I');
+			return g1 ? $gates_I : $gates_II;
+		}
+		function setGates(channel, $gates){
+
+			if(!dbLayout)
+				return;
+
+			const selectedDate = $currentLayout.val();
+			if(!selectedDate)
+				return;
+
+			const selected = dbLayout.filter(layout=>layout.creationDate == selectedDate);
+			if(!selected.length)
+				return;
+			const gates = selected[0].layouts.filter(l=>l.value==channel).map(l=>l.gates);
+			if(!gates.length)
+				return;
+			const g = gates[0];
+			$gates.each((i,select)=>{
+				const v = g[select.id];
+				if(v){
+					select.value = v;
+					checkAnotherGates(select);
+				}
+			});
+		}
+		function disableOption(select){
+			if(!select.value)
+				return;
+			$channels.children().filter((i,option)=>option.value==select.value).prop('disabled', true);
+			select.value = '';
+		}
+		function checkAnotherGates(el){
+			const cannel2 = Array.from(el.classList).filter(c=>c.length>4 && c.includes('gate'));
+			const $another = cannel2.length ? $gates_II : $gates_I;
+			const values = $another.map((i,select)=>select.value).get().filter(v=>v);
+			const $children = $another.filter((i,select)=>!select.isEqualNode(el)).children();
+			$children.each((i,option)=>{
+				option.disabled = option.value && values.filter(v=>{
+					return !(option.value && v===option.parentElement.value);
+				}).includes(option.value);
+			});
+		}
+
+		function checkDB(el){
+
+			if(!el.value)
+				return;
+
+			if(dbLayout){
+				if(!$currentLayout.val())
+					fillCurrentLayout(dbLayout);
+				return;
+			}
+
+			postWithParam('/calibration/rest/module-info', {sn: serialNumber, moduleIndex: el.value}, f_info, conectionFail);
+		}
+		function f_layout(layouts){
+			dbLayout = layouts;
+		}
+		function selectChannel(layouts){
+			layouts.forEach(layout=>{
+				const $channel = $('#' + layout.id);
+				if($channel.val() == layout.value)
+					setGates(layout.value, relatedGates($channel));
+				else
+					$channel.val(layout.value).change();
+			});
+		}
+		function f_disableFields(disable){
+			$nameInProfile.prop('disabled', disable);
+			$nameToShow.prop('disabled', disable);
+		}
+		function checkAnotherChannel(el){
+			const $another = el.id == 'channel1' ? $channel2 : $channel1;
+			$another.children().each((i,option)=>{option.disabled = option.value && option.value===el.value;});
+			checkDB(el);
+		}
+		function moduleExists(modules){
+			const keys = Object.keys(modules).sort();
+			$channels.append($('<option>', {value: '', text: 'N/A'}));
+			for(let i=0; i<keys.length; i++){
+				const key = keys[i];
+				const moduleIndex = modules[key];
+				$channels.append($('<option>', {text: key, value: moduleIndex}));
+			}
+		}
+		$modal.on('shown.bs.modal', f_startModal);
+		$modal.on('hide.bs.modal', f_stopModal);
+
+		/*]]>*/
+		//# sourceURL=currentsSetUp.js
+  		</script>
+	</th:block>
+	<th:block th:fragment="map">
+  		<div class="modal-dialog">
+    		<div class="modal-content">
+<!-- Modal Header -->
+      			<div class="modal-header row">
+        			<h5 class="modal-title ml-3 text-primary col-auto">Map Gates</h5>
+<!-- X Button -->
+        			<button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+      			</div>
+ <!-- Modal Body -->
+      			<div id="modal-body" class="modal-body">
+      				<div class="row">
+	     				<div class="form-floating col">
+  	    					<select id="nameInProfile" class="form-control" disabled></select>
+  	    					<label for="nameInProfile">Name</label>
+  	    				</div>
+	     				<div class="form-floating col">
+  	    					<input id="nameToShow" type="text" class="form-control" placeholder="Name to Show" disabled>
+  	    					<label for="nameToShow">Name to Show</label>
+  	    				</div>
+  	    			</div>
+  	    			<div id="savedResult" class="row  row-cols-2 mt-2 text-primary"> </div>
+      			</div>
+<!-- Modal Footer -->
+ 	     		<div class="modal-footer">
+ 	     			<button id="btnSaveAlias" class="btn btn-outline-warning" disabled="disabled">Save Alias</button>
+ 	     			<div class="col"></div>
+	     			<button id="btnReload" class="btn btn-outline-secondary">Reload</button>
+	     			<button id="btnDelete" class="btn btn-outline-secondary">Delete</button>
+	        	<button type="button" class="btn btn-outline-secondary col-auto" data-bs-dismiss="modal">Close</button>
+		    	</div>
+      		</div>
+      	</div>
+		<script th:inline="javascript">
+		/*<![CDATA[*/
+
+			var hwInfoCount;
+			var mi;	// module Index to get module info
+			var set = new Set();
+
+			var $savedResult = $('#savedResult');
+			var $btnReload = $('#btnReload').click(()=>{
+
+				f_disableFields(true);
+				$nameInProfile.empty();
+				f_startModal();
+			});
+			var $nameInProfile = $('#nameInProfile').change(f_nameInProfileChange);
+			var $nameToShow = $('#nameToShow').on('input', f_validate);
+			$('#btnDelete').click(()=>{
+				if(!confirm('Do you really want to delete this data?'))
+					retrun;
+				const nameInProfile = $nameInProfile.val();
+				if(!nameInProfile){
+					alert('Nothing to delete.');
+					return;
+				}
+				postWithParam('/calibration/rest/current/delete-alias', {moduleId: moduleId, nameInProfile: nameInProfile}, r=>{alert(r); $btnReload.click();}, f_error);
+			}); 
+			var $btnSaveAlias = $('#btnSaveAlias').click(f_saveAlias);
+
+			function f_nameInProfileChange(e){
+				$nameToShow.val('');
+
+				if(!currentAlias)
+					return;
+
+				currentAlias.filter(a=>a.nameInProfile === e.currentTarget.value).forEach(a=>$nameToShow.val(a.nameToShow));
+			}
+			function moduleExists(modules){
+				const keys = Object.keys(modules);
+				hwInfoCount = keys.length;
+				for(let i=0; i<keys.length; i++){
+					const moduleIndex = modules[keys[i]]
+					postWithParam('/calibration/rest/hw-info', {sn: serialNumber, moduleIndex: moduleIndex}, f_filterGates, f_error);
+				}
+			}
+			function f_filterGates(hwInfo){
+
+				--hwInfoCount;
+
+				if(!hwInfo || !hwInfo.sequence){
+					console.warn(hwInfo ? hwInfo : hwInfo.sequence ? 'moduleIndex ' + hwInfo.moduleIndex + ' does not have a gate sequence' : 'hwInfo undefined');
+					f_fillSelect();
+					return;
+				}
+
+				hwInfo.sequence.split(/(\s+)/).filter(s=>s.includes('G') || s.includes('P')).sort().forEach(s=>set.add(s));
+				if(!mi)
+					mi = hwInfo.moduleIndex;
+				f_fillSelect();
+			}
+			function f_fillSelect(){
+				if(hwInfoCount || !mi)
+					return;
+
+				set.forEach(s=>$nameInProfile.append($('<option>', {value: s, text: s})));
+
+				postWithParam('/calibration/rest/module-info', {sn: serialNumber, moduleIndex: mi}, f_info, conectionFail);
+			}
+			function f_info(info){
+				moduleId = info.deviceType + '.' + info.typeVersion;
+				postWithParam('/calibration/rest/current/alias', {moduleId: moduleId}, f_alias, conectionFail);
+
+				f_disableFields(false);
+			}
+			function f_alias(alias){
+				currentAlias = alias;
+				$savedResult.empty();
+				if(alias.length){
+					alias.sort((a,b)=>a.nameInProfile.localeCompare(b.nameInProfile)).forEach(a=>{
+						$savedResult
+						.append($('<div>', {class: 'col', text: a.nameInProfile}))
+						.append($('<div>', {class: 'col', text: a.nameToShow}));
+					});
+				}
+
+				const val = $nameInProfile.val();
+				if(val)
+					$nameInProfile.change();
+			}
+			function f_validate(e){
+
+				if( e.currentTarget.value){
+					const v =  e.currentTarget.value.toUpperCase();
+					if(v !== e.currentTarget.value)
+						e.currentTarget.value = v;
+				}
+
+				const nameInProfile = $nameInProfile.val();
+				const nameToShow = $nameToShow.val();
+
+				if(nameInProfile && nameToShow){
+
+					let disable = false;
+					if(currentAlias){
+						const a = currentAlias.filter(a=>a.nameToShow === nameToShow);
+						if(a.length>1 || (a.length && a[0].nameInProfile !== nameInProfile)){
+							const join = a.map(al=>al.nameInProfile).join(',');
+							alert('The value you are trying to put already exists. ' + join);
+							disable = true;
+						}
+					}
+
+					$btnSaveAlias.prop('disabled', disable);
+				}else
+					$btnSaveAlias.prop('disabled', true);
+			}
+			function f_saveAlias(){
+				const nameInProfile = $nameInProfile.val();
+				const nameToShow = $nameToShow.val();
+				postWithParam('/calibration/rest/current/save-alias', {moduleId: moduleId, nameInProfile: nameInProfile, nameToShow: nameToShow}, f_alias, conectionFail);
+			}
+			function f_error(){
+				--hwInfoCount;
+				conectionFail(error);
+				console.error('error.responseText: ' + error.responseText + '; error.statusText: ' + error.statusText + '; error.status: ' + error.status);
+			}
+
+			f_startModal();
+		/*]]>*/
+		//# sourceURL=current-map.js
   		</script>
 	</th:block>
 	</div>

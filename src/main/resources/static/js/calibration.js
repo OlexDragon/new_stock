@@ -32,7 +32,6 @@ let $menuPowerOffset = $('#menuPowerOffset');
 let $base;
 let $minValue;
 let $out;
-let $currentAlarm;
 // X - axel
 const options = {
 
@@ -553,6 +552,7 @@ $('#currents').click(function(e){
 });
 function loadModal(href){
 	$modal.modal('hide')
+	$modal.off('shown.bs.modal');
 	$modal.load(href, ()=>setTimeout(()=>$modal.modal('show'), 500));
 }
 $('#profile').click(function(e){
@@ -628,7 +628,7 @@ function selectAndCopy(element) {
 		if(error.responseText)
 			alert(error.responseText);
 		if(error.statusText)
-		alert(error.statusText);
+			alert(error.statusText);
 		else{
 			let status;
 			switch(error.status){
@@ -799,5 +799,13 @@ function postObject(url, object){
 		data: json,
 	    dataType: 'json'
 	})
-	
+}
+let isPostWithParam = false;
+function postWithParam(url, params, action, error){
+	if(isPostWithParam)
+		satTimeout(postWithParam, 100, url, params, action)
+
+	isPostWithParam = false;
+
+	$.post(url, params).done(action).fail(error);
 }

@@ -8,12 +8,7 @@ import lombok.Getter;
 import lombok.ToString;
 
 @Getter @ToString @JsonIgnoreProperties(ignoreUnknown = true)
-public class DigitalPotentiometer {
-
-	private Integer index;
-	private String name;
-	private Integer value;
-	private Range range;
-
-	private List<DigitalPotentiometer> vars;
+public class DacsDP {
+	Range range;
+	private List<DigitalPotentiometer> list;
 }

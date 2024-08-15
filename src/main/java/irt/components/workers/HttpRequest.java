@@ -410,7 +410,7 @@ public class HttpRequest {
 		return null;
 	}
 
-	public static Map<String, Integer> getAllDevices(String sn) throws IOException{
+	public static Map<String, Integer> getAllModules(String sn) throws IOException{
 		try {
 
 			final URL url = new URL("http", sn.trim(), "/diagnostics.asp?devices=1");

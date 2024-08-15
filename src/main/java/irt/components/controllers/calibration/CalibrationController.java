@@ -70,7 +70,7 @@ import irt.components.beans.jpa.repository.calibration.CalibrationGainSettingRep
 import irt.components.beans.jpa.repository.calibration.CalibrationOutputPowerSettingRepository;
 import irt.components.beans.jpa.repository.calibration.CalibrationPowerOffsetSettingRepository;
 import irt.components.services.HttpSerialPortServersKeeper;
-import irt.components.services.InitializeSettingConverter;
+import irt.components.services.converter.InitializeSettingConverter;
 import irt.components.workers.HttpRequest;
 import irt.components.workers.ProfileWorker;
 import irt.components.workers.ThreadRunner;
@@ -199,7 +199,7 @@ public class CalibrationController {
 		List<NameValuePair> params = new ArrayList<>();
 		params.addAll(Arrays.asList(new BasicNameValuePair("command", "devices" )));
 
-		final Map<String, Integer> devices = HttpRequest.getAllDevices(sn);
+		final Map<String, Integer> devices = HttpRequest.getAllModules(sn);
 		final List<Info> infos = getInfos(sn, devices);
 		infos.sort((a,b)->b.getDeviceId().compareTo(a.getDeviceId()));
 		model.addAttribute("infos", infos);
@@ -302,8 +302,10 @@ public class CalibrationController {
 
    						   							Optional.ofNullable(converterInfo).map(ConverterInfo::getLoFrequency).map(IrtFrequency::new).flatMap(IrtFrequency::getValue).ifPresent(lo->model.addAttribute("loFrequencty", lo));
 
-   						   						} catch (MalformedURLException | InterruptedException | ExecutionException | TimeoutException e) {
+   						   						} catch (MalformedURLException e) {
 													logger.catching(e);
+												} catch (InterruptedException | ExecutionException | TimeoutException e) {
+													logger.catching(Level.DEBUG, e);
 												}
    											});
 
@@ -348,7 +350,7 @@ public class CalibrationController {
 						}
 
    					} catch (InterruptedException | ExecutionException | TimeoutException e) {
-						logger.catching(e);
+   						logger.catching(Level.DEBUG, e);
 					}
     			});
 
@@ -402,8 +404,10 @@ public class CalibrationController {
 
 						ftProfile.get(10, TimeUnit.SECONDS);
 
-    				} catch (IOException | InterruptedException | ExecutionException | TimeoutException e) {
+    				} catch (IOException e) {
 						logger.catching(e);
+					} catch (InterruptedException | ExecutionException | TimeoutException e) {
+						logger.catching(Level.DEBUG, e);
 					}
     			});
 
@@ -421,6 +425,39 @@ public class CalibrationController {
 
     	return "calibration/current_offset :: modal";
     }
+
+	@GetMapping("currents")
+    String modalCurrents(@RequestParam String sn, Model model) {
+
+		model.addAttribute("serialNumber", sn);
+
+		return "calibration/currents :: modal";
+	}
+
+	@GetMapping("current-set-up")
+    String modalCurrentSetUp(@RequestParam String sn, Model model) {
+
+		model.addAttribute("serialNumber", sn);
+
+		return "calibration/currents :: setUp";
+	}
+
+	@GetMapping("current")
+    String modalCurrent(Integer channel, String pot, String switchName, Model model) {
+		logger.traceEntry("channel: {}; pot: {}; switchName: {}", channel, pot, switchName);
+
+		model.addAttribute("channel", channel);
+		model.addAttribute("potName", pot);
+		model.addAttribute("switchName", switchName);
+
+		return "calibration/currents :: current";
+	}
+
+	@GetMapping("current-map")
+    String modalCurrentap() {
+		logger.traceEntry();
+		return "calibration/currents :: map";
+	}
 
 	@GetMapping("btr")
     String modalBtr(@RequestParam String sn, @RequestParam(required = false, defaultValue = "false") Boolean setting, Model model) throws IOException {
@@ -571,8 +608,10 @@ public class CalibrationController {
 								gainFromProfile(sn, model).get(10, TimeUnit.SECONDS);
 							}
 
-						} catch (MalformedURLException | InterruptedException | ExecutionException | TimeoutException e) {
+						} catch (MalformedURLException e) {
 							logger.catching(e);
+						} catch (InterruptedException | ExecutionException | TimeoutException e) {
+							logger.catching(Level.DEBUG, e);
 						}
 					});
 
@@ -638,25 +677,6 @@ public class CalibrationController {
 	public static Optional<Monitor> getUnitMonitor(String serialNumber) throws MalformedURLException, InterruptedException, ExecutionException, TimeoutException {
 		final MonitorInfo value = getHttpUpdate(serialNumber, MonitorInfo.class, new BasicNameValuePair("exec", "mon_info")).get(5, TimeUnit.SECONDS);
 		return Optional.ofNullable(value).map(MonitorInfo::getData);
-	}
-
-	@GetMapping("currents")
-    String modalCurrents(@RequestParam String sn, Model model) {
-
-		model.addAttribute("serialNumber", sn);
-
-		return "calibration/currents :: modal";
-	}
-
-	@GetMapping("current")
-    String modalCurrent(Integer channel, String pot, String switchName, Model model) {
-		logger.traceEntry("channel: {}; pot: {}; switchName: {}", channel, pot, switchName);
-
-		model.addAttribute("channel", channel);
-		model.addAttribute("potName", pot);
-		model.addAttribute("switchName", switchName);
-
-		return "calibration/currents :: current";
 	}
 
 	public FutureTask<Void> gainFromProfile(String sn, Model model) {
@@ -729,7 +749,7 @@ public class CalibrationController {
 
 	private List<Info> getModulesInfo(String sn) throws IOException {
 
-		final Map<String, Integer> allDevices = HttpRequest.getAllDevices(sn);
+		final Map<String, Integer> allDevices = HttpRequest.getAllModules(sn);
     	allDevices.remove("System");
 
     	return getInfos(sn, allDevices);
@@ -754,9 +774,11 @@ public class CalibrationController {
     							});
 								return info;
 
-    						} catch (InterruptedException | ExecutionException | TimeoutException | MalformedURLException e) {
+    						} catch (MalformedURLException e) {
     							logger.catching(Level.DEBUG, e);
-    						}
+    						} catch (InterruptedException | ExecutionException | TimeoutException e) {
+								logger.catching(Level.DEBUG, e);
+							}
     						return null;
     					})
     			.filter(info->info!=null).collect(Collectors.toList());
@@ -785,7 +807,7 @@ public class CalibrationController {
 
 	public static Integer getSystemIndex(String sn) throws IOException{
 
-		final Map<String, Integer> allDevices = HttpRequest.getAllDevices(sn);
+		final Map<String, Integer> allDevices = HttpRequest.getAllModules(sn);
 		return Optional.ofNullable(allDevices.get("System")).orElse(1);
 	}
 
