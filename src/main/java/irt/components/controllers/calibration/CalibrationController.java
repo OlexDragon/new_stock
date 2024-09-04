@@ -22,6 +22,8 @@ import java.util.concurrent.atomic.AtomicReference;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
 
+import javax.script.ScriptException;
+
 import org.apache.http.NameValuePair;
 import org.apache.http.conn.HttpHostConnectException;
 import org.apache.http.message.BasicNameValuePair;
@@ -55,6 +57,7 @@ import irt.components.beans.irt.calibration.CalibrationTable;
 import irt.components.beans.irt.calibration.NameIndexPair;
 import irt.components.beans.irt.calibration.PowerDetectorSource;
 import irt.components.beans.irt.calibration.ProfileTableDetails;
+import irt.components.beans.jpa.IrtArray;
 import irt.components.beans.jpa.IrtArrayId;
 import irt.components.beans.jpa.btr.BtrSerialNumber;
 import irt.components.beans.jpa.btr.BtrSetting;
@@ -147,7 +150,7 @@ public class CalibrationController {
 
     					return;
 
-    				} catch (TimeoutException | UnknownHostException | HttpHostConnectException e) {
+    				} catch (TimeoutException | UnknownHostException | HttpHostConnectException | NullPointerException | ExecutionException e) {
 						logger.catching(Level.DEBUG, e);
 
 					} catch (Exception e) {
@@ -155,7 +158,7 @@ public class CalibrationController {
 					}
 
     				try {
-    					getHomePageInfo(s)
+    					getHomePageInfo(s, 400)
     					.ifPresent(home->{
     						final SysInfo sysInfo = home.getSysInfo();
     						final Info info = new Info();
@@ -170,7 +173,7 @@ public class CalibrationController {
     						model.addAttribute("ip", home.getNetInfo().getAddr());
             				model.addAttribute("serialNumber", info.getSerialNumber());
     					});
-    				} catch (IOException e) {
+    				} catch (IOException | InterruptedException | ExecutionException | TimeoutException e) {
     					logger.catching(Level.DEBUG, e);
     				}
     			});
@@ -191,7 +194,7 @@ public class CalibrationController {
     }
 
     @GetMapping("initialize")
-    String initialize(@RequestParam String sn, Model model) throws ExecutionException, IOException {
+    String initialize(@RequestParam String sn, Model model) throws ExecutionException, IOException, InterruptedException, TimeoutException, ScriptException {
 		logger.traceEntry("sn: {}", sn);
 
 		model.addAttribute("serialNumber", sn);
@@ -203,6 +206,7 @@ public class CalibrationController {
 		final List<Info> infos = getInfos(sn, devices);
 		infos.sort((a,b)->b.getDeviceId().compareTo(a.getDeviceId()));
 		model.addAttribute("infos", infos);
+		logger.debug(infos);
 
 		return "calibration/initialize :: modal";
     }
@@ -404,11 +408,11 @@ public class CalibrationController {
 
 						ftProfile.get(10, TimeUnit.SECONDS);
 
-    				} catch (IOException e) {
+    				} catch (IOException | ScriptException e) {
 						logger.catching(e);
 					} catch (InterruptedException | ExecutionException | TimeoutException e) {
 						logger.catching(Level.DEBUG, e);
-					}
+					} 
     			});
 
     	return "calibration/gain :: modal";
@@ -430,6 +434,8 @@ public class CalibrationController {
     String modalCurrents(@RequestParam String sn, Model model) {
 
 		model.addAttribute("serialNumber", sn);
+		final List<IrtArray> urls = arrayRepository.findByIrtArrayIdName("current_url");
+		model.addAttribute("URLs", urls);
 
 		return "calibration/currents :: modal";
 	}
@@ -721,7 +727,7 @@ public class CalibrationController {
 	}
 
 	@GetMapping("modules_menu")
-    String getModulesMenu(@RequestParam String sn, @RequestParam String fragment, Model model) throws IOException {
+    String getModulesMenu(@RequestParam String sn, @RequestParam String fragment, Model model) throws IOException, InterruptedException, ExecutionException, TimeoutException, ScriptException {
 
 		model.addAttribute("serialNumber", sn);
 
@@ -734,10 +740,10 @@ public class CalibrationController {
     }
 
 	@GetMapping("power_chart")
-    String modalPowerChart(@RequestParam String sn, Model model) throws IOException {
+    String modalPowerChart(@RequestParam String sn, Model model) throws IOException, InterruptedException, ExecutionException, TimeoutException {
 //		logger.error(sn);
 
-		getHomePageInfo(sn)
+		getHomePageInfo(sn, 100)
 		.ifPresent(
 				hpi->{
 					model.addAttribute("serialNumber", hpi.getSysInfo().getSn());
@@ -747,7 +753,7 @@ public class CalibrationController {
     	return "calibration/power_chart :: modal";
     }
 
-	private List<Info> getModulesInfo(String sn) throws IOException {
+	private List<Info> getModulesInfo(String sn) throws IOException, InterruptedException, ExecutionException, TimeoutException, ScriptException {
 
 		final Map<String, Integer> allDevices = HttpRequest.getAllModules(sn);
     	allDevices.remove("System");
@@ -755,24 +761,14 @@ public class CalibrationController {
     	return getInfos(sn, allDevices);
 	}
 
-	private List<Info> getInfos(String sn, final Map<String, Integer> allDevices) {
+	public static List<Info> getInfos(String sn, final Map<String, Integer> allDevices) {
 		return allDevices.entrySet().stream()
     			.map(
     					es->{
     						try {
 
-    							final URL url = new URL("http", sn, "/device_debug_read.cgi");
-    							List<NameValuePair> params = new ArrayList<>();
-								final Integer moduleId = es.getValue();
-    							params.addAll(Arrays.asList(new BasicNameValuePair[]{new BasicNameValuePair("devid", moduleId.toString()), new BasicNameValuePair("command", "info")}));
-
-    							final Info info = HttpRequest.postForIrtObgect(url.toString(), Info.class, params).get(1, TimeUnit.SECONDS);
-    							logger.debug(info);
-    							Optional.ofNullable(info).ifPresent(inf->{
-    								inf.setModuleId(moduleId);
-        							Optional.ofNullable(inf.getDeviceId()).map(s->s.replace("{", "")).map(s->s.split("\\.")).filter(s->s.length==3).map(s->s[0] + '.' + s[1]).ifPresent(info::setDeviceId);
-    							});
-								return info;
+								final Integer moduleIndex = es.getValue();
+    							return getInfo(sn, moduleIndex);
 
     						} catch (MalformedURLException e) {
     							logger.catching(Level.DEBUG, e);
@@ -782,6 +778,23 @@ public class CalibrationController {
     						return null;
     					})
     			.filter(info->info!=null).collect(Collectors.toList());
+	}
+
+	public static Info getInfo(String sn, final Integer moduleIndex) throws MalformedURLException, InterruptedException, ExecutionException, TimeoutException {
+
+		final URL url = new URL("http", sn, "/device_debug_read.cgi");
+		final List<NameValuePair> params = new ArrayList<>();
+
+		params.addAll(Arrays.asList(new BasicNameValuePair[]{new BasicNameValuePair("devid", moduleIndex.toString()), new BasicNameValuePair("command", "info")}));
+
+		final Info info = HttpRequest.postForIrtObgect(url.toString(), Info.class, params).get(1, TimeUnit.SECONDS);
+		logger.debug(info);
+
+		Optional.ofNullable(info).ifPresent(inf->{
+			inf.setModuleId(moduleIndex);
+			Optional.ofNullable(inf.getDeviceId()).map(s->s.replace("{", "")).map(s->s.split("\\.")).filter(s->s.length==3).map(s->s[0] + '.' + s[1]).ifPresent(info::setDeviceId);
+		});
+		return info;
 	}
 
 	private ProfileWorker getProfileWorker(String sn, Model model) {
@@ -800,12 +813,13 @@ public class CalibrationController {
 		return profileWorker;
 	}
 
-	public static Optional<HomePageInfo> getHomePageInfo(String sn) throws IOException {
-		final String honePage = getHonePage(sn);
+	public static Optional<HomePageInfo> getHomePageInfo(String sn, int timeout) throws IOException, InterruptedException, ExecutionException, TimeoutException {
+		final FutureTask<String> ft = getHonePage(sn, timeout);
+		final String honePage = ft.get(timeout, TimeUnit.MILLISECONDS);
 		return Optional.ofNullable(honePage).map(HomePageInfo::new);
 	}
 
-	public static Integer getSystemIndex(String sn) throws IOException{
+	public static Integer getSystemIndex(String sn) throws IOException, InterruptedException, ExecutionException, TimeoutException, ScriptException{
 
 		final Map<String, Integer> allDevices = HttpRequest.getAllModules(sn);
 		return Optional.ofNullable(allDevices.get("System")).orElse(1);
@@ -833,11 +847,11 @@ public class CalibrationController {
 		return HttpRequest.postForIrtObgect(url.toString(), toClass, params);
 	}
 
-	private static String getHonePage(String ipAddress) throws IOException {
+	private static FutureTask<String> getHonePage(String ipAddress, int timeout) throws IOException, InterruptedException, ExecutionException, TimeoutException {
 
 		final URL url = new URL("http", ipAddress, "/overview.asp");
 		logger.debug(url);
 
-		return HttpRequest.getForString(url.toString());
+		return HttpRequest.getForString(url.toString(), timeout);
 }
 }

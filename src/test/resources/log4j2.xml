@@ -14,9 +14,13 @@
     </Appenders>
 
     <Loggers>
-		<logger name="org.apache.http.client.protocol.ResponseProcessCookies" level="error" />
-		<logger name="irt.components.controllers.rma.RmaController" level="all" />
-		<logger name="irt.components.services.SpringMailSender" level="all" />
+<!-- 		<logger name="org.apache.http.client.protocol.ResponseProcessCookies" level="error" /> -->
+<!-- 		<logger name="irt.components.controllers.rma.RmaController" level="all" /> -->
+<!-- 		<logger name="irt.components.services.SpringMailSender" level="all" /> -->
+<!-- 		<logger name="irt.components.controllers.calibration.CalibrationController" level="all" /> -->
+<!-- 		<logger name="irt.components.controllers.calibration.CalibrationRestController" level="all" /> -->
+		<logger name="irt.components.controllers.calibration.CurrentRestController" level="all" />
+<!-- 		<logger name="irt.components.workers.HttpRequest" level="all" /> -->
 
         <Root level="info">
             <AppenderRef ref="ConsoleAppender" />

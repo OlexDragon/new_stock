@@ -9,7 +9,6 @@ import java.io.OutputStream;
 import java.io.UnsupportedEncodingException;
 import java.net.ConnectException;
 import java.net.HttpURLConnection;
-import java.net.MalformedURLException;
 import java.net.URL;
 import java.net.UnknownHostException;
 import java.util.AbstractMap;
@@ -18,7 +17,11 @@ import java.util.List;
 import java.util.Map;
 import java.util.Optional;
 import java.util.Scanner;
+import java.util.concurrent.Callable;
+import java.util.concurrent.ExecutionException;
 import java.util.concurrent.FutureTask;
+import java.util.concurrent.TimeUnit;
+import java.util.concurrent.TimeoutException;
 import java.util.stream.Collectors;
 
 import javax.script.ScriptEngine;
@@ -339,18 +342,25 @@ public class HttpRequest {
 		.ifPresent(httpPost::setEntity);
 	}
 
-	public static String getForString(String url) throws IOException {
+	public static FutureTask<String> getForString(String url){
+		 return  getForString(url, 500);
+	 }
 
-		logger.traceEntry(url);
+	public static FutureTask<String> getForString(String url, int timeout) {
 
-		final HttpGet httpGet = new HttpGet(url);
+		Callable<String> callable = ()->{
+			final HttpGet httpGet = new HttpGet(url);
 
-		try(	final CloseableHttpClient httpclient = HttpClients.createDefault();
-				final CloseableHttpResponse response = httpclient.execute(httpGet);){
+			try(	final CloseableHttpClient httpclient = HttpClients.createDefault();
+					final CloseableHttpResponse response = httpclient.execute(httpGet);){
+				return entityToString(response);
+			}
 
-			return entityToString(response);
+		};
+		FutureTask<String> ft = new FutureTask<>(callable);
+		ThreadRunner.runThread(ft);
 
-		}
+		return ft;
 	}
 
 	private static String entityToString(final CloseableHttpResponse response) {
@@ -410,13 +420,13 @@ public class HttpRequest {
 		return null;
 	}
 
-	public static Map<String, Integer> getAllModules(String sn) throws IOException{
-		try {
+	public static Map<String, Integer> getAllModules(String sn) throws IOException, InterruptedException, ExecutionException, TimeoutException, ScriptException{
 
 			final URL url = new URL("http", sn.trim(), "/diagnostics.asp?devices=1");
 			logger.debug(url);
 
-			final String html = getForString(url.toString());
+			final FutureTask<String> forString = getForString(url.toString());
+			final String html = forString.get(2, TimeUnit.SECONDS);
 			final String str = Optional.of(html.indexOf("devices = [")).filter(index->index>=0)
 								.flatMap(start->Optional.of(html.indexOf("]", start)).filter(index->index>=0)
 										.map(stop->html.substring(start, stop + 1))).orElse(null);
@@ -432,9 +442,6 @@ public class HttpRequest {
 				final List<?> list = mapper.readValue(json, List.class);
 				return list.parallelStream().map(l->(Map<?,?>)l).filter(m->m.get("name")!=null).map(m->new AbstractMap.SimpleEntry<>((String)m.get("name"), (Integer)m.get("index"))).collect(Collectors.toMap(e->e.getKey(), e->e.getValue()));
 			}
-		} catch (JsonProcessingException | MalformedURLException | ScriptException e) {
-			logger.catching(e);
-		}
 
 		return new HashMap<>();
 	}

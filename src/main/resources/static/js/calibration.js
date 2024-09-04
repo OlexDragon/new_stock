@@ -396,6 +396,9 @@ $scan.click(function(e){
 
 	scanIpInterval = setInterval(function() {
 
+		if(postWithParamCount>20)
+			return;
+
 		if(ip>maxIP){
 			// Stop IP scan
 			clearInterval(scanIpInterval);
@@ -410,10 +413,9 @@ $scan.click(function(e){
 		var ipAddress = '192.168.30.' + ip;
 		$modalHeader.text('Send Request for ' + ipAddress);
 
-		$.post('/calibration/rest/scan', {ip : ipAddress})
-		.done(function(hostname){
+		postWithParam('/calibration/rest/scan', {ip : ipAddress}, function(homePageInfo){
 
-			if(hostname!=ipAddress)
+			if(!homePageInfo || !homePageInfo.sysInfo || !homePageInfo.netInfo)
 				return;
 
 			var $text = $('<div>', {class: 'col-sm'});
@@ -427,32 +429,25 @@ $scan.click(function(e){
 				.append(
 					$('<div>', {class: 'col-sm'})
 					.append(
-						$('<a>', {href: 'http://' + ipAddress, target: "_blank"}).text(ipAddress)
+						$('<a>', {href: 'http://' + homePageInfo.netInfo.addr, target: "_blank"}).text(homePageInfo.netInfo.addr)
 					)
 				)
 				.append($text)
 			);
 
-			$.post('/calibration/rest/info', {ip : ipAddress})
-			.done(function(info){
-
-				if(!info)
-					return;
-
-				$text.append($('<a>', {href: 'http://' + ipAddress, target: "_blank"}).text(info["Serial number"]));
-				$row
-				.append(
-					$('<div>', {class: 'col-auto'}).append($('<a>', { class: 'btn btn-sm btn-outline-dark', target: "_blank", href: '/calibration?sn=' + info["Serial number"]}).text('Calibrate'))
-				)
-				.append(
-					$('<div>', {class: 'col-auto'}).append($('<a>', { class: 'btn btn-sm btn-outline-info', onclick: 'loginFromScan(event, this)', target: "_blank", href: '/calibration/rest/login?sn=' + info["Serial number"]}).text('Login'))
-				);
-				$row.attr('data-bs-toggle','tooltip').attr('data-bs-placement','top').attr('title', info["Product name"]);
-			});
+			$text.append($('<a>', {href: 'http://' + homePageInfo.sysInfo.sn, target: "_blank"}).text(homePageInfo.sysInfo.sn));
+			$row
+			.append(
+				$('<div>', {class: 'col-auto'}).append($('<a>', { class: 'btn btn-sm btn-outline-dark', target: "_blank", href: '/calibration?sn=' + homePageInfo.netInfo.addr}).text('Calibrate'))
+			)
+			.append(
+				$('<div>', {class: 'col-auto'}).append($('<a>', { class: 'btn btn-sm btn-outline-info', onclick: 'loginFromScan(event, this)', target: "_blank", href: '/calibration/rest/login?sn=' + homePageInfo.netInfo.addr}).text('Login'))
+			);
+			$row.attr('data-bs-toggle','tooltip').attr('data-bs-placement','top').attr('title', homePageInfo.sysInfo.desc);
 		});
 
 		++ip;
-	}, 700);
+	}, 100);
 
 	$modal.on('hidden.bs.modal', function () {
 		clearInterval(scanIpInterval);
@@ -552,7 +547,7 @@ $('#currents').click(function(e){
 });
 function loadModal(href){
 	$modal.modal('hide')
-	$modal.off('shown.bs.modal');
+	$modal.off('shown.bs.modal').off('hide.bs.modal');
 	$modal.load(href, ()=>setTimeout(()=>$modal.modal('show'), 500));
 }
 $('#profile').click(function(e){
@@ -800,12 +795,18 @@ function postObject(url, object){
 	    dataType: 'json'
 	})
 }
-let isPostWithParam = false;
-function postWithParam(url, params, action, error){
-	if(isPostWithParam)
-		satTimeout(postWithParam, 100, url, params, action)
+let postWithParamCount = 0;
+function postWithParam(url, params, f_action, f_error){
 
-	isPostWithParam = false;
+	++postWithParamCount;
 
-	$.post(url, params).done(action).fail(error);
+	$.post(url, params).done(data=>{
+		--postWithParamCount;
+		if(f_action)
+			f_action(data);
+	}).fail(err=>{
+		--postWithParamCount;
+		if(f_error)
+			f_error(err);
+	});
 }

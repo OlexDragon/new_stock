@@ -34,8 +34,7 @@ class RmaControllerTest {
 
 	@Autowired private EntityManager		entityManager;
 
-	@Autowired
-	private MockMvc mockMvc;
+	@Autowired private MockMvc mockMvc;
 
 	@Test
 	void bySerialNumberTest() throws Exception {

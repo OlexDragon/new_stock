@@ -42,7 +42,7 @@
       				<div class="row">
  <!-- ST0 -->
       					<div class="col-xl-3">
-      						<div class="card">
+      						<div class="card border border-info">
       							<div class="card-header"><h6>Master register (ST0):</h6><strong id="st0"></strong></div>
       							<div class="card-body">
 									<div class="d-grid gap-2">
@@ -70,7 +70,7 @@
       					</div>
  <!-- ST1 -->
       					<div class="col-xl-3">
-      						<div class="card">
+      						<div class="card border border-info">
       							<div class="card-header"><h6>Fractional value (ST1):</h6><strong id="st1"></strong></div>
       							<div class="card-body">
  									<div class="d-grid gap-2">
@@ -98,7 +98,7 @@
       					</div>
 <!-- ST2 -->
       					<div class="col-xl-3">
-      						<div class="card">
+      						<div class="card border border-info">
       							<div class="card-header"><h6>Modulus value (ST2):</h6><strong id="st2"></strong></div>
       							<div class="card-body">
  									<div class="d-grid gap-2">
@@ -122,7 +122,7 @@
       					</div>
 <!-- ST3 -->
       					<div class="col-xl-3">
-      						<div class="card">
+      						<div class="card border border-info">
       							<div class="card-header"><h6>R divider, CP leakage, ... (ST3):</h6><strong id="st3"></strong></div>
       							<div class="card-body">
  									<div class="d-grid gap-2">
@@ -171,7 +171,7 @@
       					</div>
 <!-- ST4 -->
       					<div class="col-xl-3">
-      						<div class="card">
+      						<div class="card border border-info">
       							<div class="card-header"><h6>Lock det., ... (ST4):</h6><strong id="st4"></strong></div>
       							<div class="card-body">
  									<div class="d-grid gap-2">
@@ -242,7 +242,7 @@
       					</div>
 <!-- ST5 -->
       					<div class="col-xl-3">
-      						<div class="card">
+      						<div class="card border border-info">
       							<div class="card-header"><h6>Low power mode (ST5):</h6><strong id="st5"></strong></div>
       							<div class="card-body">
  									<div class="d-grid gap-2">
@@ -262,7 +262,7 @@
       					</div>
 <!-- ST6 -->
       					<div class="col-xl-3">
-      						<div class="card">
+      						<div class="card border border-info">
       							<div class="card-header"><h6>VCO Calibrator, ... (ST6):</h6><strong id="st6"></strong></div>
       							<div class="card-body">
  									<div class="d-grid gap-2">
@@ -324,7 +324,7 @@
       					</div>
 <!-- ST7 -->
       					<div class="col-xl-3">
-      						<div class="card">
+      						<div class="card border border-info">
       							<div class="card-header"><h6>Fast Lock , LD_SDO (ST7):</h6><strong id="st7"></strong></div>
       							<div class="card-body">
  									<div class="d-grid gap-2">
@@ -367,7 +367,7 @@
       					</div>
 <!-- ST8 -->
       					<div class="col-xl-3">
-      						<div class="card">
+      						<div class="card border border-info">
       							<div class="card-header"><h6>LDO Voltage Regulator (ST8):</h6><strong id="st8"></strong></div>
       							<div class="card-body">
  									<div class="d-grid gap-2">
@@ -440,7 +440,7 @@
       					</div>
 <!-- ST9 -->
       					<div class="col-xl-3">
-      						<div class="card">
+      						<div class="card border border-info">
       							<div class="card-header"><h6>Test & Initialization (ST9):</h6><strong id="st9"></strong></div>
       							<div class="card-body">
  									<div class="d-grid gap-2">
@@ -458,7 +458,7 @@
       					</div>
 <!-- ST10 -->
       					<div class="col-xl-3">
-      						<div class="card">
+      						<div class="card border border-info">
       							<div class="card-header"><h6>Status (ST10):</h6><strong id="st10"></strong></div>
       							<div class="card-body">
  									<div class="d-grid gap-2">
@@ -503,7 +503,7 @@
       					</div>
 <!-- ST11 -->
       					<div class="col-xl-3">
-      						<div class="card">
+      						<div class="card border border-info">
       							<div class="card-header"><h6>Device identifier (ST11):</h6><strong id="st11"></strong></div>
       							<div class="card-body">
  									<div class="d-grid gap-2">
@@ -524,6 +524,7 @@
       			</div>
  <!-- Modal Footer -->
 				<div class="modal-footer">
+	        		<button id="btnPllUpdate" type="button" class="btn btn-sm btn-outline-primary">Update</button>
 	        		<button type="button" class="btn btn-sm btn-outline-secondary" data-bs-dismiss="modal">Close</button>
 	    		</div>
     		</div>
@@ -531,6 +532,7 @@
   		<script th:inline="javascript">
 			/*<![CDATA[*/
 
+				$('#btnPllUpdate').click(getPllReg);
 //
 // ***** ST0 *****
 //
@@ -552,7 +554,7 @@
 
 				let storedValue = parseInt($st0.attr('title'));
 
-				$st0.text(storedValue);
+				$st0.text('0x' + storedValue.toString(16).toUpperCase());
 				changeColor($st0, storedValue);
 
 // Charge Pump
@@ -580,7 +582,7 @@
 
 				let storedValue = parseInt($st1.attr('title'));
 
-				$st1.text(storedValue);
+				$st1.text('0x' + storedValue.toString(16).toUpperCase());
 				changeColor($st1, storedValue);
 
 // DBR
@@ -610,7 +612,7 @@
 
 				let storedValue = parseInt($st2.attr('title'));
 
-				$st2.text(storedValue);
+				$st2.text('0x' + storedValue.toString(16).toUpperCase());
 				changeColor($st2, storedValue);
 
 // DBR
@@ -642,7 +644,7 @@
 
 				let storedValue = parseInt($st3.attr('title'));
 
-				$st3.text(storedValue);
+				$st3.text('0x' + storedValue.toString(16).toUpperCase());
 				changeColor($st3, storedValue);
 
 // DBR
@@ -687,7 +689,7 @@
 
 				let storedValue = parseInt($st4.attr('title'));
 
-				$st4.text(storedValue);
+				$st4.text('0x' + storedValue.toString(16).toUpperCase());
 				changeColor($st4, storedValue);
 
 // CALB_3V3_MODE1
@@ -730,7 +732,7 @@
 
 				let storedValue = parseInt($st5.attr('title'));
 
-				$st5.text(storedValue);
+				$st5.text('0x' + storedValue.toString(16).toUpperCase());
 				changeColor($st5, storedValue);
 
 // RF2_OUTBUF_LP
@@ -761,7 +763,7 @@
 
 				let storedValue = parseInt($st6.attr('title'));
 
-				$st6.text(storedValue);
+				$st6.text('0x' + storedValue.toString(16).toUpperCase());
 				changeColor($st6, storedValue);
 
 //DITHERING
@@ -807,7 +809,7 @@
 
 				let storedValue = parseInt($st7.attr('title'));
 
-				$st7.text(storedValue);
+				$st7.text('0x' + storedValue.toString(16).toUpperCase());
 				changeColor($st7, storedValue);
 
 // LD_SDO_tristate
@@ -851,7 +853,7 @@
 
 				let storedValue = parseInt($st8.attr('title'));
 
-				$st8.text(storedValue);
+				$st8.text('0x' + storedValue.toString(16).toUpperCase());
 				changeColor($st8, storedValue);
 
 // PD_RF2_DISABLE
@@ -890,7 +892,7 @@
 
 				let storedValue = parseInt($st9.attr('title'));
 
-				$st9.text(storedValue);
+				$st9.text('0x' + storedValue.toString(16).toUpperCase());
 				changeColor($st9, storedValue);
 
 //RESERVED_ST9
@@ -919,7 +921,7 @@
 
 				let storedValue = parseInt($st10.attr('title'));
 
-				$st10.text(storedValue);
+				$st10.text('0x' + storedValue.toString(16).toUpperCase());
 				changeColor($st10, storedValue);
 
 				if(!storedValue){
@@ -965,7 +967,7 @@
 
 				let storedValue = parseInt($st11.attr('title'));
 
-				$st11.text(storedValue);
+				$st11.text('0x' + storedValue.toString(16).toUpperCase());
 				changeColor($st11, storedValue);
 
 				if(!storedValue){
@@ -1197,7 +1199,7 @@
 				let value = (round << shift) & mask;
 				let presentValue = parseInt($value.text());
 				let newValue = (presentValue & maskXOR) | value;
-				$value.text(newValue);
+				$value.text('0x' + newValue.toString(16));
 
 				changeColor($value, newValue);
 			}
@@ -1213,7 +1215,7 @@
 					newValue = newValue & mask;
 				}
 
-				$value.text(newValue);
+				$value.text('0x' + newValue.toString(16));
 
 				changeColor($value, newValue);
 			}

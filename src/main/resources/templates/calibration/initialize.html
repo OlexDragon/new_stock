@@ -159,7 +159,7 @@
 				if(postWriteTimeout)
 						return;
 				postRwInfo = true;
-				$.post('/calibration/rest/calib-rw-info', {sn: serialNumber})
+				$.post('/calibration/rest/calib_rw_info', {sn: serialNumber})
 				.done(function(data){
 					postRwInfo = false;
 					if(!data){

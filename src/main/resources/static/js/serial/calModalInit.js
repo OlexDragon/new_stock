@@ -6,6 +6,10 @@ let $stepVal;
 let $maxVal;
 let $unitSerialPort;
 let $unitVal;
+let $calResult;
+let $propName
+let $btnCopy;
+
 let calChart;
 
 let prefix;
@@ -27,9 +31,12 @@ let f_init;
 function init(subInit){
 
 	if(subInit)
-		f_init =subInit;
+		f_init = subInit;
 	if(f_init)
 		f_init();
+	$btnCopy	 = $('#btnCopy').click(()=>selectAndCopy($calResult[0]));
+	$propName	 = $('#propName');
+	$calResult	 = $('#calResult');
 	$btnStart	 = $('#btnStart');
 	$btnInfo	 = $('#btnInfo');
 	$toolVal	 = $('#toolVal');
@@ -58,62 +65,64 @@ function init(subInit){
 		});
 		setFromCookies();
 	});
-$btnInfo.click(getInfo);
-$unitSerialPort.change(e=>{
-	if(e.currentTarget.value && e.currentTarget.value != 'Select Remote Serial Port.'){
-		$btnInfo.removeClass('disabled');
-		getInfo();
-		setCookies(e.currentTarget);
-	}else
+	$btnInfo.click(getInfo);
+	$unitSerialPort.change(e=>{
+		if(e.currentTarget.value && e.currentTarget.value != 'Select Remote Serial Port.'){
+			$btnInfo.removeClass('disabled');
+			getInfo();
+			setCookies(e.currentTarget);
+		}else
+			$btnInfo.addClass('disabled');
+	});
+	$btnStart.click(()=>{
+
+		// Stop Button
+		if($btnStart.text()==='Stop'){
+			f_stop();
+			$btnInfo.removeClass('disabled');
+			return;
+		}
+		if($btnStart.text()=='Reset'){
+			calChart.reset();
+			$numberOfEntries.text(x.length);
+			$btnStart.text('Restart');
+			$btnInfo.text('Optimize');
+			return;
+		}
+		if($btnStart.text()==='Restart'){
+			clear();
+			$toolVal.val(startToolValue);
+			$btnInfo.text('Clear')
+		}
+
 		$btnInfo.addClass('disabled');
-});
-$btnStart.click(()=>{
+		$toolVal.prop('readonly', true);
+		$stepVal.prop('readonly', true);
 
-	// Stop Button
-	if($btnStart.text()=='Stop'){
-		f_stop();
-		$btnInfo.removeClass('disabled');
-		return;
-	}
-	if($btnStart.text()=='Reset'){
-		calChart.reset();
-		$btnStart.text('Restart');
-		$btnInfo.text('Optimize');
-		return;
-	}
-	if($btnStart.text()=='Restart'){
-		clear();
-		$toolVal.val(startToolValue);
-		$btnInfo.text('Clear')
-	}
+		// Check Serial Port, Tool Addreass and Input Tool Type
+		const toSend = getToSendIT(commandIndex);
+		if(!checkInputTool(toSend)){
+			$modal.modal('hide');
+			$collapseInput.show();
+			return;
+		}
 
-	$btnInfo.addClass('disabled');
-	$toolVal.prop('readonly', true);
-	$stepVal.prop('readonly', true);
-
-	// Check Serial Port, Tool Addreass and Input Tool Type
-	const toSend = getToSendIT(commandIndex);
-	if(!checkInputTool(toSend)){
-		$modal.modal('hide');
-		$collapseInput.show();
-		return;
-	}
-
-	f_toolValue();
-	startToolValue = $toolVal.val();
-	startButtonText(BTN_STOP);
-	f_run();
-});
-$toolVal.keypress(e=>{
-	if(e.which == 13){  // the enter key code
 		f_toolValue();
-		setTimeout(()=>$toolVal.val($inputPower.val()), 300);
-	}
-})
-.change(()=>$btnStart.text('Start'));
-$modal.on('hidden.bs.modal', f_stop);
-$stepVal.on('focusout', e=>setCookies(e.currentTarget));
-$maxVal.on('focusout', e=>setCookies(e.currentTarget));
+		if($btnStart.text()==='Start')
+			startToolValue = $toolVal.val();
+		startButtonText(BTN_STOP);
+		f_run();
+	});
+	$toolVal.keypress(e=>{
+		if(e.which == 13){  // the enter key code
+			f_toolValue();
+			setTimeout(()=>$toolVal.val($inputPower.val()), 300);
+		}
+	})
+	.change(()=>$btnStart.text('Start'));
+	$modal.on('hidden.bs.modal', f_stop);
+	$stepVal.on('focusout', e=>setCookies(e.currentTarget));
+	$maxVal.on('focusout', e=>setCookies(e.currentTarget));
 
 	$modal.modal('show');
 }
@@ -156,6 +165,7 @@ function getInfo(){
 		clear();
 		$btnStart.text('Restart');
 		$btnInfo.text('Info');
+		$toolVal.val(startToolValue);
 		return;
 	}
 	if($btnInfo.text()=='Optimize'){
@@ -163,6 +173,9 @@ function getInfo(){
 		calChart.optimize(parse);
 		$btnStart.text('Reset');
 		$btnInfo.text('Save');
+		$numberOfEntries.text(x.length);
+		showTable();
+		$btnCopy.prop('disabled', false);
 		return;
 	}
 	if($btnInfo.text()=='Save'){
@@ -171,6 +184,19 @@ function getInfo(){
 	}
 	const command = getCommand(new Packet());
 	sendCommand(command, showInfo);
+}
+function showTable(){
+
+	$calResult.empty();
+	const propName = $propName.val();
+
+	for(let i=0;i<x.length; i++){
+		const line = propName + ' ' + x[i] + ' ' + y[i];
+		$calResult
+		.append(
+			$('<dive>', {class: 'row', text: line})
+		);
+	}
 }
  function saveToProfile(){
    	if(!x.length){
@@ -187,14 +213,7 @@ function getInfo(){
 		array.push({input: y[i], output: x[i]});
 
 	table.values = array;
-	const json = JSON.stringify(table);
-   	$.ajax({
-		url: '/calibration/rest/to_profile',
-		type: 'POST',
-		contentType: "application/json",
-		data: json,
-		dataType: 'json'
-	})
+	postObject('/calibration/rest/to_profile', table)
 	.done(function(data){
 		console.log(data.content);
 		alert(data.content);
@@ -287,20 +306,23 @@ function showInfo(command){
 	if(sn)
 		$('#unit_description').children('h4').text(dscr);
 }
+var sendCommandCount = 0;
 function sendCommand(command, action){
-	console.log('Send command: ' + JSON.stringify(command));
+
+	++sendCommandCount;
 
 	const url = command.toSend ? '/serial_port/rest/send-bytes' : '/serial_port/rest/read-bytes';
-	const json = JSON.stringify(command);
-	$.ajax({
-		url: url,
-		type: 'POST',
-		contentType: "application/json",
-		data: json,
-        dataType: 'json'
-    })
-	.done(action)
+	postObject(url, command)
+	.done(data=>{
+
+		--sendCommandCount;
+
+		action(data);
+	})
 	.fail(function(error) {
+
+		--sendCommandCount;
+
 		if(error.statusText!='abort'){
 			var responseText = error.responseText;
 			if(responseText)
@@ -329,7 +351,7 @@ function f_stop(){
 }
 function startButtonText(start){
 	if(start)
-		$btnStart.text('Start').removeClass('btn-outline-warning').addClass('btn-outline-success')
+		$btnStart.text('Continue').removeClass('btn-outline-warning').addClass('btn-outline-success')
 	else
 		$btnStart.text('Stop').removeClass('btn-outline-success').addClass('btn-outline-warning')
 }
@@ -341,7 +363,6 @@ function f_toolValue(){
 		$inputPower.val('');
 
 	$inputPowerBtn.click();
-
 }
 function reset(){
 	if(startToolValue)

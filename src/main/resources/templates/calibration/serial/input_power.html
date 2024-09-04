@@ -36,7 +36,7 @@
 	      						<label for="unitSerialPort">Unit Serial Port</label>
     	  					</div>
       						<div class="form-floating col">
- 	     						<input id="toolVal" type="number" class="form-control" placeholder="Tool">
+ 	     						<input id="toolVal" type="number" class="form-control" placeholder="Tool" value="-50">
       							<label for="toolVal">Tool Value</label>
       						</div>
       						<div class="form-floating col">
@@ -52,7 +52,7 @@
 	      						<label for="maxVal">Max. Cal. Value</label>
     	  					</div>
       					</div>
-      					<div class="row">
+      					<div class="row mb-2">
       						<div class="col">
 	        					<button type="button" id="btnStart" class="btn btn-outline-success form-control disabled">Start</button>
 	        				</div>
@@ -62,6 +62,19 @@
 	      					<div class="col">
 	        					<button type="button" class="btn btn-outline-secondary form-control" data-bs-dismiss="modal">Close</button>
 	        				</div>
+	        			</div>
+	        			<div class="row mb-2">
+	        				<div class="col text-end">Number of Entries:</div>
+	        				<div id="numberOfEntries" class="col-auto">0</div>
+	        			</div>
+	        			<div class="row">
+	        				<div class="col form-floating">
+	        					<input id="propName" value="in-power-lut-entry" class="form-control text-center" placeholder="Profile Table Property">
+								<label for="propName">Profile Table Property</label>
+	        				</div>
+	        				<div class="col-auto"><button id="btnCopy"  type="button" class="btn btn-outline-primary" disabled>Copy</button></div>
+	        			</div>
+	        			<div id="calResult" class="row">
 	        			</div>
 	        		</div>
 	    		</div>
@@ -73,57 +86,70 @@
 			init();
   			setRun(run);
 
+  			var $numberOfEntries = $('#numberOfEntries');
   			var calRun = false;
-  			var doNxt = true;
   			var stack = 0;
+  			var payloadReadWrite = new Payload(new Parameter(PARAMETER_READ_WRITE), DEVICE_FCM_ADC_INPUT_POWER().toBytes());
   			function run(){
+
   				if(stack>10){
   					stack = 0;
-  					cinsole.warn('stackoverflow');
+  					console.warn('stackoverflow');
   					f_stop();
    					alert('Stackover Flow');
  					return;
   				}
   				++stack;
-  				doNxt = true;
+
   				if(calRun)
   					return;
+  				if(x.length==y.length){
+  					const toolV = $inputPower.val();
+  					if(!toolV){
+  						console.warn('No Input Tool Value.');
+  						return;
+  					}
+  					if($toolVal.val())
+  						$toolVal.val(toolV);
+  					if(x.length && x[x.length-1] == toolV){
+  						f_nextStep();
+  						return;
+  					}
+
+
+  					const tmp = parseFloat(toolV).toFixed(1)
+  					x.push(tmp);
+  					$numberOfEntries.text(x.length);
+  				}
+
   				calRun = true;
-  				const toolV = $inputPower.val();
-  				if(!toolV){
-  					console.warn('No Input Tool Value.');
-  					calRun = false;
-  					return;
-  				}
-  				if($toolVal.val())
-  					$toolVal.val(toolV);
-  				if(x.length && x[x.length-1] == toolV){
-  					f_nextStep();
-  					calRun = false;
-  					return;
-  				}
   				stack = 0;
-  				x.push(parseFloat(toolV).toFixed(1));
-  				const packet = new Packet(new Header(packetType.request, undefined, packetGroupId.deviceDebug), new Payload(new Parameter(PARAMETER_READ_WRITE), DEVICE_FCM_ADC_INPUT_POWER().toBytes()));
+
+  				const packet = new Packet(new Header(packetType.request, undefined, packetGroupId.deviceDebug), payloadReadWrite);
   				const command = getCommand(packet);
   				sendCommand(command, inputPower);
-  				if(doNxt)
-  					f_nextStep();
   			}
+  			var inputPowerCount = 0
   			function inputPower(command){
 				const register =  commandToRegister(command);
   				if(!register){
-  					f_stop();
-  					doNxt = false;
-  	  				calRun = false;
-  					return;
+  					++inputPowerCount;
+  					console.warn('inputPowerCount = ' + inputPowerCount);
+  					if(inputPowerCount>3)
+  	  					f_stop();
+  	  	  			calRun = false;
+ 					return;
   				}
+
+	  	  		calRun = true;
+	  	  		inputPowerCount = 0;
   				if(x.length>y.length){
   					y.push(register.value);
   					$unitVal.val(register.value);
   					calChart.update();
   				}
   				calRun = false;
+				f_nextStep();
   			 }
   			function f_nextStep(){
   				let tmp = $maxVal.val();

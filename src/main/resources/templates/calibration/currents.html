@@ -30,80 +30,90 @@
  <!-- Modal Body -->
       			<div id="modal-body" class="modal-body">
       			<table class="table table-sm table-borderless align-middle bg_tropo text-center">
-      				<tr><td id="toBlink1" class="border-start"></td><td><div class="mt-5 mb-5"></div></td><td></td><td></td>
-      					<td><button id="gate1" class="btn btn-outline-dark gate invisible" data-switch="switch5">1</button></td>
+      				<tr><td id="toBlink1" class="border-start"><strong id="current1" class="form-control form-control-sm text-primary bg-white fw-bold current invisible">1.0 A</strong></td>
+      					<td><button id="gate1" class="btn btn-outline-dark gate invisible" data-switch="switch2">1</button></td>
+      					<td class="border-start"><strong id="current2" class="form-control form-control-sm text-primary bg-white fw-bold current invisible">2.0 A</strong></td>
+      					<td><button id="gate2" class="btn btn-outline-dark gate invisible" data-switch="switch5">2</button></td><td></td>
       					<td></td><td></td><td></td><td></td><td></td></tr>
      				<tr id="blink1" class="dashed_border gates_I">
-       					<td style="width: 10%"></td>
-      					<td><strong id="current1" class="form-control form-control-sm text-primary bg-white fw-bold current_I switch2"  th:text="''">1.0 A</strong></td>
-      					<td style="width: 10%;"><button id="gate2" class="btn btn-outline-dark gate invisible" data-switch="switch2">2</button></td>
-      					<td style="width: 10%;"><button id="gate3" class="btn btn-outline-dark gate invisible" data-switch="switch5">3</button></td>
-      					<td style="width: 10%;"><button id="gate4" class="btn btn-outline-dark gate invisible" data-switch="switch5">4</button></td>
-      					<td style="width: 10%;"><button id="gate5" class="btn btn-outline-dark gate invisible" data-switch="switch6">5</button></td>
-      					<td style="width: 10%;"><button id="gate6" class="btn btn-outline-dark gate invisible" data-switch="switch6">6</button></td>
-      					<td style="width: 10%;"><button id="gate7" class="btn btn-outline-dark gate invisible" data-switch="switch3">7</button></td>
-     					<td><strong id="current2" class="form-control form-control-sm text-primary bg-white fw-bold current_I switch3"  th:text="''">2.0 A</strong></td>
-      					<td style="width: 10%;"></td>
+       					<td class="border-start"><strong id="current3" class="form-control form-control-sm text-primary bg-white fw-bold current invisible">3.0 A</strong></td>
+      					<td style="width: 12%;"><button id="gate3" class="btn btn-outline-dark gate invisible" data-switch="switch2">3</button></td>
+      					<td style="width: 12%;"><button id="gate4" class="btn btn-outline-dark gate invisible" data-switch="switch5">4</button></td>
+      					<td style="width: 12%;"><button id="gate5" class="btn btn-outline-dark gate invisible" data-switch="switch5">5</button></td>
+      					<td style="width: 12%;"><button id="gate6" class="btn btn-outline-dark gate invisible" data-switch="switch6">6</button></td>
+      					<td style="width: 12%;"><button id="gate7" class="btn btn-outline-dark gate invisible" data-switch="switch6">7</button></td>
+      					<td style="width: 12%;"><button id="gate8" class="btn btn-outline-dark gate invisible" data-switch="switch3">8</button></td>
+     					<td class="border-start"><strong id="current4" class="form-control form-control-sm text-primary bg-white fw-bold current invisible">4.0 A</strong></td>
       				</tr>
-       				<tr><td><div class="mt-5"></div></td><td></td><td></td><td><strong id="current3" class="form-control form-control-sm text-primary bg-white fw-bold current_I switch5"  th:text="''">9.0 A</strong></td>
-       					<td>><button id="gate8" class="btn btn-outline-dark gate invisible" data-switch="switch5">8</button></td>
-       					<td>><button id="gate9" class="btn btn-outline-dark gate invisible" data-switch="switch6">9</button></td>
-       					<td><strong id="current4" class="form-control form-control-sm text-primary bg-white fw-bold current_I switch6"  th:text="''">10.0 A</strong></td><td></td><td></td><td></td></tr>
+       				<tr><td class="border-start"><strong id="current5" class="form-control form-control-sm text-primary bg-white fw-bold current invisible">5.0 A</strong></td>
+       					<td><button id="gate9" class="btn btn-outline-dark gate invisible" data-switch="switch2">9</button></td>
+       					<td class="border-start"><strong id="current6" class="form-control form-control-sm text-primary bg-white fw-bold current invisible">6.0 A</strong></td>
+       					<td><button id="gate10" class="btn btn-outline-dark gate invisible" data-switch="switch5">10</button></td>
+       					<td><button id="gate11" class="btn btn-outline-dark gate invisible" data-switch="switch6">11</button></td>
+       					<td class="border-start"><strong id="current7" class="form-control form-control-sm text-primary bg-white fw-bold current invisible">7.0 A</strong></td>
+       					<td><button id="gate12" class="btn btn-outline-dark gate invisible" data-switch="switch2">12</button></td>
+       					<td class="border-start"><strong id="current8" class="form-control form-control-sm text-primary bg-white fw-bold current invisible">8.0 A</strong></td></tr>
      				<tr id="blink2" class="dashed_border gates_I">
-       					<td></td>
-      					<td><strong id="switch1" class="form-control form-control-sm text-primary bg-white fw-bold current_I switch1"  th:text="''">3.0 A</strong></td>
-      					<td><button id="gate10" class="btn btn-outline-dark gate invisible" data-switch="switch1">10</button></td>
-      					<td><button id="gate11" class="btn btn-outline-dark gate invisible" data-switch="switch5">11</button></td>
-      					<td><button id="gate12" class="btn btn-outline-dark gate invisible" data-switch="switch5">12</button></td>
-      					<td><button id="gate13" class="btn btn-outline-dark gate invisible" data-switch="switch6">13</button></td>
-      					<td><button id="gate14" class="btn btn-outline-dark gate invisible" data-switch="switch6">14</button></td>
-      					<td><button id="gate15" class="btn btn-outline-dark gate invisible" data-switch="switch4">15</button></td>
-     					<td><strong id="current6" class="form-control form-control-sm text-primary bg-white fw-bold current_I switch4"  th:text="''">4.0 A</strong></td>
-       					<td></td>
+      					<td class="border-start"><strong id="current9" class="form-control form-control-sm text-primary bg-white fw-bold current invisible">9.0 A</strong></td>
+      					<td><button id="gate13" class="btn btn-outline-dark gate invisible" data-switch="switch1">13</button></td>
+      					<td><button id="gate14" class="btn btn-outline-dark gate invisible" data-switch="switch5">14</button></td>
+      					<td><button id="gate15" class="btn btn-outline-dark gate invisible" data-switch="switch5">15</button></td>
+      					<td><button id="gate16" class="btn btn-outline-dark gate invisible" data-switch="switch6">16</button></td>
+      					<td><button id="gate17" class="btn btn-outline-dark gate invisible" data-switch="switch6">17</button></td>
+      					<td><button id="gate18" class="btn btn-outline-dark gate invisible" data-switch="switch4">18</button></td>
+     					<td class="border-start"><strong id="current10" class="form-control form-control-sm text-primary bg-white fw-bold current invisible">10.0 A</strong></td>
       				</tr>
-       				<tr><td></td><td><div class="mt-5"></div></td><td></td><td>></td><td></td>
-       					<td>><button id="gate16" class="btn btn-outline-dark gate invisible" data-switch="switch6">16</button></td>
-       					<td></td><td></td><td></td><td></td></tr>
-       				<tr><td></td><td><div class="mt-5"></div></td><td></td><td></td>
-       					<td>><button id="gate17" class="btn btn-outline-dark gate invisible" data-switch="switch6">17</button></td>
-       					<td>></td>
-       					<td></td><td></td><td></td><td></td></tr>
+       				<tr><td><div class="mt-5"></div></td><td></td><td></td><td></td>
+       					<td><button id="gate19" class="btn btn-outline-dark gate invisible" data-switch="switch6">19</button></td>
+       					<td class="border-start"><strong id="current11" class="form-control form-control-sm text-primary bg-white fw-bold current invisible">11.0 A</strong></td>
+       					<td><button id="gate20" class="btn btn-outline-dark gate invisible" data-switch="switch6">20</button></td>
+       					<td class="border-start"><strong id="current12" class="form-control form-control-sm text-primary bg-white fw-bold current invisible">12.0 A</strong></td></tr>
+       				<tr><td class="border-start"><strong id="current13" class="form-control form-control-sm text-primary bg-white fw-bold current invisible">13.0 A</strong></td>
+       					<td><button id="gate21" class="btn btn-outline-dark gate invisible" data-switch="switch6">21</button></td>
+       					<td class="border-start"><strong id="current14" class="form-control form-control-sm text-primary bg-white fw-bold current invisible">14.0 A</strong></td>
+       					<td><button id="gate22" class="btn btn-outline-dark gate invisible" data-switch="switch6">22</button></td>
+       					<td></td>
+       					<td></td><td></td><td></td></tr>
      				<tr>
-       					<td></td>
-      					<td><strong id="current7" class="form-control form-control-sm text-primary bg-white fw-bold current_II switch4"  th:text="''">5.0 A</strong></td>
-       					<td><button id="gate18" class="btn btn-outline-dark gate invisible" data-switch="switch4">18</button></td>
-      					<td><button id="gate19" class="btn btn-outline-dark gate invisible" data-switch="switch6">19</button></td>
-      					<td><button id="gate20" class="btn btn-outline-dark gate invisible" data-switch="switch6">20</button></td>
-      					<td><button id="gate21" class="btn btn-outline-dark gate invisible" data-switch="switch5">21</button></td>
-      					<td><button id="gate22" class="btn btn-outline-dark gate invisible" data-switch="switch5">22</button></td>
-      					<td><button id="gate23" class="btn btn-outline-dark gate invisible" data-switch="switch1">23</button></td>
-     					<td><strong id="current8" class="form-control form-control-sm text-primary bg-white fw-bold current_II switch1"  th:text="''">6.0 A</strong></td>
-       					<td></td>
+      					<td class="border-start"><strong id="current15" class="form-control form-control-sm text-primary bg-white fw-bold current invisible">15.0 A</strong></td>
+       					<td><button id="gate23" class="btn btn-outline-dark gate invisible" data-switch="switch4">23</button></td>
+      					<td><button id="gate24" class="btn btn-outline-dark gate invisible" data-switch="switch6">24</button></td>
+      					<td><button id="gate25" class="btn btn-outline-dark gate invisible" data-switch="switch6">25</button></td>
+      					<td><button id="gate26" class="btn btn-outline-dark gate invisible" data-switch="switch5">26</button></td>
+      					<td><button id="gate27" class="btn btn-outline-dark gate invisible" data-switch="switch5">27</button></td>
+      					<td><button id="gate28" class="btn btn-outline-dark gate invisible" data-switch="switch1">28</button></td>
+     					<td class="border-start"><strong id="current16" class="form-control form-control-sm text-primary bg-white fw-bold current invisible">16.0 A</strong></td>
       				</tr>
-       				<tr><td><div class="mt-5"></div></td><td></td><td></td><td><strong id="current9" class="form-control form-control-sm text-primary bg-white fw-bold current_II switch6"  th:text="''">11.0 A</strong></td>
-       					<td><button id="gate24" class="btn btn-outline-dark gate invisible" data-switch="switch6">24</button></td>
-       					<td><button id="gate25" class="btn btn-outline-dark gate invisible" data-switch="switch5">25</button></td>
-       					<td><strong id="current10" class="form-control form-control-sm text-primary bg-white fw-bold current_II switch5"  th:text="''">12.0 A</strong></td><td></td><td></td><td></td></tr>
-      				<tr data-channel="1002">
-      					<td></td>
-      					<td><strong id="current11" class="form-control form-control-sm text-primary bg-white fw-bold current_II switch3"  th:text="''">7.0 A</strong></td>
-      					<td><button id="gate26" class="btn btn-outline-dark gate invisible" data-switch="switch3">26</button></td>
-      					<td><button id="gate27" class="btn btn-outline-dark gate invisible" data-switch="switch6">27</button></td>
-      					<td><button id="gate28" class="btn btn-outline-dark gate invisible" data-switch="switch6">28</button></td>
-      					<td><button id="gate29" class="btn btn-outline-dark gate invisible" data-switch="switch5">29</button></td>
-      					<td><button id="gate30" class="btn btn-outline-dark gate invisible" data-switch="switch5">30</button></td>
-      					<td><button id="gate31" class="btn btn-outline-dark gate invisible" data-switch="switch2">31</button></td>
-     					<td><strong id="current12" class="form-control form-control-sm text-primary bg-white fw-bold current_II switch2"  th:text="''">8.0 A</strong></td>
-       					<td></td>
-      				</tr>
-       				<tr><td id="toBlink2" class="border-start"><div class="mt-5"></div></td><td></td><td></td><td></td><td></td>
-       					<td><button id="gate32" class="btn btn-outline-dark gate invisible" data-switch="switch5">32</button></td>
-       					<td></td><td></td><td></td><td></td></tr>
+       				<tr class="border-start"><td><strong id="current17" class="form-control form-control-sm text-primary bg-white fw-bold current invisible">17.0 A</strong></td>
+       					<td><button id="gate29" class="btn btn-outline-dark gate invisible" data-switch="switch1">29</button></td>
+       					<td class="border-start"><strong id="current18" class="form-control form-control-sm text-primary bg-white fw-bold current invisible">18.0 A</strong></td>
+       					<td><button id="gate30" class="btn btn-outline-dark gate invisible" data-switch="switch6">30</button></td>
+       					<td><button id="gate31" class="btn btn-outline-dark gate invisible" data-switch="switch5">31</button></td>
+       					<td class="border-start"><strong id="current19" class="form-control form-control-sm text-primary bg-white fw-bold current invisible">19.0 A</strong></td>
+       					<td><button id="gate32" class="btn btn-outline-dark gate invisible" data-switch="switch3">32</button></td>
+       					<td class="border-start"><strong id="current20" class="form-control form-control-sm text-primary bg-white fw-bold current invisible">20.0 A</strong></td>
+       				</tr>
+      				<tr>
+      					<td class="border-start"><strong id="current21" class="form-control form-control-sm text-primary bg-white fw-bold current invisible">21.0 A</strong></td>
+      					<td><button id="gate33" class="btn btn-outline-dark gate invisible" data-switch="switch3">33</button></td>
+      					<td><button id="gate34" class="btn btn-outline-dark gate invisible" data-switch="switch6">34</button></td>
+      					<td><button id="gate35" class="btn btn-outline-dark gate invisible" data-switch="switch6">35</button></td>
+      					<td><button id="gate36" class="btn btn-outline-dark gate invisible" data-switch="switch5">36</button></td>
+      					<td><button id="gate37" class="btn btn-outline-dark gate invisible" data-switch="switch5">37</button></td>
+      					<td><button id="gate38" class="btn btn-outline-dark gate invisible" data-switch="switch2">38</button></td>
+     					<td class="border-start"><strong id="current22" class="form-control form-control-sm text-primary bg-white fw-bold current invisible">22.0 A</strong></td>
+       				</tr>
+       				<tr><td id="toBlink2" class="border-start"><div class="mt-5"></div></td><td></td><td></td><td></td>
+       					<td><button id="gate39" class="btn btn-outline-dark gate invisible" data-switch="switch5">39</button></td>
+       					<td class="border-start"><strong id="current23" class="form-control form-control-sm text-primary bg-white fw-bold current invisible">23.0 A</strong></td>
+       					<td><button id="gate40" class="btn btn-outline-dark gate invisible" data-switch="switch2">40</button></td>
+       					<td class="border-start"><strong id="current24" class="form-control form-control-sm text-primary bg-white fw-bold current invisible">24.0 A</strong></td>
+       				</tr>
       			</table>
     			<div class="row mt-3" >
      				<div id="currentDelay" class="col"></div>
       				<div class="col-auto">
-      					<button id="resetBtn" class="btn btn-outline-secondary">Reset</button>
+      					<button id="btnReset" class="btn btn-outline-secondary">Reset</button>
       				</div>
    				</div>
     		</div>
@@ -119,84 +129,92 @@
 	        	<input  sec:authorize="hasAuthority('EDIT_PROFILE_PROPERTY')" id="currentShowAll" type="checkbox" class="btn-check" autocomplete="off"></input >
 				<label sec:authorize="hasAuthority('EDIT_PROFILE_PROPERTY')" class="btn btn-outline-primary" for="currentShowAll">Show All</label>
 	        	<button sec:authorize="hasAuthority('EDIT_PROFILE_PROPERTY')" id="currentSetup" type="button" class="btn btn-outline-warning col-auto" disabled>Setup</button>
+	        	<input type="checkbox" class="btn-check" id="cbAlias" autocomplete="off" checked>
+				<label class="btn btn-outline-info disabled" for="cbAlias">Alias</label>
 	        	<button type="button" class="btn btn-outline-secondary col-auto" data-bs-dismiss="modal">Close</button>
 	    	</div>
   			</div>
   		</div>
 		<script th:inline="javascript">
 		/*<![CDATA[*/
+	
+		var URLs = /*[[${URLs}]]*/ 1001;
+		var regUrl;
 
-		var dbLayout;
-		var currentAlias;
-		var moduleId;
+		var $allCurrens = $('.current');
+		var $specialText = $('#specialText');
+		var $gates = $('.gate');
+		var $currentSetup = $('#currentSetup').click(()=>loadModal('/calibration/current-set-up?sn=' + serialNumber));
+		var $currentLayout = $('#currentLayout').change(layoutChanged);
+
+		var delay;
+		var noConnection;
+		var intervalCurrent;
+		var moduleInfo;
 		var channels = {};
 
-		var regUrl;
-		if($('#typeVersion').val()>30)
-			regUrl = '/calibration/rest/hpbm_register_v31';
-		else
-			regUrl = '/calibration/rest/hpbm_register_v21';
+		var currentAlias;
 
-		var $current_I = $('.current_I');
-		var $current_II = $('.current_II');
-		var $specialText = $('#specialText');
+		var $cbAlias = $('#cbAlias')
+		.change(e=>{
 
-		$('#currentShowAll').change(e=>{
-			if(e.currentTarget.checked)
-				$gates.filter((i,el)=>Array.from(el.classList).filter(c=>c.includes('invisible')).length).removeClass('invisible').addClass('disabled');
-			else
-				$gates.filter((i,el)=>Array.from(el.classList).filter(c=>c.includes('disabled')).length).removeClass('disabled').addClass('invisible');
-		});
-		var $gates = $('.gate');
-		var layout;
-		var $currentLayout = $('#currentLayout').change(e=>{
-
-			if(!dbLayout)
-				return;
-
-			layout = dbLayout.filter(l=>l.creationDate == e.currentTarget.value);
-			if(!layout.length){
-				alert('something went wrong.\nNo settings.');
+			if(e.currentTarget.checked){
+				f_showAlias();
 				return;
 			}
-			$gates.addClass('invisible');
-			showGates(layout[0].layouts);
-			showSpecial();
+
+			f_visibleGates().each((i,el)=>el.innerText = el.value);
 		});
 
+		$('#currentShowAll').change(e=>{
+			if(e.currentTarget.checked){
+				$allCurrens.removeClass('invisible');
+				$gates.filter((i,el)=>Array.from(el.classList).filter(c=>c.includes('invisible')).length).removeClass('invisible').addClass('disabled');
+			}else{
+				$allCurrens.addClass('invisible');
+				$gates.filter((i,el)=>Array.from(el.classList).filter(c=>c.includes('disabled')).length).removeClass('disabled').addClass('invisible');
+			}
+		});
+		var layout;
+
 		function showGates(layouts){
+
+			$gates.addClass('invisible');
+
 			if(!layouts)
 				return;
 
 			layouts.forEach(l=>{
-				channels[l.value] = l.id;
-				Object.keys(l.gates).forEach(k=>$('#' + k).removeClass('invisible').text(l.gates[k]).val(l.gates[k]).attr('data-channel', l.value));
+				l.gates.forEach(g=>$('#' + g.id).removeClass('invisible').text(g.value).val(g.value).attr('data-switch', g.toSwitch).attr('data-channel', l.value));
+				l.switches.forEach(sw=>$('#' + sw.id).removeClass('invisible').attr('data-switch', sw.value).attr('data-channel', l.value));
 			});
 
-			if(moduleId && dbLayout)
-				postWithParam('/calibration/rest/current/alias', {moduleId: moduleId}, f_alias, conectionFail);
+			if(moduleInfo.length)
+				postWithParam('/calibration/rest/current/alias', {moduleId: moduleInfo[0].info['Device ID']}, f_alias, conectionFail);
 		}
 		function f_alias(alias){
 			currentAlias = alias;
 			if(!alias)
 				return;
-			$gates.filter((i,el)=>!Array.from(el.classList).includes('invisible')).each((i,el)=>{
-				alias.filter(a=>a.nameInProfile === el.value)
-				.forEach(a=>{
-					el.innerText = a.nameToShow;
-				});
-			});
+			$cbAlias.next().removeClass('disabled');
+			f_showAlias();
+		}
+		function f_visibleGates(){
+			return $gates.filter((i,el)=>!Array.from(el.classList).includes('invisible'));
+		}
+		function f_showAlias(){
+			f_visibleGates().each((i,el)=>currentAlias.filter(a=>a.nameInProfile === el.value).forEach(a=>el.innerText = a.nameToShow));
 		}
 
 		$gates.click(e=>{
 			let href = '/calibration/current?channel=' + e.currentTarget.dataset.channel + '&pot=' + e.currentTarget.value + '&switchName=' + e.currentTarget.dataset.switch;
 			loadModal(href);
 		});
-		var delay;
-		var intervalCurrent;
 		function setDelay(d){
+
 			clearInterval(intervalCurrent);
-			if(d)
+
+			if(d && !d.currentTarget)
 				delay = d;
 			else{
 				let cookiesDelay = Cookies.get('currentDelay');
@@ -206,9 +224,10 @@
 					delay = 200;
 			}
 			$currentDelay.text('Delay: ' + delay + ' ms');
+
 			intervalCurrent = setInterval(getCurrents, delay);
 		}
-		$('#resetBtn').click(setDelay);
+		$('#btnReset').click(setDelay);
 
 		var $currentDelay = $('#currentDelay').text('Delay: ' + delay + ' ms').dblclick(e=>{
 			e.preventDefault();
@@ -223,7 +242,7 @@
 			Cookies.set('currentDelay', mill);
 			setDelay(mill);
 		});
-// // Currenr Alarm setting.
+
 				var $currentAlarm = $('#currentAlarm');
 
 				cookies = Cookies.get("currentAlarm");
@@ -243,189 +262,218 @@
 						Cookies.remove("currentAlarm");
 					}
 				});
-// // END - Currenr Alarm setting.
 
-			var requestCount;
-			var selection = 0;
-			function getCurrents(){
-
-				if(!$modal.hasClass('show') || !dbLayout || !dbLayout.length) return;
-
-
-				const layout = dbLayout.filter(l=>l.creationDate == $currentLayout.val());
-				if(!layout.length){
-					console.log('Layout is not selected.');
-					return;
-				}
-
-				--selection;
-				if(selection<0)
-					selection = layout[0].layouts.length-1;
-
-				devid = layout[0].layouts[selection].value;
-				if(!devid)
-					return;
-
-				if(requestCount<0)
-					requestCount = 0;
-				else if(requestCount>5){
-					if(noConnection)
-						return;
-
-					setDelay(++delay);
-					clearInterval(intervalCurrent);
-					intervalCurrent = setInterval(getCurrents, delay);
-					return;
-				}
-				++requestCount;
-				postWithParam(regUrl, {sn: serialNumber, devid: devid}, f_showCurrent, f_showCurrentError);
-			}
-			var noConnection;
-			function f_showCurrent(data){
-				--requestCount
-				if(!data){
-					noConnection = true;
-					return;
-				}
-				noConnection = false;
-				const channel = Object.keys(data);
-				const channelId = channels[channel];
-				const $current = channelId == 'channel1' ? $current_I : $current_II;
-				const ch = data[channel];
-				if(!ch)
-					return;
-
-				blinkBorder(channelId);
-				const switches = Object.keys(ch);
-				for(let i=0; i<switches.length; i++){
-					const sw = switches[i];
-					$current.filter((i,el)=>Array.from(el.classList).includes(sw))
-					.each((i,el)=>{
-						const toSet = ch[sw];
-						if(!toSet)
-							return;
-						el.innerText = toSet;
-
-		 				const v = toSet.split(" ")[0];
-		 				if(!v)
-	 						return;
-
-		 				const maxCurrent = $currentAlarm.val();
-
-		 				if(parseFloat(v)>=maxCurrent){
-	 						el.classList.add('bg-danger');
-	 						el.classList.add('text-white');
-	 						el.classList.remove('text-primary');
-	 						el.classList.remove('bg-white');
-	 					}else{
-	 						el.classList.add('text-primary');
-	 						el.classList.add('bg-white');
-	 						el.classList.remove('bg-danger');
-	 						el.classList.remove('text-white');
-	 					}
-		 			});
-				}
-			}
 			function f_showCurrentError(data){
-				--requestCount
 				noConnection = true;
-console.log(data);
+				console.log(data);
 			}
 
-			var $toBlink1 = $('#toBlink1');
-			var $toBlink2 = $('#toBlink2');
-			function blinkBorder(channelId){
-				const $c = channelId==='channel1' ? $toBlink1 : $toBlink2;
-				$c.addClass('border-info');
-				setTimeout(function(){ $c.removeClass('border-info'); }, 100);
+			function blinkBorder(channel, border, timeout){
+
+				if(!border)
+					border = 'border-info';
+
+				if(!timeout)
+					timeout = 100;
+
+				$allCurrens.
+				filter((i,el)=>el.dataset.channel == channel)
+				.filter((i,el)=>!Array.from(el.classList).includes('invisible'))
+				.map((i,el)=>el.parentElement)
+				.filter((i,el)=>!Array.from(el.classList).includes(border))
+				.each((i,el)=>{
+					el.classList.add(border);
+					setTimeout(()=>{ el.classList.remove(border); }, timeout);
+				});
 			}
 
-		var $currentSetup = $('#currentSetup').click(()=>loadModal('/calibration/current-set-up?sn=' + serialNumber));
-		var timeoutInit;
-		var modulesLeft;
-		var initCount;
-		function init(){
+		function layoutChanged(e){
 
-			if(modulesLeft){
-				timeoutInit = setTimeout(init, 100);
+			if(!moduleInfo.length)
+				return;
+
+			const layout = moduleInfo[0].layout.filter(l=>l.creationDate == e.currentTarget.value);
+			if(!layout.length){
+				alert('Something went wrong.\nNo settings.');
 				return;
 			}
+			
+			if(typeof $deleteLayout !== 'undefined')
+				$deleteLayout.prop('disabled', false);
 
-			if(!sequences.length){
-				alert('The device does not support current measurement.');
-				if($currentSetup)
-					$currentSetup.prop('disabled', false);
-				return;
-			}
-			postWithParam('/calibration/rest/module-info', {sn: serialNumber, moduleIndex: sequences[0].moduleIndex}, f_info, conectionFail);
+			showGates(layout[0].layouts);
+			showSpecial();
 		}
-		function f_info(info){
-			moduleId = info.deviceType + '.' + info.typeVersion
-			postWithParam('/calibration/rest/current/layout', {sn: serialNumber, topId: topId, moduleId: moduleId}, f_layout, conectionFail);
-		}
-		function f_layout(layouts){
+		var selection = 0;
+		function getCurrents(){
 
-			if(!layouts || !layouts.length){
+			if(!$modal.hasClass('show') || !moduleInfo || !moduleInfo.length) return;
+
+			const layout = getCurrentLayout();
+			if(!layout){
 				if($currentSetup.length)
 					loadModal('/calibration/current-set-up?sn=' + serialNumber);
 				else{
 					alert('There are no settings for this device.\nCall Roman to fix this.');
 					$modal.modal('hide')
 				}
+			}else if(!layout.length){
+				console.log('Layout is not selected.');
 				return;
 			}
-			dbLayout = layouts;
-			$currentSetup.prop('disabled', false);
-			fillCurrentLayout(layouts);
-		}
-		var sequences = [];
-		function f_allModules(modules){
 
-			if(!modules){
-				alert('Unable to read information from the unit.');
-				return;
-			}
-			const keys = Object.keys(modules);
-			if(!keys.length){
-				alert('Unable to obtain information about modules.');
-				return;
-			}
-			moduleExists(modules);
-		}
-		function moduleExists(modules){
-			const keys = Object.keys(modules);
-			modulesLeft = keys.length;
-			for(let i=0; i<keys.length; i++){
-				const moduleIndex = modules[keys[i]]
-				postWithParam('/calibration/rest/hw-info', {sn: serialNumber, moduleIndex: moduleIndex}, f_sequencesPush, f_error);
-			}
-			timeoutInit = setTimeout(init, 1000);
-		}
-		function f_sequencesPush(hwInfo){
-			--modulesLeft;
-
-			if(!hwInfo || !hwInfo.sequence)
+			const devid = getDivId(layout);
+			if(!devid)
 				return;
 
-			sequences.push({moduleIndex: hwInfo.moduleIndex, sequence: hwInfo.sequence});
+			else if(postWithParamCount>3){
+				if(noConnection)
+					return;
+
+				setDelay(++delay);
+				return;
+			}
+			postWithParam(regUrl, {sn: serialNumber, devid: devid}, f_showCurrent, f_showCurrentError);
 		}
-		function f_error(error){
-			conectionFail(error);
-			console.error('error.responseText: ' + error.responseText + '; error.statusText: ' + error.statusText + '; error.status: ' + error.status);
-			$modal.modal('hide')
+
+		function getCurrentLayout(){
+
+			const val = $currentLayout.val();
+			if(!val || !moduleInfo || !moduleInfo.length){
+				return;
+			}
+
+			const selectedDate = $currentLayout.val();
+			return moduleInfo[0].layout.filter(l=>l.creationDate == selectedDate);
 		}
-		function fillCurrentLayout(layout){
-			layout.forEach(l=>$currentLayout.append($('<option>', {text: l.creationDate, value: l.creationDate})));
-			if($currentLayout.val())
-				$currentLayout.change();
+
+		function getDivId(layout){
+
+			if(typeof layout === 'undefined')
+				return;
+
+			--selection;
+			if(selection<0)
+				selection = layout[0].layouts.length-1;
+
+			return layout[0].layouts[selection].value;
 		}
+		function f_showCurrent(data){
+
+			if(!data){
+				noConnection = true;
+				moduleInfo.map(mi=>mi.index).forEach(ch=>blinkBorder(ch, 'border-danger', 1000));
+				return;
+			}
+
+			noConnection = false;
+			const channels = Object.keys(data);
+			if(!channels.length){
+				console.warn('The answer does not contain any information.');
+				return;
+			}
+
+			const channel = channels[0];
+
+			const switches = data[channel];
+			if(!switches){
+				console.wran('There is no information in the response.')
+				return;
+			}
+			const swIds = Object.keys(switches);
+			if(!swIds.length){
+				console.warn('There is no information to display.')
+				return;
+			}
+			if(!switches[swIds[0]]){
+				setTimeout(()=>$modal.modal('hide'), 1);
+				alert('Unable to obtain current..\nCall Potomkin to fix it.');
+				return;
+			}
+
+			blinkBorder(channel);
+			for(let index=0; index<swIds.length; index++){
+
+				const swValue = switches[swIds[index]];
+				if(!swValue)
+					break;
+ 				const v = swValue.split(" ")[0];
+
+ 				$allCurrens
+ 				.filter((i,el)=>el.dataset.switch===swIds[index])
+ 				.filter((i,el)=>el.dataset.channel==channel)
+				.each((i,el)=>{
+					el.innerText = swValue;
+
+	 				if(!v)
+ 						return;
+
+	 				const maxCurrent = $currentAlarm.val();
+
+	 				if(parseFloat(v)>=maxCurrent){
+ 						el.classList.add('bg-danger');
+ 						el.classList.add('text-white');
+ 						el.classList.remove('text-primary');
+ 						el.classList.remove('bg-white');
+ 					}else{
+ 						el.classList.add('text-primary');
+ 						el.classList.add('bg-white');
+ 						el.classList.remove('bg-danger');
+ 						el.classList.remove('text-white');
+ 					}
+	 			});
+			}
+		}
+
 		function showSpecial(){
-			if(dbLayout && dbLayout.length==1 && dbLayout[0].topId==serialNumber)
-				$specialText.text('Special')
+
+			const layout = getCurrentLayout();
+			if(layout && layout.length==1 && layout[0].topId==serialNumber){
+				$specialText.text('Special').attr('title', 'This layout is just for ' + serialNumber);
+				new bootstrap.Tooltip($specialText);
+			}
+		}
+
+		function f_fillSelectLayout(){
+
+			if(moduleInfo.length){
+				moduleInfo[0].layout.forEach(l=>$currentLayout.append($('<option>', {text: l.creationDate, value: l.creationDate})));
+				if($currentLayout.val()){
+					$currentLayout.change();
+					f_postForCurrent();
+				}else
+					f_noLayout();
+				$currentSetup.prop('disabled', false);
+			}
+		}
+		function f_noLayout(){}
+		function f_postForCurrent(){
+			clearInterval(intervalCurrent);
+			intervalCurrent = setInterval(getCurrents, delay);
+		}
+		function f_moduleInfo(data){
+			moduleInfo = data
+			console.log(moduleInfo);
+
+			let url = URLs.filter(u=>u.irtArrayId.id==data[0].moduleId);
+			if(url.length)
+				regUrl = '/calibration/rest/' + url[0].description;
+			else
+				regUrl = '/calibration/rest/' +  URLs.filter(u=>u.irtArrayId.id=='default')[0].description;
+
+			if(!moduleInfo || !moduleInfo.length || !moduleInfo[0].layout || !moduleInfo[0].layout.length || !moduleInfo[0].layout[0].moduleId){
+				console.warn('unable to retrieve data');
+				return;
+			}
+
+			f_fillSelectLayout();
 		}
 		function f_startModal(){
-			initCount = requestCount= 0;
-			postWithParam('/calibration/rest/all-modules', {sn: serialNumber}, f_allModules, conectionFail);
+
+			if(moduleInfo)
+				f_fillSelectLayout();
+			else
+				postWithParam('/calibration/rest/current/module-info', {sn: serialNumber, topId: topId}, f_moduleInfo, conectionFail);
 		}
 		function f_stopModal(){
 // 			err = true;
@@ -452,7 +500,7 @@ console.log(data);
  <!-- Modal Body -->
       			<div id="modal-body" class="modal-body">
       				<div class="row">
-	     				<div class="form-floating col">
+	     				<div id="toBlinkValue" class="form-floating col border-bottom">
   	    					<input id="currentValue" type="number" class="form-control" placeholder="Pot.Value" readonly>
   	    					<label for="currentValue">Pot. Value</label>
   	    				</div>
@@ -460,7 +508,7 @@ console.log(data);
   	    					<input id="currentSetValue" type="number" class="form-control" placeholder="Value to set" disabled>
   	    					<label for="currentSetValue">Value to set</label>
   	    				</div>
-	     				<div class="form-floating col">
+	     				<div id="toBlinkCurrent" class="form-floating col border-bottom">
   	    					<input id="currentToShow" type="text" class="form-control" placeholder="Current" readonly>
   	    					<label for="currentToShow">Current</label>
   	    				</div>
@@ -502,6 +550,8 @@ console.log(data);
 			var potName = /*[[${potName}]]*/ 'G01';
 			var switchName =  /*[[${switchName}]]*/ 'SWITCH1';
 
+			var $toBlinkCurrent = $('#toBlinkCurrent');
+			var $toBlinkValue = $('#toBlinkValue');
 			var $currentToShow =  $('#currentToShow');
 			var $currentValue = $('#currentValue');
 			var $currentDefault = $('#currentDefault').click(()=>{
@@ -514,11 +564,6 @@ console.log(data);
 					$currentSetValue.val(saved);
 					setValue($currentSetValue[0], false, gateStartupValues);
 				});
-			})
-			var $currentSetValue = $('#currentSetValue').change(e=>{
-				if(parseInt(e.currentTarget.value)<0)
-					e.currentTarget.value = 0;
-				
 			});
 			var $currentSave = $('#currentSave').click(()=>{
 				setValue($currentSetValue[0], true, gateStartupValues);
@@ -532,7 +577,12 @@ console.log(data);
 				if(cookies)
 					el.value = cookies;
 			});
-			var $currentSetValue = $('#currentSetValue').keydown(e=>{
+			var $currentSetValue = $('#currentSetValue')
+			.change(e=>{
+				if(parseInt(e.currentTarget.value)<0)
+					e.currentTarget.value = 0;
+			})
+			.keydown(e=>{
 				if(e.ctrlKey){
 					if(e.keyCode==37){	//(e.key=='ArrowLeft'){
 						e.preventDefault();
@@ -593,6 +643,9 @@ console.log(data);
 				const toSend = {sn : serialNumber, channel: channel, index: potIndex, value: el.value};
 				if(save)
 					toSend.save = save;
+
+				toSend.binary = isBinary;
+
 				xhrInfo = $.post('/calibration/rest/current/dac', toSend)
 				.done(done=>{
 					postSetValue = false;
@@ -670,106 +723,9 @@ console.log(data);
 			}
 			var potIndex;
 			var postRwInfo = false;
-			function getRwInfo(){
-				if(saving)
-						return;
-
-				postWithParam('/calibration/rest/calib_rw_info', {sn: serialNumber}, f_calibRwInfo, f_calibRwInfoError);
-			}
-			function f_calibRwInfo(data){
-				if(!data){
-					disableAll();
-					return;
-				}
-
-				let calMode = false;
-				if(data.calibrationRwInfo)
-					calMode = data.calibrationRwInfo.calMode;
-
-				else if(data.digitalPotentiometers)
-					calMode = data.digitalPotentiometers.calMode;
-
-				else{
-					disableAll();
-					login();
-					return;
-				}
-
-				$calibrationMode.next().removeClass('disabled');
-
-				if(calMode){
-					$calibrationMode.prop('checked', true);
-					$currentSetValue.prop('disabled', false);
-					$currentSave.prop('disabled', false);
-				}else{
-					$calibrationMode.prop('checked', false);
-					$currentSetValue.prop('disabled', true);
-					$currentSave.prop('disabled', true);
-				}
-
-				const pts = data.digitalPotentiometers.list.filter(pt=>pt.index==channel);
-				if(!pts || !pts.length){
-					return;
-				}
-				const p = pts[0].vars
-									.filter(pt=>{
-
-										if(!pt.name)
-											return;
-
-										let name
-										if(currentAlias && currentAlias.length){
-											const al = currentAlias.filter(a=>a.nameToShow===pt.name);
-											if(al.length)
-												name = al[0].nameInProfile;
-											else
-												name = pt.name;
-										}else
-											name = pt.name;
-
-										return name==potName;
-									});
-				if(!p || !p.length)
-					return;
-
-				potIndex = p[0].index;
-				const value = p[0].value;
-				$currentValue.val(value);
-				if(!$currentSetValue.val())
-					$currentSetValue.val(value);
-				setMinMax(p[0].range);
-			}
 			function f_calibRwInfoError(error){
 				$modal.modal('hide');
 				conectionFail(error);
-			}
-			var postShowCurrent = false;
-			function showCurrent(){
-				if(saving)
-					return;
-				if(postShowCurrent){
-					if(!timestamp){
-						timestamp = Date.now();
-						return;
-					}
-					const tmp = Date.now();
-					if((tmp-timestamp)<15000)	//15 sec
-						return;
-					timestamp = false;
-				}
-				postShowCurrent = true;
-				$.post(regUrl, {sn: serialNumber, devid: channel})
-				.done(data=>{
-					postShowCurrent = false;
-					if(data && data[channel] && data[channel][switchName])
-						$currentToShow.val(data[channel][switchName]);
-				})
-				.fail(error=>{
-					postShowCurrent = false;
-					$modal.modal('hide');
-					conectionFail(error);
-					console.log(error);
-				});
 			}
 			function setMinMax(range){
 				if(!range)
@@ -840,25 +796,7 @@ console.log(data);
 			var intervalCalibrationMode;
 			var intervalShowCurrent;
 			var intervalGateStartupValues;
-// 			$modal.on('shown.bs.modal', startAll);
-			$modal.on('hide.bs.modal', switchToCurrensModal);
-			function switchToCurrensModal(){
-				stopAll();
-				setTimeout(()=>$modal.off('hide.bs.modal', switchToCurrensModal), 100);
-				setTimeout(()=>loadModal(`/calibration/currents?sn=${serialNumber}`), 200);
-				setTimeout(()=>getCurrents(), 500);
-			}
-			function startAll(){
-				stopAll()
-				intervalCalibrationMode = setInterval(getRwInfo, 1600);
-				intervalShowCurrent = setInterval(showCurrent, 1000);
-				intervalGateStartupValues = setInterval(gateStartupValues, 10001);
-			}
-			function stopAll(){
-				intervalCalibrationMode = clearInterval(intervalCalibrationMode);
-				intervalShowCurrent = clearInterval(intervalShowCurrent);
-				intervalGateStartupValues = clearInterval(intervalGateStartupValues);
-			}
+
 			function disableAll(notCalMod){
 				$currentSetValue.prop('disabled', true);
 				$currentSave.prop('disabled', true);
@@ -866,7 +804,123 @@ console.log(data);
 					return;
 				$calibrationMode.next().addClass('disabled');
 			}
-			startAll();
+			var isBinary;
+			function getRwInfo(){
+				if(saving)
+						return;
+
+				if(typeof isBinary === 'undefined'){
+
+					const moduleId = moduleInfo[0].layout[0].moduleId;
+					postWithParam('/calibration/rest/irt_array', {name: 'calibration_binary', id: moduleId}, data=>isBinary = data != null, error=>console.error(e));
+				}
+
+				postWithParam('/calibration/rest/calib_rw_info', {sn: serialNumber}, f_calibRwInfo, f_calibRwInfoError);
+			}
+			function f_calibRwInfo(data){
+				if(!data){
+					disableAll();
+					return;
+				}
+
+				let calMode = false;
+				if(data.calibrationRwInfo)
+					calMode = data.calibrationRwInfo.calMode;
+
+				else if(data.digitalPotentiometers)
+					calMode = data.digitalPotentiometers.calMode;
+
+				else{
+					disableAll();
+					login();
+					return;
+				}
+
+				$calibrationMode.next().removeClass('disabled');
+
+				if(calMode){
+					$calibrationMode.prop('checked', true);
+					$currentSetValue.prop('disabled', false);
+					$currentSave.prop('disabled', false);
+				}else{
+					$calibrationMode.prop('checked', false);
+					$currentSetValue.prop('disabled', true);
+					$currentSave.prop('disabled', true);
+				}
+
+				let pts;
+				if(data.digitalPotentiometers)
+					pts = data.digitalPotentiometers.list.filter(pt=>pt.index==channel);
+				else
+					pts = data.calibrationRwInfo.dacs.list[0].vars;
+
+				if(!pts || !pts.length)
+					return;
+				
+				let vars;
+				if(pts[0].vars){
+					vars = pts[0].vars;
+				}else
+					vars = pts;
+
+				const p = vars
+									.filter(pt=>{
+
+										if(!pt.name)
+											return;
+
+										let name
+										if(currentAlias && currentAlias.length){
+											const al = currentAlias.filter(a=>a.nameToShow===pt.name);
+											if(al.length)
+												name = al[0].nameInProfile;
+											else
+												name = pt.name;
+										}else
+											name = pt.name;
+
+										return name==potName;
+									});
+				if(!p || !p.length){
+					alert('Gate with this name not found.\nIt may be necessary to make an alias for ' + potName + '.\nCall Roman to fix this.');
+					$modal.modal('hide');
+					return;
+				}
+
+				if(potName[0] === 'G')
+					potIndex = parseInt(potName.replace(/\D/g,''));
+				else
+					potIndex = p[0].index;
+				const value = p[0].value;
+				$currentValue.val(value);
+				blinkBorder($toBlinkValue);
+				if(!$currentSetValue.val()){
+					$currentSetValue.val(value);
+					gateStartupValues();
+				}
+				setMinMax(p[0].range);
+			}
+			function getDivId(layout){
+				return channel;
+			}
+			function f_showCurrent(data){
+				if(data && data[channel] && data[channel][switchName])
+					$currentToShow.val(data[channel][switchName]);
+				blinkBorder($toBlinkCurrent);
+			}
+
+			$modal.on('shown.bs.modal', ()=>{
+				f_startModal();
+				getRwInfo();
+				intervalCalibrationMode = setInterval(getRwInfo, 3001)
+				intervalGateStartupValues = setInterval(gateStartupValues, 10001);
+			});
+			$modal.on('hide.bs.modal', ()=>{
+				f_stopModal();
+				intervalCalibrationMode = clearInterval(intervalCalibrationMode);
+				intervalGateStartupValues = clearInterval(intervalGateStartupValues);
+				setTimeout(()=>loadModal(`/calibration/currents?sn=${serialNumber}`), 200);
+			});
 		/*]]>*/
 		//# sourceURL=current.js
   		</script>
@@ -883,77 +937,324 @@ console.log(data);
  <!-- Modal Body -->
       			<div id="modal-body" class="modal-body">
       			<table class="table table-sm table-borderless align-middle bg_tropo text-center">
-      				<tr class="gates_I"><td><select id="channel1" class="form-control border border-success channel"></select></td><td><div class="mt-5 mb-5"></div></td><td></td>
+      				<tr class="gates_I">
+      					<td><select id="current1" class="form-control border border-success switch">
+      						<option value="">~ ~</option>
+     						<option value="switch1">Switch 1</option>
+     						<option value="switch2">Switch 2</option>
+     						<option value="switch3">Switch 3</option>
+     						<option value="switch4">Switch 4</option>
+     						<option value="switch5">Switch 5</option>
+     						<option value="switch6">Switch 6</option>
+      					</select></td>
       					<td><select id="gate1" class="form-control border border-primary gate" disabled></select></td>
-      					<td></td><td></td><td></td><td></td><td></td></tr>
+      					<td><select id="current2" class="form-control border border-success switch">
+      						<option value="">~ ~</option>
+     						<option value="switch1">Sw 1</option>
+     						<option value="switch2">Sw 2</option>
+     						<option value="switch3">Sw 3</option>
+     						<option value="switch4">Sw 4</option>
+     						<option value="switch5">Sw 5</option>
+     						<option value="switch6">Sw 6</option>
+      					</select></td>
+      					<td><select id="gate2" class="form-control border border-primary gate" disabled></select></td>
+      					<td></td><td></td><td></td>
+      					<td><select id="channel3" class="form-control border border-danger channel"></select></td>
+      				</tr>
      				<tr class="dashed_border gates_I">
-       					<td style="width: 20%"></td>
-      					<td style="width: 10%;"><select id="gate2" class="form-control border border-primary gate" disabled></select></td>
+       					<td style="width: 20%"><select id="current3" class="form-control border border-success switch">
+      						<option value="">~ ~</option>
+     						<option value="switch1">Switch 1</option>
+     						<option value="switch2">Switch 2</option>
+     						<option value="switch3">Switch 3</option>
+     						<option value="switch4">Switch 4</option>
+     						<option value="switch5">Switch 5</option>
+     						<option value="switch6">Switch 6</option>
+      					</select></td>
       					<td style="width: 10%;"><select id="gate3" class="form-control border border-primary gate" disabled></select></td>
-      					<td style="width: 10%;">><select id="gate4" class="form-control border border-primary gate" disabled></select></td>
-      					<td style="width: 10%;">><select id="gate5" class="form-control border border-primary gate" disabled></select></td>
+      					<td style="width: 10%;"><select id="gate4" class="form-control border border-primary gate" disabled></select></td>
+      					<td style="width: 10%;"><select id="gate5" class="form-control border border-primary gate" disabled></select></td>
       					<td style="width: 10%;"><select id="gate6" class="form-control border border-primary gate" disabled></select></td>
       					<td style="width: 10%;"><select id="gate7" class="form-control border border-primary gate" disabled></select></td>
-     					<td style="width: 10%"><strong id="current3" class="text-primary bg-white" th:text="''">3.0 A</strong></td>
-      					<td style="width: 10%;"></td>
+      					<td style="width: 10%;"><select id="gate8" class="form-control border border-primary gate" disabled></select></td>
+       					<td style="width: 20%"><select id="current4" class="form-control border border-success switch">
+      						<option value="">~ ~</option>
+     						<option value="switch1">Switch 1</option>
+     						<option value="switch2">Switch 2</option>
+     						<option value="switch3">Switch 3</option>
+     						<option value="switch4">Switch 4</option>
+     						<option value="switch5">Switch 5</option>
+     						<option value="switch6">Switch 6</option>
+      					</select></td>
       				</tr>
-       				<tr class="gates_I"><td><div class="mt-5"></div></td><td></td><td><strong id="drivers1" class="text-primary bg-white"></strong></td>
-       					<td>><select id="gate8" class="form-control border border-primary gate" disabled></select></td>
-       					<td>><select id="gate9" class="form-control border border-primary gate" disabled></select></td>
-       					<td><strong id="drivers2" class="text-primary bg-white"></strong></td><td></td><td></td><td></td></tr>
+       				<tr class="gates_I">
+       					<td><select id="current5" class="form-control border border-success switch">
+      						<option value="">~ ~</option>
+     						<option value="switch1">Switch 1</option>
+     						<option value="switch2">Switch 2</option>
+     						<option value="switch3">Switch 3</option>
+     						<option value="switch4">Switch 4</option>
+     						<option value="switch5">Switch 5</option>
+     						<option value="switch6">Switch 6</option>
+      					</select></td>
+      					<td><select id="gate9" class="form-control border border-primary gate" disabled></select></td>
+      					<td><select id="current6" class="form-control border border-success switch">
+      						<option value="">~ ~</option>
+     						<option value="switch1">Sw 1</option>
+     						<option value="switch2">Sw 2</option>
+     						<option value="switch3">Sw 3</option>
+     						<option value="switch4">Sw 4</option>
+     						<option value="switch5">Sw 5</option>
+     						<option value="switch6">Sw 6</option>
+      					</select></td>
+       					<td><select id="gate10" class="form-control border border-primary gate" disabled></select></td>
+       					<td><select id="gate11" class="form-control border border-primary gate" disabled></select></td>
+      					<td><select id="current7" class="form-control border border-success switch">
+      						<option value="">~ ~</option>
+     						<option value="switch1">Sw 1</option>
+     						<option value="switch2">Sw 2</option>
+     						<option value="switch3">Sw 3</option>
+     						<option value="switch4">Sw 4</option>
+     						<option value="switch5">Sw 5</option>
+     						<option value="switch6">Sw 6</option>
+      					</select></td>
+      					<td><select id="gate12" class="form-control border border-primary gate" disabled></select></td>
+      					<td><select id="current8" class="form-control border border-success switch">
+      						<option value="">~ ~</option>
+     						<option value="switch1">Switch 1</option>
+     						<option value="switch2">Switch 2</option>
+     						<option value="switch3">Switch 3</option>
+     						<option value="switch4">Switch 4</option>
+     						<option value="switch5">Switch 5</option>
+     						<option value="switch6">Switch 6</option>
+      					</select></td>
+       				</tr>
      				<tr id="blink2" class="dashed_border gates_I">
-       					<td></td>
-      					<td><select id="gate10" class="form-control border border-primary gate" disabled></select></td>
-      					<td><select id="gate11" class="form-control border border-primary gate" disabled></select></td>
-      					<td>><select id="gate12" class="form-control border border-primary gate" disabled></select></td>
-     					<td>><select id="gate13" class="form-control border border-primary gate" disabled></select></td>
+      					<td><select id="current9" class="form-control border border-success switch">
+      						<option value="">~ ~</option>
+     						<option value="switch1">Switch 1</option>
+     						<option value="switch2">Switch 2</option>
+     						<option value="switch3">Switch 3</option>
+     						<option value="switch4">Switch 4</option>
+     						<option value="switch5">Switch 5</option>
+     						<option value="switch6">Switch 6</option>
+      					</select></td>
+      					<td><select id="gate13" class="form-control border border-primary gate" disabled></select></td>
       					<td><select id="gate14" class="form-control border border-primary gate" disabled></select></td>
       					<td><select id="gate15" class="form-control border border-primary gate" disabled></select></td>
-     					<td><strong id="current4" class="text-primary bg-white" th:text="''">4.0 A</strong></td>
-       					<td></td>
+     					<td><select id="gate16" class="form-control border border-primary gate" disabled></select></td>
+      					<td><select id="gate17" class="form-control border border-primary gate" disabled></select></td>
+      					<td><select id="gate18" class="form-control border border-primary gate" disabled></select></td>
+      					<td><select id="current10" class="form-control border border-success switch">
+      						<option value="">~ ~</option>
+     						<option value="switch1">Switch 1</option>
+     						<option value="switch2">Switch 2</option>
+     						<option value="switch3">Switch 3</option>
+     						<option value="switch4">Switch 4</option>
+     						<option value="switch5">Switch 5</option>
+     						<option value="switch6">Switch 6</option>
+      					</select></td>
       				</tr>
-       				<tr class="gates_I"><td></td><td><div class="mt-5"></div></td><td></td><td>></td>
-       					<td>><select id="gate16" class="form-control border border-primary gate" disabled></select></td>
-       					<td></td><td></td><td></td><td></td></tr>
-       				<tr class="gates_II"><td><select id="channel2" class="form-control border border-success channel"></select></td><td><div class="mt-5"></div></td><td></td>
-       					<td>><select id="gate17" class="form-control border border-primary gate  gate16" disabled></select></td>
-       					<td>></td>
-       					<td></td><td></td><td></td><td></td></tr>
+       				<tr class="gates_I">
+       					<td><select id="channel1" class="form-control border border-danger channel"></select></td>
+       					<td><div class="mt-5"></div></td>
+       					<td></td><td></td>
+       					<td><select id="gate19" class="form-control border border-primary gate" disabled></select></td>
+      					<td><select id="current11" class="form-control border border-success switch">
+      						<option value="">~ ~</option>
+     						<option value="switch1">Sw 1</option>
+     						<option value="switch2">Sw 2</option>
+     						<option value="switch3">Sw 3</option>
+     						<option value="switch4">Sw 4</option>
+     						<option value="switch5">Sw 5</option>
+     						<option value="switch6">Sw 6</option>
+      					</select></td>
+      					<td><select id="gate20" class="form-control border border-primary gate" disabled></select></td>
+      					<td><select id="current12" class="form-control border border-success switch">
+      						<option value="">~ ~</option>
+     						<option value="switch1">Switch 1</option>
+     						<option value="switch2">Switch 2</option>
+     						<option value="switch3">Switch 3</option>
+     						<option value="switch4">Switch 4</option>
+     						<option value="switch5">Switch 5</option>
+     						<option value="switch6">Switch 6</option>
+      					</select></td>
+       				</tr>
+       				<tr class="gates_II">
+      					<td><select id="current13" class="form-control border border-success switch">
+      						<option value="">~ ~</option>
+     						<option value="switch1">Switch 1</option>
+     						<option value="switch2">Switch 2</option>
+     						<option value="switch3">Switch 3</option>
+     						<option value="switch4">Switch 4</option>
+     						<option value="switch5">Switch 5</option>
+     						<option value="switch6">Switch 6</option>
+      					</select></td>
+      					<td><select id="gate21" class="form-control border border-primary gate" disabled></select></td>
+      					<td><select id="current14" class="form-control border border-success switch">
+      						<option value="">~ ~</option>
+     						<option value="switch1">Sw 1</option>
+     						<option value="switch2">Sw 2</option>
+     						<option value="switch3">Sw 3</option>
+     						<option value="switch4">Sw 4</option>
+     						<option value="switch5">Sw 5</option>
+     						<option value="switch6">Sw 6</option>
+      					</select></td>
+       					<td><select id="gate22" class="form-control border border-primary gate  gate16" disabled></select></td>
+       					<td></td>
+       					<td></td><td></td>
+      					<td><select id="channel4" class="form-control border border-danger channel"></select></td>
+       				</tr>
      				<tr class="gates_II">
-       					<td></td>
-      					<td><select id="gate18" class="form-control border border-primary gate gate15" disabled></select></td>
-      					<td><select id="gate19" class="form-control border border-primary gate gate14" disabled></select></td>
-      					<td>><select id="gate20" class="form-control border border-primary gate gate13" disabled></select></td>
-     					<td>><select id="gate21" class="form-control border border-primary gate gate12" disabled></select></td>
-      					<td><select id="gate22" class="form-control border border-primary gate gate11" disabled></select></td>
-      					<td><select id="gate23" class="form-control border border-primary gate gate10" disabled></select></td>
-     					<td><strong id="current5" class="text-primary bg-white" th:text="''">5.0 A</strong></td>
-       					<td></td>
+       					<td><select id="current15" class="form-control border border-success switch">
+      						<option value="">~ ~</option>
+     						<option value="switch1">Switch 1</option>
+     						<option value="switch2">Switch 2</option>
+     						<option value="switch3">Switch 3</option>
+     						<option value="switch4">Switch 4</option>
+     						<option value="switch5">Switch 5</option>
+     						<option value="switch6">Switch 6</option>
+      					</select></td>
+      					<td><select id="gate23" class="form-control border border-primary gate gate15" disabled></select></td>
+      					<td><select id="gate24" class="form-control border border-primary gate gate14" disabled></select></td>
+      					<td><select id="gate25" class="form-control border border-primary gate gate13" disabled></select></td>
+     					<td><select id="gate26" class="form-control border border-primary gate gate12" disabled></select></td>
+      					<td><select id="gate27" class="form-control border border-primary gate gate11" disabled></select></td>
+      					<td><select id="gate28" class="form-control border border-primary gate gate10" disabled></select></td>
+       					<td><select id="current16" class="form-control border border-success switch">
+      						<option value="">~ ~</option>
+     						<option value="switch1">Switch 1</option>
+     						<option value="switch2">Switch 2</option>
+     						<option value="switch3">Switch 3</option>
+     						<option value="switch4">Switch 4</option>
+     						<option value="switch5">Switch 5</option>
+     						<option value="switch6">Switch 6</option>
+      					</select></td>
       				</tr>
-       				<tr class="gates_II"><td><div class="mt-5"></div></td><td></td><td><strong id="drivers4" class="text-primary bg-white"></strong></td>
-       					<td><select id="gate24" class="form-control border border-primary gate gate9" disabled></select></td>
-       					<td><select id="gate25" class="form-control border border-primary gate gate8" disabled></select></td>
-       					<td><strong id="drivers3" class="text-primary bg-white"></strong></td><td></td><td></td><td></td></tr>
+       				<tr class="gates_II">
+      					<td><select id="current17" class="form-control border border-success switch">
+      						<option value="">~ ~</option>
+     						<option value="switch1">Switch 1</option>
+     						<option value="switch2">Switch 2</option>
+     						<option value="switch3">Switch 3</option>
+     						<option value="switch4">Switch 4</option>
+     						<option value="switch5">Switch 5</option>
+     						<option value="switch6">Switch 6</option>
+      					</select></td>
+      					<td><select id="gate29" class="form-control border border-primary gate" disabled></select></td>
+      					<td><select id="current18" class="form-control border border-success switch">
+      						<option value="">~ ~</option>
+     						<option value="switch1">Sw 1</option>
+     						<option value="switch2">Sw 2</option>
+     						<option value="switch3">Sw 3</option>
+     						<option value="switch4">Sw 4</option>
+     						<option value="switch5">Sw 5</option>
+     						<option value="switch6">Sw 6</option>
+      					</select></td>
+       					<td><select id="gate30" class="form-control border border-primary gate gate9" disabled></select></td>
+       					<td><select id="gate31" class="form-control border border-primary gate gate8" disabled></select></td>
+      					<td><select id="current19" class="form-control border border-success switch">
+      						<option value="">~ ~</option>
+     						<option value="switch1">Sw 1</option>
+     						<option value="switch2">Sw 2</option>
+     						<option value="switch3">Sw 3</option>
+     						<option value="switch4">Sw 4</option>
+     						<option value="switch5">Sw 5</option>
+     						<option value="switch6">Sw 6</option>
+      					</select></td>
+       					<td><select id="gate32" class="form-control border border-primary gate" disabled></select></td>
+      					<td><select id="current20" class="form-control border border-success switch">
+      						<option value="">~ ~</option>
+     						<option value="switch1">Switch 1</option>
+     						<option value="switch2">Switch 2</option>
+     						<option value="switch3">Switch 3</option>
+     						<option value="switch4">Switch 4</option>
+     						<option value="switch5">Switch 5</option>
+     						<option value="switch6">Switch 6</option>
+      					</select></td>
+       				</tr>
       				<tr class="gates_II">
-      					<td></td>
-      					<td><select id="gate26" class="form-control border border-primary gate gate7" disabled></select></td>
-      					<td><select id="gate27" class="form-control border border-primary gate gate6" disabled></select></td>
-      					<td>><select id="gate28" class="form-control border border-primary gate gate5" disabled></select></td>
-     					<td>><select id="gate29" class="form-control border border-primary gate gate4" disabled></select></td>
-      					<td><select id="gate30" class="form-control border border-primary gate gate3" disabled></select></td>
-      					<td><select id="gate31" class="form-control border border-primary gate gate2" disabled></select></td>
-     					<td><strong id="current6" class="text-primary bg-white" th:text="''">6.0 A</strong></td>
-       					<td></td>
+       					<td><select id="current21" class="form-control border border-success switch">
+      						<option value="">~ ~</option>
+     						<option value="switch1">Switch 1</option>
+     						<option value="switch2">Switch 2</option>
+     						<option value="switch3">Switch 3</option>
+     						<option value="switch4">Switch 4</option>
+     						<option value="switch5">Switch 5</option>
+     						<option value="switch6">Switch 6</option>
+      					</select></td>
+     					<td><select id="gate33" class="form-control border border-primary gate gate7" disabled></select></td>
+      					<td><select id="gate34" class="form-control border border-primary gate gate6" disabled></select></td>
+      					<td><select id="gate35" class="form-control border border-primary gate gate5" disabled></select></td>
+     					<td><select id="gate36" class="form-control border border-primary gate gate4" disabled></select></td>
+      					<td><select id="gate37" class="form-control border border-primary gate gate3" disabled></select></td>
+      					<td><select id="gate38" class="form-control border border-primary gate gate2" disabled></select></td>
+      					<td><select id="current22" class="form-control border border-success switch">
+      						<option value="">~ ~</option>
+     						<option value="switch1">Switch 1</option>
+     						<option value="switch2">Switch 2</option>
+     						<option value="switch3">Switch 3</option>
+     						<option value="switch4">Switch 4</option>
+     						<option value="switch5">Switch 5</option>
+     						<option value="switch6">Switch 6</option>
+      					</select></td>
       				</tr>
-       				<tr class="gates_II"><td><div class="mt-5"></div></td><td></td><td></td><td></td>
-       					<td><select id="gate32" class="form-control border border-primary gate gate1" disabled></select></td>
-       					<td></td><td></td><td></td><td></td></tr>
+       				<tr class="gates_II">
+       					<td><select id="channel2" class="form-control border border-danger channel"></select></td>
+       					<td></td><td></td><td></td>
+       					<td><select id="gate39" class="form-control border border-primary gate gate1" disabled></select></td>
+      					<td><select id="current23" class="form-control border border-success switch">
+      						<option value="">~ ~</option>
+     						<option value="switch1">Sw 1</option>
+     						<option value="switch2">Sw 2</option>
+     						<option value="switch3">Sw 3</option>
+     						<option value="switch4">Sw 4</option>
+     						<option value="switch5">Sw 5</option>
+     						<option value="switch6">Sw 6</option>
+      					</select></td>
+      					<td><select id="gate40" class="form-control border border-primary gate" disabled></select></td>
+      					<td><select id="current24" class="form-control border border-success switch">
+      						<option value="">~ ~</option>
+     						<option value="switch1">Switch 1</option>
+     						<option value="switch2">Switch 2</option>
+     						<option value="switch3">Switch 3</option>
+     						<option value="switch4">Switch 4</option>
+     						<option value="switch5">Switch 5</option>
+     						<option value="switch6">Switch 6</option>
+      					</select></td>
+       				</tr>
       			</table>
+      			<div class="row">
+      				<div class="col">
+						<input type="checkbox" class="btn-check hider" id="showChannels" autocomplete="off" checked="checked">
+						<label class="btn btn-outline-danger form-control" for="showChannels">Channels</label><br>
+      				</div>
+     				<div class="col">
+						<input type="checkbox" class="btn-check hider" id="showGates" autocomplete="off" checked="checked">
+						<label class="btn btn-outline-primary form-control" for="showGates">Gaits</label><br>
+      				</div>
+    				<div class="col">
+						<input type="checkbox" class="btn-check hider" id="showSwitches" autocomplete="off" checked="checked">
+						<label class="btn btn-outline-success form-control" for="showSwitches">Switches</label><br>
+      				</div>
+      			</div>
+      			<div class="row">
+      				<div class="col">
+ 						<div class="form-floating">
+							<input type="text" class="form-control" id="urlToCurrent" placeholder="URL to Current">
+							<label for="urlToCurrent">URL to Current</label>
+						</div>
+      				</div>
+      				<div class="col-auto">
+ 						<button id="btnSetUrl" type="button" class="btn btn-outline-warning">Set</button>
+      				</div>
+      			</div>
     		</div>
 <!-- Modal Footer -->
       		<div class="modal-footer">
-	        	<button id="save" type="button" class="btn btn-outline-primary col-auto current-save">Save</button>
+	        	<button id="btnSaveSetup" type="button" class="btn btn-outline-primary col-auto current-save">Save</button>
 	        	<button id="special" type="button" class="btn btn-outline-warning col-auto current-save" th:title="'Save only for ' + ${serialNumber}">Special</button>
+	        	<button id="deleteLayout" type="button" class="btn btn-outline-dark col-auto current-save" th:title="'Save only for ' + ${serialNumber}" disabled>Delete</button>
 	        	<div id="specialText" class="col text-danger text-center fs-5"></div>
 	        	<div class="col-2">
 	        	<select id="currentLayout" class="form-control"></select>
@@ -961,7 +1262,7 @@ console.log(data);
 				<input type="checkbox" class="btn-check" id="cbAlias" autocomplete="off">
 				<label class="btn btn-outline-info" for="cbAlias">Alias</label><br>
 	        	<button id="mapGates" type="button" class="btn btn-outline-primary col-auto">Map Gates</button>
-	        	<button id="reset" type="button" class="btn btn-outline-secondary col-auto">Reset</button>
+	        	<button id="btnReset" type="button" class="btn btn-outline-secondary col-auto">Reset</button>
 	        	<button type="button" class="btn btn-outline-secondary col-auto" data-bs-dismiss="modal">Close</button>
 	    	</div>
   			</div>
@@ -969,21 +1270,40 @@ console.log(data);
 		<script th:inline="javascript">
 		/*<![CDATA[*/
 
-		var copyToGates_II;
+			// *********** Setup ***********
+
+		var copyToAnotherGates;
+
+		var $urlToCurrent = $('#urlToCurrent');
+		var tmp = regUrl.split('/');
+		if(tmp.length)
+		$urlToCurrent.val(tmp[tmp.length-1]);
+		$('#btnSetUrl').click(()=>{
+
+			const moduleId = moduleInfo[0].layout[0].moduleId;
+			const url = $urlToCurrent.val();
+
+			if(!moduleId || !url){
+
+				alert('No required data.');
+				return;
+			}
+
+			postWithParam('/calibration/rest/current/url', {moduleId: moduleId, url: url}, data=>console.log(data), conectionFail);
+		});
 
 		$('#mapGates').click(()=>loadModal('/calibration/current-map'))
+		var $deleteLayout = $('#deleteLayout');
 		var $specialText = $('#specialText');
 		var $allSelects = $modal.find('select');
-		var $channel1 = $('#channel1');
-		var $channel2 = $('#channel2');
+		var $channels = $('.channel');
 		var $gates = $('.gate');
-		var $gates_I = $('.gates_I .gate');
-		var $gates_II = $('.gates_II .gate');
+		var $switches = $('.switch');
 		var $cbAlias = $('#cbAlias')
 		.change(e=>{
 
 			if(!e.currentTarget.checked){
-				$('.gate').children().filter((i,el)=>el.value).each((i,el)=>el.innerText = el.value);
+				$gates.children().filter((i,el)=>el.value).each((i,el)=>el.innerText = el.value);
 				return;
 			}
 
@@ -996,10 +1316,104 @@ console.log(data);
 			else
 				postWithParam('/calibration/rest/module-info', {sn: serialNumber, moduleIndex: moduleIndex[0]}, f_infoAlias, conectionFail);
 		});
+		$('.hider').change(e=>{
+
+			let $el;
+			switch(e.currentTarget.id){
+			case 'showChannels':
+				$el = $channels;
+				break;
+			case 'showSwitches':
+				$el = $switches;
+				break;
+			case 'showGates':
+				$el = $gates;
+				break;
+			default:
+				return;
+			}
+			if(e.currentTarget.checked)
+				$el.removeClass('invisible');
+			else
+				$el.addClass('invisible');
+		});
+		var previousSwitch;
+		$switches
+		.change(f_showGatesSelect)
+		.focus(e=>previousSwitch = e.currentTarget.value)
+		.mousedown(e=>{
+			if(!e.ctrlKey || !e.currentTarget.value)
+				return;
+			e.preventDefault();
+			e.currentTarget.focus();
+			f_showGatesSelect(e);
+		});
+		function f_showGatesSelect(e){
+
+			$toastContaner.empty();
+
+			const $ch = $channels.filter((i,el)=>el.value===e.currentTarget.dataset.channel)
+			if(!$ch.length){
+				alert('The channel must be selected.');
+				e.currentTarget.value = '';
+				return;
+			}
+
+			const $g = relatedGates($ch.attr('id')).filter((i,el)=>el.value).filter((i,el)=>!el.dataset.switch || el.dataset.switch === e.currentTarget.value);
+			if(!$g.length && e.currentTarget.value){
+				alert('There are no free channels.');
+				e.currentTarget.value = '';
+				return;
+			}
+
+			const duplicateCount = $switches.filter((i,el)=>el.value).filter((i,el)=>el.dataset.channel === e.currentTarget.dataset.channel).filter((i,el)=>el.id!==e.currentTarget.id).filter((i,el)=>el.value === previousSwitch || el.value === e.currentTarget.value).length;
+			if(!duplicateCount && previousSwitch !== e.currentTarget.value){
+				$g.filter((i,el)=>el.dataset.switch===previousSwitch).each((i,el)=>delete el.dataset.switch);
+			}
+			previousSwitch = e.currentTarget.value;
+			if(!e.currentTarget.value)
+				return;
+
+			const text = e.currentTarget.options[e.currentTarget.selectedIndex].text;
+			const chBox = $g.sort((a,b)=>a.value.localeCompare(b.value))
+			.map((i,el)=>{
+						const v = el.value;
+						return $('<div>', {class: 'col mb-2'})
+							.append(
+								$('<input>', {id: 'g' + i, type: 'checkbox', class: 'btn-check', autocomplete: 'off', checked: typeof el.dataset.switch !== 'undefined', value: v})
+								.change(input=>{
+									$g.filter((i,el)=>el.value === input.currentTarget.value)
+									.each((i,el)=>{
+										if(input.currentTarget.checked)
+											el.dataset.switch = e.currentTarget.value;
+										else
+											delete el.dataset.switch;
+									})
+								}))
+							.append($('<label>', {for: 'g' + i, class: 'btn btn-outline-success form-control', text: v}));
+			});
+
+			const $body = $('<div>', {class: 'toast-body row row-cols-4'});
+			chBox.each((i,el)=>$body.append(el));
+
+			const $toast = $('<div>', {class: 'toast', role: 'alert', 'aria-live': 'assertive', 'aria-atomic': true})
+				.append(
+					$('<div>', {class: 'toast-header text-bg-warning'})
+					.append(
+						$('<strong>', {class: 'me-auto', text: 'Gates matching for ' + text})
+					)
+					.append(
+						$('<button>', {class: 'btn-close', type: 'button', 'data-bs-dismiss': 'toast', 'aria-label': 'Close'})
+					)
+				)
+				.append($body)
+			.appendTo($toastContaner)
+			.on('hide.bs.toast', function(){this.remove();});
+
+			new bootstrap.Toast($toast).show();
+		}
 		function f_infoAlias(info){
-			moduleId = info.deviceType +'.' + info.typeVersion;
-			console.log(moduleId);
-			postWithParam('/calibration/rest/current/alias', {moduleId: moduleId}, f_alias, conectionFail);
+			postWithParam('/calibration/rest/current/alias', {moduleId: moduleInfo[0].info['Device ID']}, f_alias, conectionFail);
 		}
 		function f_alias(alias){
 
@@ -1010,7 +1424,7 @@ console.log(data);
 			if(!currentAlias.length)
 				return;
 
-			const $options = $('.gate').children();
+			const $options = $gates.children();
 			if(!$options.length)
 				return;
 
@@ -1024,120 +1438,92 @@ console.log(data);
 				currentAlias.filter(a=>a.nameInProfile===val).forEach(a=>el.innerText = a.nameToShow);
 			});
 		}
-		var $gates_I = $('.gates_I .gate')
-		.change(e=>{
-			checkAnotherGates(e.currentTarget);
-			if(!$channel2.val())
-				return;
-			if(typeof copyToGates_II == 'undefined')
-				copyToGates_II = confirm('Do you want to copy channel #1 to channel #2 ?\nIf yes press OK.');
-			if(!copyToGates_II)
-				return;
-			const $anotherTarget = $('.' +e.currentTarget.id).val(e.currentTarget.value);
-			checkAnotherGates($anotherTarget[0]);
-		});
-		var $gates_II = $('.gates_II .gate').change(e=>checkAnotherGates(e.currentTarget));
-		var $channels = $('.channel')
-		.change(e=>{
-
-			const $channel = $(e.currentTarget);
-			const $gates = relatedGates($channel);
-			$gates.empty().prop('disabled', true);
-			if(!e.currentTarget.value){
-				checkAnotherChannel(e.currentTarget);
-				return;
-			}
-
-			postWithParam('/calibration/rest/hw-info', {sn: serialNumber, moduleIndex: e.currentTarget.value}, f_hwInfo, conectionFail);
-		});
-		function f_hwInfo(hwInfo){
-			if(!hwInfo || !hwInfo.sequence){
-				alert('The device does not support current measurement.');
-				disableOption(e.currentTarget);
-				return;
-			}
-
-			$gates.append($('<option>', {value: '', text: '--'})).prop('disabled', false);
-			hwInfo.sequence.split(/(\s+)/).filter(s=>s.includes('G') || s.includes('P')).sort().forEach(s=>$gates.append($('<option>', {value: s, text: s})));
-			const $ch = $channels.filter((i,el)=>el.value==hwInfo.moduleIndex);
-			if($ch.length)
-				checkAnotherChannel($ch[0]);
-
-			const channel = $ch.val();
-			if(channel)
-				setGates(channel, $gates);
-		}
-		var $currentLayout = $('#currentLayout').change(e=>{
-			if(!dbLayout)
-				return;
-
-			const layout = dbLayout.filter(l=>l.creationDate == e.currentTarget.value);
-			if(!layout.length){
-				alert('something went wrong.\nNo settings.');
-				return;
-			}
-			$gates_I.val('');
-			$gates_II.val('');
-			selectChannel(layout[0].layouts);
-			showSpecial();
-		});
 		var $btnSpecial = $('#special');
 		new bootstrap.Tooltip($btnSpecial);
-		$('#reset').click(()=>{
+		$('#btnReset').click(()=>{
 
 			$currentLayout.val('');
+			$deleteLayout.prop('disabled', true);
 
-			const $gates = $('.gate');
 			if($gates.filter((i,el)=>el.value).length){
-				$gates.val('').children().prop('disabled', false);
+				$gates.val('').children().prop('disabled', false).removeAttr('data-switch');
+				$switches.val('');
 				return;
 			}
-			$channels.val('').children().prop('disabled', false);
+
+			$channels.val('').removeClass('invisible').children().prop('disabled', false);
+			$gates.removeAttr('data-channel').prop('disabled', true).empty().removeClass('invisible');
+			$switches.removeAttr('data-channel');
 		});
+		function f_delete(message){
+
+			moduleInfo = null;
+
+			if(!message)
+				return;
+
+			alert(message);
+			console.log(message);
+		}
 		$btnSave = $('.current-save').click(e=>{
 
-			e.currentTarget.disabled = true;
+			if(!confirm('Are you sure you want to ' + e.currentTarget.innerText + ' this layout?'))
+				return;
+
+			if(e.currentTarget.id=='deleteLayout'){
+				const layout = getCurrentLayout();
+				if(!layout.length){
+					alert('Something went wrong.');
+					return;
+				}
+
+				postWithParam('/calibration/rest/current/delete', {topId: layout[0].topId, moduleId: layout[0].moduleId, date: layout[0].creationDate}, f_delete, conectionFail);
+				$modal.modal('hide');
+				return;
+			}
 
 			const toSend = {};
 			toSend.layouts = [];
-			$channels.each((i, el)=>{
-				if(!el.value)
+			$channels.each((i, ch)=>{
+				if(!ch.value)
 					return;
-				const c = {id: el.id, value: el.value};
-				c.gates = {};
-				const g = relatedGates($(el)).filter((i,el)=>el.value)
+				const c = {id: ch.id, value: ch.value};
+
+				c.gates = [];
+				const g = relatedGates(ch.id).filter((i,el)=>el.value)
 				if(!g.length)
 					return;
-				g.each((i,el)=>c.gates[el.id] = el.value);
+				g.each((i,el)=>{
+					c.gates.push({id: el.id, value: el.value, toSwitch: el.dataset.switch});
+				});
+
+				c.switches = [];
+				const sw = relatedSwitches(ch.id).filter((i,el)=>el.value)
+				if(!sw.length)
+					return;
+				sw.each((i,el)=>c.switches.push({id: el.id, value: el.value}));
 				toSend.layouts.push(c);
 			});
-			if(!toSend.layouts.length){
-				alert('There is nothing to save.')
-				return;
+
+			if(!toSend.layouts.length || !moduleInfo.length){
+				alert('There is not enough information to save.');
+				return
 			}
 
 			$btnSave.prop('disabled', true);
 			$btnSpecial.prop('disabled', true);
 
-			dbLayout = null;
-			$.post('/calibration/rest/module-info', {sn: serialNumber, moduleIndex: toSend.layouts[0].value})
-			.done(i=>{
-				toSend.serialNumber = serialNumber;
-				toSend.topId = info.deviceType + '.' + info.typeVersion;
-				toSend.moduleId = i.deviceType + '.' + i.typeVersion;
-				toSend.special = e.currentTarget.id === 'special';
+			toSend.serialNumber = serialNumber;
+			toSend.topId = topId;
+			toSend.moduleId = moduleInfo[0].info["Device ID"];
+			toSend.special = e.currentTarget.id === 'special';
 
-				postObject('/calibration/rest/current/save', toSend)
-	 			.done(response=>{
-	 				console.log(response);
-	 				$modal.modal('hide');
-	 			})
-				.fail(error=>{
-					conectionFail(error);
-					console.error(error);
-					$btnSave.prop('disabled', false);
-					$btnSpecial.prop('disabled', false);
-				});
+			e.currentTarget.disabled = true;
+
+			postObject('/calibration/rest/current/layout/save', toSend)
+ 			.done(response=>{
+ 				console.log(response);
+ 				moduleInfo = null;
  			})
 			.fail(error=>{
 				conectionFail(error);
@@ -1145,97 +1531,317 @@ console.log(data);
 				$btnSave.prop('disabled', false);
 				$btnSpecial.prop('disabled', false);
 			});
+
+			$modal.modal('hide');
 		});
-
-		function relatedGates($channel){
-			const g1 = $channel.parents('tr').hasClass('gates_I');
-			return g1 ? $gates_I : $gates_II;
-		}
-		function setGates(channel, $gates){
-
-			if(!dbLayout)
-				return;
-
-			const selectedDate = $currentLayout.val();
-			if(!selectedDate)
-				return;
-
-			const selected = dbLayout.filter(layout=>layout.creationDate == selectedDate);
-			if(!selected.length)
-				return;
-			const gates = selected[0].layouts.filter(l=>l.value==channel).map(l=>l.gates);
-			if(!gates.length)
-				return;
-			const g = gates[0];
-			$gates.each((i,select)=>{
-				const v = g[select.id];
-				if(v){
-					select.value = v;
-					checkAnotherGates(select);
-				}
-			});
-		}
 		function disableOption(select){
 			if(!select.value)
 				return;
 			$channels.children().filter((i,option)=>option.value==select.value).prop('disabled', true);
 			select.value = '';
 		}
-		function checkAnotherGates(el){
-			const cannel2 = Array.from(el.classList).filter(c=>c.length>4 && c.includes('gate'));
-			const $another = cannel2.length ? $gates_II : $gates_I;
-			const values = $another.map((i,select)=>select.value).get().filter(v=>v);
-			const $children = $another.filter((i,select)=>!select.isEqualNode(el)).children();
-			$children.each((i,option)=>{
-				option.disabled = option.value && values.filter(v=>{
-					return !(option.value && v===option.parentElement.value);
-				}).includes(option.value);
-			});
-		}
-
-		function checkDB(el){
-
-			if(!el.value)
-				return;
-
-			if(dbLayout){
-				if(!$currentLayout.val())
-					fillCurrentLayout(dbLayout);
-				return;
-			}
-
-			postWithParam('/calibration/rest/module-info', {sn: serialNumber, moduleIndex: el.value}, f_info, conectionFail);
-		}
 		function f_layout(layouts){
-			dbLayout = layouts;
-		}
-		function selectChannel(layouts){
-			layouts.forEach(layout=>{
-				const $channel = $('#' + layout.id);
-				if($channel.val() == layout.value)
-					setGates(layout.value, relatedGates($channel));
-				else
-					$channel.val(layout.value).change();
-			});
+			currentLayout = layouts;
 		}
 		function f_disableFields(disable){
 			$nameInProfile.prop('disabled', disable);
 			$nameToShow.prop('disabled', disable);
 		}
-		function checkAnotherChannel(el){
-			const $another = el.id == 'channel1' ? $channel2 : $channel1;
-			$another.children().each((i,option)=>{option.disabled = option.value && option.value===el.value;});
-			checkDB(el);
+
+		function setGates(channelValue, $gates){
+			$gates.val('').removeAttr('data-switch');
+
+			const currentLayout = getCurrentLayout();
+			if(!currentLayout)
+				return;
+
+			const layout = currentLayout[0].layouts.filter(l=>l.value==channelValue);
+			const gates = layout.map(l=>l.gates);
+			if(!gates.length)
+				return;
+
+			const gs = gates[0];
+			$gates.each((i,gate)=>{
+
+				const v = gs.filter(g=>g.id===gate.id);
+				if(!v.length)return;
+
+				gate.value = v[0].value;
+				if(v[0].toSwitch)
+					gate.dataset.switch = v[0].toSwitch;
+				gate.dataset.channel = channelValue;
+			});
+
+			const id = $channels.filter((i,el)=>el.value===channelValue).attr('id');
+			const $sw = relatedSwitches(id).val('');
+			const switches = layout.map(l=>l.switches);
+			if(switches.length)
+				switches[0].forEach(sw=>$sw.filter((i,el)=>el.id==sw.id).each((i,el)=>el.value=sw.value));
+
+			checkAnotherGates(layout[0].id);
 		}
-		function moduleExists(modules){
-			const keys = Object.keys(modules).sort();
-			$channels.append($('<option>', {value: '', text: 'N/A'}));
-			for(let i=0; i<keys.length; i++){
-				const key = keys[i];
-				const moduleIndex = modules[key];
-				$channels.append($('<option>', {text: key, value: moduleIndex}));
+
+		$channels.change(e=>f_fillGates(e.currentTarget));
+
+		function f_fillGates(ch){
+
+			checkAnotherChannel();
+
+			const $rSwitches = relatedSwitches(ch.id).val('');
+			const $g = relatedGates(ch.id).removeAttr('data-switch').empty().prop('disabled', true);
+
+			if(ch.value){
+				$rSwitches.attr('data-channel', ch.value);
+				$g.attr('data-channel', ch.value);
+			}else{
+				$rSwitches.removeAttr('data-channel');
+				$g.removeAttr('data-channel');
+			}
+
+
+			const $another = f_$anotherChannel(ch);
+			if($another && $another.val()){
+
+				f_setIndex(relatedGates($another.attr('id')));
+
+				if(!ch.value){
+					$another.change();
+					return;
+				}
+			}
+
+			const info = moduleInfo.filter(mi=>mi.index==ch.value);
+			if(!info.length)
+				return;
+			
+			$g.append($('<option>', {value: '', text: '--'})).prop('disabled', false);
+			info[0].hwInfo.sequence.split(/(\s+)/).filter(s=>s.includes('G') || s.includes('P')).sort().forEach(s=>$g.append($('<option>', {value: s, text: s})));
+
+			if(ch.value){
+				f_setIndex($g);
+				setGates(ch.value, $g);
 			}
 		}
+
+		function f_setIndex($g){
+
+			if($g[0].id===channel3Gates[0] || $g[0].id===channel2Gates[0])
+				$g.sort((a,b)=>parseInt(b.id.replace(/\D/g,'')) - parseInt(a.id.replace(/\D/g,'')));
+			else
+				$g.sort((a,b)=>parseInt(a.id.replace(/\D/g,'')) - parseInt(b.id.replace(/\D/g,'')));
+
+			$g.each((i, el)=>el.dataset.index = i);
+		}
+
+		function f_$anotherChannel(element){
+			let $another;
+			switch(element.id){
+
+			case 'channel1':
+					$another = $('#channel3')
+				break;
+
+			case 'channel3':
+					$another = $('#channel1')
+				break;
+
+			case 'channel2':
+					$another = $('#channel4')
+				break;
+
+			case 'channel4':
+					$another = $('#channel2')
+				break;
+			}
+			return $another;
+		}
+
+		$gates.change(e=>{
+			const $ch = $channels.filter((i,el)=>el.value).filter((i,el)=>el.value === e.currentTarget.dataset.channel);
+			if(!$ch.length){
+				console.warn($ch);
+				return;
+			}
+			checkAnotherGates($ch.attr('id'));
+
+			const $anotherCh = $channels.filter((i,el)=>el.value).filter((i,el)=>el.value !== e.currentTarget.dataset.channel);
+			if(!$anotherCh.length)
+				return;
+
+			if(typeof copyToAnotherGates == 'undefined')
+				copyToAnotherGates = confirm('Make a copy to other channels?\nIf yes press OK.');
+
+			if(!copyToAnotherGates)
+				return;
+
+			$gates
+			.filter((i,el)=>el.id!==e.currentTarget.id)
+			.filter((i,el)=>el.dataset.index===e.currentTarget.dataset.index)
+			.filter((i,el)=>!el.value)
+			.filter((i,el)=>!$gates.filter((i, g)=>g.dataset.channel===el.dataset.channel).map((i,g)=>g.value).get().includes(e.currentTarget.value))
+			.val(e.currentTarget.value);
+
+			$anotherCh.each((i,el)=>checkAnotherGates(el.id));
+		});
+
+		function checkAnotherChannel(){
+
+			const vals = $channels.filter((i,el)=>el.value).map((i,el)=>el.value).get();
+
+			$channels.each((i,ch)=>{
+
+				const children = Array.from(ch.children).filter(el=>el.value);
+				if(!children.length){
+					return;
+				}
+
+				children.forEach(el=>el.disabled = vals.filter(v=>v!==ch.value).includes(el.value));
+
+				const enabled = children.filter(el=>!el.disabled);
+				if(enabled.length)
+					ch.classList.remove('invisible');
+				else
+					ch.classList.add('invisible');
+			});
+		}
+
+		function checkAnotherGates(channelId){
+			const $g = relatedGates(channelId);
+			$g.children().prop('disabled', false);
+
+			const vars = $g.filter((i,el)=>el.value).map((i,el)=>el.value).get();
+			if(!vars.length)
+				return;
+
+			$g.each((i,g)=>{
+
+				const children = Array.from(g.children).filter(el=>el.value).filter(el=>!el.disabled).filter(el=>g.value!==el.value);
+				children.forEach(el=>el.disabled = vars.includes(el.value));
+				const $enabled = children.filter(el=>!el.disabled);
+				if($enabled.length)
+					g.classList.remove('invisible');
+				else
+					if(!g.value)
+						g.classList.add('invisible');
+			});
+		}
+
+		var channel1Gates = ['gate1', 'gate2', 'gate3', 'gate4', 'gate5', 'gate9', 'gate10', 'gate13', 'gate14', 'gate15']
+		var channel3Gates = ['gate6', 'gate7', 'gate8', 'gate11', 'gate12', 'gate16', 'gate17', 'gate18', 'gate19', 'gate20']
+		var channel2Gates = ['gate21', 'gate22', 'gate23', 'gate24', 'gate25', 'gate29', 'gate30', 'gate33', 'gate34', 'gate35']
+		var channel4Gates = ['gate26', 'gate27', 'gate28', 'gate31', 'gate32', 'gate36', 'gate37', 'gate38', 'gate39', 'gate40']
+
+		function relatedGates(id){
+
+			let gateNames;
+			switch(id){
+
+			case 'channel1':
+				if($('#channel3').val())
+					gateNames = channel1Gates;
+				else
+					gateNames = channel1Gates.concat(channel3Gates);
+				break;
+
+			case 'channel3':
+				if($('#channel1').val())
+					gateNames = channel3Gates;
+				else
+					gateNames = channel1Gates.concat(channel3Gates);
+				break;
+
+			case 'channel2':
+				if($('#channel4').val())
+					gateNames = channel2Gates;
+				else
+					gateNames = channel2Gates.concat(channel4Gates);
+				break;
+			case 'channel4':
+				if($('#channel2').val())
+					gateNames = channel4Gates;
+				else
+					gateNames = channel2Gates.concat(channel4Gates);
+				break;
+				default:
+					console.warn('id: ' + id + '; gateNames: ' + gateNames);
+			}
+			return $g = $gates.filter((i,el)=>gateNames.includes(el.id));
+		}
+
+		var channel1Switches = ['current1', 'current2', 'current3', 'current5', 'current6', 'current9'];
+		var channel3Switches = ['current4', 'current7', 'current8', 'current10', 'current11', 'current12'];
+		var channel2Switches = ['current13', 'current14', 'current15', 'current17', 'current18', 'current21'];
+		var channel4Switches = ['current16', 'current19', 'current20', 'current22', 'current23', 'current24'];
+
+		function relatedSwitches(id){
+
+			let switchNames;
+			switch(id){
+
+			case 'channel1':
+				if($('#channel3').val())
+					switchNames = channel1Switches;
+				else
+					switchNames = channel1Switches.concat(channel3Switches);
+				break;
+
+			case 'channel3':
+				if($('#channel1').val())
+					switchNames = channel3Switches;
+				else
+					switchNames = channel1Switches.concat(channel3Switches);
+				break;
+
+			case 'channel2':
+				if($('#channel4').val())
+					switchNames = channel2Switches;
+				else
+					switchNames = channel2Switches.concat(channel4Switches);
+				break;
+			case 'channel4':
+				if($('#channel2').val())
+					switchNames = channel4Switches;
+				else
+					switchNames = channel2Switches.concat(channel4Switches);
+				break;
+			default:
+				console.warn('Something went wrong. id=' + id);
+				return;
+			}
+			return $switches.filter((i,el)=>switchNames.includes(el.id));
+		}
+		
+		function selectChannel(layouts){
+			layouts.forEach(l=>{
+				const $channel = $('#' + l.id);
+				if($channel.val() == l.value){
+
+					setGates(l.value, relatedGates($channel.attr('id')));
+
+				}else
+					$channel.val(l.value).change();
+			});
+		}
+		function f_fillChannel(){
+
+			if($channels.children().length)
+				return;
+
+			$channels.append($('<option>', {value: '', text: 'N/A'}));
+			moduleInfo.sort((a,b)=>a.name.localeCompare(b.name)).forEach(mi=>{
+				$channels.append($('<option>', {text: mi.name, value: mi.index}));
+			});
+		}
+	
+		function f_noLayout(){
+			f_fillChannel();
+		}
+		var $currentLayout = $('#currentLayout').change(layoutChanged);
+		function showGates(layouts){
+			f_fillChannel();
+			selectChannel(layouts);
+		}
+		function f_postForCurrent(){ /*	No Current on this Modal*/ }
 		$modal.on('shown.bs.modal', f_startModal);
 		$modal.on('hide.bs.modal', f_stopModal);
 
@@ -1264,13 +1870,12 @@ console.log(data);
   	    					<label for="nameToShow">Name to Show</label>
   	    				</div>
   	    			</div>
-  	    			<div id="savedResult" class="row  row-cols-2 mt-2 text-primary"> </div>
+  	    			<div id="savedResult" class="row row-cols-2 mt-2 text-primary"> </div>
       			</div>
 <!-- Modal Footer -->
  	     		<div class="modal-footer">
  	     			<button id="btnSaveAlias" class="btn btn-outline-warning" disabled="disabled">Save Alias</button>
  	     			<div class="col"></div>
-	     			<button id="btnReload" class="btn btn-outline-secondary">Reload</button>
 	     			<button id="btnDelete" class="btn btn-outline-secondary">Delete</button>
 	        	<button type="button" class="btn btn-outline-secondary col-auto" data-bs-dismiss="modal">Close</button>
 		    	</div>
@@ -1279,29 +1884,9 @@ console.log(data);
 		<script th:inline="javascript">
 		/*<![CDATA[*/
 
-			var hwInfoCount;
-			var mi;	// module Index to get module info
-			var set = new Set();
-
 			var $savedResult = $('#savedResult');
-			var $btnReload = $('#btnReload').click(()=>{
-
-				f_disableFields(true);
-				$nameInProfile.empty();
-				f_startModal();
-			});
 			var $nameInProfile = $('#nameInProfile').change(f_nameInProfileChange);
 			var $nameToShow = $('#nameToShow').on('input', f_validate);
-			$('#btnDelete').click(()=>{
-				if(!confirm('Do you really want to delete this data?'))
-					retrun;
-				const nameInProfile = $nameInProfile.val();
-				if(!nameInProfile){
-					alert('Nothing to delete.');
-					return;
-				}
-				postWithParam('/calibration/rest/current/delete-alias', {moduleId: moduleId, nameInProfile: nameInProfile}, r=>{alert(r); $btnReload.click();}, f_error);
-			}); 
 			var $btnSaveAlias = $('#btnSaveAlias').click(f_saveAlias);
 
 			function f_nameInProfileChange(e){
@@ -1312,62 +1897,11 @@ console.log(data);
 
 				currentAlias.filter(a=>a.nameInProfile === e.currentTarget.value).forEach(a=>$nameToShow.val(a.nameToShow));
 			}
-			function moduleExists(modules){
-				const keys = Object.keys(modules);
-				hwInfoCount = keys.length;
-				for(let i=0; i<keys.length; i++){
-					const moduleIndex = modules[keys[i]]
-					postWithParam('/calibration/rest/hw-info', {sn: serialNumber, moduleIndex: moduleIndex}, f_filterGates, f_error);
-				}
-			}
-			function f_filterGates(hwInfo){
 
-				--hwInfoCount;
-
-				if(!hwInfo || !hwInfo.sequence){
-					console.warn(hwInfo ? hwInfo : hwInfo.sequence ? 'moduleIndex ' + hwInfo.moduleIndex + ' does not have a gate sequence' : 'hwInfo undefined');
-					f_fillSelect();
-					return;
-				}
-
-				hwInfo.sequence.split(/(\s+)/).filter(s=>s.includes('G') || s.includes('P')).sort().forEach(s=>set.add(s));
-				if(!mi)
-					mi = hwInfo.moduleIndex;
-				f_fillSelect();
-			}
-			function f_fillSelect(){
-				if(hwInfoCount || !mi)
-					return;
-
-				set.forEach(s=>$nameInProfile.append($('<option>', {value: s, text: s})));
-
-				postWithParam('/calibration/rest/module-info', {sn: serialNumber, moduleIndex: mi}, f_info, conectionFail);
-			}
-			function f_info(info){
-				moduleId = info.deviceType + '.' + info.typeVersion;
-				postWithParam('/calibration/rest/current/alias', {moduleId: moduleId}, f_alias, conectionFail);
-
-				f_disableFields(false);
-			}
-			function f_alias(alias){
-				currentAlias = alias;
-				$savedResult.empty();
-				if(alias.length){
-					alias.sort((a,b)=>a.nameInProfile.localeCompare(b.nameInProfile)).forEach(a=>{
-						$savedResult
-						.append($('<div>', {class: 'col', text: a.nameInProfile}))
-						.append($('<div>', {class: 'col', text: a.nameToShow}));
-					});
-				}
-
-				const val = $nameInProfile.val();
-				if(val)
-					$nameInProfile.change();
-			}
 			function f_validate(e){
 
 				if( e.currentTarget.value){
-					const v =  e.currentTarget.value.toUpperCase();
+					const v =  e.currentTarget.value;
 					if(v !== e.currentTarget.value)
 						e.currentTarget.value = v;
 				}
@@ -1391,10 +1925,50 @@ console.log(data);
 				}else
 					$btnSaveAlias.prop('disabled', true);
 			}
+
+			$('#btnDelete').click(()=>{
+				if(!confirm('Do you really want to delete this data?'))
+					retrun;
+				const nameInProfile = $nameInProfile.val();
+				if(!nameInProfile){
+					alert('Nothing to delete.');
+					return;
+				}
+				postWithParam('/calibration/rest/current/delete-alias', {moduleId: moduleInfo[0].info['Device ID'], nameInProfile: nameInProfile}, r=>{
+
+					alert(r);
+					moduleInfo = null;
+					f_startModal();
+				}, f_error);
+			});
+			function f_fillSelectLayout(){
+				f_fillNameInProfile();
+			}
+			function f_info(info){
+				postWithParam('/calibration/rest/current/alias', {moduleId: moduleInfo[0].info['Device ID']}, f_alias, conectionFail);
+
+				f_disableFields(false);
+			}
+			function f_alias(alias){
+				currentAlias = alias;
+				$savedResult.empty();
+				if(alias.length){
+					alias.sort((a,b)=>a.nameInProfile.localeCompare(b.nameInProfile)).forEach(a=>{
+						const $div = $('<div>', {class: 'col', text: a.nameInProfile}).click(e=>$nameInProfile.val(e.currentTarget.innerText).change());
+						$savedResult
+						.append($div)
+						.append($('<div>', {class: 'col', text: a.nameToShow}));
+					});
+				}
+
+				const val = $nameInProfile.val();
+				if(val)
+					$nameInProfile.change();
+			}
 			function f_saveAlias(){
 				const nameInProfile = $nameInProfile.val();
 				const nameToShow = $nameToShow.val();
-				postWithParam('/calibration/rest/current/save-alias', {moduleId: moduleId, nameInProfile: nameInProfile, nameToShow: nameToShow}, f_alias, conectionFail);
+				postWithParam('/calibration/rest/current/save-alias', {moduleId: moduleInfo[0].info['Device ID'], nameInProfile: nameInProfile, nameToShow: nameToShow}, f_alias, conectionFail);
 			}
 			function f_error(){
 				--hwInfoCount;
@@ -1402,7 +1976,23 @@ console.log(data);
 				console.error('error.responseText: ' + error.responseText + '; error.statusText: ' + error.statusText + '; error.status: ' + error.status);
 			}
 
-			f_startModal();
+			function f_fillNameInProfile(){
+				const set = new Set();
+				moduleInfo.forEach(mi=>{
+					mi.hwInfo.sequence.split(/(\s+)/).filter(s=>s.includes('G') || s.includes('P'))
+					.forEach(s=>set.add(s));
+				});
+				if(!set.size)
+					return;
+
+				$nameInProfile.prop('disabled', false);
+				$nameToShow.prop('disabled', false);
+				$nameInProfile.empty();
+				Array.from(set).sort().forEach(s=>$nameInProfile.append($('<option>', {text: s, value: s})));
+
+				f_info(moduleInfo[0].info);
+			}
+			$modal.on('shown.bs.modal', f_fillNameInProfile);
 		/*]]>*/
 		//# sourceURL=current-map.js
   		</script>

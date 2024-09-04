@@ -103,7 +103,7 @@ function parsePackets(bytes){
 			indexes.push(index++);
 	}
 	if(indexes.length<2){
-		console.warn("Wrong data to parse");
+		console.warn("Wrong data to parse\n bytes: " + bytes + '\n indexes: ' + indexes);
 		alert("Wrong data to parse");
 		return 0;
 	}
@@ -147,10 +147,11 @@ function parseToString(data){
 function toIrtRegister(bytes, packetId){
 	const packets = parsePackets(bytes);
 	if(!packets || !packets.length){
-		console.warn('Something went wrong.');
+		console.warn('Something went wrong.\n bytes: ' + bytes);
 		alert('Something went wrong.');
 		return 0;
 	}
+//	console.log(packets);
 	//remove acknowledgement
 	if(packets[0].header.type==packetType.acknowledgement)
 		packets.shift();
@@ -165,7 +166,7 @@ function toIrtRegister(bytes, packetId){
 	}else
 		index = 0;
 	if(index<0 || !packets.length){
-		console.warn('index=' + index + '; packets.length=' + packets.length + '; packetId=' + packetId + '; packets: ' + JSON.stringify(packets))
+		console.warn('index=' + index + '; packets.length=' + packets.length + '; packetId=' + packetId + '; packets: ' + JSON.stringify(packets) + '\n bytes: ' + bytes);
 		return 0;
 	}
 	const packet = packets[index];
@@ -321,7 +322,7 @@ class Packet{
 		// From bytes
 		if(Array.isArray(header)){
 			const bytes = header;
-			console.log(bytes);
+//			console.log(bytes);
 			const packetArray = bytes.splice(0,bytes.length-2);
 			const chcksm = checksumToBytes(packetArray);
 			if(chcksm[0]==(bytes[0]&0xff) && chcksm[1]==(bytes[1]&0xff)){
@@ -335,7 +336,7 @@ class Packet{
 				this.header = new Header(packetType.error, packetArray[2] * 256 + packetArray[1], 'The packet checksum is incorrect');
 				console.warn('The packet checksum is incorrect; received: ' + header[header.length-2] +',' + header[header.length-1] + '; calculated: ' + chcksm + '; bytes: ' + header);
 			}
-			console.log(this);
+//			console.log(this);
 			return;
 		}
 		this.header = (header == undefined ? new Header() : header);
@@ -345,7 +346,7 @@ class Packet{
 		if(unitAddr!=undefined)
 			this.linkHeader = new LinkHeader(unitAddr);
 
-		console.log(this);
+//		console.log(this);
 	}
 	getAcknowledgement(){
 		const header = new Header(packetType.acknowledgement, this.header.packetId);

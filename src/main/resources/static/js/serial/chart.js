@@ -48,49 +48,65 @@ function getChart(){
 
 }
 Chart.prototype.optimize =  function(start){
+
 	oldX = [...x];
 	oldY = [...y];
+
 	if(!start)
 		start = -50;
+
 	x.length = y.length = 0;
+
 	for(let i=0; i<oldX.length; i++){
+
 		if(oldX[i]<start)
 			continue;
-		const index = y.length-1;
-		if(!y.length || y[index]<oldY[i]){
-			if(y.length>2){
-				const firstX = x[y.length-2];
-				const midleX = x[index];
-				const lastX = oldX[i];
-				const timesX1 = midleX - firstX;
-				const timesX2 = lastX - firstX;
 
-				const firstY = y[y.length-2];
+		const index = y.length-1;
+
+		if(index<0 || y[index]<oldY[i]){
+
+			if(index>0){
+
+				const firstY = y[index-1];
 				const midleY = y[index];
 				const lastY = oldY[i];
-				let timesY1 = ((midleY - firstY)/timesX1);
-				let timesY2 = ((lastY - firstY)/timesX2);
-				if(timesY1>10 || timesY2>10){
-					timesY1 = timesY1.toFixed(0);
-					timesY2 = timesY2.toFixed(0);
-				}else if(timesY1>1 || timesY2>1){
-					timesY1 = timesY1.toFixed(1);
-					timesY2 = timesY2.toFixed(1);
-				}else{
-					timesY1 = timesY1.toFixed(2);
-					timesY2 = timesY2.toFixed(2);
-				}
+
+				const timesY1 = midleY - firstY;
+				const timesY2 = lastY - midleY;
+
 				if(timesY1 == timesY2){
-					x[index] = lastX;
+					x[index] = oldX[i];
 					y[index] = lastY;
 					continue;
+				}
+
+				const length1 = timesY1.toString().length;
+				const length2 = timesY2.toString().length;
+				if(length1>1 || length2>1){
+					let y1, y2;
+					if(length1>2){
+						const power = length1 -2;
+						const divider = Math.pow(10, power);
+						y1 = Math.round(timesY1 / divider);
+						y2 = Math.round(timesY2 / divider);
+					}else{
+						y1 = timesY1;
+						y2 = timesY2;
+					}
+
+					if(Math.abs(y1-y2)<10){
+						x[index] = oldX[i];
+						y[index] = lastY;
+						continue;
+					}
 				}
 			}
 			x.push(oldX[i]);
 			y.push(oldY[i]);
-			this.update();
 		}
 	}
+	this.update();
 }
 Chart.prototype.reset = function(){
 	x.length = y.length = 0;

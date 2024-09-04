@@ -11,6 +11,7 @@ import java.net.MalformedURLException;
 import java.net.URL;
 import java.net.UnknownHostException;
 import java.nio.file.Files;
+import java.text.SimpleDateFormat;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Date;
@@ -23,6 +24,8 @@ import java.util.concurrent.TimeUnit;
 import java.util.concurrent.TimeoutException;
 import java.util.stream.Collectors;
 import java.util.stream.IntStream;
+
+import javax.script.ScriptException;
 
 import org.apache.http.NameValuePair;
 import org.apache.http.message.BasicNameValuePair;
@@ -41,12 +44,16 @@ import org.springframework.web.bind.annotation.RestController;
 
 import irt.components.beans.CurrentAlias;
 import irt.components.beans.CurrentOffset;
+import irt.components.beans.irt.HWInfo;
+import irt.components.beans.irt.Info;
 import irt.components.beans.irt.calibration.CurrentToSave;
+import irt.components.beans.irt.calibration.ModuleInfo;
 import irt.components.beans.jpa.IrtArray;
 import irt.components.beans.jpa.IrtArrayId;
 import irt.components.beans.jpa.calibration.CurrentLayout;
 import irt.components.beans.jpa.repository.IrtArrayRepository;
 import irt.components.beans.jpa.repository.calibration.CurrentLayoutRepository;
+import irt.components.controllers.calibration.CalibrationRestController.PostFor;
 import irt.components.services.converter.CurrentAliastListConverter;
 import irt.components.workers.HttpRequest;
 import irt.components.workers.ThreadRunner;
@@ -69,6 +76,51 @@ public class CurrentRestController {
 	@Autowired private IrtArrayRepository	arrayRepository;
 	@Autowired private CurrentLayoutRepository	layoutRepository;
 
+	@PostMapping("module-info")
+	List<ModuleInfo> currentDbLayout(@RequestParam String sn, String topId) throws IOException, ScriptException{
+		logger.trace("sn: {}; topId: {}", sn, topId);
+
+		final List<ModuleInfo> list = new ArrayList<>();
+		try {
+			HttpRequest.getAllModules(sn)
+			.forEach(
+					(n,i)->{
+
+						final HWInfo hwInfo = CalibrationRestController.diagnostics(HWInfo.class, sn, "hwinfo", i.toString(), "4", null, null, PostFor.IRT_OBJECT);
+						if(hwInfo==null || hwInfo.getSequence() == null || hwInfo.getSequence().isEmpty())
+							return;
+
+						final ModuleInfo moduleInfo = new ModuleInfo();
+						moduleInfo.setName(n);
+						moduleInfo.setIndex(i);
+						moduleInfo.setHwInfo(hwInfo);
+						try {
+
+							final Info info = CalibrationController.getInfo(sn, i);
+							moduleInfo.setInfo(info);
+							final int deviceType = info.getDeviceType();
+							final int typeVersion = info.getTypeVersion();
+							final String moduleId = deviceType + "." + typeVersion;
+
+							final List<CurrentLayout> layout = list.stream().filter(inf->inf.getInfo().getDeviceId().equals(moduleId)).map(inf->inf.getLayout()).findAny().orElseGet(()->currentLayout(sn, topId, moduleId));
+							moduleInfo.setLayout(layout);
+
+						} catch (InterruptedException | ExecutionException | TimeoutException e) {
+							logger.catching(Level.DEBUG, e);
+						} catch (MalformedURLException e) {
+							logger.catching(e);
+						}
+						
+						list.add(moduleInfo);
+					});
+		} catch (InterruptedException | ExecutionException | TimeoutException e) {
+			logger.catching(Level.DEBUG, e);
+		}
+		logger.debug(list);
+
+		return list;
+	}
+
 	@PostMapping("layout")
 	List<CurrentLayout> currentLayout(@RequestParam String sn, String topId, String moduleId) {
     	logger.traceEntry("sn: {}; topId: {}; moduleId: {}", sn, topId, moduleId);
@@ -78,11 +130,19 @@ public class CurrentRestController {
     	if(!specialLayouts.isEmpty())
     		return specialLayouts;	// Special
 
-		return layoutRepository.findByTopIdAndModuleIdOrderByCreationDateDesc(topId,  moduleId);
-		
+		return layoutRepository.findByTopIdAndModuleIdOrderByCreationDateDesc(topId,  moduleId);	
 	}
 
-	@PostMapping("save")
+	@PostMapping("url")
+	IrtArray currentUrl(@RequestParam String moduleId, String url) {
+    	logger.traceEntry("moduleId: {}; url: {};", moduleId, url);
+
+    	final IrtArrayId id = new IrtArrayId("current_url", moduleId);
+    	final IrtArray irtArray =  arrayRepository.findById(id).orElseGet(()->new IrtArray(id, url));
+		return arrayRepository.save(irtArray);
+	}
+
+	@PostMapping("layout/save")
 	CurrentLayout currentSave(@RequestBody CurrentToSave toSend) {
     	logger.traceEntry("toSend: {};", toSend);
 
@@ -118,6 +178,30 @@ public class CurrentRestController {
     	}
 
     	return layoutRepository.save(layout);	
+	}
+
+	private final SimpleDateFormat format = new SimpleDateFormat("yyyy-MM-dd");
+	@PostMapping("delete")
+	String deleteLayout(@RequestParam String topId, String moduleId, String date) {
+    	logger.traceEntry("topId: {}; moduleId: {}; date: {};", topId, moduleId, date);
+
+		final List<CurrentLayout> list = layoutRepository.findByTopIdAndModuleIdOrderByCreationDateDesc(topId, moduleId);
+		final List<CurrentLayout> filter = list.parallelStream().filter(cl->format.format(cl.getCreationDate()).equals(date)).collect(Collectors.toList());
+		switch(filter.size()) {
+
+		case 0:
+			return "The requested layout was not found in the database.";
+
+		case 1:
+			break;
+		default:
+			return "Layout not removed.\nMore than one layout found.";
+		}
+
+		final CurrentLayout currentLayout = filter.get(0);
+		layoutRepository.delete(currentLayout);
+
+		return "";	
 	}
 
 	private final static String CURRENT_ALIAS = "current-alias";
@@ -334,16 +418,28 @@ public class CurrentRestController {
     }
 
     @PostMapping("dac")
-    boolean setDac(@RequestParam String sn, Integer channel, Integer index, Integer value, Boolean save){
-    	logger.traceEntry("sn: {}; channel: {}; index: {}; value: {}", sn, channel, index, value);
+    boolean setDac(@RequestParam String sn, Integer channel, Integer index, Integer value, Boolean save, Boolean binary){
+    	logger.error("sn: {};; channel: {}; index: {}; value: {} binary: {}", sn, channel, index, value, binary);
 
 		try {
 
 			final URL url = new URL("http", sn, "/calibration.cgi");
 			List<NameValuePair> params = new ArrayList<>();
-			final List<BasicNameValuePair> asList = new ArrayList<>(Arrays.asList(new BasicNameValuePair[]{new BasicNameValuePair("channel", channel.toString()), new BasicNameValuePair("index", index.toString())}));
-			Optional.ofNullable(save).ifPresent(s->asList.add(new BasicNameValuePair("save_dp", "1")));
-			Optional.ofNullable(value).ifPresent(s->asList.add(new BasicNameValuePair("value", value.toString())));
+			final List<BasicNameValuePair> asList = new ArrayList<>();
+
+			if(Optional.ofNullable(binary).filter(b->b).isPresent()) {
+				asList.add(new BasicNameValuePair("channel", "deb_reg"));
+				asList.add(new BasicNameValuePair("set", "Set"));
+				asList.add(new BasicNameValuePair("index", "26"));
+				asList.add(new BasicNameValuePair("addr", index.toString()));
+				asList.add(new BasicNameValuePair("value", Integer.toBinaryString(value)));
+			}else {
+				asList.add(new BasicNameValuePair("index", index.toString()));
+				asList.add(new BasicNameValuePair("channel", channel.toString()));
+				Optional.ofNullable(save).ifPresent(s->asList.add(new BasicNameValuePair("save_dp", "1")));
+				Optional.ofNullable(value).ifPresent(s->asList.add(new BasicNameValuePair("value", value.toString())));
+			}
+
 			params.addAll(asList);
 
 			HttpRequest.postForIrtObgect(url.toString(), Object.class, params).get(5, TimeUnit.SECONDS);
