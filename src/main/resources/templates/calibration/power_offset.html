@@ -318,7 +318,7 @@
 		    	table = { serialNumber: serialNumber, name: 'Power Offset', values: array };
 
 		    	$.ajax({
-					url: '/calibration/rest/to_profile',
+					url: '/calibration/rest/profile/save',
 					type: 'POST',
 					contentType: "application/json",
 					data: JSON.stringify(table),

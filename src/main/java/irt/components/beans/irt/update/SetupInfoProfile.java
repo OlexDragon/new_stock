@@ -5,7 +5,7 @@ import lombok.RequiredArgsConstructor;
 import lombok.Setter;
 
 @RequiredArgsConstructor @Getter @Setter
-public class SetupInfoProfile {
+public class SetupInfoProfile implements SetupInfo {
 
 	public final static String setupInfoPathern = "%1$s any.any.any.%2$s { profile { path { %2$s.bin }}}";
 

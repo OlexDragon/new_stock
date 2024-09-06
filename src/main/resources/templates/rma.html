@@ -168,7 +168,7 @@
 					</div>
 			</div>
 			</div>
-			<script type="application/javascript" th:inline="javascript" th:if="${status.size} eq 1")>
+			<script type="application/javascript" th:inline="javascript" th:if="${status.size} eq 1">
 			/*<![CDATA[*/
 
 				var collapse = document.getElementsByClassName('collapse')[0];
@@ -258,7 +258,7 @@
    		     		</div>
 					<div class="mt-3">
 						<label for="attachFiles" class="btn btn-outline-secondary form-control">Attach Files</label>
-						<input id="attachFiles" type="file" style="display:none" multiple>
+						<input id="attachFiles" type="file" hidden multiple>
 					</div>
 					<div id="fileNames">
 					</div>

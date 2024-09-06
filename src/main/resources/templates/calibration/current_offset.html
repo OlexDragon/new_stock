@@ -139,14 +139,14 @@
 				let module = pair.first.split('.')[0];
 
 				if(pair.second=='Saved'){
-					let btnUpload = $('<a>', {class: "btn btn-outline-success", href: '/calibration/rest/upload?sn=' + serialNumber + '&module=' + module, text: 'Upload'})
+					let btnUpload = $('<a>', {class: "btn btn-outline-success", href: '/calibration/rest/profile/upload?sn=' + serialNumber + '&module=' + module, text: 'Upload'})
 					$div.append(btnUpload.click(function(e){
 								e.preventDefault();
 								$(this).addClass('disabled');
 								upload(this);
 							}))
 						.append(
-							$('<a>', {class: "btn btn-outline-secondary", href: '/calibration/rest/package/' + (module==null ? serialNumber : module), target: '_blank', text: 'Get Package'}));
+							$('<a>', {class: "btn btn-outline-secondary", href: '/calibration/rest/profile/package/' + (module==null ? serialNumber : module), target: '_blank', text: 'Get Package'}));
 				}else{
 					$div.attr('class', 'text-center text-danger');
 					$div.text(pair.second);

@@ -213,7 +213,7 @@ function showTable(){
 		array.push({input: y[i], output: x[i]});
 
 	table.values = array;
-	postObject('/calibration/rest/to_profile', table)
+	postObject('/calibration/rest/profile/save', table)
 	.done(function(data){
 		console.log(data.content);
 		alert(data.content);
@@ -298,7 +298,7 @@ function showInfo(command){
 		$('.modal-title').text('Input Power: ' + sn[0]);
 		$btnInfo.text('Clear');
 		serialNumber = sn[0];
-		$profilePath.prop('href', '/calibration/rest/profile_path?sn=' + sn);
+		$profilePath.prop('href', '/calibration/rest/profile/path?sn=' + sn);
 	}else
 		$btnStart.addClass('disabled');
 

@@ -42,10 +42,10 @@ public class ProductionController {
 		logger.traceEntry();
 
 		String url = oneCeUrl.createUrl(salesOrder);
-		logger.error(url);
+		logger.debug(url);
 
 		final SalesOrderResponse productionOrderResponse = HttpRequest.getForObgect(url, SalesOrderResponse.class).get(10, TimeUnit.SECONDS);
-		logger.error(productionOrderResponse);
+		logger.debug(productionOrderResponse);
 		model.addAttribute("salesOrders", productionOrderResponse.getSalesOrders());
 
 		return "production :: sales_order";

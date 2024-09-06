@@ -582,13 +582,14 @@ const $profilePath = $('.profilePath').click(function(e){
  	$.get(link.href)
 	.done(function(path){
 
-		let $message = $('<div>', { class: "alert alert-warning alert-dismissible fade show row", role: "alert"})
+		const $btnCopy = $('<button>', {type: 'button', class: 'btn col-auto copy', title: 'Copy to clipboard', 'aria-label': 'Copy to clipboard', text: 'Copy'});
+		const $message = $('<div>', { class: "alert alert-warning alert-dismissible fade show row", role: "alert"})
 						.append($('<strong>', {class: 'col'}).text(path))			
-						.append($('<button>', {type: 'button', class: 'btn col-auto copy', title: 'Copy to clipboard', 'aria-label': 'Copy to clipboard'}).text('Copy'))
+						.append($btnCopy)
 						.append($('<button>', {type: 'button', class: 'btn-close col-auto', 'data-bs-dismiss': 'alert', 'aria-label': 'Close'}));
 		$('body').append($message);
 
-		$('.copy').click(function(){
+		$btnCopy.click(function(){
 			var strong = $(this).parent().children('strong')[0];
 			selectAndCopy(strong);
 		});
@@ -784,6 +785,15 @@ function sendPrologixCommands(commands, responseProcessing){
 		}
 	});
 }
+function postFormData(url, formData){
+	return $.ajax({
+		url: url,
+		type: 'POST',
+		processData: false,
+		contentType: false,
+		data: formData
+	});
+}
 function postObject(url, object){
 	var json = JSON.stringify(object);
 
@@ -793,7 +803,7 @@ function postObject(url, object){
 		contentType: "application/json",
 		data: json,
 	    dataType: 'json'
-	})
+	});
 }
 let postWithParamCount = 0;
 function postWithParam(url, params, f_action, f_error){
@@ -808,5 +818,27 @@ function postWithParam(url, params, f_action, f_error){
 		--postWithParamCount;
 		if(f_error)
 			f_error(err);
+	});
+}
+function softSelected(el){
+	const url = '/calibration/rest/soft/select/upload'
+	const fd = new FormData();
+	fd.append('file', el.files[0]);
+	if(el.dataset.sn)
+		fd.append('sn', el.dataset.sn);
+	fd.append('moduleSn', el.dataset.moduleSn);
+
+	postFormData(url, fd)
+	.done(data=>{
+		alert(data);
+	})
+	.fail(function(error) {
+		if(error.statusText!='abort'){
+		var responseText = error.responseText;
+			if(responseText)
+				alert(error.responseText);
+			else
+				alert("Server error. Status = " + error.status)
+		}
 	});
 }

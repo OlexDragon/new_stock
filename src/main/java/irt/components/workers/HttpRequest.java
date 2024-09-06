@@ -251,7 +251,7 @@ public class HttpRequest {
 	}
 
 	private static final String lineEnd = "\r\n";
-	public static void upload(String sn, ToUpload profile) {
+	public static void upload(String sn, ToUpload toUpload) {
 		logger.traceEntry(sn);
 
 		HttpURLConnection connection = null;
@@ -268,7 +268,7 @@ public class HttpRequest {
 				dataOutputStream.writeBytes("Upgrade" + lineEnd);
 				dataOutputStream.writeBytes(lineEnd);
 
-				byte[] bytes = profile.toBytes();
+				byte[] bytes = toUpload.toBytes();
 				dataOutputStream.write(bytes , 0, bytes.length);
 				dataOutputStream.writeBytes(lineEnd);
 				dataOutputStream.flush();
