@@ -9,7 +9,7 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.boot.test.context.SpringBootTest.WebEnvironment;
 
-import irt.components.beans.jpa.rma.Rma.Status;
+import irt.components.beans.jpa.rma.Rma;
 
 @SpringBootTest(webEnvironment = WebEnvironment.RANDOM_PORT)
 class RmaServiceWebTest {
@@ -19,8 +19,8 @@ class RmaServiceWebTest {
 	@Test
 	void test() {
 
-		final List<Long> rmaIdsByStatus = web.rmaIdsByStatus(Status.CREATED);
-		assertEquals(rmaIdsByStatus.size(), 6);
+		final List<Long> rmaIdsByStatus = web.rmaIdsByStatus(Rma.Status.FINALIZED, Rma.Status.FIXED, Rma.Status.READY);
+		assertEquals(1, rmaIdsByStatus.size());
 	}
 
 }

@@ -16,12 +16,6 @@
 <!-- Modal Message -->
 	<div id="modal" class="modal" tabindex="-1" role="dialog">
 	<th:block th:fragment="modal">
- 		<th:block th:if="${dbSerialNumber==null}">
- 			<script type="application/javascript">
- 				alert('This device is not supported or not connected.');
- 				$btrMeasurement.addClass('disabled');
- 			</script>
- 		</th:block>
  		<th:block th:if="${monitor!=null} and ${settings}!=null and not ${showSetting}">
   		<div class="modal-dialog modal-lg">
     		<div class="modal-content">

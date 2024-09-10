@@ -106,7 +106,7 @@ public class ProfileRestController {
 
     @PostMapping("save")
     Message saveToProfile(@RequestBody Table table) throws IOException {
-//    	logger.error(table);
+    	logger.error(table);
 
     	ProfileWorker profileWorker = new ProfileWorker(profileFolder, table.getSerialNumber());
 

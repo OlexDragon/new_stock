@@ -127,7 +127,7 @@ public class SerialNumberScaner {
 		final List<Long> ids = rmaReadyToShipLocal();
 
 		// From Web
-		final List<Long> fromWeb = web.rmaIdsByStatus(Rma.Status.READY);
+		final List<Long> fromWeb = web.rmaIdsByStatus(Rma.Status.READY, Rma.Status.FINALIZED, Rma.Status.FIXED);
 		ids.addAll(fromWeb);
 
 		if(!ids.isEmpty())
@@ -138,7 +138,7 @@ public class SerialNumberScaner {
 		final CriteriaBuilder criteriaBuilder	 = entityManager.getCriteriaBuilder();
 		final CriteriaQuery<Long> criteriaQuery	 = criteriaBuilder.createQuery(Long.class);
 		final Root<Rma> root					 = criteriaQuery.from(Rma.class);
-		criteriaQuery.where(root.get("status").in(Rma.Status.READY.ordinal(), Rma.Status.FIXED.ordinal()));
+		criteriaQuery.where(root.get("status").in(Rma.Status.READY.ordinal(), Rma.Status.FIXED.ordinal(), Rma.Status.FINALIZED.ordinal()));
 		final CriteriaQuery<Long> select = criteriaQuery.select(root.get("id")).distinct(true);
 
 		return entityManager.createQuery(select).getResultList();

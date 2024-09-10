@@ -6,6 +6,7 @@ const $serialNumber		 = $('#serialNumber');
 const $spServers		 = $('#spServers');
 const $menuInputPower	 = $('#menuInputPower');
 const $menuGain			 = $('#menuGain');
+const $calMode			 = $('#calMode');
 
 const sn = new URLSearchParams(window.location.search).get('sn');
 if(sn && !sn.includes('.'))
@@ -264,14 +265,14 @@ function showCalibrationModal(e){
 			return;
 		}
 
-		$modal.off('.bs.modal');
 		calibrateId = id;
-		$modal.load(this.href, function(body,error){
-			if(error=='error')
-				alert('Unable to connect to the Unit.');
-		});
+		loadModal(this.href);
+
 	}else
 		$modal.modal('show');
+}
+function setupModal(){
+	console.log("empty setupModal");
 }
 // Upload the profile
 $('.upload').click(function(e){
@@ -472,7 +473,7 @@ $('#dropdownCalibrateButton').on('show.bs.dropdown', function(){
 
 	$menuGain.addClass('disabled list-group-item-light');
 
-	if(!serialNumber)
+	if(!serialNumber || $calMode.hasClass('disabled'))
 		return;
 
 	$.post('/calibration/rest/calibration_mode', { ip: serialNumber })
@@ -482,7 +483,7 @@ $('#dropdownCalibrateButton').on('show.bs.dropdown', function(){
 			calibrationModeError('calMode == null');
 
 		var status = calMode["Calibration mode"];
-		var $calMode = $('#calMode').removeClass('text-primary text-success');
+		$calMode.removeClass('text-primary text-success');
 
 		switch(status){
 
@@ -547,8 +548,16 @@ $('#currents').click(function(e){
 });
 function loadModal(href){
 	$modal.modal('hide')
-	$modal.off('shown.bs.modal').off('hide.bs.modal');
-	$modal.load(href, ()=>setTimeout(()=>$modal.modal('show'), 500));
+//	$modal.off('shown.bs.modal').off('hide.bs.modal');
+	$modal.load(href, function(body, error){
+		if(error=='error'){
+			alert('Unable to connect to the Unit.');
+			console.log(error);
+			return;
+		}
+	setupModal();
+	setTimeout(()=>$modal.modal('show'), 500);
+});
 }
 $('#profile').click(function(e){
 	getProfile(e, this);

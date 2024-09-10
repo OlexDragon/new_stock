@@ -15,11 +15,11 @@
 <!-- Modal Message -->
 	<div id="modal" class="modal" tabindex="-1" role="dialog">
 	<th:block th:fragment="converter">
-  		<div class="modal-dialog modal-xl" data-prefix="ip" data-command-index="2" data-default-tool-val="-50">
+  		<div class="modal-dialog modal-xl" data-prefix="ip" data-command-index="2">
     		<div class="modal-content">
 <!-- Modal Header -->
       			<div class="modal-header">
-        			<h5 class="modal-title ml-3 text-primary col">Input Power</h5>
+        			<h5 class="modal-title ml-3 text-primary col">Output Power</h5>
 <!-- X Button -->
         			<button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
       			</div>
@@ -36,7 +36,7 @@
 	      						<label for="unitSerialPort">Unit Serial Port</label>
     	  					</div>
       						<div class="form-floating col">
- 	     						<input id="toolVal" type="number" class="form-control" placeholder="Tool" value="-50">
+ 	     						<input id="toolVal" type="number" class="form-control" placeholder="Tool">
       							<label for="toolVal">Tool Value</label>
       						</div>
       						<div class="form-floating col">
@@ -48,7 +48,11 @@
       							<label for="stepVal">Step</label>
       						</div>
       						<div class="form-floating col">
-	      						<input id="maxVal" type="number" class="form-control" placeholder="Max Value" value="0">
+	      						<input id="minVal" type="number" class="form-control" placeholder="Max Value" value="-20">
+	      						<label for="minVal">Min. Cal. Value</label>
+    	  					</div>
+      						<div class="form-floating col">
+	      						<input id="maxVal" type="number" class="form-control" placeholder="Max Value" value="10">
 	      						<label for="maxVal">Max. Cal. Value</label>
     	  					</div>
       					</div>
@@ -69,7 +73,7 @@
 	        			</div>
 	        			<div class="row">
 	        				<div class="col form-floating">
-	        					<input id="propName" value="in-power-lut-entry" class="form-control text-center" placeholder="Profile Table Property">
+	        					<input id="propName" value="out-power-lut-entry" class="form-control text-center" placeholder="Profile Table Property">
 								<label for="propName">Profile Table Property</label>
 	        				</div>
 	        				<div class="col-auto"><button id="btnCopy"  type="button" class="btn btn-outline-primary" disabled>Copy</button></div>
@@ -83,13 +87,44 @@
   			<script>
 			/*<![CDATA[*/
 
+  			var tableName = 'Output Power';
+
 			init();
   			setRun(run);
+  			runTimeout = 2000;
 
+  			var stopValue;
+  			var offset;
+  			var $minVal = $('#minVal');
+  			$toolVal.on('input', ()=>defaultToolVal = stopValue = null);
+  			setConfirmStart(()=>{
+
+  				if(stopValue)
+  					return true;
+
+  				if(!confirm('Does the power meter reading match the maximum value?'))
+  					return false;
+  				stopValue = $toolVal.val();
+  				if(!stopValue){
+  					alert('Input Tool Value needs to be set.')
+  					return false;
+  				}
+
+  				stopValue = parseFloat(stopValue);
+
+  				if(!defaultToolVal){
+  					const max = $maxVal.val();
+  					const drop = max - $minVal.val();
+  					$toolVal.val(stopValue - drop);
+  					offset = max - stopValue;
+  				}
+
+  				return true
+  			});
   			var $numberOfEntries = $('#numberOfEntries');
   			var calRun = false;
   			var stack = 0;
-  			var payloadReadWrite = new Payload(new Parameter(PARAMETER_READ_WRITE), DEVICE_FCM_ADC_INPUT_POWER().toBytes());
+  			var payloadReadWrite = new Payload(new Parameter(PARAMETER_READ_WRITE), DEVICE_FCM_ADC_OUTPUT_POWER().toBytes());
   			function run(){
 
   				if(stack>10){
@@ -103,6 +138,7 @@
 
   				if(calRun)
   					return;
+
   				if(x.length==y.length){
   					const toolV = $inputPower.val();
   					if(!toolV){
@@ -117,7 +153,7 @@
   					}
 
 
-  					const tmp = parseFloat(toolV).toFixed(1)
+  					const tmp = (parseFloat(toolV) + offset).toFixed(1);
   					x.push(tmp);
   					$numberOfEntries.text(x.length);
   				}
@@ -127,22 +163,22 @@
 
   				const packet = new Packet(new Header(packetType.request, undefined, packetGroupId.deviceDebug), payloadReadWrite);
   				const command = getCommand(packet);
-  				sendCommand(command, inputPower);
+  				sendCommand(command, outputPower);
   			}
   			var inputPowerCount = 0
-  			function inputPower(command){
+  			function outputPower(command){
 				const register =  commandToRegister(command);
   				if(!register){
-  					++inputPowerCount;
-  					console.warn('inputPowerCount = ' + inputPowerCount);
-  					if(inputPowerCount>3)
+  					++outputPowerCount;
+  					console.warn('OutputPowerCount = ' + outputPowerCount);
+  					if(outputPowerCount>3)
   	  					f_stop();
   	  	  			calRun = false;
  					return;
   				}
 
 	  	  		calRun = true;
-	  	  		inputPowerCount = 0;
+	  	  		outputPowerCount = 0;
   				if(x.length>y.length){
   					y.push(register.value);
   					$unitVal.val(register.value);
@@ -152,16 +188,10 @@
 				f_nextStep();
   			 }
   			function f_nextStep(){
-  				let tmp = $maxVal.val();
-  				let max;
-  				if(tmp)
-  					max = parseFloat(tmp);
-  				else
-  					max = 0;
   				const toolV = parseFloat($inputPower.val());
   				if(!startToolValue)
   					startToolValue = toolV;
-  				if(toolV == max){
+  				if(toolV == stopValue){
   					f_stop();
   					$btnStart.text('Restart')
   					$btnInfo.removeClass('disabled').text('Optimize');
@@ -169,7 +199,7 @@
   					alert('Calibration completes.');
   					return;
   				}
-  				tmp = $stepVal.val();
+  				const tmp = $stepVal.val();
   				let step;
   				if(tmp)
   					step = parseFloat(tmp);
@@ -179,14 +209,18 @@
   				}
 
   				let newValue = (toolV + step).toFixed(1);
-  				if(newValue>max)
-  					newValue = max;
+  				if(newValue>stopValue)
+  					newValue = stopValue;
 
   				$toolVal.val(newValue);
   				f_toolValue();
   			}
+
+  			function setupModal(){
+  				console.log("Output Power setupModal");
+  			}
   			/*]]>*/
-  			//# sourceURL=fcm-input-power.js
+  			//# sourceURL=fcm-output-power.js
   			</script>
 	</th:block>
 	</div>

@@ -51,7 +51,7 @@ function outputGet(){
 	if(!isAouto)
 		toSend.commands.push({command: '++read eoi', getAnswer: true}); // READ id prologix mode isn't AUTO
 
-	let $outputValue = $('#outputValue').text('');
+	$('#outputValue').text('');
 	sendPrologixCommands(toSend, outputAction);
 }
 function outputAction(data){

@@ -26,8 +26,14 @@ let f_toRun = function(){
 			console.log('The f_toRun function is not defined;');
 			alert('The f_toRun function is not defined;');
 		 };
+let confirmStart = ()=>true;
+function setConfirmStart(cs){
+	if(cs)
+		confirmStart = cs;
+	else
+	confirmStart = ()=>true;
+}
 let f_init;
-
 function init(subInit){
 
 	if(subInit)
@@ -94,6 +100,9 @@ function init(subInit){
 			$toolVal.val(startToolValue);
 			$btnInfo.text('Clear')
 		}
+
+		if(!confirmStart())
+			return;
 
 		$btnInfo.addClass('disabled');
 		$toolVal.prop('readonly', true);
@@ -207,7 +216,7 @@ function showTable(){
 
 	$btnInfo.addClass('disabled');
 
-	const table = {serialNumber: serialNumber, name: 'FCM Input Power'};
+	const table = {serialNumber: serialNumber, name: tableName};
 	const array = [];
 	for(let i=0; i<x.length; i++)
 		array.push({input: y[i], output: x[i]});
@@ -295,7 +304,7 @@ function showInfo(command){
 	if(sn.length){
 		$serialNumber.text(sn[0]);
 		$btnStart.removeClass('disabled');
-		$('.modal-title').text('Input Power: ' + sn[0]);
+		$('.modal-title').text(tableName + 'r: ' + sn[0]);
 		$btnInfo.text('Clear');
 		serialNumber = sn[0];
 		$profilePath.prop('href', '/calibration/rest/profile/path?sn=' + sn);
@@ -333,11 +342,12 @@ function sendCommand(command, action){
 	});
 }
 let v_stop = true;;
+let runTimeout = 1000;
 function f_run(run){
-	v_stop = false;;
+	v_stop = false;
 	if(run) setRun(run);
 	clearInterval(calIntervalID);
-	calIntervalID = setInterval(f_toRun, 1000);
+	calIntervalID = setInterval(f_toRun, runTimeout);
 }
 function f_stop(){
 	v_stop = true;;

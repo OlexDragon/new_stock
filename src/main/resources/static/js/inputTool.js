@@ -153,6 +153,10 @@ function showSetupToast(target){
 
 $('.input-tool-buton').click(e=>{
 
+	if(!$inputTool.val()){
+		alert('Input Tool Is not Selected.');
+		return;
+	}
 	const valueID = e.currentTarget.id.replace('Btn', '');
 	const $valueField = $('#' + valueID);
 	const value = $valueField.val();

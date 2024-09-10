@@ -163,14 +163,14 @@ public class RmaServiceWeb implements RmaService {
 				.block();
 	}
 
-	public List<Long> rmaIdsByStatus(Status status) {
+	public List<Long> rmaIdsByStatus(Status... status) {
 
 		return createWebClient()
 
 				.get()
 				.uri(
 						builder->builder.path(idsByStatus)
-						.queryParam("status", status)
+						.queryParam("status", (Object[])status)
 						.build())
 				.retrieve()
 				.onStatus(

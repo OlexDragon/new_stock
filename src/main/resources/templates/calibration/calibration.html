@@ -251,7 +251,7 @@
     							th:title="${info.name}"
     							class="dropdown-item"
     							onclick=" upload(event, this);"
-    							th:href="@{${info==null} ? '#' : '/calibration/rest/soft/profile/upload?sn=' + ${serialNumber} + '&moduleSn=' + ${info.serialNumber}}">Module Serial Number</a>
+    							th:href="@{${info==null} ? '#' : '/calibration/rest/soft/upload?sn=' + ${serialNumber} + '&moduleSn=' + ${info.serialNumber}}">Module Serial Number</a>
 </th:block>
 </th:block>
     					</div>
@@ -259,7 +259,7 @@
 <!-- Upload System Soft-->
 					<a	class="dropdown-item upload"
 						th:classappend="${info==null ? 'disabled list-group-item-light' : ''}"
-						th:href="@{${info==null} ? '#' : '/calibration/rest/soft/profile/upload?sn=' + ${info.serialNumber}}">Soft Upload</a>
+						th:href="@{${info==null} ? '#' : '/calibration/rest/soft/upload?sn=' + ${info.serialNumber}}">Soft Upload</a>
  				</div>
 <!-- Download Soft Package -->
 				<div class="btn-group" style="width:100%;">
@@ -342,7 +342,7 @@
 <!-- Input Power -->
     			<a	id="menuInputPower"
     				class="dropdown-item calibrate disabled list-group-item-light"
-    				th:href="@{${(info==null or info.deviceId==null)} ? '/calibration/input-power/converter' : '/calibration/input-power?sn=' + ${info.serialNumber} + '&pn=' + ${partNumber} + '&deviceId=' + ${#strings.substring(info.deviceId, 1, info.deviceId.length()-1)}}">Input Power</a>
+    				th:href="@{${(info==null or info.deviceId==null)} ? '/calibration/converter/input-power' : '/calibration/input-power?sn=' + ${info.serialNumber} + '&pn=' + ${partNumber} + '&deviceId=' + ${#strings.substring(info.deviceId, 1, info.deviceId.length()-1)}}">Input Power</a>
 <!-- Output Power -->
 				<div class="btn-group" style="width:100%;">
 					<div class="btn-group dropstart" role="group">
@@ -364,15 +364,14 @@
     							th:href="@{${info==null} ? '#' : '/calibration/output_power/by_input?sn=' + ${info.serialNumber} + '&pn=' + ${partNumber}}">by Input</a>
 
     						<a id="nemuAutoByGain"
-    							class="dropdown-item calibrate disabled"
+    							class="dropdown-item calibrate"
     							th:classappend="${info==null ? 'disabled list-group-item-light' : ''}"
-    							th:href="@{${info==null} ? '#' : '/calibration/output_power/by_gain?sn=' + ${info.serialNumber} + '&pn=' + ${partNumber}}">by Gain</a>
+    							th:href="@{${(info==null or info.deviceId==null)} ? '/calibration/converter/output-power' : '/calibration/output_power/by_gain?sn=' + ${info.serialNumber} + '&pn=' + ${partNumber}}">by Gain</a>
     					</div>
 					</div>
     				<a	id="menuOutputPower"
     					class="dropdown-item calibrate"
-    					th:classappend="${info==null ? 'disabled list-group-item-light' : ''}"
-    					th:href="@{${info==null} ? '#' : '/calibration/output_power?sn=' + ${info.serialNumber} + '&pn=' + ${partNumber}}">Output Power</a>
+    					th:href="@{${(info==null or info.deviceId==null)} ? '/calibration/converter/output-power' : '/calibration/output_power?sn=' + ${info.serialNumber} + '&pn=' + ${partNumber}}">Output Power</a>
  				</div>
 <!-- Power Offset -->
     			<a	id="menuPowerOffset"
@@ -380,7 +379,7 @@
     				th:classappend="${(info==null or info.deviceId==null) ? 'disabled list-group-item-light' : ''}"
     				th:href="@{${(info==null or info.deviceId==null)} ? '#' : '/calibration/power_offset?sn=' + ${info.serialNumber} + '&pn=' + ${partNumber} + '&deviceId=' + ${#strings.substring(info.deviceId, 1, info.deviceId.length()-1)}}">Power Offset</a>
 <!-- Gain -->
-    			<a id="menuGain" class="dropdown-item calibrate disabled" th:classappend="${info==null ? 'disabled list-group-item-light' : ''}" th:href="@{${info==null} ? '/calibration/gain/converter' : '/calibration/gain?sn=' + ${info.serialNumber} + '&pn=' + ${partNumber}}">Gain</a>
+    			<a id="menuGain" class="dropdown-item calibrate disabled" th:classappend="${info==null ? 'disabled list-group-item-light' : ''}" th:href="@{${info==null} ? '/calibration/converter/gain' : '/calibration/gain?sn=' + ${info.serialNumber} + '&pn=' + ${partNumber}}">Gain</a>
     			<div><hr class="dropdown-divider"></div>
 <!-- Calibration Mode -->
     			<a class="dropdown-item" id="calMode" th:classappend="${info==null ? 'disabled list-group-item-light' : ''}" href="#">Calibration Mode</a>
@@ -468,7 +467,7 @@
 	        					<label for="outputComPorts">Serial Port</label>
 	        				</div>
 							<div class="form-floating col-sm">
-		        				<select id="outputTool" class="form-select save-to-cookies" title="Outpu Tool">
+		        				<select id="outputTool" class="form-select save-to-cookies tool" title="Outpu Tool">
 									<option selected="selected" disabled="disabled" hidden="hidden" value="">Select a Power Meter</option>
 									<option value="HP438A" th:each="outputTool, stat : ${T(irt.components.beans.irt.calibration.tools.OutputTools).values()}" th:text="${outputTool.name}" th:value="${outputTool.commands}">HP438A</option>
 		        				</select>
@@ -548,8 +547,8 @@
 	        					<label for="inputComPorts">Serial Port</label>
 	    	    			</div>
 							<div class="form-floating col-sm">
-		        				<select id="inputTool" class="form-select save-to-cookies" title="Input Tool">
-									<option selected="selected" disabled="disabled" hidden="hidden" title="Input Tool" value="">Input</option>
+		        				<select id="inputTool" class="form-select save-to-cookies tool" title="Input Tool">
+									<option selected="selected" disabled="disabled" hidden="hidden" title="Input Tool" value="">Select Input</option>
 									<option value="HP438A" 
 											th:each="inputTool, stat : ${T(irt.components.beans.irt.calibration.tools.InputTools).values()}" 
 											th:text="${inputTool.name}" 
@@ -596,9 +595,9 @@
       					<div class="row gap-3 prologix">
 
 							<div class="col-lg input-group flex-nowrap">
-								<input id="inputToolAddress" type="number" class="form-control address" aria-label="Tool Address" title="Tool Address" placeholder="Address" value="13">
+								<input id="inputToolAddress" type="number" class="form-control address" aria-label="Tool Address" title="Tool Address" placeholder="Address" value="19">
 								<button class="input-group-text btn btn-outline-secondary to-disable disabled"
-										data-commands='["++addr 13"]'
+										data-commands='["++addr 19"]'
 										data-get-answer='false'>Set</button>
 							</div>
 	        				<button class="form-control col btn btn-outline-secondary to-disable disabled"

@@ -181,14 +181,20 @@ public class CalibrationController {
 		return "calibration/calibration";
     }
 
-	@GetMapping("input-power/converter")
-    String inputPower() throws ExecutionException {
+	@GetMapping("converter/input-power")
+    String inputPowerConverter() throws ExecutionException {
 		logger.traceEntry();
-		return "calibration/serial/input_power :: converter";
+		return "calibration/serial/fcm_input_power :: converter";
     }
 
-    @GetMapping("gain/converter")
-    String gain() throws ExecutionException {
+    @GetMapping("converter/output-power")
+    String outputPowerConverter() throws ExecutionException {
+		logger.traceEntry();
+		return "calibration/serial/fcm_output_power :: converter";
+    }
+
+    @GetMapping("converter/gain")
+    String gainConverter() throws ExecutionException {
 		logger.traceEntry();
 		return "calibration/serial/fcm_gain :: converter";
     }
@@ -464,174 +470,6 @@ public class CalibrationController {
 		logger.traceEntry();
 		return "calibration/currents :: map";
 	}
-
-	@GetMapping("btr")
-    String modalBtr(@RequestParam String sn, @RequestParam(required = false, defaultValue = "false") Boolean setting, Model model) throws IOException {
-    	logger.traceEntry("sn: {}; setting: {}", sn, setting);
-
-		model.addAttribute("serialNumber", sn);
-
-		Optional<BtrSerialNumber> oSerialNumber = serialNumberRepository.findBySerialNumber(sn);
-
-		//The DB serial number does not exist.
-    	if(!oSerialNumber.isPresent()) {
-
-    		//Get data from 1C
-    		String url = createProductionOrderUrl(sn);
-    		logger.debug(url);
-
-    		final FutureTask<ProductionOrderResponse> frProductionOrderResponse = HttpRequest.getForObgect(url, ProductionOrderResponse.class);
-    		try {
-
-    			oSerialNumber = Optional.of(frProductionOrderResponse.get(10, TimeUnit.SECONDS))
-
-    					.map(ProductionOrderResponse::getProductionOrders)
-    					.filter(pos->pos.length>0)
-    					.map(pos->pos[0])
-    					.map(ProductionOrder::getComment)
-    					.flatMap(
-    							c->{
-
-    								Optional<BtrWorkOrder> findByNumber = Optional.empty();
-    								final String[] split = c.split("\\s+");
-    								for(String woNumber: split) {
-    									if(woNumber.startsWith("WO")) {
-
-    										findByNumber = workOrderRepository.findByNumber(woNumber);
-    										if(!findByNumber.isPresent()){
-    											findByNumber = createNewWO(woNumber);
-			            						logger.debug("{} from 1C system.", woNumber);
-    										}
-    										break;
-    									}
-    								}
-    								if(!findByNumber.isPresent()) { // Search WO in the LogFile
-
-    						    		final File lf = new File(logFile);
-    						        	if(lf.exists()){
-
-    						            	try(InputStream is=new FileInputStream(lf); ){
-
-    						            		final String[] splitSN = sn.split("-");
-    						            		final String number;
-    						            		if(splitSN.length>1) {
-    						            			number = splitSN[1];
-    						            		}else
-    						            			number = splitSN[0];
-
-												final Optional<XSSFRow> rowWithSN = getRowWithSN(is, number);
-    						            		if(rowWithSN.isPresent()) {
-
-    						            			final XSSFRow row = rowWithSN.get();
-					            					final String woNumber = row.getCell(WORK_ORDER, MissingCellPolicy.CREATE_NULL_AS_BLANK).toString().trim();
-					            					if(!woNumber.isEmpty()) {
-					            						findByNumber = createNewWO(woNumber);
-					            						logger.debug("{} from LogFile.", woNumber);
-					            					}
-    						            		}
-
-    						            	} catch (Exception e) {
-    						            		logger.catching(e);
-    						        		}
-    						        	}
-    								}
-    								if(!findByNumber.isPresent()) {
-    									findByNumber = workOrderRepository.findByNumber(WO_NOT_FOUND);
-
-										if(!findByNumber.isPresent()){ 
-											final BtrWorkOrder btrWorkOrder = new BtrWorkOrder();
-											btrWorkOrder.setNumber(WO_NOT_FOUND);
-											findByNumber = Optional.of(workOrderRepository.save(btrWorkOrder));
-										}
-	            						logger.debug("WO Not Found.");
-    								}
-    								return findByNumber.map(
-    										wo->{
-
-    											Optional<BtrSerialNumber> findBySerialNumber = serialNumberRepository.findBySerialNumber(sn);
-    											if(!findBySerialNumber.isPresent()) {
-    												final BtrSerialNumber btrSerialNumber = new BtrSerialNumber();
-    												btrSerialNumber.setSerialNumber(sn);
-    												btrSerialNumber.setWorkOrder(wo);
-    												btrSerialNumber.setWorkOrderId(wo.getId());
-
-    												try {
-
-        												final FutureTask<AtomicReference<String>> aDescription = descriptionFromProfile(sn, model);
-        												final FutureTask<AtomicReference<String>> aPpartNumber = partNumberFromProfile(sn, model);
-
-        												final String description = aDescription.get(10, TimeUnit.SECONDS).get();
-														btrSerialNumber.setDescription(description);
-        												final String partNumber = aPpartNumber.get(10, TimeUnit.SECONDS).get();
-														btrSerialNumber.setPartNumber(partNumber);
-
-        												return serialNumberRepository.save(btrSerialNumber);
-
-    												} catch (InterruptedException | ExecutionException | TimeoutException e) {
-    													logger.catching(e);
-    												}
-
-    												return null;
-    											}
-
-    											return findBySerialNumber.get();
-    										});
-    							});
-
-    		} catch (InterruptedException | ExecutionException | TimeoutException e) {
-				logger.catching(Level.DEBUG, e);
-			}
-    	}
-
-    	boolean showSetting = false;
-    	if(oSerialNumber.isPresent()) {
-
-    		final BtrSerialNumber btrSerialNumber = oSerialNumber.get();
-    		model.addAttribute("dbSerialNumber", btrSerialNumber);
-
-    		// Get settings from DB
-    		final Optional<BtrSetting> oBtrSetting = btrSettingRepository.findById(btrSerialNumber.getPartNumber());
-    		oBtrSetting.ifPresent(btrSetting->model.addAttribute("settings", btrSetting));
-    		showSetting = !oBtrSetting.isPresent() || setting;
-    		model.addAttribute("showSetting", showSetting);
-
-    	}
-
-
-		if(!showSetting)
-			Optional.ofNullable(sn).filter(s->!s.isEmpty())
-			.ifPresent(
-					serialNumber->{
-
-						try {
-
-							final Optional<Monitor> oUnitMonitor = getUnitMonitor(serialNumber);
-							if(oUnitMonitor.isPresent()) {
-
-								final Monitor monitor = oUnitMonitor.get();
-								model.addAttribute("monitor", monitor);
-
-								gainFromProfile(sn, model).get(10, TimeUnit.SECONDS);
-							}
-
-						} catch (MalformedURLException e) {
-							logger.catching(e);
-						} catch (InterruptedException | ExecutionException | TimeoutException e) {
-							logger.catching(Level.DEBUG, e);
-						}
-					});
-
-		logger.debug(
-				"\n\tSerialNumber:\t{}\n\tMonitor:\t{}\n\tGein:\t{}\n\tSettings:\t{}\n\tShowSetting:\t{}\n\tDbSerialNumber:\t{}",
-				()->model.getAttribute("serialNumber"),
-				()->model.getAttribute("monitor"),
-				()->model.getAttribute("gain"),
-				()->model.getAttribute("settings"),
-				()->model.getAttribute("showSetting"),
-				()->model.getAttribute("dbSerialNumber"));
-
-    	return "calibration/btr_table :: modal";
-    }
 
     @GetMapping("pll")
     String modalPll(@RequestParam String sn, Model model) {
