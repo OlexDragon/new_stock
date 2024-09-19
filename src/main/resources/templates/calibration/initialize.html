@@ -69,8 +69,8 @@
     	</div>
   		<script th:inline="javascript">
 		/*<![CDATA[*/
-			const $noConverter = $('.card-header').filter((i,el)=>{const innerText = el.innerText;return innerText[innerText.length-1]!=='C';});
-			const topSN = $noConverter.map((i,el)=>el.innerText).filter((i,text)=>text.length==11).get();
+			var $noConverter = $('.card-header').filter((i,el)=>{const innerText = el.innerText;return innerText[innerText.length-1]!=='C';});
+			var topSN = $noConverter.map((i,el)=>el.innerText).filter((i,text)=>text.length==11).get();
 			if(topSN.length){
 				const sn = topSN[0];
 				$noConverter.filter((i,el)=>!el.innerText.startsWith(sn)).each((i,el)=>el.classList.add('text-bg-danger'));
@@ -84,7 +84,7 @@
 			function setting(e){
 				let deviceId = e.currentTarget.dataset.deviceId;
 				$modal.modal('hide');
-				setTimeout(()=>$modal.load('/calibration/initialize/setting?deviceId=' + deviceId), 300);
+				setTimeout(()=>loadModal('/calibration/initialize/setting?deviceId=' + deviceId), 300);
 			}
 			var postWriteTimeout;
 			function initialize(e){
@@ -278,14 +278,29 @@
       			<div id="modal-body" class="modal-body">
 	   				<div class="row mb-3 reg-index">
 	   					<div class="form-floating col">
-      						<input id="regIndex" type="text" class="form-control value" placeholder="Enter the Register Address" th:value="${setting}==null ? '' : ${setting.regIndex}">
+      						<input id="regIndex"
+      							 type="text"
+      							 class="form-control value" 
+      							 placeholder="Enter the Register Address" 
+      							 th:value="${setting}==null ? '26' : ${setting.regIndex}"
+      							 data-bs-toggle="tooltip"
+      							 data-bs-title="Index to get registers on diagnostics page."
+      							 data-bs-placement="left"
+      							 title="For all Units of this type">
 							<label for="regIndex">Register Index</label>
       					</div>
       				</div>
       				<th:block th:if="${setting}!=null">
 					<div class="row mb-3 start-with" th:each="nv, stat: ${setting.nameValue.entrySet()}">
       					<div class="form-floating col">
-      						<input th:id="'name' + ${stat.count}" type="text" class="form-control reg-name" placeholder="Enter the Register Name start with" th:value="${nv.key}">
+      						<input th:id="'name' + ${stat.count}"
+      							type="text" class="form-control reg-name"
+      							placeholder="Enter the Register Name start with"
+      							th:value="${nv.key}"
+      							data-bs-toggle="tooltip"
+      							data-bs-title="Common substring for the group of registers."
+      							data-bs-placement="left"
+      							title="Common substring for the group of registers.">
 							<label th:for="'name' + ${stat.count}">Name Start With</label>
 						</div>
 	   					<div class="form-floating col">
@@ -296,7 +311,14 @@
       				</th:block>
 					<div class="row mb-3 start-with to-clone">
       					<div class="form-floating col">
-      						<input id="name" type="text" class="form-control reg-name" placeholder="Enter the Register Name start with">
+      						<input id="name"
+      							type="text"
+      							class="form-control reg-name"
+      							placeholder="Enter the Register Name start with"
+      							data-bs-toggle="tooltip"
+      							data-bs-title="Common substring for the group of registers."
+      							data-bs-placement="left"
+      							title="Common substring for the group of registers.">
 							<label for="name">Name Start With</label>
 						</div>
 	   					<div class="form-floating col">
@@ -429,7 +451,11 @@
 
 				return parseInt(value);
 			}
-			$modal.modal('show');
+			function setupModal(){
+				calibrateId = null;
+				const tooltipTriggerList = document.querySelectorAll('[data-bs-toggle="tooltip"]');
+				[...tooltipTriggerList].map(tooltipTriggerEl => new bootstrap.Tooltip(tooltipTriggerEl));
+			}
 		/*]]>*/
 		//# sourceURL=initializeSetting.js
   		</script>

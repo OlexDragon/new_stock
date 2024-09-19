@@ -37,9 +37,11 @@
 <!-- 		<logger name="irt.components.controllers.rma.RmaController" level="ALL" /> -->
 <!-- 		<logger name="irt.components.controllers.rma.RmaRestController" level="ALL" /> -->
 
+<!-- 		<logger name="irt.components.controllers.calibration.CurrentRestController" level="all" /> -->
 <!-- 		<logger name="irt.components.controllers.calibration.SoftRestController" level="all" /> -->
 <!-- 		<logger name="irt.components.controllers.calibration.CalibrationController" level="all" /> -->
 <!-- 		<logger name="irt.components.controllers.calibration.CalibrationRestController" level="all" /> -->
+<!-- 		<logger name="irt.components.controllers.calibration.ProfileRestController" level="all" /> -->
 <!-- 		<logger name="irt.components.controllers.rma.RmaController" level="all" /> -->
 
 <!-- 		<logger name="irt.components.controllers.btr.WorkOrderController" level="all" /> -->

@@ -24,7 +24,7 @@
         			<button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
       			</div>
  <!-- Modal Body -->
-      			<div id="modal-body" class="modal-body row">
+      			<div id="modal-body" class="modal-body row" data-bs-toggle="tooltip" data-th-data-bs-title="${#authorization.expression('hasAuthority(''EDIT_PROFILE_PROPERTY'')')} ? 'Press CTRL to move.' : 'Click to chage.'" title="Click to chage.">
       				<div th:each="b: ${biasing}" class="col-1 mb-1">
 						<input type="checkbox" class="btn-check" th:id="${b.name}" th:checked="${b.enable}" autocomplete="off">
 						<label class="btn"
@@ -46,22 +46,19 @@
 	        				<div class="col"><button type="button" id="btnAddBiasing" class="btn btn-outline-primary form-control disabled">Add</button></div>
 	        			</div>
 	        		</div>
-	        		<div class="col p-1"><button type="button" id="btnSaveDB" class="btn btn-outline-info form-control">Save to DB</button></div>
-	        		<div class="col p-1"><button type="button" id="btnToProfile" class="btn btn-outline-info form-control">to Profile</button></div>
+	        		<div class="col p-1"><button type="button" id="btnSaveDB" class="btn btn-outline-info form-control" data-bs-toggle="tooltip" data-th-data-bs-title="'For ' + ${modulId} + ' type'" title="For all Units of this type">Save to DB</button></div>
+	        		<div class="col p-1"><button type="button" id="btnToProfile" class="btn btn-outline-info form-control" data-bs-toggle="tooltip" data-th-data-bs-title="'Only for ' + ${snTitle}" title="Only for this unit.">to Profile</button></div>
 	        	</th:block>
-	        		<div class="col p-1"><a class="btn btn-outline-primary biasingUpload form-control" th:href="${module==null} ? @{'/calibration/rest/profile/upload?sn=' + ${sn}} : @{'/calibration/rest/profile/upload?sn=' + ${sn} + '&module=' + ${module}}">Upload</a></div>
+	        		<div class="col p-1"><a class="btn btn-outline-primary biasingUpload form-control" th:href="${module==null} ? @{'/calibration/rest/profile/upload?sn=' + ${sn}} : @{'/calibration/rest/profile/upload?sn=' + ${sn} + '&moduleSn=' + ${module}}">Upload</a></div>
 	        		<div class="col p-1"><button type="button" id="btnSave" class="btn btn-outline-primary disabled form-control">Save</button></div>
 	        		<div class="col p-1"><button type="button" id="btnDefault" class="btn btn-outline-secondary form-control" th:classappend="${biasing.isEmpty() ? 'disabled' : ''}">Default</button></div>
-	        		<div class="col p-1"><button type="button" id="btnEnable" class="btn btn-outline-primary form-control"data-bs-toggle="tooltip" data-bs-title="Mute Invertion" title="Mute Invertion">Enable</button></div>
+	        		<div class="col p-1"><button type="button" id="btnEnable" class="btn btn-outline-primary form-control" data-bs-toggle="tooltip" data-bs-title="Mute Invertion" title="Mute Invertion">Enable</button></div>
 	        		<div class="col p-1"><button type="button" class="btn btn-outline-secondary form-control" data-bs-dismiss="modal">Close</button></div>
 	    		</div></div>
     		</div>
   		</div>
   		<script th:inline="javascript">
 			/*<![CDATA[*/
-
-				const tooltipTriggerList = document.querySelectorAll('[data-bs-toggle="tooltip"]');
-				const tooltipList = [...tooltipTriggerList].map(tooltipTriggerEl => new bootstrap.Tooltip(tooltipTriggerEl));
 
 			var menus = $('div[aria-labelledby=menuModuleBiasing] a:not(.disabled)')
 			.map((i,el)=>{
@@ -340,6 +337,10 @@
 				const biasingInputs = $modalBody.find('input').filter((i,el)=>el.checked).map((i,el)=>el.id).get().join('-');
 				if(biasingLine != biasingInputs)
 					$biasingLine.addClass('text-bg-danger');
+			}
+			function setupModal(){
+				const tooltipTriggerList = document.querySelectorAll('[data-bs-toggle="tooltip"]');
+				[...tooltipTriggerList].map(tooltipTriggerEl => new bootstrap.Tooltip(tooltipTriggerEl));
 			}
 			/*]]>*/
 			//# sourceURL=biasing-sequence.js

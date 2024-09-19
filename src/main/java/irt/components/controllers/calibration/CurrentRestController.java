@@ -78,7 +78,7 @@ public class CurrentRestController {
 
 	@PostMapping("module-info")
 	List<ModuleInfo> currentDbLayout(@RequestParam String sn, String topId) throws IOException, ScriptException{
-		logger.trace("sn: {}; topId: {}", sn, topId);
+		logger.traceEntry("sn: {}; topId: {}", sn, topId);
 
 		final List<ModuleInfo> list = new ArrayList<>();
 		try {
@@ -206,19 +206,25 @@ public class CurrentRestController {
 
 	private final static String CURRENT_ALIAS = "current-alias";
 	@PostMapping("alias")
-	List<CurrentAlias> currentAlias(@RequestParam String moduleId) {
-    	logger.traceEntry("moduleId: {};", moduleId);
+	List<CurrentAlias> currentAlias(@RequestParam String topId, String moduleId) {
+    	logger.traceEntry("topId: {}; moduleId: {};", topId, moduleId);
 
+    	final String dbId = dbId(topId, moduleId);
 		final CurrentAliastListConverter listConverter = new CurrentAliastListConverter();
-    	final IrtArrayId id = new IrtArrayId(CURRENT_ALIAS, moduleId);
+    	final IrtArrayId id = new IrtArrayId(CURRENT_ALIAS, dbId);
 		return arrayRepository.findById(id).map(IrtArray::getDescription).map(listConverter::convertToEntityAttribute).orElse(null);
 	}
 
-	@PostMapping("save-alias")
-	List<CurrentAlias> currentSaveAlias(@RequestParam String moduleId, String nameInProfile, String nameToShow) {
-    	logger.traceEntry("moduleId: {}; nameInProfile: {}; nameToShow: {};", moduleId, nameInProfile, nameToShow);
+	public String dbId(String topId, String moduleId) {
+		return topId.equals(moduleId) ? topId : topId + " : " + moduleId;
+	}
 
-    	final IrtArrayId id = new IrtArrayId(CURRENT_ALIAS, moduleId);
+	@PostMapping("save-alias")
+	List<CurrentAlias> currentSaveAlias(@RequestParam String topId, String moduleId, String nameInProfile, String nameToShow) {
+    	logger.traceEntry("topId: {}; moduleId: {}; nameInProfile: {}; nameToShow: {};", topId, moduleId, nameInProfile, nameToShow);
+
+    	final String dbId = dbId(topId, moduleId);
+    	final IrtArrayId id = new IrtArrayId(CURRENT_ALIAS, dbId);
 		final Optional<IrtArray> oIrtArray = arrayRepository.findById(id);
 		final IrtArray irtArray;
 
@@ -247,10 +253,11 @@ public class CurrentRestController {
 	}
 
 	@PostMapping("delete-alias")
-	String currentDeleteAlias(@RequestParam String moduleId, String nameInProfile) {
-    	logger.traceEntry("moduleId: {}; nameInProfile: {};", moduleId, nameInProfile);
+	String currentDeleteAlias(@RequestParam String topId, String moduleId, String nameInProfile) {
+    	logger.traceEntry("topId: {}; moduleId: {}; nameInProfile: {};", topId, moduleId, nameInProfile);
 
-    	final IrtArrayId id = new IrtArrayId(CURRENT_ALIAS, moduleId);
+    	final String dbId = dbId(topId, moduleId);
+    	final IrtArrayId id = new IrtArrayId(CURRENT_ALIAS, dbId);
 		final Optional<IrtArray> oIrtArray = arrayRepository.findById(id);
 
 		if(!oIrtArray.isPresent()) 
@@ -419,7 +426,7 @@ public class CurrentRestController {
 
     @PostMapping("dac")
     boolean setDac(@RequestParam String sn, Integer channel, Integer index, Integer value, Boolean save, Boolean binary){
-    	logger.error("sn: {};; channel: {}; index: {}; value: {} binary: {}", sn, channel, index, value, binary);
+    	logger.traceEntry("sn: {};; channel: {}; index: {}; value: {} binary: {}", sn, channel, index, value, binary);
 
 		try {
 

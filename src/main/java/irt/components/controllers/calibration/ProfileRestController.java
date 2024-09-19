@@ -91,7 +91,7 @@ public class ProfileRestController {
     	return profileWorker.getOPath().get().toString();
 	}
 
-    @GetMapping("profile/by-property")
+    @GetMapping("by-property")
     String profileByProperty(@RequestParam String sn, String property) throws IOException{
     	logger.traceEntry("Serial Number: {}; property: {}", sn, property);
 
@@ -118,11 +118,11 @@ public class ProfileRestController {
     			.orElse("The table was not found.");
 
     	return new Message(content);
-
 	}
 
     @PostMapping("upload")
     String uploadProfile(@RequestParam String sn, @RequestParam(required = false) String moduleSn) throws IOException {
+    	logger.traceEntry("sn: {}; moduleSn: {}", sn, moduleSn);
 
     	final ProfileWorker profileWorker = new ProfileWorker(profileFolder, Optional.ofNullable(moduleSn).orElse(sn));
 		if(!profileWorker.exists()) return sn + " profile does not exist.";

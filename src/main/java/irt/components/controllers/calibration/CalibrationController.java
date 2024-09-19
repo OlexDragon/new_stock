@@ -1,9 +1,6 @@
 package irt.components.controllers.calibration;
 
-import java.io.File;
-import java.io.FileInputStream;
 import java.io.IOException;
-import java.io.InputStream;
 import java.math.BigDecimal;
 import java.math.MathContext;
 import java.net.MalformedURLException;
@@ -30,10 +27,6 @@ import org.apache.http.message.BasicNameValuePair;
 import org.apache.logging.log4j.Level;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
-import org.apache.poi.ss.usermodel.Row.MissingCellPolicy;
-import org.apache.poi.xssf.usermodel.XSSFRow;
-import org.apache.poi.xssf.usermodel.XSSFSheet;
-import org.apache.poi.xssf.usermodel.XSSFWorkbook;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Controller;
@@ -42,8 +35,6 @@ import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestParam;
 
-import irt.components.beans.ProductionOrder;
-import irt.components.beans.ProductionOrderResponse;
 import irt.components.beans.irt.CalibrationInfo;
 import irt.components.beans.irt.ConverterInfo;
 import irt.components.beans.irt.Dacs;
@@ -59,16 +50,10 @@ import irt.components.beans.irt.calibration.PowerDetectorSource;
 import irt.components.beans.irt.calibration.ProfileTableDetails;
 import irt.components.beans.jpa.IrtArray;
 import irt.components.beans.jpa.IrtArrayId;
-import irt.components.beans.jpa.btr.BtrSerialNumber;
-import irt.components.beans.jpa.btr.BtrSetting;
-import irt.components.beans.jpa.btr.BtrWorkOrder;
 import irt.components.beans.jpa.calibration.CalibrationGainSettings;
 import irt.components.beans.jpa.calibration.CalibrationOutputPowerSettings;
 import irt.components.beans.jpa.calibration.CalibrationPowerOffsetSettings;
 import irt.components.beans.jpa.repository.IrtArrayRepository;
-import irt.components.beans.jpa.repository.btr.BtrSerialNumberRepository;
-import irt.components.beans.jpa.repository.btr.BtrWorkOrderRepository;
-import irt.components.beans.jpa.repository.calibration.BtrSettingRepository;
 import irt.components.beans.jpa.repository.calibration.CalibrationGainSettingRepository;
 import irt.components.beans.jpa.repository.calibration.CalibrationOutputPowerSettingRepository;
 import irt.components.beans.jpa.repository.calibration.CalibrationPowerOffsetSettingRepository;
@@ -83,11 +68,9 @@ import irt.components.workers.ThreadRunner;
 public class CalibrationController {
 	private final static Logger logger = LogManager.getLogger();
 
-	private static final int WORK_ORDER = 3;
-
-	private static final int SERIAL_NUMBER = 1;
-
-	private static final String WO_NOT_FOUND = "WO Not Found";
+//	private static final int WORK_ORDER = 3;
+//	private static final String WO_NOT_FOUND = "WO Not Found";
+//	private static final int SERIAL_NUMBER = 1;
 
 	@Value("${irt.url.protocol}")
 	private String protocol;
@@ -108,10 +91,6 @@ public class CalibrationController {
 	@Autowired private CalibrationOutputPowerSettingRepository	 calibrationOutputPowerSettingRepository;
 	@Autowired private CalibrationPowerOffsetSettingRepository	 calibrationPowerOffsetSettingRepository;
 	@Autowired private CalibrationGainSettingRepository			 calibrationGainSettingRepository;
-
-	@Autowired private BtrSettingRepository			btrSettingRepository;
-	@Autowired private BtrWorkOrderRepository		workOrderRepository;
-	@Autowired private BtrSerialNumberRepository	serialNumberRepository;
 
 	@Autowired private IrtArrayRepository	arrayRepository;
 
@@ -484,40 +463,6 @@ public class CalibrationController {
     	return "calibration/pll :: modal";
     }
 
-	private Optional<BtrWorkOrder> createNewWO(String woNumber) {
-		Optional<BtrWorkOrder> wo;
-		final BtrWorkOrder btrWorkOrder = new BtrWorkOrder();
-		btrWorkOrder.setNumber(woNumber);
-		wo = Optional.of(workOrderRepository.save(btrWorkOrder));
-		logger.debug("Created new WO. ( {} )", woNumber);
-		return wo;
-	}
-
-	private Optional<XSSFRow> getRowWithSN(InputStream is, String sn) throws IOException {
-
-		try(XSSFWorkbook wb=new XSSFWorkbook(is);){
-
-			XSSFSheet sheet=wb.getSheetAt(0);
-			for(int nextToRead = sheet.getLastRowNum(); nextToRead>0; nextToRead--) {
-
-				final XSSFRow row = sheet.getRow(nextToRead);
-				if(row==null)
-					continue;
-
-				final String cellSN = row.getCell(SERIAL_NUMBER, MissingCellPolicy.RETURN_BLANK_AS_NULL).toString().trim();
-				if(!cellSN.isEmpty()) {
-					return Optional.of(row);
-				}
-			}
-
-		}
-		return Optional.empty();
-	}
-
-	private String createProductionOrderUrl(String sn) {
-		return new StringBuilder(protocol).append(login).append(url).append("Document_ProductionOrder?$filter=like(Comment,%27%25").append(sn.trim().replaceAll("\\D", "")).append("%25%27)").toString();
-	}
-
 	public static Optional<Monitor> getUnitMonitor(String serialNumber) throws MalformedURLException, InterruptedException, ExecutionException, TimeoutException {
 		final MonitorInfo value = getHttpUpdate(serialNumber, MonitorInfo.class, new BasicNameValuePair("exec", "mon_info")).get(5, TimeUnit.SECONDS);
 		return Optional.ofNullable(value).map(MonitorInfo::getData);
@@ -581,7 +526,7 @@ public class CalibrationController {
     String modalPowerChart(@RequestParam String sn, Model model) throws IOException, InterruptedException, ExecutionException, TimeoutException {
 //		logger.error(sn);
 
-		getHomePageInfo(sn, 100)
+		getHomePageInfo(sn, 200)
 		.ifPresent(
 				hpi->{
 					model.addAttribute("serialNumber", hpi.getSysInfo().getSn());

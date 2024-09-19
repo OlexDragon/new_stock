@@ -186,11 +186,11 @@
 
 			layouts.forEach(l=>{
 				l.gates.forEach(g=>$('#' + g.id).removeClass('invisible').text(g.value).val(g.value).attr('data-switch', g.toSwitch).attr('data-channel', l.value));
-				l.switches.forEach(sw=>$('#' + sw.id).removeClass('invisible').attr('data-switch', sw.value).attr('data-channel', l.value));
+				l.switches.forEach(sw=>$('#' + sw.id).removeClass('invisible').attr('data-switch', sw.value).attr('data-channel', l.value).val(''));
 			});
 
 			if(moduleInfo.length)
-				postWithParam('/calibration/rest/current/alias', {moduleId: moduleInfo[0].info['Device ID']}, f_alias, conectionFail);
+				postWithParam('/calibration/rest/current/alias', {topId: topId, moduleId: moduleInfo[0].info['Device ID']}, f_alias, conectionFail);
 		}
 		function f_alias(alias){
 			currentAlias = alias;
@@ -453,7 +453,6 @@
 		}
 		function f_moduleInfo(data){
 			moduleInfo = data
-			console.log(moduleInfo);
 
 			let url = URLs.filter(u=>u.irtArrayId.id==data[0].moduleId);
 			if(url.length)
@@ -479,9 +478,10 @@
 // 			err = true;
 			intervalCurrent = clearInterval(intervalCurrent);
 		}
-		$modal.on('shown.bs.modal', f_startModal);
-		$modal.on('hide.bs.modal', f_stopModal);
-
+		function setupModal(){
+			$modal.on('shown.bs.modal', f_startModal);
+			$modal.on('hide.bs.modal', f_stopModal);
+		}
 		setDelay();
 
 		/*]]>*/
@@ -840,7 +840,7 @@
 
 				if(calMode){
 					$calibrationMode.prop('checked', true);
-					$currentSetValue.prop('disabled', false);
+					$currentSetValue.prop('disabled', false).focus();
 					$currentSave.prop('disabled', false);
 				}else{
 					$calibrationMode.prop('checked', false);
@@ -909,18 +909,20 @@
 				blinkBorder($toBlinkCurrent);
 			}
 
-			$modal.on('shown.bs.modal', ()=>{
-				f_startModal();
-				getRwInfo();
-				intervalCalibrationMode = setInterval(getRwInfo, 3001)
-				intervalGateStartupValues = setInterval(gateStartupValues, 10001);
-			});
-			$modal.on('hide.bs.modal', ()=>{
-				f_stopModal();
-				intervalCalibrationMode = clearInterval(intervalCalibrationMode);
-				intervalGateStartupValues = clearInterval(intervalGateStartupValues);
-				setTimeout(()=>loadModal(`/calibration/currents?sn=${serialNumber}`), 200);
-			});
+			function setupModal(){
+				$modal.on('shown.bs.modal', ()=>{
+					f_startModal();
+					getRwInfo();
+					intervalCalibrationMode = setInterval(getRwInfo, 3001)
+					intervalGateStartupValues = setInterval(gateStartupValues, 10001);
+				});
+				$modal.on('hide.bs.modal', ()=>{
+					f_stopModal();
+					intervalCalibrationMode = clearInterval(intervalCalibrationMode);
+					intervalGateStartupValues = clearInterval(intervalGateStartupValues);
+					setTimeout(()=>loadModal(`/calibration/currents?sn=${serialNumber}`), 200);
+				});
+			}
 		/*]]>*/
 		//# sourceURL=current.js
   		</script>
@@ -1413,7 +1415,7 @@
 			new bootstrap.Toast($toast).show();
 		}
 		function f_infoAlias(info){
-			postWithParam('/calibration/rest/current/alias', {moduleId: moduleInfo[0].info['Device ID']}, f_alias, conectionFail);
+			postWithParam('/calibration/rest/current/alias', {topId: topId, moduleId: moduleInfo[0].info['Device ID']}, f_alias, conectionFail);
 		}
 		function f_alias(alias){
 
@@ -1842,8 +1844,10 @@
 			selectChannel(layouts);
 		}
 		function f_postForCurrent(){ /*	No Current on this Modal*/ }
-		$modal.on('shown.bs.modal', f_startModal);
-		$modal.on('hide.bs.modal', f_stopModal);
+		function setupModal(){
+			$modal.on('shown.bs.modal', f_startModal);
+			$modal.on('hide.bs.modal', f_stopModal);
+		}
 
 		/*]]>*/
 		//# sourceURL=currentsSetUp.js
@@ -1934,7 +1938,7 @@
 					alert('Nothing to delete.');
 					return;
 				}
-				postWithParam('/calibration/rest/current/delete-alias', {moduleId: moduleInfo[0].info['Device ID'], nameInProfile: nameInProfile}, r=>{
+				postWithParam('/calibration/rest/current/delete-alias', {topId: topId, moduleId: moduleInfo[0].info['Device ID'], nameInProfile: nameInProfile}, r=>{
 
 					alert(r);
 					moduleInfo = null;
@@ -1945,7 +1949,7 @@
 				f_fillNameInProfile();
 			}
 			function f_info(info){
-				postWithParam('/calibration/rest/current/alias', {moduleId: moduleInfo[0].info['Device ID']}, f_alias, conectionFail);
+				postWithParam('/calibration/rest/current/alias', {topId: topId, moduleId: moduleInfo[0].info['Device ID']}, f_alias, conectionFail);
 
 				f_disableFields(false);
 			}
@@ -1968,7 +1972,7 @@
 			function f_saveAlias(){
 				const nameInProfile = $nameInProfile.val();
 				const nameToShow = $nameToShow.val();
-				postWithParam('/calibration/rest/current/save-alias', {moduleId: moduleInfo[0].info['Device ID'], nameInProfile: nameInProfile, nameToShow: nameToShow}, f_alias, conectionFail);
+				postWithParam('/calibration/rest/current/save-alias', {topId: topId, moduleId: moduleInfo[0].info['Device ID'], nameInProfile: nameInProfile, nameToShow: nameToShow}, f_alias, conectionFail);
 			}
 			function f_error(){
 				--hwInfoCount;

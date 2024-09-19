@@ -426,7 +426,7 @@ public class HttpRequest {
 			logger.debug(url);
 
 			final FutureTask<String> forString = getForString(url.toString());
-			final String html = forString.get(2, TimeUnit.SECONDS);
+			final String html = forString.get(3, TimeUnit.SECONDS);
 			final String str = Optional.of(html.indexOf("devices = [")).filter(index->index>=0)
 								.flatMap(start->Optional.of(html.indexOf("]", start)).filter(index->index>=0)
 										.map(stop->html.substring(start, stop + 1))).orElse(null);

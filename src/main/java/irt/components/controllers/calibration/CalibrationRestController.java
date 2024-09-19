@@ -388,7 +388,11 @@ public class CalibrationRestController {
 		} catch (InterruptedException | ExecutionException | TimeoutException e) {
 			logger.catching(Level.DEBUG, e);
 
-			return new ResponseEntity<>("setCalibrationMode(@RequestParam String ip);\n" + e.getLocalizedMessage(), HttpStatus.GATEWAY_TIMEOUT);
+			final String localizedMessage = e.getLocalizedMessage();
+			if(logger.getLevel().compareTo(Level.DEBUG)<0)
+				logger.warn(localizedMessage);
+
+			return new ResponseEntity<>("setCalibrationMode(@RequestParam String ip);\n" + localizedMessage, HttpStatus.GATEWAY_TIMEOUT);
 		}
     }
 

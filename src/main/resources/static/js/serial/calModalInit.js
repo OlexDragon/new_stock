@@ -31,7 +31,7 @@ function setConfirmStart(cs){
 	if(cs)
 		confirmStart = cs;
 	else
-	confirmStart = ()=>true;
+		confirmStart = ()=>true;
 }
 let f_init;
 function init(subInit){
@@ -162,7 +162,7 @@ function setFromCookies(){
 }
 function setCookies(element){
 	if(element.value)
-		Cookies.set(prefix + element.id, element.value);
+		Cookies.set(prefix + element.id, element.value, { expires: 365, path: '' });
 }
 function fromCookies(element){
 	const val = Cookies.get(prefix + element.id);

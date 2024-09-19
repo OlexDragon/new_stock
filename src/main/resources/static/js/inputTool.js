@@ -4,6 +4,7 @@ const $inputButtons			 = $inputComPorts.parents('.accordion-body').find('button'
 const $inputToolAddress 	 = $('#inputToolAddress');
 const $inputPowerUnit		 = $('#inputPowerUnit');
 const $inputToolAuto		 = $('#inputToolAuto');
+const $inputFrequency		 = $('#inputFrequency');
 const $inputFrequencyUnit	 = $('#inputFrequencyUnit');
 const $collapseInput		 = $('#collapseInput');
 const $inputPower			 = $('#inputPower');
@@ -40,16 +41,28 @@ $('.input-value').on('input', e=>{
 	let step = Cookies.get(el.id + "Step");
 	el.dataset.step = step;
 })
-.on('keydown', e=>{
+.keydown(e=>{
 
-	if(e.currentTarget.localName != 'input')
+	const el = e.currentTarget;
+
+	if(e.originalEvent.code === 'Space'){
+		e.preventDefault();
+		if(e.ctrlKey){
+			let another = getAnother(el);
+			if(another)
+				another.focus();
+		}
+		return;
+	}
+
+	if(el.localName != 'input')
 		return;
 
 	let step;
-	if(e.currentTarget.dataset.step === 'undefined')
+	if(el.dataset.step === 'undefined')
 		step = 1;
 	else
-		step = parseFloat(e.currentTarget.dataset.step);
+		step = parseFloat(el.dataset.step);
 
 	switch(e.originalEvent.code){
 
@@ -57,7 +70,7 @@ $('.input-value').on('input', e=>{
 		if(step<0.1 || !e.ctrlKey)
 			return;
 
-		e.currentTarget.dataset.step = step / 10;
+		el.dataset.step = step / 10;
 		showStepValue(e);
 		break;
 
@@ -65,24 +78,34 @@ $('.input-value').on('input', e=>{
 		if(step>10 || !e.ctrlKey)
 			return;
 
-		e.currentTarget.dataset.step = step * 10;
+		el.dataset.step = step * 10;
 		showStepValue(e);
 		break;
 
 	case 'ArrowUp':
-		if(e.currentTarget.value=='')
+		if(el.value=='')
 			break;
 
-		e.currentTarget.value = (parseFloat(e.currentTarget.value) + parseFloat(e.currentTarget.dataset.step)).toFixed(2);
-		$(`#${e.currentTarget.id}Btn`).click()
+		if(e.shiftKey && e.ctrlKey){
+			e.preventDefault();
+			changeAnother(el, 'ArrowUp');
+			return;
+		}
+
+		doStep(el, 'ArrowUp');
 		break;
 
 	case 'ArrowDown':
-		if(e.currentTarget.value=='')
+		if(el.value=='')
 			break;
 
-		e.currentTarget.value = (parseFloat(e.currentTarget.value) - parseFloat(e.currentTarget.dataset.step)).toFixed(2);
-		$(`#${e.currentTarget.id}Btn`).click()
+		if(e.shiftKey && e.ctrlKey){
+			e.preventDefault();
+			changeAnother(el, 'ArrowDown');
+			return;
+		}
+
+		doStep(el, 'ArrowDown');
 		break;
 
 	default:
@@ -91,6 +114,38 @@ $('.input-value').on('input', e=>{
 
 	e.preventDefault();
 });
+function doStep(el, arrow){
+	switch(arrow){
+
+		case 'ArrowUp':
+			el.value = (parseFloat(el.value) + parseFloat(el.dataset.step)).toFixed(2);
+			$(`#${el.id}Btn`).click()
+			break;
+
+		case 'ArrowDown':
+			el.value = (parseFloat(el.value) - parseFloat(el.dataset.step)).toFixed(2);
+			$(`#${el.id}Btn`).click()
+	}
+}
+function changeAnother(el, arrow){
+
+	let another = getAnother(el);
+	if(!another)
+		return;
+
+	switch(arrow){
+
+		case 'ArrowUp':
+			doStep(another[0], 'ArrowUp');
+			break;
+
+		case 'ArrowDown':
+			doStep(another[0], 'ArrowDown');
+	}	
+}
+function getAnother(el){
+	return el.id == 'inputPower' ? $inputFrequency : el.id == 'inputFrequency' ? $inputPower : null;
+}
 function showStepValue(e){
 
 	let $toast = $('.toast');

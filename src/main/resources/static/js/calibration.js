@@ -415,6 +415,8 @@ $scan.click(function(e){
 		$modalHeader.text('Send Request for ' + ipAddress);
 
 		postWithParam('/calibration/rest/scan', {ip : ipAddress}, function(homePageInfo){
+			if(homePageInfo)
+				console.log(homePageInfo);
 
 			if(!homePageInfo || !homePageInfo.sysInfo || !homePageInfo.netInfo)
 				return;
@@ -544,6 +546,7 @@ $('#currents').click(function(e){
 		alert('Unoun type Device ID Vertion');
 		return;
 	}
+	calibrateId = e.id;
 	loadModal(`/calibration/currents?sn=${serialNumber}`);
 });
 function loadModal(href){
@@ -555,9 +558,11 @@ function loadModal(href){
 			console.log(error);
 			return;
 		}
-	setupModal();
-	setTimeout(()=>$modal.modal('show'), 500);
-});
+  		$modal.off('shown.bs.modal');
+  		$modal.off('hide.bs.modal');
+		setupModal();
+		setTimeout(()=>$modal.modal('show'), 600);
+	});
 }
 $('#profile').click(function(e){
 	getProfile(e, this);
@@ -850,4 +855,12 @@ function softSelected(el){
 				alert("Server error. Status = " + error.status)
 		}
 	});
+}
+
+const $fixedTop = $('.fixed-top');
+const $accordion = $('#accordion');
+setMarginTop();
+$(window).on('resize', setMarginTop);
+function setMarginTop(){
+	$accordion.css('margin-top', $fixedTop.height() + 20);
 }

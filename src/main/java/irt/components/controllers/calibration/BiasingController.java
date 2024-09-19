@@ -57,7 +57,9 @@ public class BiasingController {
     	final ProfileWorker profileWorker = Optional.ofNullable(module).map(m->new ProfileWorker(profileFolder, m)).orElseGet(()->profileWorkerSystem);
 		try { if(!profileWorker.exists()) return null; } catch (IOException e) { logger.catching(Level.DEBUG, e); return null; }
 
+		model.addAttribute("snTitle", profileWorker.getSerialNumber());
 		final String modulId = getTypeRev(profileWorker);
+		model.addAttribute("modulId", modulId);
 		final IrtArrayId irtArrayId = new IrtArrayId(systemId, modulId);
 		final Optional<IrtArray> oIrtArray = arrayRepository.findById(irtArrayId);
 

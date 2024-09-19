@@ -53,7 +53,7 @@ public class InitializeController {
 							map.put("regs", str);
 
     					} catch (IOException e) {
-    						if(logger.getLevel().compareTo(Level.ERROR)>0)
+    						if(logger.getLevel().compareTo(Level.DEBUG)<0)
     							logger.warn(e.getLocalizedMessage());
     						else
     							logger.catching(e);

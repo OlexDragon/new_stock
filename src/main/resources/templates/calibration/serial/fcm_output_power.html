@@ -87,16 +87,15 @@
   			<script>
 			/*<![CDATA[*/
 
-  			var tableName = 'Output Power';
+			var skipRun;
+  			var calRun;
+ 			var tableName = 'Output Power';
 
-			init();
-  			setRun(run);
-  			runTimeout = 2000;
 
+  			var times = 3;
   			var stopValue;
   			var offset;
   			var $minVal = $('#minVal');
-  			$toolVal.on('input', ()=>defaultToolVal = stopValue = null);
   			setConfirmStart(()=>{
 
   				if(stopValue)
@@ -115,21 +114,26 @@
   				if(!defaultToolVal){
   					const max = $maxVal.val();
   					const drop = max - $minVal.val();
-  					$toolVal.val(stopValue - drop);
+  					defaultToolVal = stopValue - drop;
+  					$toolVal.val(defaultToolVal);
   					offset = max - stopValue;
   				}
 
   				return true
   			});
   			var $numberOfEntries = $('#numberOfEntries');
-  			var calRun = false;
   			var stack = 0;
   			var payloadReadWrite = new Payload(new Parameter(PARAMETER_READ_WRITE), DEVICE_FCM_ADC_OUTPUT_POWER().toBytes());
   			function run(){
+  				if(skipRun>0){
+  					--skipRun;
+  					return;
+  				}
 
   				if(stack>10){
   					stack = 0;
   					console.warn('stackoverflow');
+  					skipRun = times;
   					f_stop();
    					alert('Stackover Flow');
  					return;
@@ -145,13 +149,14 @@
   						console.warn('No Input Tool Value.');
   						return;
   					}
+
   					if($toolVal.val())
   						$toolVal.val(toolV);
+
   					if(x.length && x[x.length-1] == toolV){
   						f_nextStep();
   						return;
   					}
-
 
   					const tmp = (parseFloat(toolV) + offset).toFixed(1);
   					x.push(tmp);
@@ -171,8 +176,10 @@
   				if(!register){
   					++outputPowerCount;
   					console.warn('OutputPowerCount = ' + outputPowerCount);
-  					if(outputPowerCount>3)
-  	  					f_stop();
+  					if(outputPowerCount>3){
+  						skipRun = times;
+  						f_stop();
+  					}
   	  	  			calRun = false;
  					return;
   				}
@@ -192,6 +199,7 @@
   				if(!startToolValue)
   					startToolValue = toolV;
   				if(toolV == stopValue){
+  					skipRun = times;
   					f_stop();
   					$btnStart.text('Restart')
   					$btnInfo.removeClass('disabled').text('Optimize');
@@ -217,7 +225,39 @@
   			}
 
   			function setupModal(){
-  				console.log("Output Power setupModal");
+  				calRun = false;
+  				x.length = y.length = 0;
+  				defaultToolVal = null;
+  	  			skipRun = times;
+   	  			runTimeout = 2000;
+ 				init();
+  	  			setRun(run);
+  	  			$toolVal.on('input', ()=>defaultToolVal = stopValue = null);
+  	  			setConfirmStart(()=>{
+
+  	  				if(stopValue)
+  	  					return true;
+
+  	  				if(!confirm('Does the power meter reading match the maximum value?'))
+  	  					return false;
+  	  				stopValue = $toolVal.val();
+  	  				if(!stopValue){
+  	  					alert('Input Tool Value needs to be set.')
+  	  					return false;
+  	  				}
+
+  	  				stopValue = parseFloat(stopValue);
+
+  	  				if(!defaultToolVal){
+  	  					const max = $maxVal.val();
+  	  					const drop = max - $minVal.val();
+  	  					defaultToolVal = stopValue - drop;
+  	  					$toolVal.val(defaultToolVal);
+  	  					offset = max - stopValue;
+  	  				}
+
+  	  				return true
+  	  			});
   			}
   			/*]]>*/
   			//# sourceURL=fcm-output-power.js

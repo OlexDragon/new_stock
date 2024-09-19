@@ -139,7 +139,7 @@
 				let module = pair.first.split('.')[0];
 
 				if(pair.second=='Saved'){
-					let btnUpload = $('<a>', {class: "btn btn-outline-success", href: '/calibration/rest/profile/upload?sn=' + serialNumber + '&module=' + module, text: 'Upload'})
+					let btnUpload = $('<a>', {class: "btn btn-outline-success", href: '/calibration/rest/profile/upload?sn=' + serialNumber + '&moduleSn=' + module, text: 'Upload'})
 					$div.append(btnUpload.click(function(e){
 								e.preventDefault();
 								$(this).addClass('disabled');

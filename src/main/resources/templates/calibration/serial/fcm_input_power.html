@@ -83,24 +83,13 @@
   			<script>
 			/*<![CDATA[*/
 
-  			runTimeout = 1000;
-			init();
-  			setRun(run);
-
   			var tableName = 'FCM Input Power';
   			var $numberOfEntries;
   			var calRun;
   			var stack;
   			var payloadReadWrite;
   			var inputPowerCount;
-  			setup();
-  			function setup(){
-  	  			$numberOfEntries = $('#numberOfEntries');
-  	  			calRun = false;
-  	  			stack = 0;
-  	  			payloadReadWrite = new Payload(new Parameter(PARAMETER_READ_WRITE), DEVICE_FCM_ADC_INPUT_POWER().toBytes());
-  	  			inputPowerCount = 0
-  			}
+
   			function run(){
 
   				if(stack>10){
@@ -196,7 +185,16 @@
   				f_toolValue();
   			}
   			function setupModal(){
-  				console.log("Input Power setupModal");
+  				x.length = y.length = 0;
+  	  			runTimeout = 2000;
+  				init();
+  	  			setRun(run);
+  	  			$numberOfEntries = $('#numberOfEntries');
+  	  			calRun = false;
+  	  			stack = 0;
+  	  			payloadReadWrite = new Payload(new Parameter(PARAMETER_READ_WRITE), DEVICE_FCM_ADC_INPUT_POWER().toBytes());
+  	  			inputPowerCount = 0
+  	  			setConfirmStart();
   			}
   			/*]]>*/
   			//# sourceURL=fcm-input-power.js
