@@ -51,6 +51,7 @@ import com.fasterxml.jackson.databind.DeserializationFeature;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.dataformat.yaml.YAMLFactory;
 
+import irt.components.beans.irt.CalibrationRwInfo;
 import irt.components.beans.irt.update.ToUpload;
 
 public class HttpRequest {
@@ -161,10 +162,15 @@ public class HttpRequest {
 					return null;
 
 				json = text.contains("=") ? javaScriptToJSon(text) : textToJSON(text);
-				logger.debug("classToReturn: {}; json: {}", classToReturn, json);
+				logger.trace("classToReturn: {}; json: {}", classToReturn, json);
 
 				final ObjectMapper mapper = new ObjectMapper();
 				mapper.configure(DeserializationFeature.FAIL_ON_UNKNOWN_PROPERTIES, false);
+
+				if(classToReturn.equals(CalibrationRwInfo.class))
+					json = checkCalibrationRwInfo(json);
+
+				logger.debug(json);
 
 				return mapper.readValue(json, classToReturn);
 			}
@@ -177,6 +183,33 @@ public class HttpRequest {
 		}
 
 		return null;
+	}
+
+	private static String checkCalibrationRwInfo(String json) {
+		final String[] split = json.split("\"dp\":\\{", 2);
+		if(split.length>1) {
+			final int closingBracketIndex = findClosingBracketIndex(split[1]);
+			return split[0] + "\"dp\":[{" + split[1].substring(0, closingBracketIndex) + "}]" + split[1].substring(closingBracketIndex +1);
+		}
+		return json;
+	}
+
+	private static int findClosingBracketIndex(String string) {
+
+		int count = 1;
+		int i=0;
+
+		for(; i<string.length(); ++i) {
+			if(string.charAt(i)=='{')
+				count++;
+			else if(string.charAt(i)=='}')
+				count--;
+
+			if(count == 0)
+				break;
+		}
+
+		return i;
 	}
 
 	public static String javaScriptToJSon(String javaScript) throws ScriptException, JsonProcessingException {
@@ -200,7 +233,7 @@ public class HttpRequest {
 				Optional.of(scanner.nextLine()).map(line->line.split(":", 2)).filter(split->split.length==2)
 				.ifPresent(
 						split->{
-							sb.append("\"").append(split[0].trim()).append("\":\"").append(split[1].trim()).append("\",");
+							sb.append("\"").append(split[0].trim()).append("\":\"").append(split[1].trim().replace("N/A", "NotAplicable")).append("\",");
 						});
 				  
 			}
@@ -342,11 +375,12 @@ public class HttpRequest {
 		.ifPresent(httpPost::setEntity);
 	}
 
-	public static FutureTask<String> getForString(String url){
-		 return  getForString(url, 500);
+	public static String getForString(String url) throws InterruptedException, ExecutionException, TimeoutException{
+		 return  getForString(url, 500, TimeUnit.MILLISECONDS);
 	 }
 
-	public static FutureTask<String> getForString(String url, int timeout) {
+	public static String getForString(String url, int timeout, TimeUnit timeUnit) throws InterruptedException, ExecutionException, TimeoutException {
+		logger.debug("url: {}; timeout: {}; timeUnit: {}", url, timeout, timeUnit);
 
 		Callable<String> callable = ()->{
 			final HttpGet httpGet = new HttpGet(url);
@@ -360,7 +394,7 @@ public class HttpRequest {
 		FutureTask<String> ft = new FutureTask<>(callable);
 		ThreadRunner.runThread(ft);
 
-		return ft;
+		return ft.get(timeout, timeUnit);
 	}
 
 	private static String entityToString(final CloseableHttpResponse response) {
@@ -425,8 +459,8 @@ public class HttpRequest {
 			final URL url = new URL("http", sn.trim(), "/diagnostics.asp?devices=1");
 			logger.debug(url);
 
-			final FutureTask<String> forString = getForString(url.toString());
-			final String html = forString.get(3, TimeUnit.SECONDS);
+			final String html = getForString(url.toString(), 3, TimeUnit.SECONDS);
+			logger.debug(html);
 			final String str = Optional.of(html.indexOf("devices = [")).filter(index->index>=0)
 								.flatMap(start->Optional.of(html.indexOf("]", start)).filter(index->index>=0)
 										.map(stop->html.substring(start, stop + 1))).orElse(null);
@@ -443,6 +477,7 @@ public class HttpRequest {
 				return list.parallelStream().map(l->(Map<?,?>)l).filter(m->m.get("name")!=null).map(m->new AbstractMap.SimpleEntry<>((String)m.get("name"), (Integer)m.get("index"))).collect(Collectors.toMap(e->e.getKey(), e->e.getValue()));
 			}
 
+			logger.debug("No Answer.");
 		return new HashMap<>();
 	}
 }

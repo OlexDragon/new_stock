@@ -77,7 +77,7 @@ public class SoftRestController {
 		final String typeRev = profileWorker.getProperties("device-type", "device-revision").entrySet().stream().map(es->es.getValue()).collect(Collectors.joining("."));
 
 		final Soft soft = new Soft(typeRev, file.getName(), file.getBytes());
-		soft.setModule(Optional.ofNullable(moduleSn).map(m->true).orElse(null));	// TODO - Three states: null = System; true = Module; false = Module of Module;
+		soft.setModule(Optional.ofNullable(moduleSn).map(m->true).orElse(null));	// Three states: null = System; true = Module; false = Module of Module;
 
 		HttpRequest.upload(sn, soft);
 
@@ -140,7 +140,7 @@ public class SoftRestController {
 
 		final Path path = Paths.get(softPath);
 		final Soft soft = new Soft(tr, path);
-    	soft.setModule(Optional.ofNullable(moduleSn).map(m->true).orElse(null));	// TODO - Three states: null = System; true = Module; false = Module of Module;
+    	soft.setModule(Optional.ofNullable(moduleSn).map(m->true).orElse(null));	// Three states: null = System; true = Module; false = Module of Module;
 		return soft;
 	}
 

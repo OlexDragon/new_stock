@@ -9,12 +9,13 @@ import lombok.Setter;
 import lombok.ToString;
 
 @Getter @Setter @ToString @JsonIgnoreProperties(ignoreUnknown = true)
-public class RequestData implements SerialPortData {
+public class ReadRequest implements SerialPortData {
 
-	private String hostName;
 	private String spName;
+	private short addr;
 	/** baudrate - This variable is not used with NI GPIB  */
 	private Baudrate baudrate;
+	private byte[] answer;
 	private int timeout = 100;
 	private String errorMessage;
 }

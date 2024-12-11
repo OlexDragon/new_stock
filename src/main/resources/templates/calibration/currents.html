@@ -186,7 +186,9 @@
 
 			layouts.forEach(l=>{
 				l.gates.forEach(g=>$('#' + g.id).removeClass('invisible').text(g.value).val(g.value).attr('data-switch', g.toSwitch).attr('data-channel', l.value));
-				l.switches.forEach(sw=>$('#' + sw.id).removeClass('invisible').attr('data-switch', sw.value).attr('data-channel', l.value).val(''));
+				l.switches.forEach(sw=>{
+					$('#' + sw.id).removeClass('invisible').attr('data-switch', sw.value).attr('data-channel', l.value).text('');
+				});
 			});
 
 			if(moduleInfo.length)
@@ -453,6 +455,11 @@
 		}
 		function f_moduleInfo(data){
 			moduleInfo = data
+			if(!data.length){
+				console.warn('Unable to obtain unit information.');
+				alert('Unable to obtain unit information.');
+				return;
+			}
 
 			let url = URLs.filter(u=>u.irtArrayId.id==data[0].moduleId);
 			if(url.length)
@@ -481,6 +488,7 @@
 		function setupModal(){
 			$modal.on('shown.bs.modal', f_startModal);
 			$modal.on('hide.bs.modal', f_stopModal);
+			return true;
 		}
 		setDelay();
 
@@ -489,7 +497,7 @@
   		</script>
 	</th:block>
 	<th:block th:fragment="current">
-  		<div class="modal-dialog">
+  		<div class="modal-dialog modal-lg">
     		<div class="modal-content">
 <!-- Modal Header -->
       			<div class="modal-header row">
@@ -532,11 +540,11 @@
   	    			</div>
  	     			<div class="form-floating col-2">
   	    				<input id="currentMin" type="number" class="form-control currentSetting" placeholder="Minimum Value" value="1400">
-  	    				<label for="currentMin">Min.</label>
+  	    				<label id="lblMin" for="currentMin">Min.</label>
   	    			</div>
  	     			<div class="form-floating col-2">
   	    				<input id="currentMax" type="number" class="form-control currentSetting" placeholder="Maximum Value" value="4095">
-  	    				<label for="currentMax">Max</label>
+  	    				<label id="lblMax" for="currentMax">Max</label>
   	    			</div>
 					<input type="checkbox" class="btn-check" name="options-outlined" id="calibrationMode" autocomplete="off">
 					<label class="btn btn-outline-success disabled col-2" for="calibrationMode">Cal.</label>
@@ -550,6 +558,8 @@
 			var potName = /*[[${potName}]]*/ 'G01';
 			var switchName =  /*[[${switchName}]]*/ 'SWITCH1';
 
+			var $lblMin = $('#lblMin');
+			var $lblMax = $('#lblMax');
 			var $toBlinkCurrent = $('#toBlinkCurrent');
 			var $toBlinkValue = $('#toBlinkValue');
 			var $currentToShow =  $('#currentToShow');
@@ -619,6 +629,7 @@
 				}
 			})
 			.change(setValue);
+
 			var saving = false;
 			var postSetValue = false;
 			function setValue(el, save, action){
@@ -684,21 +695,30 @@
 			}
 			function checkSetting(){
 
-				let max = parseInt(fillEmpty($currentMax, 4095));
-				if(max<1){
-					max = 1;
+				const maxRange = !varRange ? 4095 : varRange.max;
+				const minRange = !varRange ? 0 : varRange.min;
+				const maxLbl = "Max. " + maxRange;
+				if($lblMax.text() !== maxLbl)
+					$lblMax.text(maxLbl);
+				const minLbl = "Min. " + minRange;
+				if($lblMin.text() !== minLbl)
+					$lblMin.text(minLbl);
+
+				let max = parseInt(fillEmpty($currentMax, maxRange));
+				if(max<=minRange){
+					max = minRange + 1;
 					$currentMax.val(max);
-				}else if(max>4095){
-					max = 4095;
+				}else if(max>maxRange){
+					max = maxRange;
 					$currentMax.val(max);
 				}
 
-				let min = parseInt(fillEmpty($currentMin, 1400));
-				if(min>max){
+				let min = parseInt(fillEmpty($currentMin, minRange));
+				if(min>=max){
 					min = max - 1;
 					$currentMin.val(min);
-				}else if(min<0){
-					min = 0;
+				}else if(min<minRange){
+					min = minRange;
 					$currentMin.val(min);
 				}
 
@@ -727,9 +747,14 @@
 				$modal.modal('hide');
 				conectionFail(error);
 			}
+			var varRange;
 			function setMinMax(range){
+
 				if(!range)
 					return;
+
+				varRange = range;
+
 				let check;
 				if(parseInt($currentMin.val())<range.min){
 					$currentMin.val(range.min);
@@ -828,7 +853,7 @@
 					calMode = data.calibrationRwInfo.calMode;
 
 				else if(data.digitalPotentiometers)
-					calMode = data.digitalPotentiometers.calMode;
+					calMode = data.digitalPotentiometers[0].calMode;
 
 				else{
 					disableAll();
@@ -849,9 +874,13 @@
 				}
 
 				let pts;
-				if(data.digitalPotentiometers)
-					pts = data.digitalPotentiometers.list.filter(pt=>pt.index==channel);
-				else
+				if(data.digitalPotentiometers){
+
+					const list = data.digitalPotentiometers[0].list;
+					for(let i=1; i<data.digitalPotentiometers.length;i++)
+						list.concat(data.digitalPotentiometers[i].list);
+					pts = list.filter(pt=>pt.index==channel);
+				}else
 					pts = data.calibrationRwInfo.dacs.list[0].vars;
 
 				if(!pts || !pts.length)
@@ -879,7 +908,7 @@
 										}else
 											name = pt.name;
 
-										return name==potName;
+										return name===potName;
 									});
 				if(!p || !p.length){
 					alert('Gate with this name not found.\nIt may be necessary to make an alias for ' + potName + '.\nCall Roman to fix this.');
@@ -898,7 +927,11 @@
 					$currentSetValue.val(value);
 					gateStartupValues();
 				}
-				setMinMax(p[0].range);
+				let range = p[0].rang;
+				if(!range && data.calibrationRwInfo)
+					range = data.calibrationRwInfo.dacs.range;
+
+				setMinMax(range);
 			}
 			function getDivId(layout){
 				return channel;
@@ -922,6 +955,7 @@
 					intervalGateStartupValues = clearInterval(intervalGateStartupValues);
 					setTimeout(()=>loadModal(`/calibration/currents?sn=${serialNumber}`), 200);
 				});
+				return true;
 			}
 		/*]]>*/
 		//# sourceURL=current.js
@@ -1847,6 +1881,7 @@
 		function setupModal(){
 			$modal.on('shown.bs.modal', f_startModal);
 			$modal.on('hide.bs.modal', f_stopModal);
+			return true;
 		}
 
 		/*]]>*/

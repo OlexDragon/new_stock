@@ -70,10 +70,13 @@ public class SpringMailSender implements MailSender {
 
 				try {
 
+					final String sName = InetAddress.getLocalHost().getHostName();
+					url = "\nhttp://" + sName + path;
+
 					final InetAddress localHost = InetAddress.getLocalHost();
 					final byte[] address = localHost.getAddress();
 
-					url = "\nhttp://" + IntStream.range(0, address.length).mapToObj(index->address[index]&0xff).map(Number::toString).collect(Collectors.joining(".")) + path;
+					url += "\nhttp://" + IntStream.range(0, address.length).mapToObj(index->address[index]&0xff).map(Number::toString).collect(Collectors.joining(".")) + path;
 
 				} catch (Exception e) {
 					logger.catching(e);

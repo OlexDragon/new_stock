@@ -11,7 +11,6 @@ import java.util.List;
 import java.util.Map;
 import java.util.Optional;
 import java.util.concurrent.ExecutionException;
-import java.util.concurrent.FutureTask;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.TimeoutException;
 
@@ -36,13 +35,15 @@ import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
 
+import irt.components.beans.IrtMessage;
 import irt.components.beans.irt.calibration.ProfileTableTypes;
 import irt.components.beans.irt.update.Profile;
 import irt.components.beans.irt.update.Table;
-import irt.components.controllers.calibration.CalibrationRestController.Message;
 import irt.components.workers.HtmlParsel;
 import irt.components.workers.HttpRequest;
 import irt.components.workers.ProfileWorker;
+import lombok.Getter;
+import lombok.RequiredArgsConstructor;
 
 @RestController
 @RequestMapping("calibration/rest/profile")
@@ -62,8 +63,7 @@ public class ProfileRestController {
 
     		final URL url = new URL("http", sn, "/diagnostics.asp");
         	builder = new URIBuilder(url.toString()).setParameter("profile", "1");
-        	final FutureTask<String> ft = HttpRequest.getForString(builder.build().toString());
-			String str = ft.get(5, TimeUnit.SECONDS);
+			String str = HttpRequest.getForString(builder.build().toString(), 10, TimeUnit.SECONDS);
         	logger.debug(str);
         	try(final StringReader reader = new StringReader(str);){
  
@@ -105,19 +105,34 @@ public class ProfileRestController {
     }
 
     @PostMapping("save")
-    Message saveToProfile(@RequestBody Table table) throws IOException {
-    	logger.error(table);
+    IrtMessage saveToProfile(@RequestBody Table table) throws IOException {
+    	logger.traceEntry("{}", table);
 
-    	ProfileWorker profileWorker = new ProfileWorker(profileFolder, table.getSerialNumber());
+    	ProfileWorker profileWorker = new ProfileWorker(profileFolder, table.getSerialNumber()); 
 
     	if(!profileWorker.exists())
-    		return new Message("The profile does not exist.");
+    		return new IrtMessage("The profile does not exist.");
 
     	final String content = profileWorker.scanForTable(table.getName()).filter(pt->pt.getType()!=ProfileTableTypes.UNKNOWN)
     			.map(pt->profileWorker.saveToProfile(pt, table.getValues()) ? "The table has been saved." : "Something went wrong. The table has not been saved.")
     			.orElse("The table was not found.");
 
-    	return new Message(content);
+		return new IrtMessage(content);
+	}
+
+    @PostMapping("save/property")
+    ProfileChangeMessage saveProperty(@RequestParam String sn, @RequestParam String property, @RequestParam String value) throws IOException {
+    	logger.traceEntry("sn: {}; property: {}; value: {};", sn, property, value);
+
+    	ProfileWorker profileWorker = new ProfileWorker(profileFolder, sn); 
+
+    	if(!profileWorker.exists())
+    		return new ProfileChangeMessage("The profile for " + sn + " does not exist.", false);
+
+    	if(profileWorker.saveProperty(property, value))
+    		return new ProfileChangeMessage("The propery '" + property +" " + value + "' has been saved.", true);
+
+    	return new ProfileChangeMessage("Something went wrong.", false);
 	}
 
     @PostMapping("upload")
@@ -131,7 +146,7 @@ public class ProfileRestController {
 
 		final Path path = oPath.get();
 		final Profile profile = new Profile(path);
-		profile.setModule(moduleSn!=null);
+		profile.setModule(moduleSn!=null && !moduleSn.equals(sn));
 		HttpRequest.upload(sn, profile);
 
 		return "Wait for the profile to load.";
@@ -174,4 +189,10 @@ public class ProfileRestController {
 
     	return new FileSystemResource(path);
 	}
+
+    @RequiredArgsConstructor @Getter
+    public class ProfileChangeMessage{
+    	private final String message;
+    	private final boolean changeDon;
+    }
 }

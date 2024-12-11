@@ -7,660 +7,110 @@
     <meta charset="UTF-8" />
     <title>IRT Bom.</title>
     <link rel="shortcut icon" href="http://irttechnologies.com/favicon.ico">
-    <link rel="stylesheet" href="https://stackpath.bootstrapcdn.com/bootstrap/4.4.1/css/bootstrap.min.css" data-integrity="sha384-Vkoo8x4CGsO3+Hhxv8T/Q5PaXtkKtu6ug5TOeNV6gBiFeWPGFN9MuhOf23Q9Ifjh" data-crossorigin="anonymous">
+	<link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet" integrity="sha384-QWTKZyjpPEjISv5WaRU9OFeRpok6YctnYmDr5pNlyT2bRjXh0JMhjY6hW+ALEwIH" crossorigin="anonymous">
     <link rel="stylesheet" href="../../static/css/components.css" th:href="@{/css/components.css}">
+
+    <script type="application/javascript" src="https://ajax.googleapis.com/ajax/libs/jquery/3.5.1/jquery.min.js"></script>
+    <script type="application/javascript" src="https://cdnjs.cloudflare.com/ajax/libs/popper.js/2.10.2/umd/popper.min.js"></script>
+	<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js" integrity="sha384-YvpcrYf0tY3lHB60NNkmXc5s9fDVZLESaAA55NDzOxhy9GkcIdslK1eN7N6jIeHz" crossorigin="anonymous"></script>
+	<script type="application/javascript" src="https://cdn.jsdelivr.net/npm/js-cookie@2/src/js.cookie.min.js"></script>
+	<script type="application/javascript" src="../../static/js/irt.js" th:src="@{/js/irt.js}"></script>
 </head>
 
 <body>
 
+ 	<button type="button" class="btn btn-outline-primary" data-bs-toggle="modal" data-bs-target="#modal" th:remove="all">Launch modal</button>
+
 <!-- Modal Message -->
 	<div id="modal" class="modal" tabindex="-1" role="dialog">
 	<th:block th:fragment="modal">
- 		<th:block th:if="${monitor!=null} and ${settings}!=null and not ${showSetting}">
   		<div class="modal-dialog modal-lg">
     		<div class="modal-content">
 <!-- Modal Header -->
       			<div class="modal-header row">
-        			<h5 class="modal-title ml-3 text-primary col-auto" th:text="'Gain: ' + ${gain} + ' dB;'">Gain: 74 dB</h5>
-        			<h5 id="temperature" class="modal-title ml-3 text-primary col-auto" th:text="${monitor.temperature}">Temperature</h5><h5 class="modal-title text-primary col-auto">&#x2103;;</h5>
-        			<h5 id="unitPower" class="modal-title ml-3 text-primary col-auto" th:text="${monitor.outpower}">Output Power</h5><h5 class="modal-title text-primary col-auto">dBm;</h5>
-        			<h5 id="lo" class="modal-title ml-3 text-primary col-auto" th:text="'LO: ' + ${monitor.lo} + ';'">LO</h5>
- 					<div class="col input-group">
-						<input id="btnScan" type="checkbox" class="btn-check" autocomplete="off">
-						<label id="lbl_scan" for="btnScan" class="btn form-label" data-bs-toggle="tooltip">Scan</label>
-					</div>
- <!-- BTR settings -->
-  					<div class="dropdown col-auto">
-  						<button class="btn dropdown-toggle" type="button" id="dropdownSettingsButton" data-bs-toggle="dropdown" aria-expanded="false"></button>
-  						<div class="dropdown-menu" aria-labelledby="dropdownSettingsButton">
-  							<div class="form-group row">
-    							<label class="col-sm-6 col-form-label text-end" for="gainOffset">Gain Offset:</label>
-    							<div class="col-sm-6">
-    								<input type="number" class="form-control" id="gainOffset" placeholder="Gain Offset" value="40">
-    							</div>
-  							</div>
-  							<button id="enableAll" type="button" class="btn btn-outline-secondary form-control">Enable All Fields</button>
-   						</div>
-					</div>
+        			<h5 class="modal-title ml-3 text-primary col-auto" th:text="${sn eq null ? 'Something went wrong. Refresh this page and try again.' : sn.serialNumber + ' - ' + sn.partNumber.partNumber + ' - ' + sn.partNumber.description}">IRT-2401001</h5>
  <!-- X Button -->
         			<button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
       			</div>
  <!-- Modal Body -->
      			<div id="modal-body" class="modal-body">
-
-				<!--  Gein -->
-       				<div class="row">
-      					<div class="col text-center text-success"><strong>GAIN:</strong></div><div class="col" th:each="fr : ${settings.frequencies}"><strong class="btr-frequency" th:text="${fr} + ' GHz'"></strong></div>
-      				</div>
-      				<div class="row btr-row btr-row-gain" th:each="tm : ${settings.temperatures}" th:data-key="${tm}">
-      					<div class="col text-end btr-temperature">
-      						<strong th:text="${tm} + ' &#x2103;'"></strong>
-      					</div>
-      					<div class="col" th:each="fr : ${settings.frequencies}">
-      						<input type="number" step="0.1" class="form-control btr-gain" placeholder="dB" disabled th:data-key="${fr}">
-      					</div>
-      				</div>
-    				<div><hr class="dropdown-divider"></div>
-
-				<!-- Saturated Power -->
-      				<div class="row">
-      					<div class="col text-center text-success"><strong>SAT. POWER:</strong></div><div class="col" th:each="fr : ${settings.frequencies}"><strong th:text="${fr} + ' GHz'"></strong></div>
-      				</div>
-      				<div class="row btr-row btr-row-saturation" th:each="tm : ${settings.temperatures}" th:data-key="${tm}">
-      					<div class="col text-end btr-temperature">
-      						<strong th:text="${tm} + ' &#x2103;'"></strong>
-      					</div>
-      					<div class="col" th:each="fr : ${settings.frequencies}">
-      						<input type="number" step="0.1" class="form-control" placeholder="dBm" disabled th:data-key="${fr}">
-      					</div>
-      				</div>
-    				<div><hr class="dropdown-divider"></div>
-
-				<!-- P1dB Power -->
-				<th:block th:if="${settings.hasP1db}">
-      				<div class="row">
-      					<div class="col text-center text-success"><strong>P1dB POWER:</strong></div><div class="col" th:each="fr : ${settings.frequencies}"><strong th:text="${fr} + ' GHz'"></strong></div>
-      				</div>
-      				<div class="row btr-row btr-row-p1db" th:each="tm : ${settings.temperatures}" th:data-key="${tm}">
-      					<div class="col text-end btr-temperature">
-      						<strong th:text="${tm} + ' &#x2103;'"></strong>
-      					</div>
-      					<div class="col" th:each="fr : ${settings.frequencies}">
-      						<input type="number" step="0.1" class="form-control" placeholder="dBm" disabled th:data-key="${fr}">
-      					</div>
-      				</div>
-    				<div><hr class="dropdown-divider"></div>
-    			</th:block>
-
-				<!-- Power Detector -->
-      				<div class="row">
-      					<div class="col text-center text-success"><strong>DETECTOR:</strong></div><div class="col" th:each="fr : ${settings.frequencies}"><strong th:text="${fr} + ' GHz'"></strong></div>
-      				</div>
-      				<div class="row btr-row btr-row-detector" th:each="power : ${settings.detectors}" th:data-key="${power}">
-      					<div class="col text-end">
-      						<strong th:text="${power} + ' dBm;'"></strong>
-      					</div><div class="col" th:each="fr : ${settings.frequencies}">
-      						<input type="text" class="form-control btr-detector" placeholder="dBm" th:data-key="${fr}">
-      					</div>
-      				</div>
+     				<div class="card mb-2" th:if="${measurements} != null" th:each="meas : ${measurements}">
+     					<div class="card-header row">
+     						<div class="col" th:text="${#dates.format(meas.date, 'MMMM dd, yyyy HH:mm') + ' - ' + meas.user.firstname + ' ' + meas.user.lastname}"></div>
+ 							<button
+								class="btn btn-outline-info col-auto"
+								title="Add Template"
+								data-th-data-part-number="${sn.partNumber.partNumber}"
+								data-th-data-meas-id="${meas.id}"
+								th:classappend="${profileExists} ? 'get-excel' : 'add-template'"
+								th:text="${profileExists} ? 'Excel' : 'Add'">Add</button>
+     					</div>
+     					<div class="card-body">
+     						<div class="row" th:classappend="'row-cols-' + ${cols}">
+     							<div class="col" th:each="m : ${meas.measurement.entrySet()}" th:text="${m.key} + ' - ' + ${m.value}"></div>
+     						</div>
+     					</div>
+     				</div>
        			</div>
  <!-- Modal Footer -->
       			<div class="modal-footer">
-	        		<button type="button" id="save" class="btn btn-primary">Save</button>
-	        		<button sec:authorize="hasAuthority('CALIBRATION_SETTINGS')" type="button" id="show-settings" class="btn btn-secondary">Show Settings.</button>
 	        		<button type="button" class="btn btn-outline-secondary" data-bs-dismiss="modal">Close</button>
 	    		</div>
     		</div>
   		</div>
-  		<script type="application/javascript" th:inline="javascript">
+   		<script type="application/javascript" th:inline="javascript">
 			/*<![CDATA[*/
+			$('.add-template').click(e=>{
+				const input = document.createElement('input');
+				input.type = 'file';
+				input.accept = '.xlsx';
 
-				let $lbl_scan = $('#lbl_scan');
-
-				var cookies = Cookies.get("gainOffset")
-				if(cookies)
-					$('#gainOffset').val(cookies);
-				$('#gainOffset').focusout(function(){
-					var val = $(this).val();
-					Cookies.set("gainOffset", val, { expires: 999, path: '' });
-				})
-
-				var hasP1db			 =  /*[[${settings.hasP1db}]]*/ true;
-				var measurementId; 		// To be determined later.
-
-				var $inputNode;
-				$('.btr-row input').focus(function(){
-
-					if($inputNode)
-						$inputNode.removeClass('bg-warning bg-opacity-10')
-
-					$inputNode = $(this);
-					$inputNode.addClass('bg-warning bg-opacity-10')
-
-				}).on('keyup', e=>{
-
-					if ((e.key === 'Enter' || e.keyCode === 13) && $inputNode){
-						if($inputNode.hasClass('btr-detector'))
-							$inputNode.val($unitPower.text());
-						else
-							outputGet();
+				input.onchange = e => { 
+					const fd = new FormData();
+					fd.append('file', e.target.files[0]);
+					const sn = /*[[${sn}]]*/ 'SERIAL-NUMBER';
+					if(!sn){
+						alert('This operation cannot be performed.')
+						return
 					}
-				});
-				let $$btnScan = $('#btnScan').change(function(){
+					fd.append('pn', sn.partNumber.partNumber);
 
-					if(this.checked){
-
-						if($inputNode && !$inputNode.hasClass('btr-detector'))
-							getPower()
-
-					}else{
-
-						if($inputNode)
-							$inputNode.removeClass('bg-warning bg-opacity-10')
-
-						$inputNode = null;
-
-						clearInterval(intervalPower);
-					}
-				});
-
-				let $unitPower = $('#unitPower');
-				var err;
-				var intervalMonitor;
-				var intervalPower;
-				let infoErrorCount = 0;
-				function btrUpdate(){
-
-					clearInterval(intervalMonitor);
-					clearInterval(intervalPower);
-
-					//get value from unit
-					intervalMonitor = setInterval(function() {
-
-						if(err || document.hidden || document.msHidden || document.webkitHidden || document.mozHidden)
-							return;
-
-						$.post('/calibration/rest/monitorInfo', {sn : serialNumber})
-						.done(function(monitorInfo){
-
-							if(monitorInfo && monitorInfo.data){
-
-								infoErrorCount = 0;
-
-								if(monitorInfo.data.temperature){
-
-									var temperature = monitorInfo.data.temperature;
-									$('#temperature').text(temperature);
-
-									var $dataRows = $('.btr-row').filter((i,v)=>$(v).children('.btr-temperature').length);
-									var toFindMax = $dataRows.map((i,v)=>parseFloat(v.dataset.key)).filter((i,v)=>v<temperature);
-									var max = Math.max(...toFindMax);
-									var $toEnable = $dataRows.filter((i,v)=>parseFloat(v.dataset.key)==max).find('input');
-
-									if($toEnable.prop('disabled')){
-										$dataRows.find('input').prop('disabled', true);
-										$toEnable.prop('disabled', false);
-									}
-
-								}
-
-								if(monitorInfo.data.outpower){
-									$unitPower.text(monitorInfo.data.outpower);
-
-									if($inputNode && $inputNode.hasClass('btr-detector') && $$btnScan.is(':checked')){
-										$inputNode.val(monitorInfo.data.outpower);
-									}
-								}
-							}else{
-								++infoErrorCount;
-								if(infoErrorCount>5){
-									$modal.modal('hide');
-									alert("The unit is not responding.");
-								}
-							}
-						})
-						.fail(function(error) {
-							if(err)
-								return;
-
-							$modal.modal('hide');
-
-							if(error.statusText!='abort'){
-								err = true;
-								alert(error.responseText);
-								err = false;
-							}
-				   		});
-					}, 5000);
-				}
-
-				btrUpdate();
-
-				$modal.on('shown.bs.modal', function (e) {
-					btrUpdate();
-					enableButton();
-				});
-
-				$modal.on('hidden.bs.modal', function () {
-					clearInterval(intervalMonitor);
-					clearInterval(intervalPower);
-					err = null;
-				});
-
-				$('#show-settings').click(function(){
-					 $modal.load('/calibration/btr?sn=' + serialNumber + '&setting=true');
-				});
-
-				$outputComPorts.change(()=>enableButton());	// 
-				$outputTool.change(()=>enableButton());		// From 'outputTool.js'
-				$ouputAddress.change(()=>enableButton());	//
-
-				enableButton()
-
-				function getPower(){
-
-					//get value from Power Meter
-					intervalPower = setInterval(function() {
-
-
-						if(err || !$inputNode || $inputNode.hasClass('btr-detector') || !$$btnScan.is(':checked'))
-							return;
-
-						outputGet();
-					}, 2000);
-				}
-
-				function dataProcessing(data){
-
-					$.each(data.commands, function(index, command){
-
-						if(!command.getAnswer || !command.answer)
-							return;
-
-						var answer = $.trim(String.fromCharCode.apply(String, command.answer));
-
-						var s = answer.split(/\s+/);
-						var a;
-						if(s.length>1)
-							a = parseFloat(s[1]);
-
-						else
-							a = parseFloat(answer);
-
-						if($inputNode.hasClass('btr-gain')){
-
-							var gainOffset = parseFloat($('#gainOffset').val());
-							var gain = a + gainOffset;
-							$inputNode.val(gain.toFixed(1));
-							return;
-						}
-
-						var val = parseFloat($inputNode.val());
-						a = parseFloat(a.toFixed(1));
-						if(!val || val<a)
-							$inputNode.val(a);
+					const url = '/btr/rest/template/upload';
+					postFormData(url, fd)
+					.done(data=>{
+						alert(data);
 					})
-				}
-
-				function enableButton(){
-
-					let outputComPorts 	= $outputComPorts.val();
-					let outputTool		= $outputTool.val();
-					let ouputAddress 	= $ouputAddress.val();
-
-					if(!outputComPorts || !outputTool || !ouputAddress)
-						$lbl_scan.addClass('btn-secondary disabled').removeClass('btn-outline-primary').prop('title', '"Unit Output Tool" is not set.');
-
-					else
-						$lbl_scan.removeClass('btn-secondary disabled').addClass('btn-outline-primary').prop('title', '');
-				}
-
-				$('#save').click(function(){
-
-					var frequencies = [];
-					$('.btr-frequency').map((i, v)=>$(v).text()).each((i, v)=>frequencies.push(v));
-
-					var btrData = {};
-					btrData.serialNumberId = /*[[${dbSerialNumber.id}]]*/ 1;
-					btrData.measurement = {};
-
-					btrData.measurement.gain = rowToObject($('.btr-row-gain'));
-					btrData.measurement.saturation	 = rowToObject($('.btr-row-saturation'));
-					if(hasP1db)
-						btrData.measurement.p1db	 = rowToObject($('.btr-row-p1db'));
-					btrData.measurement.detector	 = rowToObject($('.btr-row-detector'));
-
-					$modal.find('input').prop('disabled', true);
-					$('#save').addClass('disabled');
-					$$btnScan.prop('checked', false)
-
-					var json = JSON.stringify(btrData);
-					$.ajax({
-						url: '/wo/rest/save_measurement',
-						type: 'POST',
-						contentType: "application/json",
-						data: json,
-				        dataType: 'json'
-				    })
-					.fail(function(error) {
-						if(error.statusText!='abort'){
-							var responseText = error.responseText;
-							if(responseText)
-								alert(error.responseText);
-							else{
-								if(error.status==200)
-									$btrMeasurement[0].click();
-								else
-									alert("Server error. Status = " + error.status);
-							}
-						}
-					});
-				})
-
-				function rowToObject($rows){
-
-					var btrRows = []
-
-					$rows.each((i,r)=>{
-
-						var btrRow = {};
-						btrRow.key = r.dataset.key;
-						btrRow.values = [];
-
-						$(r).find('input').map((i, v)=>{
-							btrRow.values.push({key: v.dataset.key, value: v.value})
-						});
-
-						btrRows.push(btrRow);
-					});
-
-					return btrRows;
-				}
-
-				$('#enableAll').click(function(){
-					$('input:disabled').prop('disabled', false);
-				});
-
-				$('#modal-body').find('input').dblclick(function(){
-
-					if($('#lbl_scan').hasClass('disabled'))
-						return;
-
-			        $btnScan.prop("checked", !$btnScan.prop("checked"));
-				});
-
-				// On madal close
-				$modal.on('hide.bs.modal', function(e){
-
-					if($('#save').hasClass('disabled') || !$('#modal-body').find('input').filter(((i,v)=>v.value)).length || confirm('To close the table without saving the data, click OK.'))
-						return;
-
-	                e.preventDefault();
-				});
-
-				var measurements = /*[[${dbSerialNumber.measurements}]]*/ [];
-				if(measurements && measurements.length){
-					if(confirm('The device already has test data. To use them, click OK.')){
-
-						var m = measurements.sort((a,b)=> new Date(b.date) - new Date(a.date))[0];
-						measurementId = m.id;
-
-						dataToRow('.btr-row-gain'		, m.measurement.gain);
-						dataToRow('.btr-row-saturation'	, m.measurement.saturation);
-						dataToRow('.btr-row-p1db'		, m.measurement.p1db);
-						dataToRow('.btr-row-detector'	, m.measurement.detector);
-					}
-				}
-
-				function dataToRow(rowClass, data){
-
-					if(!data)
-						return;
-
-					let $rows = $(rowClass);
-					var difference = data.length - $rows.length;
-
-					if(difference>0){
-						addRow($(rowClass), difference);
-						$rows = $(rowClass);
-					}else if(difference<0){
-						removeRow($(rowClass), difference);
-						$rows = $(rowClass);
-					}
-
-					data.forEach((v,i)=>{
-
-						if(i>=$rows.length)
-							return;
-
-						let $row = $($rows[i]);
-						let $rowChildren = $row.children();
-						// Row Key ( Temperature or Power )
-						let $rowKey = $($rowChildren[0]);
-						let post = $rowKey.hasClass('btr-temperature') ? '℃' : ' dBm'
-						$rowKey.children('strong').text(v.key + post)
-						$row.prop('data-key', v.key);
-
-						// Row value
-						v.values.forEach((m,i)=>{
-							let $input = $($rowChildren[++i]).children();
-							$input.val(m.value);
-							$input.prop('data-key', m.key);
-						});
-						
-
-					});
-				}
-
-				function addRow($rows, difference){
-					var row = $rows[0];
-					for(let i = 0; i<difference; i++){
-						let clone = row.cloneNode(true);
-						row.after(clone);
-					}
-				}
-
-				function removeRow($rows, difference){
-					let length = $rows.length;
-					let stop = length-Math.abs(difference);
-					for(let i = --length; i>=stop; i--){
-						$rows[i].remove();
-					}
-				}
-
-				$modal.modal('show');
-				/*]]>*/
-			//# sourceURL=btr_table.js
-  		</script>
-	</th:block>
-	<th:block th:if="${dbSerialNumber!=null} and (${settings}==null or ${showSetting})">
-  		<div class="modal-dialog modal-lg">
-    		<div class="modal-content">
-<!-- Modal Header -->
-      			<div class="modal-header row">
-        			<h5 class="modal-title ml-3 text-primary col-auto">BTR Setting.</h5>
-<!-- X Button -->
-        			<button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
-      			</div>
- <!-- Modal Body -->
-      			<div id="modal-body" class="modal-body">
-					<div class="row input-group mb-2">
-							<span class="input-group-text col">Frequencies</span>
-							<input name="frequency" type="number" class="form-control col setting" placeholder="GHz">
-							<input name="frequency" type="number" class="form-control col setting" placeholder="GHz">
-							<input name="frequency" type="number" class="form-control col setting" placeholder="GHz">
-							<input name="frequency" type="number" class="form-control col setting" placeholder="GHz">
-							<input name="frequency" type="number" class="form-control col setting" placeholder="GHz">
-					</div>
-					<div class="row input-group mb-3">
-							<span class="input-group-text col">Temperatures</span>
-							<input name="temperature" type="number" class="form-control col setting" placeholder="&#x2103;">
-							<input name="temperature" type="number" class="form-control col setting" placeholder="&#x2103;">
-							<input name="temperature" type="number" class="form-control col setting" placeholder="&#x2103;">
-							<input name="temperature" type="number" class="form-control col setting" placeholder="&#x2103;">
-							<input name="temperature" type="number" class="form-control col setting" placeholder="&#x2103;">
-					</div>
-					<div class="row input-group mb-3">
-							<span class="input-group-text col">Power Detector</span>
-							<input name="detector" type="number" class="form-control col setting" placeholder="dBm">
-							<input name="detector" type="number" class="form-control col setting" placeholder="dBm">
-							<input name="detector" type="number" class="form-control col setting" placeholder="dBm">
-							<input name="detector" type="number" class="form-control col setting" placeholder="dBm">
-							<input name="detector" type="number" class="form-control col setting" placeholder="dBm">
-							<input name="detector" type="number" class="form-control col setting" placeholder="dBm">
-							<input name="detector" type="number" class="form-control col setting" placeholder="dBm">
-							<input name="detector" type="number" class="form-control col setting" placeholder="dBm">
-					</div>
-					<div class="row input-group">
-						<input id="btn-p1dB" type="checkbox" class="btn-check" autocomplete="off">
-						<label id="lbl-p1dB" for="btn-p1dB" class="btn btn-outline-primary form-label" title="Click to add P1dB to the BTR." data-bs-toggle="tooltip">No P1dB</label>
-					</div>
-      			</div>
- <!-- Modal Footer -->
-      			<div class="modal-footer">
-	        		<button type="button" id="save" class="btn btn-primary disabled">Save</button>
-	        		<button type="button" id="clear" class="btn btn-secondary disabled">Clear</button>
-	        		<button type="button" class="btn btn-outline-secondary" data-bs-dismiss="modal">Close</button>
-	    		</div>
-    		</div>
-  		</div>
-  		<script th:if="${dbSerialNumber}!=null" type="application/javascript" th:inline="javascript">
-			/*<![CDATA[*/
-
-				var partNumber = /*[[${dbSerialNumber.partNumber}]]*/ 'IPB-CB00530-RMS11';
-// 				if(!partNumber){
-// 					var serialNumber =  /*[[${serialNumber}]]*/ 'IRT-2121021';
-// 					alert('This unit is not in the database.\nHave to add the ' + serialNumber + ' to the database.\nTo add it to the database,\nyou will be redirected to the "IRT Work Orders" page.');
-// 					window.location.href = "/wo?sn=" + serialNumber;
-// 				}
-
-				$('.setting').on('input', function(){
-					enableButtons();
-				});
-
-				function enableButtons(){
-
-					var isFreq		 = hasValue($('input[name=frequency]'));
-					var isTemp		 = hasValue($('input[name=temperature]'));
-					var isDetector	 = hasValue($('input[name=detector]'));
-
-					//Enable/Disable 'Clear' button
-					if(isFreq || isTemp || isDetector)
-						$('#clear').removeClass('disabled');
-					else
-						$('#clear').addClass('disabled');
-
-					//Enable/Disable 'Save' button
-					if(isFreq && isTemp && isDetector)
-						$('#save').removeClass('disabled');
-					else
-						$('#save').addClass('disabled');
-				}
-
-				$('#clear').click(function(){
-					$('.setting').val('');
-				});
-
-				$('#btn-p1dB').change(function(){
-
-					if($(this).prop('checked'))
-						$('#lbl-p1dB').prop('title', 'Click to remove P1dB from the BTR.');
-					else
-						$('#lbl-p1dB').prop('title', 'Click to add P1dB to the BTR.');
-
-					enableButtons();
-				});
-
-				$('#btn-p1dB').change(e=>{
-					if(e.currentTarget.checked)
-						$('label[for=btn-p1dB]').text('With P1dB');
-					else
-						$('label[for=btn-p1dB]').text('No P1dB');
-				});
-
-				$('#save').click(function(){
-					var calSetting = {}
-					calSetting.partNumber = /*[[${dbSerialNumber.partNumber}]]*/ 'IPB-CB00530-RMS11';
-					calSetting.frequencies = toArray($('input[name=frequency]'));
-					calSetting.temperatures = toArray($('input[name=temperature]'));
-					calSetting.detectors = toArray($('input[name=detector]'));
-					calSetting.hasP1db = $('#btn-p1dB').prop('checked');
-
-					var json = JSON.stringify(calSetting);
-
-					$.ajax({
-						url: '/calibration/rest/btr/setting',
-						type: 'POST',
-						contentType: "application/json",
-						data: json,
-				        dataType: 'json'
-				    })
-				    .done(function(data){
-				    	$modal.modal('hide');
-				    	let href = $btrMeasurement.prop('href');
-				    	$modal.load(href, function(body, error, c){
-							if(error=='error')
-								alert('Unable to connect to the Unit.');
-							else
-								$modal.modal('show');
-						});
-				    })
 					.fail(function(error) {
 						if(error.statusText!='abort'){
 						var responseText = error.responseText;
 							if(responseText)
 								alert(error.responseText);
-							else{
-								if(error.status==200)
-									$btrMeasurement[0].click();
-								else
-									alert("Server error. Status = " + error.status);
-							}
+							else
+								alert("Server error. Status = " + error.status)
 						}
 					});
-				});
+				}
 
-				// Setting from DB
-				/*[# th:if="${settings}!=null"]*/
+				input.click();
+			});
+			$('.get-excel').click(e=>{
+				const measId = e.currentTarget.dataset.measId;
+				const partNumber = e.currentTarget.dataset.partNumber;
+				const sn = /*[[${sn}]]*/ 'SERIAL-NUMBER';
+				if(sn){
+					const url = `/btr/rest/template?sn=${sn.serialNumber}&measId=${measId}&pn=${partNumber}`;
+					downloadURL(url);
+				}
+			});
 
-					var fr = $('input[name=frequency]');
-					var settings =  /*[[${settings}]]*/ {};
+			function setupModal(){
+				return true;
+			}
 
-					if(settings.frequencies.length || settings.temperatures.length || settings.detectors.length)
-						$('#clear').removeClass('disabled');
-
-					settings.frequencies.forEach(function(v, i){
-						fr[i].value = v;
-					});
-
-					var tm = $('input[name=temperature]');
-					settings.temperatures.forEach(function(v, i){
-						tm[i].value = v;
-					});
-
-					var tm = $('input[name=detector]');
-					settings.detectors.forEach(function(v, i){
-						tm[i].value = v;
-					});
-
-					if(settings.hasP1db)
-						$('#btn-p1dB').prop('checked', true).trigger("change");
-
-					[].slice.call(document.querySelectorAll('[data-bs-toggle="tooltip"]')).map(function (tooltipTriggerEl) { return new bootstrap.Tooltip(tooltipTriggerEl)});
-				/*[/]*/
-
-				$modal.modal('show');
 			/*]]>*/
-			//# sourceURL=btr-setting.js
+			//# sourceURL=btr_table.js
   		</script>
-	</th:block>
 		</th:block>
 	</div>
-
-    <script type="application/javascript" src="https://ajax.googleapis.com/ajax/libs/jquery/3.5.1/jquery.min.js"></script>
-    <script type="application/javascript" src="https://cdnjs.cloudflare.com/ajax/libs/popper.js/2.10.2/umd/popper.min.js"></script>
-    <script type="application/javascript" src="https://stackpath.bootstrapcdn.com/bootstrap/4.4.1/js/bootstrap.min.js"></script>
-	<script type="application/javascript" src="https://cdn.jsdelivr.net/npm/js-cookie@2/src/js.cookie.min.js"></script>
-	<script type="application/javascript" src="../../static/js/irt.js" th:src="@{/js/irt.js}"></script>
 </body>
 </html>

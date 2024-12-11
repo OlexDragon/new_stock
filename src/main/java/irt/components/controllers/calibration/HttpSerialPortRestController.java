@@ -89,8 +89,9 @@ public class HttpSerialPortRestController {
     	final String port = serversKeeper.getPort(hostName);
 
     	if(port==null) {
-    		logger.warn("Serial Port Server: Unknown Host Name: " + hostName);
-    		return commandRequest.setError("Serial Port Server: Unknown Host Name: " + hostName);
+    		final String message = "Serial Port Server: Unknown Host Name: " + hostName;
+			logger.warn(message);
+    		return commandRequest.setError(message);
     	}
 
     	try {
@@ -159,8 +160,34 @@ public class HttpSerialPortRestController {
 			final URL url =  new URL("http", hostName, ":" + port + "/read");
 			logger.debug(url);
 
-			CommandBytesRequest result = new RestTemplate().postForObject(url.toURI(), requestData, CommandBytesRequest.class);
-			return result;
+			return new RestTemplate().postForObject(url.toURI(), requestData, CommandBytesRequest.class);
+
+		} catch (MalformedURLException | RestClientException | URISyntaxException e) {
+			logger.catching(e);
+			final CommandBytesRequest commandRequest = new CommandBytesRequest();
+			commandRequest.setErrorMessage(e.getLocalizedMessage());
+			return commandRequest;
+		}
+	}
+
+	@PostMapping( value = "read")
+	CommandBytesRequest read(@RequestBody RequestData requestData){
+    	logger.traceEntry("{}", requestData );
+
+    	final String hostName = requestData.getHostName();
+		final String port = serversKeeper.getPort(hostName);
+    	if(port==null) {
+    		final CommandBytesRequest commandRequest = new CommandBytesRequest();
+    		commandRequest.setErrorMessage("No connection to the HTTP Serial Port. Host Name: " + hostName);
+    		return commandRequest;
+    	}
+
+		try {
+
+			final URL url =  new URL("http", hostName, ":" + port + "/read");
+			logger.debug(url);
+
+			return new RestTemplate().postForObject(url.toURI(), requestData, CommandBytesRequest.class);
 
 		} catch (MalformedURLException | RestClientException | URISyntaxException e) {
 			logger.catching(e);

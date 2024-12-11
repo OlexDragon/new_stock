@@ -7,6 +7,10 @@ const $spServers		 = $('#spServers');
 const $menuInputPower	 = $('#menuInputPower');
 const $menuGain			 = $('#menuGain');
 const $calMode			 = $('#calMode');
+const $menuOPAutoByInput = $('#menuOPAutoByInput');
+const $nemuOPAutoByGain	 = $('#nemuOPAutoByGain');
+const $tool				 = $('.tool');
+const $toastContainer = $('#toast-container');
 
 const sn = new URLSearchParams(window.location.search).get('sn');
 if(sn && !sn.includes('.'))
@@ -91,6 +95,26 @@ let $LD_ACTIVELOW;
 let $LD_PREC;
 let $LD_COUNT;
 
+const $comPorts = $('.com-ports').on('change', function(){
+
+	comPortSelected(this);
+	Cookies.set(this.id, this.value, { expires: 999, path: '' });
+
+	$(this).parents('.accordion-collapse').trigger('show.bs.collapse');
+});
+
+$spServers.change(function(){
+
+	$menuInputPower.removeClass('disabled');
+	$menuGain.removeClass('disabled');
+	$menuOPAutoByInput.removeClass('disabled').text('by Input');
+	$nemuOPAutoByGain.removeClass('disabled').text('by Gain');
+
+	const spServers = $(this).val();
+	Cookies.set("spServers", spServers, { expires: 7, path: '' });
+	gerSerialPorts(setToolsSerialPorts);
+});
+
 // Get HTTP Serial Port Server from the cookies
 const cookie = Cookies.get("spServers");
 if(cookie){
@@ -98,31 +122,12 @@ if(cookie){
 		const $toSelect = $('option[value=' + cookie + ']');
 		if($toSelect.length){
 			$toSelect.prop('selected', true);
-			$menuInputPower.removeClass('disabled');
-			$menuGain.removeClass('disabled');
+			$spServers.trigger('change');
 		}
-		gerSerialPorts(setToolsSerialPorts);
 	}catch(err) {
 		console.error(err);
 	}
 }
-
-$spServers.change(function(){
-
-	const spServers = $(this).val();
-
-	if(!spServers){
-		$menuInputPower.addClass('disabled');
-		$menuGain.addClass('disabled');
-		return;
-	}
-
-	$menuInputPower.removeClass('disabled');
-	$menuGain.removeClass('disabled');
-
-	Cookies.set("spServers", spServers, { expires: 7, path: '' });
-	gerSerialPorts(setToolsSerialPorts);
-});
 
 let $saveToCookies = $('.save-to-cookies')
 .change(function(){
@@ -169,40 +174,11 @@ function setToolsSerialPorts(ports){
 			var $option = $(select).children('[value="' + value + '"]');
 			$option.prop('selected', true);
 			comPortSelected(select);
-			disableMenuItens();
 		}
 	});
 }
-const $comPorts = $('.com-ports').on('change', function(){
-
-	comPortSelected(this);
-	Cookies.set(this.id, this.value, { expires: 999, path: '' });
-
-	disableMenuItens();
-	$(this).parents('.accordion-collapse').trigger('show.bs.collapse');
-});
-
-function disableMenuItens(){
-
-	let inputComPortValue = $('#inputComPorts').val();
-	let isinputSelected = inputComPortValue && !inputComPortValue.startsWith('Select');
-
-	let outputComPortValue = $('#outputComPorts').val();
-	let outputIsSelected = outputComPortValue && !outputComPortValue.startsWith('Select');
-
-	if(outputIsSelected)
-		$('#menuAutoByInput').removeClass('disabled')
-	else
-		$('#menuAutoByInput').addClass('disabled')
-
-	if(isinputSelected && outputIsSelected)
-		$('#nemuAutoByGain').removeClass('disabled')
-	else
-		$('#nemuAutoByGain').addClass('disabled')
-}
 
 function comPortSelected(select){
-
 	let $parent = $(select).parents('.accordion-body');
 	setAccordionHeaderText($parent)
 }
@@ -213,11 +189,13 @@ function setAccordionHeaderText($parent){
 	const messageId = $port.attr('data-info-message');
 	const $message = $('#' + messageId);
 	const $toDisable = $parent.find('.to-disable');
+	const $toolBtns = $parent.find('.tool-btn');
 
 	let port = $port.length ? $port.val() : '';
 	if(port && !port.startsWith('Select')){
-		if(port!='NI GPIB')
-			$toDisable.addClass('disabled');
+		$toDisable.addClass('disabled');
+		if(port==='NI GPIB')
+			$toolBtns.removeClass('disabled');
 	}else{
 		port = '';
 		$message.text(' Serial Port is not selected');
@@ -269,11 +247,15 @@ function showCalibrationModal(e){
 		loadModal(this.href);
 
 	}else
-		$modal.modal('show');
+		if(setupModal(true))
+			$modal.modal('show');
 }
+
 function setupModal(){
-	console.log("empty setupModal");
+	alert("Empty setupModal");
+	return false;
 }
+
 // Upload the profile
 $('.upload').click(function(e){
 	upload(e, this);
@@ -299,9 +281,16 @@ $('.unitLogin').click(function(e){
 	loginWhithHref(href);
 });
 
+var loginSent;
 function login(){
-	var href = $('#unitLogin').prop('href');
-	loginWhithHref(href);
+	if(!loginSent){
+		var href = $('#unitLogin').prop('href');
+		loginWhithHref(href);
+		loginSent = true;
+		setTimeout(()=>{loginSent = false;}, 6000);
+		console.log('Log In to ' + href);
+	}else
+		console.log('Skipped Log In to ' + href);
 }
 
 function loginFromScan(e, t){
@@ -415,8 +404,6 @@ $scan.click(function(e){
 		$modalHeader.text('Send Request for ' + ipAddress);
 
 		postWithParam('/calibration/rest/scan', {ip : ipAddress}, function(homePageInfo){
-			if(homePageInfo)
-				console.log(homePageInfo);
 
 			if(!homePageInfo || !homePageInfo.sysInfo || !homePageInfo.netInfo)
 				return;
@@ -560,8 +547,8 @@ function loadModal(href){
 		}
   		$modal.off('shown.bs.modal');
   		$modal.off('hide.bs.modal');
-		setupModal();
-		setTimeout(()=>$modal.modal('show'), 600);
+		if(setupModal())
+			setTimeout(()=>$modal.modal('show'), 600);
 	});
 }
 $('#profile').click(function(e){
@@ -785,6 +772,10 @@ function sendPrologixCommands(commands, responseProcessing){
 	postObject('/serial_port/rest/send', commands)
 	.done(function(data){
 
+		if(data.error){
+			alert(data.error);
+			return;
+		}
 		$.each(data.commands, function(i, c){
 			responseProcessing(c);
 		});
@@ -863,4 +854,13 @@ setMarginTop();
 $(window).on('resize', setMarginTop);
 function setMarginTop(){
 	$accordion.css('margin-top', $fixedTop.height() + 20);
+}
+function downloadURL(href) {
+  var link = document.createElement("a");
+  link.href = href;
+  link.target = '_blank';
+  document.body.appendChild(link);
+  link.click();
+  document.body.removeChild(link);
+  delete link;
 }

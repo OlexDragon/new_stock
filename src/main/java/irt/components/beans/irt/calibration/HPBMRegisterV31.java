@@ -12,7 +12,7 @@ import lombok.ToString;
 public class HPBMRegisterV31 {
 
 	@JsonProperty("switch1")
-	@JsonAlias({"Current_mon_1 (101)", "I_HS1 (0x03)", "CS_HVDD (0x01)"})
+	@JsonAlias({"Current_mon_1 (101)", "I_HS1 (0x03)", "CS_HVDD (0x01)", "VDD_CS (0x10)"})
 	String switch1;
 
 	@JsonProperty("switch2")

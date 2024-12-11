@@ -73,11 +73,8 @@ import irt.components.beans.jpa.repository.calibration.CalibrationOutputPowerSet
 import irt.components.beans.jpa.repository.calibration.CalibrationPowerOffsetSettingRepository;
 import irt.components.workers.HtmlParsel;
 import irt.components.workers.HttpRequest;
-import lombok.AllArgsConstructor;
 import lombok.Getter;
 import lombok.RequiredArgsConstructor;
-import lombok.Setter;
-import lombok.ToString;
 
 @RestController
 @RequestMapping("calibration/rest")
@@ -249,7 +246,7 @@ public class CalibrationRestController {
     }
 
     @PostMapping("gain")
-    String saveGainSettings(@RequestParam String partNumber, int startValue, int stopValue) {
+    String saveGainSettings(@RequestParam String partNumber, int startValue, int stopValue, int fields, boolean p1dB) {
 
     	return calibrationGainSettingRepository.findById(partNumber)
     			.map(
@@ -257,6 +254,8 @@ public class CalibrationRestController {
 
     						ops.setStartValue(startValue);
     						ops.setStopValue(stopValue);
+    						ops.setFields(fields);
+    						ops.setP1dB(p1dB);
     						calibrationGainSettingRepository.save(ops);
 
     						return "The setings has been updated.";
@@ -268,6 +267,8 @@ public class CalibrationRestController {
     						settings.setPartNumber(partNumber);
     						settings.setStartValue(startValue);
     						settings.setStopValue(stopValue);
+    						settings.setFields(fields);
+    						settings.setP1dB(p1dB);
 							calibrationGainSettingRepository.save(settings);
 
     						return "The setings has been saved.";
@@ -527,8 +528,7 @@ public class CalibrationRestController {
     String calibrationMode(@RequestParam String sn) throws URISyntaxException, IOException, InterruptedException, ExecutionException, TimeoutException{
 
     	final URL url = new URL("http", sn, "/calibration.asp");
-    	final FutureTask<String> ft = HttpRequest.getForString( url.toString());
-		String str = ft.get(100, TimeUnit.MILLISECONDS);
+		String str = HttpRequest.getForString( url.toString(), 100, TimeUnit.MILLISECONDS);
     	logger.error(str);
 		final HtmlParsel htmlParsel = new HtmlParsel("script");
 		final List<String> all = htmlParsel.parseAll(str);
@@ -665,11 +665,6 @@ public class CalibrationRestController {
 		}
 		return null;
 	}
-
-    @Getter @Setter @AllArgsConstructor @ToString
-    public static class Message{
-    	private String content;
-    }
     @RequiredArgsConstructor @Getter
     public enum Mute{
     	OFF("Off"),

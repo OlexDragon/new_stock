@@ -15,7 +15,7 @@
 <!-- Modal Message -->
 	<div id="modal" class="modal" tabindex="-1" role="dialog">
 	<th:block th:fragment="outputPower">
-  		<div class="modal-dialog">
+		<div class="modal-dialog">
     		<div class="modal-content">
 <!-- Modal Header -->
       			<div class="modal-header">
@@ -404,34 +404,38 @@
 			    /*[/]*/
 
 			    $('.modal-footer').dblclick(e=>$btnSave.removeClass('disabled'));
-			$modal.modal('show');
 
-			$modal.on('shown.bs.modal', function (e) {
-				update();
-			});
+			function setupModal(){
 
-			$modal.on('hide.bs.modal', e=>{
-	    		var array = [];
+				$modal.on('shown.bs.modal', function (e) {
+					update();
+				});
 
-	    		$modalBody.find('.row').each(function(){
-	    			var $row = $(this);
-	    			var input = $row.find('.input').text();
-	    			var out = $row.find('.output').text();
-	    			array.push({input: input, output: out});
-	    		});
+				$modal.on('hide.bs.modal', e=>{
+		    		var array = [];
 
-	    		if(!array.length)
-	    			return;
+		    		$modalBody.find('.row').each(function(){
+		    			var $row = $(this);
+		    			var input = $row.find('.input').text();
+		    			var out = $row.find('.output').text();
+		    			array.push({input: input, output: out});
+		    		});
 
-	    		var json = JSON.stringify(array);
-				Cookies.set(serialNumber + "_opTable", json, { expires: 30, path: '' });
-			})
+		    		if(!array.length)
+		    			return;
 
-			$modal.on('hidden.bs.modal', function () {
-				clearInterval(interval);
-				interval = undefined;
-				err = null;
-			});
+		    		var json = JSON.stringify(array);
+					Cookies.set(serialNumber + "_opTable", json, { expires: 30, path: '' });
+				})
+
+				$modal.on('hidden.bs.modal', function () {
+					clearInterval(interval);
+					interval = undefined;
+					err = null;
+				});
+
+				return true;
+			}
 
 			/*]]>*/
 			//# sourceURL=outputPower.js

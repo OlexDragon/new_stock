@@ -1,6 +1,7 @@
 package irt.components.beans.jpa.btr;
 
 import java.util.Date;
+import java.util.Map;
 
 import javax.persistence.Column;
 import javax.persistence.Convert;
@@ -17,26 +18,31 @@ import javax.persistence.TemporalType;
 
 import com.fasterxml.jackson.annotation.JsonFormat;
 
-import irt.components.beans.irt.calibration.measurement.Measurement;
 import irt.components.beans.jpa.User;
-import irt.components.services.converter.JSonMeasurementConverter;
-import lombok.AllArgsConstructor;
+import irt.components.services.converter.JSonMapConverter;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
+import lombok.NonNull;
+import lombok.RequiredArgsConstructor;
 import lombok.Setter;
 import lombok.ToString;
 
 @Entity
 @Table
-@NoArgsConstructor @AllArgsConstructor @Getter @Setter @ToString
+@NoArgsConstructor @RequiredArgsConstructor @Getter @Setter @ToString
 public class BtrMeasurements {
 
 	@Id @GeneratedValue(strategy = GenerationType.IDENTITY)
 	private Long id;
 
+	@NonNull
 	private Long	 serialNumberId;
-	@Convert(converter = JSonMeasurementConverter.class)
-	private Measurement	 measurement;
+
+	@NonNull
+	@Convert(converter = JSonMapConverter.class)
+	private Map<String, String>	 measurement;
+
+	@NonNull
 	private Long	 userId;
 
 	@Temporal(TemporalType.TIMESTAMP)

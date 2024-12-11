@@ -16,7 +16,7 @@ public class CalibrationRwInfo {
 
 	@JsonProperty("digitalPotentiometers")
 	@JsonAlias("dp")
-	private DigitalPotentiometers digitalPotentiometers;
+	private List<DigitalPotentiometers> digitalPotentiometers;
 	private List<UnitModule> linearizer;
 	private List<UnitModule> fan;
 	@JsonProperty("fcm")

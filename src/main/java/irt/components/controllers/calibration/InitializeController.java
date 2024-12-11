@@ -5,10 +5,10 @@ import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.Map.Entry;
 import java.util.Optional;
 import java.util.Scanner;
 import java.util.Set;
-import java.util.Map.Entry;
 import java.util.concurrent.atomic.AtomicInteger;
 
 import org.apache.logging.log4j.Level;
@@ -22,11 +22,11 @@ import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
 
+import irt.components.beans.IrtMessage;
 import irt.components.beans.irt.calibration.InitializeSetting;
 import irt.components.beans.jpa.IrtArray;
 import irt.components.beans.jpa.IrtArrayId;
 import irt.components.beans.jpa.repository.IrtArrayRepository;
-import irt.components.controllers.calibration.CalibrationRestController.Message;
 import irt.components.services.converter.InitializeSettingConverter;
 
 @RestController
@@ -107,17 +107,17 @@ public class InitializeController {
      }
 
 	@PostMapping("initialize/save")
-	Message initializeSave(@RequestBody InitializeSetting setting) {
+	IrtMessage initializeSave(@RequestBody InitializeSetting setting) {
     	logger.traceEntry("setting: {}", setting);
 
     	if(setting.getDeviceId()==null || setting.getDeviceId().isEmpty())
-        	return new Message("Values ​​cannot be saved.\nDevice ID is missing.");
+        	return new IrtMessage("Values ​​cannot be saved.\nDevice ID is missing.");
 
     	final IrtArrayId irtArrayId = new IrtArrayId("initialize", setting.getDeviceId());
     	final IrtArray irtArray = arrayRepository.findById(irtArrayId).orElseGet(()->new IrtArray(irtArrayId, ""));
     	irtArray.setDescription(new InitializeSettingConverter().convertToDatabaseColumn(setting));
     	arrayRepository.save(irtArray);
-    	return new Message("");
+    	return new IrtMessage("");
     }
 
 }

@@ -43,7 +43,7 @@ public class ProductionRestController {
 	public ProductionOrderResponse salesOrder() throws InterruptedException, ExecutionException, TimeoutException{
 		logger.error("Yee");
 
-		String url = createUrl(productionOrder);//TODO Change to Sales Order
+		String url = createUrl(productionOrder);
 		logger.error(url);
 		final FutureTask<ProductionOrderResponse> ftProductionOrderResponse = HttpRequest.getForObgect(url, ProductionOrderResponse.class);
 		final ProductionOrderResponse productionOrderResponse = ftProductionOrderResponse.get(10, TimeUnit.SECONDS);

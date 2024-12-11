@@ -47,7 +47,8 @@ public class WebSecurityConfig {
 										"/images/**",
 										"/wo/**",
 										"/wip/**",
-										"/production/**")
+										"/production/**",
+										"/btr/**")
 			.permitAll()
 
 			.antMatchers(HttpMethod.POST,
@@ -65,7 +66,8 @@ public class WebSecurityConfig {
 											"/inventory",
 											"/create/rest/**",
 											"/calibration/biasing/rest/save",
-											"/wo/**")
+											"/wo/**",
+											"/btr/**")
 			.permitAll()
 
 			.anyRequest().authenticated()

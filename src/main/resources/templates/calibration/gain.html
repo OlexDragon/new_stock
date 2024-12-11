@@ -19,7 +19,7 @@
     		<div class="modal-content">
 <!-- Modal Header -->
       			<div class="modal-header row">
-        			<h5 class="modal-title ml-3 text-primary col-auto" th:text="'Gain: ' + ${gain} + ' dB'">Gain: 74 dB</h5>
+        			<h5 id="profileGain" class="modal-title ml-3 text-primary col-auto" th:text="'Gain: ' + ${gain} + ' dB'">Gain: 74 dB</h5>
         			<h5 class="modal-title text-primary col-auto">;</h5>
         			<h5 id="temperature" class="modal-title ml-3 text-primary col-auto" th:text="${temperature}">Temperature</h5>
         			<h5 class="modal-title text-primary col-auto">&#x2103; ;</h5>
@@ -51,6 +51,20 @@
     								<input type="number" class="form-control settings" id="step" placeholder="DAC Step" value="50">
     							</div>
   							</div>
+  							<div class="row">
+    							<label class="col-sm-6 col-form-label text-end" for="fieldsCount">Fields:</label>
+    							<div class="col-sm-6">
+    								<input type="number" class="form-control settings" id="fieldsCount" placeholder="fields Count" value="4" th:value="${settings.fields}">
+    							</div>
+  							</div>
+  							<div class="row">
+  								<div class="col ps-5">
+									<div class="form-check form-switch text-center">
+										<input class="form-check-input" type="checkbox" role="switch" id="p1dB" th:checked="${settings.p1dB}">
+										<label class="form-check-label" for="p1dB">P1dBt</label>
+									</div>
+								</div>
+  							</div>
    						</div>
 					</div>
 <!-- X Button -->
@@ -61,7 +75,10 @@
       			</div>
  <!-- Modal Footer -->
       			<div class="modal-footer">
-	        		<button type="button" id="save" class="btn btn-primary disabled">Save to Profile</button>
+	        		<button type="button" id="save" class="btn btn-primary disabled"
+    					th:text="${#authentication.principal=='anonymousUser'} ? 'Save - Login required' : 'Save to Profile'">
+    						Save to Profile
+    				</button>
 	        		<button type="button" id="calc" class="btn btn-secondary disabled">Calculate Min., Max.</button>
 	        		<button type="button" id="clear" class="btn btn-secondary disabled">Clear</button>
 	        		<button type="button" class="btn btn-outline-secondary" data-bs-dismiss="modal">Close</button>
@@ -70,16 +87,17 @@
   		</div>
   		<script th:inline="javascript">
 			/*<![CDATA[*/
+	
+				$step = $('#step');
+				$addRow = $('#addRow');
+				$save = $('#save');
+				$calc = $('#calc');
+				var $setDacValue = $('#setDacValue');
 
 			/*[# th:if="${message}!=null" ]*/
 				alert(/*[[${message}]]*/ 'Message');
 				throw new Error(/*[[${message}]]*/ 'Message');
 			/*[/]*/
-
-			$save = $('#save');
-			$calc = $('#calc');
-			$step = $('#step');
-			$addRow = $('#addRow');
 // Step
 			var step = Cookies.get("dacStep");
 			if(step)
@@ -100,12 +118,12 @@
 // Copy updated value to input field
 			$('#dacValue').dblclick(function() {
 				  var value = this.textContent;
-				  $('#setDacValue').val(value);
+				  $setDacValue.val(value);
 			});
 
 // Send changed DAC value to the Unit
 			var channel = 'fcm_dac';
-			$('#setDacValue').on('input', function(e){
+			$setDacValue.on('input', function(e){
 
 				var newValue = this.valueAsNumber;
 				var defaultValue = this.defaultValue;
@@ -179,7 +197,7 @@
 								var value = dac2.substring(++index, dac2.length-1);
 								$('#dacValue').text(value);
 
-								var setDacValue = $('#setDacValue').val();
+								var setDacValue = $setDacValue.val();
 								if(setDacValue != value){
 
 									if(channel == 'fcm_dac')
@@ -202,7 +220,7 @@
 									$addRow.removeClass('disabled');
 
 									var temperature = data.bias.temperature;
-									$('#temperature').text(temperature);
+									$temperature.text(temperature);
 
 								})
 								.fail(gainError);
@@ -210,14 +228,6 @@
 							.fail(gainError);
 				}, 3000);
 			}
-			update();
-			$modal.on('shown.bs.modal', function (e) { update(); });
-
-			$modal.on('hidden.bs.modal', function () {
-				clearInterval(interval);
-				interval = undefined;
-				err = null;
-			});
 
 			function gainError(error){
 				if(err)
@@ -235,7 +245,7 @@
 			}
 			function onAddRow(){
 
-				var temperature = $('#temperature').text();
+				var temperature = $temperature.text();
 				var dacValue = $('#dacValue').text();
 
 				if(!(temperature && dacValue)){
@@ -247,21 +257,12 @@
 			}
 
 			$addRow.click(onAddRow);
-			$('#setDacValue').on('keypress', function (e) {
-				 if(e.which === 13){	// Enter key
-					 var newValue = $(this).val();
-					 if($('#dacValue').text()==newValue)
-					 	onAddRow();
-					 else
-						 postNewValue(newValue);
-				 }
-			});
 
 			var gainTable = Cookies.get(serialNumber + "_gainTable");
 			if(gainTable && gainTable !== undefined){
 				var array = JSON.parse(gainTable);
 				array.forEach( row => {
-					addRow(row.input, row.output);
+					addRow(row.input, row.output, row.btr);
 				});
 			}
 
@@ -280,11 +281,22 @@
 			    var gainTable = [];
 			    $('#modal-body').children().each(function(){
 
-		    		var $row = $(this);
-		    		var tableRow = {}
+			    	const $row = $(this);
+			    	const tableRow = {}
 		    		tableRow.input = $row.find('.input').text();
 		    		tableRow.output = $row.find('.output').text();
 		    		gainTable.push(tableRow);
+
+		    		tableRow.btr = {};
+		    		$row.find('.btr-field').each(function(){
+
+		    			 const $field = $(this);
+		    			 const val = $field.val();
+		    			 if(val){
+		    				 const field = $field.attr('data-btr-field');
+		    				 tableRow.btr[field] = val; 
+		    			 }
+		    		 });
 			    });
 
 				var json = JSON.stringify(gainTable);
@@ -333,17 +345,46 @@
 				return length;
 			}
 
-			function addRow(inputValue, outputValue){
-				$('<div>', {class: 'row'})
-				.append($('<div>', {class: 'col input'}).text(inputValue))
-				.append($('<div>', {class: 'col output'}).text(outputValue))
+			function addRow(inputValue, outputValue, btr){
+
+				const fieldsCount = $('#fieldsCount').val();
+				const $inputRow = $('<div>', {class: 'col-12'}).append(addInputFields('Gain', fieldsCount, 'Gain', btr));
+
+				const p1dB = $('#p1dB').is(':checked');
+				if(p1dB)
+					$inputRow.append(addInputFields('P1dB.', fieldsCount, 'P1dB', btr));
+
+				$inputRow.append(addInputFields('P Sat.', fieldsCount, 'Psat', btr));
+
+				$('<div>', {class: 'row bg-info bg-opacity-10 border border-info rounded m-1'})
+				.append($('<div>', {class: 'col'}).append($('<span>', {text: 'Temp.°C:'})).append($('<b>', {class: 'input fw-bold bg-light ms-2 ps-5 pe-5', text: inputValue})))
+				.append($('<div>', {class: 'col'}).append($('<span>', {text: 'DAC:'})).append($('<b>', {class: 'output fw-bold bg-light ms-2 ps-5 pe-5', text: outputValue})))
 				.append($('<div>', {class: 'col-auto'}).append($('<button>', {class: 'btn btn-link', onclick: 'removeRow(this)'}).text('Remove')))
+				.append($inputRow)
 				.appendTo($('#modal-body'));
 
 				sortModalBody();
 				disableButtons();
 			}
 
+			function addInputFields(name, fieldsCount, rowIndex, btr){
+
+				const $row = $('<div>', {class: 'row mb-2'});
+
+				for(let i=0; i<fieldsCount; i++){
+					const key = rowIndex + '.' + i;
+					const $input = $('<input>', {type: 'number', placeholder: name, class: 'form-control btr-field', 'data-btr-field': key, step: 0.1}).keydown(moveAround);
+					if(btr){
+						const val = btr[key];
+						if(val)
+							$input.val(val);
+					}
+
+					$row.append($('<div>', {class: 'col'}).append($input));
+				}
+
+				return $row;
+			}
 			function removeRow(button){
 				var parent = $(button).closest('.row').remove();
 				disableButtons();
@@ -360,14 +401,17 @@
 		    	var hasError = false;
 		    	var prevInput;
 		    	var array = [];
+	    		const btr = {};
+	    		btr.serialNumber = serialNumber;
+	    		btr.data = {};
 
-		    	$('#modal-body').find('.row').each(function(){
+		    	$('#modal-body').find('.row.bg-info').each((index, el)=>{
 
 		    		if(hasError)
 		    			return;
 
-		    		var $row = $(this);
-		    		var input = $row.find('.input').text();
+					const $row = $(el);
+		    		const input = $row.find('.input').text();
 
 		    		if(prevInput && prevInput==input)
 		    				hasError = true;
@@ -378,13 +422,24 @@
 		    		}
 
 		    		prevInput = input;
-		    		var out = $row.find('.output').text();
+		    		const out = $row.find('.output').text();
 
 		    		/*[# th:if="${inHertz}" ]*/
 			    		input = parseInt(input*1000000000);
 					/*[/]*/
 
-		    		array.push({input: input, output: out});
+					const tableRow = {input: input, output: out};
+		    		
+		    		$row.find('.btr-field').each((i, el)=>{
+
+		    			 const val = el.value;
+		    			 if(val){
+		    				 const field = el.dataset.btrField;
+		    				 btr.data[index + '.' + field] = val; 
+		    			 }
+		    		 });
+
+		    		array.push(tableRow);
 		    	});
 
 		    	if(hasError || !array.length){
@@ -394,20 +449,20 @@
 
 		    	const table = { serialNumber: serialNumber, name: 'Gain over temperature', values: array };
 
-		    	$.ajax({
-					url: '/calibration/rest/profile/save',
-					type: 'POST',
-					contentType: "application/json",
-					data: JSON.stringify(table),
-					dataType: 'json'
-				})
+		    	postObject('/calibration/rest/profile/save', table)
 				.done(function(data){
 					alert(data.content);
 					$save.addClass('disabled');
 					$modal.modal('hide');
 				})
 				.fail(conectionFail);
-		    		
+
+		    	if(Object.keys(btr.data).length)
+		    		postObject('/btr/rest/save', btr)
+					.done(function(data){
+						alert(data.content);
+					})
+					.fail(conectionFail);
 		    });
 
 		    $calc.click(function(){
@@ -501,16 +556,18 @@
 				$('#dropdownSettingsButton').on('hidden.bs.dropdown', function () {
 					if(confirm('Do you want to save your changes to the database?')){
 
-						var pn = $serialNumber.prop('title');
-						var min = $('#minValue').val();
-						var max = $('#maxValue').val();
+						const pn = $serialNumber.prop('title');
+						const min = $('#minValue').val();
+						const max = $('#maxValue').val();
+						const filds = $('#fieldsCount').val();
+						const p1dB = $('#p1dB').is(':checked');
 
 						if(!(pn && min && max)){
 							alert('One of the values is missing.')
 							return;
 						}
 
-						$.post('/calibration/rest/gain', {partNumber: pn, startValue: min, stopValue:  max})
+						$.post('/calibration/rest/gain', {partNumber: pn, startValue: min, stopValue:  max, fields: filds, p1dB: p1dB })
     					.done(function(data){
     						alert(data);
 						})
@@ -523,8 +580,155 @@
 				});
 			/*[/]*/
 
-		$modal.modal('show');
+			getGainFromTemplate();
+			function getGainFromTemplate(){
+				const pn = $serialNumber.prop('title');
+				$.get('btr/rest/template/gain', {pn: pn})
+				.done(data=>{
+					if(!data || !data.length){
+						console.warn('Template not found.');
+						return;
+					}
 
+					const typ = data.find(d=>d.includes('typ'));
+					if(!typ)
+						console.warn('The BTR template do not contains typical gain value.')
+
+					const $profileGain = $('#profileGain');
+					const min = data.find(d=>d.includes('min'));
+					if(min)
+						$profileGain.prop('title', 'Gain ' +  min);
+
+					const profGain = parseFloat($profileGain.text().replace(/[^\d.-]/g, ''));
+					const btrlGain = parseFloat(typ.replace(/[^\d.-]/g, ''));
+					if(profGain ==btrlGain)
+						return;
+
+					if(confirm(`The Profile gain ( ${profGain} ) does not match the BTR gain ( ${btrlGain} ).\nIf you whant to put BTR gain in the profile, press OK button.`)){
+						$.post('/calibration/rest/profile/save/property', {sn: serialNumber, property: 'zero-attenuation-gain', value: btrlGain})
+						.done(profileMessage=>{
+							alert(profileMessage.message);
+							if(profileMessage.changeDon)
+								$profileGain.text(`Gain: ${btrlGain} dB`);
+						})
+						.fail(function(error) {
+							if(error.statusText!='abort'){
+								var responseText = error.responseText;
+									if(responseText)
+										alert(error.responseText);
+									else
+										alert("Server error. Status = " + error.status)
+							}
+						});
+					}
+				})
+				.fail(function(error) {
+					if(error.statusText!='abort'){
+					var responseText = error.responseText;
+						if(responseText)
+							alert(error.responseText);
+						else
+							alert("Server error. Status = " + error.status)
+					}
+				});
+			}
+			var $temperature;
+
+			function setupModal(){
+
+				$temperature = $('#temperature');
+				$save = $('#save');
+				$calc = $('#calc');
+				$step = $('#step');
+				$addRow = $('#addRow');
+				$setDacValue = $('#setDacValue').on('keypress', function (e) {
+					 if(e.which === 13){	// Enter key
+						 var newValue = $(this).val();
+						 if($('#dacValue').text()==newValue)
+						 	onAddRow();
+						 else
+							 postNewValue(newValue);
+					 }
+				});;
+
+				$modal.on('shown.bs.modal', update);
+
+				$modal.on('hidden.bs.modal', function () {
+					clearInterval(interval);
+					interval = undefined;
+					err = null;
+				});
+				return true;
+			}
+
+			function moveAround(e){
+
+				const $row = $(e.currentTarget).parents('.row.mb-2');
+				const $children = $row.parent().children();
+				let $inputs = $row.find('input');
+				let index;
+				let rowIndex;
+				$inputs.get().some((el, i)=>{
+					if(el===e.currentTarget){
+						index = i;
+						return true;
+					}
+					return false;
+				});
+
+				if(index === undefined)
+					return;
+
+				$inputs.get()
+				const code = e.originalEvent.code;
+				switch(code){
+
+				case 'ArrowLeft':
+					e.preventDefault();
+					if(--index<0)
+						return;
+					break;
+
+				case 'ArrowRight':
+					e.preventDefault();
+					if(++index>=$inputs.length)
+						return;
+					break;
+
+				case 'ArrowUp':
+					e.preventDefault();
+					$children.get().some((el, i)=>{
+						if(el===$row[0]){
+							rowIndex = i;
+							return true;
+						}
+						return false;
+					});
+					if(--rowIndex<0)
+						return;
+					$inputs = $($children[rowIndex]).find('input');
+					break;
+
+				case 'ArrowDown':
+					e.preventDefault();
+					$children.get().some((el, i)=>{
+						if(el===$row[0]){
+							rowIndex = i;
+							return true;
+						}
+						return false;
+					});
+					if(++rowIndex>=$children.length)
+						return;
+					$inputs = $($children[rowIndex]).find('input');
+					break;
+
+					default:
+						return;
+				}
+
+				$inputs[index].focus();
+			}
 		/*]]>*/
 		//# sourceURL=gain.js
   		</script>

@@ -47,8 +47,9 @@
 <!-- 		<logger name="irt.components.controllers.btr.WorkOrderController" level="all" /> -->
 <!-- 		<logger name="irt.components.controllers.btr.WorkOrderRestController" level="all" /> -->
 <!-- 		<logger name="irt.components.controllers.BomController" level="all" /> -->
+<!-- 		<logger name="irt.components.controllers.calibration.BtrRestController" level="all" /> -->
 
-<!-- 		<logger name="irt.components.workers.HttpRequest" level="all" /> -->
+<!-- 		<logger name="irt.components.workers.HttpRequest" level="debug" /> -->
 <!-- 		<logger name="irt.components.controllers.calibration.HttpSerialPortRestController" level="all" /> -->
 <!-- 		<logger name="irt.components.services.HttpSerialPortServersKeeper" level="all" /> -->
 

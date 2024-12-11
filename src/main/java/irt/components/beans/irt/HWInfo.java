@@ -28,6 +28,7 @@ public class HWInfo implements Diagnostics{
 
 	public enum Status{
 		OFF,
-		ON;
+		ON,
+		NotAplicable;
 	}
 }

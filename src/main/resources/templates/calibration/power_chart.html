@@ -117,10 +117,6 @@
 									}
 							});
 
-			$modal.modal('show');
-			$modal.on('shown.bs.modal', update);
-			$modal.on('hidden.bs.modal', function () { clearInterval(interval); });
-
 			$lastPoint = $('#lastPoint');
 			chartRun = false;
 			function update(){
@@ -392,6 +388,13 @@
 				})
 				.fail(conectionFail);
 			}
+
+			function setupModal(){
+				$modal.on('shown.bs.modal', update);
+				$modal.on('hidden.bs.modal', function () { clearInterval(interval); });
+				return true;
+			}
+
 			/*]]>*/
 		//# sourceURL=power_chart.js
   		</script>

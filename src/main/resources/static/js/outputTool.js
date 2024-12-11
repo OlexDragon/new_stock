@@ -14,43 +14,49 @@ function outputGet(){
 
 	$outputToolValue.val('');
 
-	let outputComPorts = $outputComPorts.val();
+	const outputComPorts = $outputComPorts.val();
 	if(!outputComPorts){
 		console.log("The Serial Port is not selected.");
 		alert('The Serial Port is not selected.');
 		return;
 	}
 
-	let toolCommands = $outputTool.val();
+	const toolCommands = $outputTool.val();
 	if(!toolCommands){
 		console.log("Tool not selected.");
 		alert('Tool not selected.');
 		return;
 	}
 
-	let toolAddress = $outputToolAddress.val();
+	const toolAddress = $outputToolAddress.val();
 	if(!toolAddress){
 		console.log("Type the Output Tool Address.");
 		alert('Type the Tool Address.');
 		return;
 	}
 
-	let toSend = {}
+	const toSend = {}
 	toSend.spName = outputComPorts;
 	toSend.commands = [];
-	toSend.commands.push({command: '++addr ' + toolAddress, getAnswer: false}); // Set Tool Address
+	toSend.addr = toolAddress;
+	const notNiGPIB = toSend.spName!='NI GPIB';
+	if(notNiGPIB)
+		toSend.commands.push({command: '++addr ' + toSend.addr, getAnswer: false});
 
-	let isAouto = $outputToolAuto[0].dataset.commands.includes('++auto 0');// Prologix is in AUTO mode
-	$.each(toolCommands.split(','), function(index, command){
+	const isAouto = $outputToolAuto[0].dataset.commands.includes('++auto 0');// Prologix is in AUTO mode
+	$.each(toolCommands.split(','), (i, command)=>{
 		var c = {};
 		c.command = command;
 		c.getAnswer = isAouto;
 		toSend.commands.push(c);
 	});
 
-	if(!isAouto)
+	if(notNiGPIB && !isAouto)
 		toSend.commands.push({command: '++read eoi', getAnswer: true}); // READ id prologix mode isn't AUTO
 
+	toSend.timeout = 10000;
+
+	toSend.commands[toSend.commands.length-1].getAnswer = true;
 	$('#outputValue').text('');
 	sendPrologixCommands(toSend, outputAction);
 }

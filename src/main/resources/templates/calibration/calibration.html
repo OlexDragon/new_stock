@@ -49,14 +49,7 @@
 <!-- BTR Measurement -->
     			<a id="btrMeasurement" 
     				class="dropdown-item calibrate" 
-    				th:href="@{${info==null} ? '#' : '/calibration/btr?sn=' + ${info.serialNumber} + '&pn=' + ${partNumber}}" 
-    				th:classappend="${#authentication.principal=='anonymousUser' or info==null} ? 'disabled' : ''" 
-    				th:text="${#authentication.principal=='anonymousUser'} ? 'Measurement - Login required' : 'Measurement'">Measurement</a>
-<!-- BTR Excel -->
-    			<a id="btrExcel" 
-    				class="dropdown-item" 
-    				th:href="@{${info==null} ? '#' : '/calibration/btr/excel?sn=' + ${info.serialNumber}}" 
-    				th:classappend="${#authentication.principal=='anonymousUser' or info==null} ? 'disabled' : ''">Excel</a>
+    				th:href="@{${info==null} ? (${sn} == null ? '#' : '/calibration/btr?sn=' + ${sn}) : '/calibration/btr?sn=' + ${info.serialNumber}}">Measurement</a>
   			</div>
 		</div>
 <!-- Unit Dropdown menu -->
@@ -358,20 +351,20 @@
 
     						<a class="dropdown-item disabled">Auto:</a>
 
-    						<a id="menuAutoByInput"
+    						<a id="menuOPAutoByInput"
     							class="dropdown-item calibrate disabled"
     							th:classappend="${info==null ? 'disabled list-group-item-light' : ''}"
-    							th:href="@{${info==null} ? '#' : '/calibration/output_power/by_input?sn=' + ${info.serialNumber} + '&pn=' + ${partNumber}}">by Input</a>
+    							th:href="@{${info==null} ? '#' : '/calibration/op/by_input?sn=' + ${info.serialNumber} + '&pn=' + ${partNumber}}">by Input - SP Server needed</a>
 
-    						<a id="nemuAutoByGain"
-    							class="dropdown-item calibrate"
+    						<a id="nemuOPAutoByGain"
+    							class="dropdown-item calibrate disabled"
     							th:classappend="${info==null ? 'disabled list-group-item-light' : ''}"
-    							th:href="@{${(info==null or info.deviceId==null)} ? '/calibration/converter/output-power' : '/calibration/output_power/by_gain?sn=' + ${info.serialNumber} + '&pn=' + ${partNumber}}">by Gain</a>
+    							th:href="@{${(info==null or info.deviceId==null)} ? '/calibration/converter/output-power' : '/calibration/op/by_gain?sn=' + ${info.serialNumber} + '&pn=' + ${partNumber}}">by Gain - SP Server needed</a>
     					</div>
 					</div>
     				<a	id="menuOutputPower"
     					class="dropdown-item calibrate"
-    					th:href="@{${(info==null or info.deviceId==null)} ? '/calibration/converter/output-power' : '/calibration/output_power?sn=' + ${info.serialNumber} + '&pn=' + ${partNumber}}">Output Power</a>
+    					th:href="@{${(info==null or info.deviceId==null)} ? '/calibration/converter/output-power' : '/calibration/op?sn=' + ${info.serialNumber} + '&pn=' + ${partNumber}}">Output Power</a>
  				</div>
 <!-- Power Offset -->
     			<a	id="menuPowerOffset"

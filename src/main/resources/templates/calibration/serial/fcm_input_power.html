@@ -25,7 +25,7 @@
       			</div>
  <!-- Modal Body -->
       			<div id="modal-body" class="modal-body">
-      				<canvas id="ipChart"></canvas>
+					<canvas id="ipChart"></canvas>
       			</div>
  <!-- Modal Footer -->
       			<div class="modal-footer">
@@ -195,6 +195,7 @@
   	  			payloadReadWrite = new Payload(new Parameter(PARAMETER_READ_WRITE), DEVICE_FCM_ADC_INPUT_POWER().toBytes());
   	  			inputPowerCount = 0
   	  			setConfirmStart();
+  	  			return true;
   			}
   			/*]]>*/
   			//# sourceURL=fcm-input-power.js

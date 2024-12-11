@@ -51,11 +51,9 @@ import irt.components.beans.irt.calibration.ProfileTableDetails;
 import irt.components.beans.jpa.IrtArray;
 import irt.components.beans.jpa.IrtArrayId;
 import irt.components.beans.jpa.calibration.CalibrationGainSettings;
-import irt.components.beans.jpa.calibration.CalibrationOutputPowerSettings;
 import irt.components.beans.jpa.calibration.CalibrationPowerOffsetSettings;
 import irt.components.beans.jpa.repository.IrtArrayRepository;
 import irt.components.beans.jpa.repository.calibration.CalibrationGainSettingRepository;
-import irt.components.beans.jpa.repository.calibration.CalibrationOutputPowerSettingRepository;
 import irt.components.beans.jpa.repository.calibration.CalibrationPowerOffsetSettingRepository;
 import irt.components.services.HttpSerialPortServersKeeper;
 import irt.components.services.converter.InitializeSettingConverter;
@@ -88,7 +86,6 @@ public class CalibrationController {
 	private String logFile;
 
 	@Autowired private HttpSerialPortServersKeeper			 	 httpSerialPortServersKeeper;
-	@Autowired private CalibrationOutputPowerSettingRepository	 calibrationOutputPowerSettingRepository;
 	@Autowired private CalibrationPowerOffsetSettingRepository	 calibrationPowerOffsetSettingRepository;
 	@Autowired private CalibrationGainSettingRepository			 calibrationGainSettingRepository;
 
@@ -97,6 +94,7 @@ public class CalibrationController {
 	@GetMapping
     String calibration(@RequestParam(required = false) String sn, Model model) {
     	logger.traceEntry(sn);
+    	model.addAttribute("sn", sn);
 
 		final Map<String, String> httpSerialPortServers = httpSerialPortServersKeeper.getHttpSerialPortServers();
 		model.addAttribute("serialPortServers", httpSerialPortServers);
@@ -114,7 +112,6 @@ public class CalibrationController {
 
 					return "IRT-" + s;
 				})
-    	.filter(s->!s.trim().isEmpty())
     	.ifPresent(
     			s->{
     				try {
@@ -204,41 +201,6 @@ public class CalibrationController {
 		arrayRepository.findById(new IrtArrayId("initialize", deviceId)).ifPresent(irtArray->model.addAttribute("setting", new InitializeSettingConverter().convertToEntityAttribute(irtArray.getDescription())));
 
 		return "calibration/initialize :: setting";
-    }
-
-    @GetMapping("output_power")
-    String outputPower(@RequestParam String sn, @RequestParam String pn, Model model) throws ExecutionException {
-    	logger.traceEntry(sn);
-
-    	Optional.ofNullable(sn)
-		.map(String::trim)
-    	.filter(s->!s.isEmpty())
-    	.ifPresent(
-    			s->{
-    				// Get settings from DB
-					final CalibrationOutputPowerSettings settings = calibrationOutputPowerSettingRepository.findById(pn).orElseGet(()->new CalibrationOutputPowerSettings(pn, 30, 46, "power1"));
-
-//    					logger.error("calibrationInfo: {}", calibrationInfo);
-					model.addAttribute("serialNumber", s);
-					model.addAttribute("settings", settings);
-    			});
-        return "calibration/output_power :: outputPower";
-    }
-
-    @GetMapping("output_power/by_input")
-    String outputPowerByInput(@RequestParam String sn, @RequestParam String pn, Model model) throws ExecutionException {
-
-//    	model.addAttribute("byInput", true);
-    	outputPower(sn, pn, model);
-    	return "calibration/output_power_auto :: byInput";
-    }
-
-    @GetMapping("output_power/by_gain")
-    String outputPowerByGain(@RequestParam String sn, @RequestParam String pn, Model model) throws ExecutionException {
-    	logger.error(sn);
-
-    	outputPower(sn, pn, model);
-    	return "calibration/output_power_auto :: byGain";
     }
 
     @GetMapping("power_offset")
@@ -388,7 +350,7 @@ public class CalibrationController {
     					model.addAttribute("dac2", dacs.getDac2RowValue());
 
     					// Get settings from DB
-    					final CalibrationGainSettings settings = calibrationGainSettingRepository.findById(pn).orElseGet(()->new CalibrationGainSettings(pn, -40, 85));
+    					final CalibrationGainSettings settings = calibrationGainSettingRepository.findById(pn).orElseGet(()->new CalibrationGainSettings(pn, -40, 85, 4, true));
     					model.addAttribute("settings", settings);
 
 						ftProfile.get(10, TimeUnit.SECONDS);
@@ -597,8 +559,7 @@ public class CalibrationController {
 	}
 
 	public static Optional<HomePageInfo> getHomePageInfo(String sn, int timeout) throws IOException, InterruptedException, ExecutionException, TimeoutException {
-		final FutureTask<String> ft = getHonePage(sn, timeout);
-		final String honePage = ft.get(timeout, TimeUnit.MILLISECONDS);
+		final String honePage = getHonePage(sn, timeout, TimeUnit.MILLISECONDS);
 		return Optional.ofNullable(honePage).map(HomePageInfo::new);
 	}
 
@@ -630,11 +591,11 @@ public class CalibrationController {
 		return HttpRequest.postForIrtObgect(url.toString(), toClass, params);
 	}
 
-	private static FutureTask<String> getHonePage(String ipAddress, int timeout) throws IOException, InterruptedException, ExecutionException, TimeoutException {
+	private static String getHonePage(String ipAddress, int timeout, TimeUnit timeUnit) throws IOException, InterruptedException, ExecutionException, TimeoutException {
 
 		final URL url = new URL("http", ipAddress, "/overview.asp");
 		logger.debug(url);
 
-		return HttpRequest.getForString(url.toString(), timeout);
-}
+		return HttpRequest.getForString(url.toString(), timeout, timeUnit);
+	}
 }

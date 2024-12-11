@@ -18,4 +18,6 @@ public class CalibrationGainSettings {
 	@Id private String partNumber;
 	private Integer startValue;
 	private Integer stopValue;
+	private Integer fields;
+	private Boolean p1dB;
 }

@@ -25,35 +25,38 @@ class CalibrationRwInfoTest {
 
 		 final CalibrationRwInfo info = mapper.readValue(json, CalibrationRwInfo.class);
 		 logger.error(info);
-		 final DigitalPotentiometers potentiometers = info.getDigitalPotentiometers();
-		 assertTrue(potentiometers.getCalMode());
-		 final List<UnitModule> list = potentiometers.getList();
-		 assertFalse(list.isEmpty());
-		 list.forEach(
-				 module->{
-					 logger.error(module);
+		 final List<DigitalPotentiometers> potentiometers = info.getDigitalPotentiometers();
+		 potentiometers.forEach(
+				 p->{
+					 assertTrue(p.getCalMode());
+					 final List<UnitModule> list = p.getList();
+					 assertFalse(list.isEmpty());
+					 list.forEach(
+							 module->{
+								 logger.error(module);
 
-					 if(module.getName()==null || !module.getName().equals("HPBM1"))
-						 return;
-					 assertEquals("HPBM1", module.getName());
-					 assertEquals(1002, module.getIndex());
-					 assertTrue(module.getSaveEnable());
-					 
-					 final List<DigitalPotentiometer> vars = module.getVars();
-					 assertFalse(vars.isEmpty());
-					 vars.forEach(
-							 potentiometer->{
-								 logger.error(potentiometer);
-								 if(potentiometer.getIndex()==null || potentiometer.getIndex()!=0)
+								 if(module.getName()==null || !module.getName().equals("HPBM1"))
 									 return;
-								 assertEquals(0, potentiometer.getIndex());
-								 assertEquals("G0", potentiometer.getName());
-								 assertEquals(2047, potentiometer.getValue());
-								 final Range range = potentiometer.getRange();
-								 assertEquals(0, range.getMin());
-								 assertEquals(4095, range.getMax());
+								 assertEquals("HPBM1", module.getName());
+								 assertEquals(1002, module.getIndex());
+								 assertTrue(module.getSaveEnable());
+								 
+								 final List<DigitalPotentiometer> vars = module.getVars();
+								 assertFalse(vars.isEmpty());
+								 vars.forEach(
+										 potentiometer->{
+											 logger.error(potentiometer);
+											 if(potentiometer.getIndex()==null || potentiometer.getIndex()!=0)
+												 return;
+											 assertEquals(0, potentiometer.getIndex());
+											 assertEquals("G0", potentiometer.getName());
+											 assertEquals(2047, potentiometer.getValue());
+											 final Range range = potentiometer.getRange();
+											 assertEquals(0, range.getMin());
+											 assertEquals(4095, range.getMax());
+										 });
 							 });
-				 });
+				});
 	}
 
 }

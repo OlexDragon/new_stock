@@ -69,7 +69,7 @@ public class HttpSerialPortServersKeeper {
 
 						} catch (Exception e) {
 							logger.info("Can not connect  to http://{}:{}/ping", entry.getKey(), entry.getValue());
-							logger.catching(e);
+//							logger.catching(e);
 							toRemove.add(entry.getKey());
 						}
 					});

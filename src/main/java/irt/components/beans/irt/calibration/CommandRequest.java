@@ -9,8 +9,8 @@ import lombok.Setter;
 import lombok.ToString;
 import lombok.experimental.Accessors;
 
-@Getter @Setter @ToString @JsonIgnoreProperties(ignoreUnknown = true)
-public class CommandRequest extends RequestData{
+@Getter @Setter @ToString(callSuper = true) @JsonIgnoreProperties(ignoreUnknown = true)
+public class CommandRequest extends RequestData {
 
 	private List<Command> commands;
 	@Accessors(chain = true)

@@ -87,6 +87,7 @@ public class CurrentRestController {
 					(n,i)->{
 
 						final HWInfo hwInfo = CalibrationRestController.diagnostics(HWInfo.class, sn, "hwinfo", i.toString(), "4", null, null, PostFor.IRT_OBJECT);
+						logger.debug("n: {}; i: {}; hwInfo: {};", n, i, hwInfo);
 						if(hwInfo==null || hwInfo.getSequence() == null || hwInfo.getSequence().isEmpty())
 							return;
 

@@ -33,6 +33,11 @@ $('.input-value').on('input', e=>{
 
 	showSetupToast(e.currentTarget)
 })
+.on( "focusin", e=>{
+	const $toast = $('.toast');
+	if($toast.length)
+		$toast.remove();
+})
 .each((i,el)=>{
 
 	if(el.localName != 'input')
@@ -62,20 +67,34 @@ $('.input-value').on('input', e=>{
 	if(el.dataset.step === 'undefined')
 		step = 1;
 	else
-		step = parseFloat(el.dataset.step);
+		step = el.dataset.step ? parseFloat(el.dataset.step) : 1;
 
 	switch(e.originalEvent.code){
 
 	case 'ArrowRight':
-		if(step<0.1 || !e.ctrlKey)
+
+		if(!e.ctrlKey)
 			return;
 
+		if(showStepValue(e))
+			break;
+
+		if(step<0.1)
+			return;
+		
 		el.dataset.step = step / 10;
 		showStepValue(e);
 		break;
 
 	case 'ArrowLeft':
-		if(step>10 || !e.ctrlKey)
+
+		if(!e.ctrlKey)
+			return;
+
+		if(showStepValue(e))
+			break;
+
+		if(step>10)
 			return;
 
 		el.dataset.step = step * 10;
@@ -151,9 +170,11 @@ function showStepValue(e){
 	let $toast = $('.toast');
 	if($toast.length){
 		$toast.find('input').val(e.currentTarget.dataset.step);
-		return;
-	}else
-		showSetupToast(e.currentTarget);
+		return false;	// Been open
+	}
+
+	showSetupToast(e.currentTarget);
+	return true; 	// Open
 }
 prologixElements($inputComPorts, $inputToolAddress, $inputButtons);
 function inputAction(data, $valueField, divider){

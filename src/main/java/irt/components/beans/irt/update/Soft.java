@@ -11,7 +11,7 @@ import lombok.ToString;
 public class Soft extends TarToBytes{
 
 	private final String typeRev;
-	private Boolean module;	// TODO - Three states: null = System; false = Module of Module; true = Module
+	private Boolean module;	// Three states: null = System; false = Module of Module; true = Module
 
 	public Soft(String typeRev, Path path) throws IOException {
 		super(path);

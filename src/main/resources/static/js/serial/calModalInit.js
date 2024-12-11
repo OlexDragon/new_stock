@@ -133,7 +133,7 @@ function init(subInit){
 	$stepVal.on('focusout', e=>setCookies(e.currentTarget));
 	$maxVal.on('focusout', e=>setCookies(e.currentTarget));
 
-	$modal.modal('show');
+//	$modal.modal('show');
 }
 function setRun(run){
 	if(run)
@@ -152,9 +152,12 @@ function clear(){
 		f_init();
 }
 function setFromCookies(){
-	const comPort = $unitSerialPort[0];
-	fromCookies(comPort);
-	comPort.dispatchEvent(new Event('change'));
+	if($unitSerialPort.length){
+		const comPort = $unitSerialPort[0];
+		fromCookies($unitSerialPort[0]);
+		comPort.dispatchEvent(new Event('change'));
+	}
+	
 	const step = $stepVal[0]
 	fromCookies(step);
 	const max = $maxVal[0];

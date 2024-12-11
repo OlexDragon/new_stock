@@ -131,9 +131,7 @@ function enableCreateButton(){
 		return;
 
 	var pnNameCode = $('#pnName').val();
-	var pnTypeCode = $('#pnType').val();
 	var description = $('#description').val();
-	var pn = $('#componentPN').val();
 
 	if(pnNameCode && description){
 		$btn.removeClass('disabled');
