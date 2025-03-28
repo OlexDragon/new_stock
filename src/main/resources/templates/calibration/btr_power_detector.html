@@ -1,0 +1,332 @@
+<!DOCTYPE html>
+<html 	xmlns="http://www.w3.org/1999/xhtml"
+		xmlns:th="https://www.thymeleaf.org"
+      	xmlns:sec="http://www.thymeleaf.org/extras/spring-security"
+      	lang="en">
+<head>
+    <meta charset="UTF-8" />
+    <title>IRT Bom.</title>
+    <link rel="shortcut icon" href="http://irttechnologies.com/favicon.ico">
+	<link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet" integrity="sha384-QWTKZyjpPEjISv5WaRU9OFeRpok6YctnYmDr5pNlyT2bRjXh0JMhjY6hW+ALEwIH" crossorigin="anonymous">
+    <link rel="stylesheet" href="../../static/css/components.css" th:href="@{/css/components.css}">
+
+    <script type="application/javascript" src="https://ajax.googleapis.com/ajax/libs/jquery/3.5.1/jquery.min.js"></script>
+    <script type="application/javascript" src="https://cdnjs.cloudflare.com/ajax/libs/popper.js/2.10.2/umd/popper.min.js"></script>
+	<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js" integrity="sha384-YvpcrYf0tY3lHB60NNkmXc5s9fDVZLESaAA55NDzOxhy9GkcIdslK1eN7N6jIeHz" crossorigin="anonymous"></script>
+	<script type="application/javascript" src="https://cdn.jsdelivr.net/npm/js-cookie@2/src/js.cookie.min.js"></script>
+	<script type="application/javascript" src="../../static/js/irt.js" th:src="@{/js/irt.js}"></script>
+</head>
+
+<body>
+
+ 	<button type="button" class="btn btn-outline-primary" data-bs-toggle="modal" data-bs-target="#modal" th:remove="all">Launch modal</button>
+
+<!-- Modal Message -->
+	<div id="modal" class="modal" tabindex="-1" role="dialog">
+	<th:block th:fragment="modal">
+  		<div class="modal-dialog">
+    		<div class="modal-content">
+<!-- Modal Header -->
+      			<div class="modal-header row">
+        			<h5 class="modal-title ml-3 text-primary col-auto" th:text="${sn eq null ? 'Something went wrong. Refresh this page and try again.' : sn + ' - Power Detector'}">IRT-2401001</h5>
+ <!-- X Button -->
+        			<button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+      			</div>
+ <!-- Modal Body -->
+     			<div class="modal-body">
+     				<div class="row p-1 mb-2" th:if="${pd} != null" th:each="meas : ${pd?.measurement?.entrySet()}">
+     					<div class="col-auto badge bg-info-subtle text-dark fs-5" th:text="${meas.getKey()}"></div>
+     					<div class="col" th:each="val : ${meas.getValue().entrySet()}">
+     						<input th:id="${val.getKey()}" type="text" class="form-control" th:value="${val.getValue()}" data-th-data-power="${meas.getKey()}">
+     					</div>
+     				</div>
+       			</div>
+ <!-- Modal Footer -->
+      			<div class="modal-footer">
+      				<div class="text-start col-12" th:text="${pd?.user?.username != null ? 'Measured by ' + pd?.user?.username : ''}" th:title="${pd?.date}"></div>
+	        		<button id="btnSavePD"
+	        			type="button"
+	        			class="btn btn-outline-success"
+	        			th:classappend="${#authentication.principal=='anonymousUser'} ? 'btn-outline-secondary' : 'btn-outline-success'"
+    					th:text="${#authentication.principal=='anonymousUser'} ? 'Save - Login required' : 'Save'"
+    					th:disabled="${#authentication.principal=='anonymousUser'}">
+    					Save
+    				</button>
+	        		<button id="pdAuto" type="button" class="btn btn-outline-primary">Auto</button>
+	        		<button id="pdPmDetValue" type="button" class="btn btn-outline-primary">←PM</button>
+	        		<button id="pdClear" type="button" class="btn btn-outline-secondary">Clear</button>
+	        		<button type="button" class="btn btn-outline-secondary" data-bs-dismiss="modal">Close</button>
+	    		</div>
+    		</div>
+  		</div>
+   		<script type="application/javascript" th:inline="javascript">
+			/*<![CDATA[*/
+			$('#pdClear').click(()=>{
+				if(!confirm('Are you sure you want to delete all data?'))
+					return;
+				const $inputs = $('.modal-body').find('input').val('');
+				const cookiesName = "powerDetector" + serialNumber;
+				Cookies.remove(cookiesName);
+			});
+			$('#btnSavePD').click(e=>{
+
+				const principal = /*[[${#authentication.principal}]]*/ "anonymousUser";
+				if(principal === "anonymousUser"){
+					alert("You must log in.");
+					return;
+				}
+				if(!confirm("Are you sure you want to save the data to the database?"))
+					return;
+
+				e.currentTarget.disabled = true;
+
+				const powerDetector = {};
+				powerDetector.serialNumberId = parseInt(serialNumber.replace(/\D/g,''));
+				powerDetector.userId = principal.user.id
+				powerDetector.measurement = {};
+
+				$('.modal-body').find('input').each((_,el)=>{
+					if(!powerDetector.measurement[el.dataset.power])
+						powerDetector.measurement[el.dataset.power] = {};
+					powerDetector.measurement[el.dataset.power][el.id] = el.value;
+				});
+				postObject('/btr/rest/pd/save', powerDetector)
+				.done(function(data){
+
+					if(data.error){
+						alert(data.error);
+						return;
+					}
+					console.log(data)
+				})
+				.fail(function(error) {
+					if(error.statusText!='abort'){
+					var responseText = error.responseText;
+						if(responseText)
+							alert(error.responseText);
+						else
+							alert("Server error. Status = " + error.status)
+					}
+				});
+			});
+			var notShift;
+			var selectedField;
+			function setupModal(){
+
+				const cookiesName = "powerDetector" + serialNumber;
+				const $inputs = $('.modal-body').find('input');
+
+				$inputs.keyup(e=>{
+
+					if(notShift)
+						return;
+
+					const code = e.originalEvent.code;
+					const array = e.currentTarget.id.split('.');
+
+					switch(code){
+
+					case "ArrowDown":
+						++array[0];
+						$inputs.filter((_,el)=>el.id===array.join('.')).focus();
+						break;
+
+					case "ArrowUp":
+						--array[0];
+						$inputs.filter((_,el)=>el.id===array.join('.')).focus();
+						break;
+
+					case "ArrowRight":
+						++array[2];
+						$inputs.filter((_,el)=>el.id===array.join('.')).focus();
+						break;
+
+					case "ArrowLeft":
+						--array[2];
+						$inputs.filter((_,el)=>el.id===array.join('.')).focus();
+						break;
+
+					case "ControlLeft":
+					case "ControlRight":
+						notShift = true;
+						setTimeout(()=>notShift=false, 10000);
+						break;
+
+					case "Enter":
+					case "NumpadEnter":
+						$("#pdPmDetValue").click();
+						
+					}
+				})
+				.focus(e=>{
+					const $inputs = $('.modal-body').find('input').css('background-color','');
+					selectedField = e.currentTarget;
+					selectedField.style.backgroundColor = "yellow";
+				});
+				$('#pdPmDetValue').click(()=>{
+
+					if(selectedField)
+						selectedField.focus();
+
+					$.get('/calibration/rest/monitorInfo', {sn: serialNumber})
+					.done(data=>{
+						if(!data.data.outpower){
+							alert('Something went wrong.');
+							return;
+						}
+						if(!selectedField){
+							alert('Select one of the text fields.');
+							return;
+						}
+						selectedField.value = data.data.outpower;
+						const array = selectedField.id.split('.');
+						++array[0];
+						$inputs.filter((_,el)=>el.id===array.join('.')).focus();
+					});
+				});
+				$modal.on('shown.bs.modal', ()=>{
+
+					if(!$inputs.length)
+						return;
+
+					if(!$inputs.filter((_,el)=>el.value).length){
+						let cookies = Cookies.get(cookiesName);
+						if(cookies){
+							const o = JSON.parse(cookies);
+							Object.keys(o).forEach(k=>{
+								$inputs.filter((_,el)=>el.id===k).val(o[k]);
+							});
+							setTimeout(()=>alert('Note: Values ​​are taken from cookies.\nTo save the values ​​to the database, click the "Save" button.'),10);
+						}
+					}
+				});
+
+				$modal.on('hide.bs.modal', function () {
+					if (document.activeElement) 
+			            document.activeElement.blur();
+				});
+
+				$modal.on('hidden.bs.modal', function () {
+
+					externalInputAction = null;
+					
+					let toCookies = {};
+					$inputs.filter((_,el)=>el.value).each((_,el)=>{
+						toCookies[el.id] = el.value;
+					});
+					if(Object.keys(toCookies).length){
+						var json = JSON.stringify(toCookies);
+						Cookies.set(cookiesName, json, { expires: 7, path: '' });
+					}
+				});
+
+				$modal.on('hide.bs.modal', _=>{
+					$('#btnPdStart').text('Start');
+					clearInterval(pdInterval);
+				});
+
+				return true;
+			}
+// Auto measurement
+			$('#pdAuto').click(e=>{
+				e.currentTarget.disabled = true;
+
+				const $rowMeas = $('<div>', {class: 'row'})
+								.append($('<div>', {class: 'col'}).append( $('<input>', {id: 'pdInputFreq', class: 'form-control', type: 'number', readonly: true, placeholder: 'Frequency', title: 'Frequency'})))
+								.append($('<div>', {class: 'col'}).append( $('<input>', {id: 'pdInputVal', class: 'form-control', type: 'number', readonly: true, placeholder: 'Input Value', title: 'Input Value'})))
+								.append($('<div>', {class: 'col'}).append( $('<input>', {id: 'pdOutputVal', class: 'form-control', type: 'number', readonly: true, placeholder: 'Output Value', title: 'Output Value'})));
+				const $row = $('<div>', {class: 'row'});
+				const count = $('.modal-body').children(":first").find('input').length;
+
+				if(count<2){
+					console.warn('The number of fields is less than 2.')
+					return;
+				}
+
+				const fields = [];
+				for(let i=0; i<count; ++i){
+					const $field = $('<input>', {class: 'form-control', type: 'number', step: 0.001});
+					fields.push($field);
+					$row.append($('<div>', {class: 'col'}).append($field));
+				}
+				const $btn = $('<button>', {id: 'btnPdStart', class: 'btn btn-outline-primary form-control', text: 'Start'}).click(pdAuto);
+				$row.append($('<div>', {class: 'col-12'}).append($btn));
+
+				$('.modal-footer')
+				.append($rowMeas)
+				.append($row);
+
+				$.get('/calibration/rest/power_offset', {sn: serialNumber})
+				.done(data=>{
+					if(!data?.startValue){
+						setFrequenceFronCookies();
+						return;
+					}
+
+					fields[0].val(data.startValue);
+					fields[fields.length-1].val(data.stopValue);
+					const step = Math.round(((data.stopValue-data.startValue)/(count-1))*20)/20;
+					for(let i=1;i<count-1;++i){
+						const toAdd = i*step;
+						fields[i].val((data.startValue+toAdd).toFixed(2));
+					}
+				});
+				getPM();
+				$inputFrequency.val('').change();
+				$inputPower.val('').change();
+			});
+			function setFrequenceFronCookies(){
+				console.log('setFrequenceFronCookies(); Function to be implemented.');
+			}
+			function getPM(){
+				outputGet(data=>{
+					if(!data.getAnswer){
+						return;
+					}
+					const val = data.answer;
+					const toFixed = dataToValue(data);
+					if(!toFixed)
+						return;
+
+					$('#pdOutputVal').val(toFixed);
+				});
+			}
+			function inputToolAction($valueField){
+				switch($valueField.attr('id')){
+
+				case 'inputFrequency':
+					$('#pdInputFreq').val($valueField.val());
+					break;
+
+				case 'inputPower':
+					$('#pdInputVal').val($valueField.val());
+					break;
+				default:
+						console.log($valueField.attr('id'));
+				}
+			}
+			externalInputAction = inputToolAction;
+			var pdInterval;
+			function pdAuto(e){
+
+				const text = e.currentTarget.innerText;
+
+				if(text!=='Start'){
+					e.currentTarget.innerText = 'Start';
+					clearInterval(pdInterval);
+					return;
+				}
+
+				e.currentTarget.innerText = 'Stop';
+				pdInterval = setInterval(pdProcess, 3000);
+			}
+			function pdProcess(){
+				console.log('pdProcess()');
+			}
+			/*]]>*/
+			//# sourceURL=btr_power_detector.js
+  		</script>
+		</th:block>
+	</div>
+</body>
+</html>

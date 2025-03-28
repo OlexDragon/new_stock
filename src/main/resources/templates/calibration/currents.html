@@ -2031,7 +2031,11 @@
 
 				f_info(moduleInfo[0].info);
 			}
-			$modal.on('shown.bs.modal', f_fillNameInProfile);
+			function setupModal(){
+				$modal.on('shown.bs.modal', f_fillNameInProfile);
+				return true;
+			}
+
 		/*]]>*/
 		//# sourceURL=current-map.js
   		</script>

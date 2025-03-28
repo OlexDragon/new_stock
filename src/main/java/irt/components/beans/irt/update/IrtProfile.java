@@ -8,11 +8,11 @@ import lombok.Setter;
 import lombok.ToString;
 
 @Getter @Setter @ToString
-public class Profile extends TarToBytes{
+public class IrtProfile extends TarToBytes{
 
 	private boolean module;
 
-	public Profile(Path path) throws IOException {
+	public IrtProfile(Path path) throws IOException {
 		super(path);
 	}
 

@@ -102,9 +102,10 @@ public class ProfileWorker {
 			public FileVisitResult visitFile(Path file, BasicFileAttributes attrs) throws IOException {
 
 				if(attrs.isRegularFile()) {
+					final String path = file.toString();
 
 					Path name = file.getFileName();
-					if (matcher.matches(name)) {
+					if (matcher.matches(name) && !path.contains("profile\\WEB") && !path.contains("profile\\ZZZ")) {
 						arPath.set(file);
 						return FileVisitResult.TERMINATE;
 					}
@@ -200,7 +201,7 @@ public class ProfileWorker {
 
 			logger.debug("Save profile: {}", path);
 			Files.write(path, sb.toString().getBytes(), StandardOpenOption.TRUNCATE_EXISTING);
-			logger.info("Profile {} saved.", serialNumber);
+			logger.info("IrtProfile {} saved.", serialNumber);
 
 			return true;
 
@@ -235,7 +236,7 @@ public class ProfileWorker {
 
 			logger.debug("Save profile: {}", path);
 			Files.write(path, sb.toString().getBytes(), StandardOpenOption.TRUNCATE_EXISTING);
-			logger.info("Profile {} saved.", serialNumber);
+			logger.info("IrtProfile {} saved.", serialNumber);
 
 			return true;
 
@@ -299,7 +300,7 @@ public class ProfileWorker {
 
 						String comment = null;
 						if(split.length==5) {
-							final String[] c = split[5].split("#", 2);
+							final String[] c = split[4].split("#", 2);
 							if(c.length==2)
 								comment = c[1];
 						}

@@ -19,6 +19,7 @@ import irt.components.beans.jpa.repository.calibration.CalibrationOutputPowerSet
 @RequestMapping("calibration/op")
 public class OutputPowerController {
 	private final static Logger logger = LogManager.getLogger();
+
 	@Autowired private CalibrationOutputPowerSettingRepository	 calibrationOutputPowerSettingRepository;
 
     @GetMapping

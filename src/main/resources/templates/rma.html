@@ -187,24 +187,23 @@
 		<script type="application/javascript" sec:authorize="hasAuthority('ADD_RMA_COMMENT')" th:if="${ rmas != null ? rmas.size() > 0 : false }" th:inline="javascript">
 			/*<![CDATA[*/
 
-			$('.add-comment').mouseenter(removeDataCollapse);
-			$('.add-to-rma').mouseenter(removeDataCollapse);
-			function removeDataCollapse(){
-				let t = $(this).parents('.accordion-button').attr('data-bs-toggle', '');
-			}
-
-			$('.add-comment').mouseleave(addDataCollapse);
-			$('.add-to-rma').mouseleave(addDataCollapse);
-			function addDataCollapse(){
-				$(this).parents('.accordion-button').attr('data-bs-toggle', 'collapse');
-			}
-
-			$('.add-comment').click(function(e){
+			$('.add-comment')
+			.mouseenter(removeDataCollapse)
+			.mouseleave(addDataCollapse).click(function(e){
 				e.stopPropagation();
 
 				let $row = $(this).parents('.accordion-item');
 				showComment($row);
 			});
+			$('.add-to-rma').mouseenter(removeDataCollapse);
+			function removeDataCollapse(){
+				let t = $(this).parents('.accordion-button').attr('data-bs-toggle', '');
+			}
+
+			$('.add-to-rma').mouseleave(addDataCollapse);
+			function addDataCollapse(){
+				$(this).parents('.accordion-button').attr('data-bs-toggle', 'collapse');
+			}
 			function ondblclick(){
 				var $this = $(this);
 				showComment($this)

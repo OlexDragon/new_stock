@@ -35,6 +35,10 @@ import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestParam;
 
+import irt.components.beans.OneCeHeader;
+import irt.components.beans.OneCeUrl;
+import irt.components.beans.PartNumber;
+import irt.components.beans.SerialNumber;
 import irt.components.beans.irt.CalibrationInfo;
 import irt.components.beans.irt.ConverterInfo;
 import irt.components.beans.irt.Dacs;
@@ -64,6 +68,8 @@ import irt.components.workers.ThreadRunner;
 @Controller
 @RequestMapping("calibration")
 public class CalibrationController {
+	private static final String PLL_INDEX = "PLL_index";
+
 	private final static Logger logger = LogManager.getLogger();
 
 //	private static final int WORK_ORDER = 3;
@@ -84,6 +90,8 @@ public class CalibrationController {
 
 	@Value("${irt.log.file}")
 	private String logFile;
+
+	@Autowired private OneCeUrl oneCeApiUrl;
 
 	@Autowired private HttpSerialPortServersKeeper			 	 httpSerialPortServersKeeper;
 	@Autowired private CalibrationPowerOffsetSettingRepository	 calibrationPowerOffsetSettingRepository;
@@ -153,6 +161,9 @@ public class CalibrationController {
     					logger.catching(Level.DEBUG, e);
     				}
     			});
+
+		if(model.getAttribute("serialNumber")==null)
+			model.addAttribute("serialNumber", sn);
 
 		return "calibration/calibration";
     }
@@ -225,11 +236,8 @@ public class CalibrationController {
 
    								()->{
 
-   									// Get Converter Index.
-   									URL url = new URL("http", serialNumber, "/update.cgi");
-   									List<NameValuePair> params = new ArrayList<>();
-   									params.add(new BasicNameValuePair("exec", "debug_devices"));
-   									final NameIndexPair[] pairs = HttpRequest.postForIrtObgect(url.toString(), NameIndexPair[].class,  params).get(5, TimeUnit.SECONDS);
+   									final NameIndexPair[] pairs = getAllIndex(serialNumber);
+   									logger.error("{} : {}", pairs.length, pairs);
 
    									Optional.ofNullable(pairs)
    									.map(Arrays::stream)
@@ -248,7 +256,8 @@ public class CalibrationController {
    						   							// LO Frequency
    						   							final ConverterInfo converterInfo = getHttpDeviceDebug(serialNumber, ConverterInfo.class,
 															new BasicNameValuePair("devid", index.toString()),
-															new BasicNameValuePair("command", "config")).get(5, TimeUnit.SECONDS);
+															new BasicNameValuePair("command", "config"))
+   						   								.get(5, TimeUnit.SECONDS);
    						   							logger.debug(converterInfo);
 
    						   							Optional.ofNullable(converterInfo).map(ConverterInfo::getLoFrequency).map(IrtFrequency::new).flatMap(IrtFrequency::getValue).ifPresent(lo->model.addAttribute("loFrequencty", lo));
@@ -308,9 +317,18 @@ public class CalibrationController {
 		return "calibration/power_offset :: modal";
     }
 
+	public static NameIndexPair[] getAllIndex(String serialNumber) throws MalformedURLException, InterruptedException, ExecutionException, TimeoutException {
+		// Get Converter Index.
+		URL url = new URL("http", serialNumber, "/update.cgi");
+		List<NameValuePair> params = new ArrayList<>();
+		params.add(new BasicNameValuePair("exec", "debug_devices"));
+		final NameIndexPair[] pairs = HttpRequest.postForIrtObgect(url.toString(), NameIndexPair[].class,  params).get(5, TimeUnit.SECONDS);
+		return pairs;
+	}
+
 	@GetMapping("gain")
-    String modalGain(@RequestParam String sn, @RequestParam String pn, Model model) {
-//    	logger.error(sn);
+    String modalGain(@RequestParam String sn, Model model) {
+    	logger.traceEntry(sn);
 
 		Optional.ofNullable(sn)
 		.map(String::trim)
@@ -318,6 +336,7 @@ public class CalibrationController {
     	.ifPresent(
     			s->{
 
+    				final FutureTask<OneCeHeader> ftHeader = OneCeRestController.getOneCHeader(oneCeApiUrl, sn);
 					model.addAttribute("serialNumber", s);
 
 					FutureTask<Void> ftProfile = gainFromProfile(sn, model);
@@ -350,7 +369,36 @@ public class CalibrationController {
     					model.addAttribute("dac2", dacs.getDac2RowValue());
 
     					// Get settings from DB
-    					final CalibrationGainSettings settings = calibrationGainSettingRepository.findById(pn).orElseGet(()->new CalibrationGainSettings(pn, -40, 85, 4, true));
+    					final OneCeHeader oneCeHeader = ftHeader.get(10, TimeUnit.SECONDS);
+    					final CalibrationGainSettings settings = Optional.ofNullable(oneCeHeader)
+
+    							.map(
+    									och->
+    									calibrationGainSettingRepository.findById(och.getProduct())
+    									.orElseGet(
+    											()->
+    											calibrationGainSettingRepository.findById(och.getSalesSKU())
+    											.orElseGet(
+    													()->
+    													new CalibrationGainSettings(oneCeHeader.getSalesSKU(), -40, 85, 4, true, false))))
+    							.orElseGet(
+    									()->{
+											try {
+
+												return Optional.ofNullable(BtrController.getSerialNumber(s).get(10, TimeUnit.SECONDS))
+
+														.map(SerialNumber::getPartNumber)
+														.map(PartNumber::getPartNumber)
+														.flatMap(calibrationGainSettingRepository::findById)
+														.orElseGet(()->new CalibrationGainSettings(oneCeHeader.getSalesSKU(), -40, 85, 4, true, false));
+
+											} catch (InterruptedException | ExecutionException | TimeoutException e) {
+												logger.catching(e);
+											}
+
+											return new CalibrationGainSettings(oneCeHeader.getSalesSKU(), -40, 85, 4, true, false);
+    									});
+
     					model.addAttribute("settings", settings);
 
 						ftProfile.get(10, TimeUnit.SECONDS);
@@ -414,8 +462,28 @@ public class CalibrationController {
 
     @GetMapping("pll")
     String modalPll(@RequestParam String sn, Model model) {
+    	logger.traceEntry("sn: {}", sn);
 
-    	Optional.ofNullable(sn)
+    	String pllIndex = "102";
+    	try {
+			final Integer devid = getSystemIndex(sn);
+			pllIndex = Optional.ofNullable(getInfo(sn, devid)).map(Info::getDeviceId)
+
+					.flatMap(
+							dId->{
+								IrtArrayId id = new IrtArrayId(PLL_INDEX, dId);
+								return arrayRepository.findById(id);
+							})
+					.map(IrtArray::getDescription)
+					.orElse("102");
+
+    	} catch (IOException | InterruptedException | ExecutionException | TimeoutException | ScriptException e) {
+			logger.catching(e);
+		}
+
+		model.addAttribute("regIndex", pllIndex);
+
+		Optional.ofNullable(sn)
 		.map(String::trim)
     	.filter(s->!s.isEmpty())
     	.ifPresent(s->{

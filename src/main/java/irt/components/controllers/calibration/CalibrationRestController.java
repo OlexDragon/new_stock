@@ -12,18 +12,24 @@ import java.net.MalformedURLException;
 import java.net.URISyntaxException;
 import java.net.URL;
 import java.net.UnknownHostException;
+import java.nio.CharBuffer;
 import java.util.AbstractMap;
 import java.util.AbstractMap.SimpleEntry;
 import java.util.ArrayList;
 import java.util.Arrays;
+import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Optional;
+import java.util.Scanner;
+import java.util.TreeMap;
 import java.util.concurrent.Callable;
 import java.util.concurrent.ExecutionException;
 import java.util.concurrent.FutureTask;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.TimeoutException;
+import java.util.concurrent.atomic.AtomicReference;
+import java.util.function.Function;
 
 import javax.script.ScriptException;
 
@@ -45,9 +51,14 @@ import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
 
+import irt.components.beans.OneCeHeader;
+import irt.components.beans.OneCeUrl;
+import irt.components.beans.PartNumber;
+import irt.components.beans.SerialNumber;
 import irt.components.beans.irt.AlarmInfo;
 import irt.components.beans.irt.CalibrationInfo;
 import irt.components.beans.irt.CalibrationRwInfo;
+import irt.components.beans.irt.Etc;
 import irt.components.beans.irt.HWInfo;
 import irt.components.beans.irt.HomePageInfo;
 import irt.components.beans.irt.Info;
@@ -56,6 +67,7 @@ import irt.components.beans.irt.calibration.CalibrationMode;
 import irt.components.beans.irt.calibration.Diagnostics;
 import irt.components.beans.irt.calibration.HPBMRegisterV21;
 import irt.components.beans.irt.calibration.HPBMRegisterV31;
+import irt.components.beans.irt.calibration.NameIndexPair;
 import irt.components.beans.irt.calibration.RegisterEmpty;
 import irt.components.beans.irt.calibration.RegisterGates;
 import irt.components.beans.irt.calibration.RegisterPLL;
@@ -81,13 +93,15 @@ import lombok.RequiredArgsConstructor;
 public class CalibrationRestController {
 	private final static Logger logger = LogManager.getLogger();
 
+	@Autowired private OneCeUrl oneCeApiUrl;
+
 	@Autowired private CalibrationOutputPowerSettingRepository calibrationOutputPowerSettingRepository;
 	@Autowired private CalibrationPowerOffsetSettingRepository calibrationPowerOffsetSettingRepository;
 	@Autowired private CalibrationGainSettingRepository calibrationGainSettingRepository;
 	@Autowired private BtrSettingRepository calibrationBtrSettingRepository;
 	@Autowired private IrtArrayRepository	arrayRepository;
 
-	@PostMapping(path="monitorInfo", produces = "application/json;charset=utf-8")
+	@RequestMapping(path="monitorInfo", produces = "application/json;charset=utf-8")
     MonitorInfo monitorInfo(@RequestParam(required = false) String sn) {
 //    	logger.error(sn);
     	return Optional.ofNullable(sn)
@@ -111,8 +125,9 @@ public class CalibrationRestController {
 
 	@PostMapping(path="calibrationInfo", produces = "application/json;charset=utf-8")
     CalibrationInfo calibrationInfo(@RequestParam(required = false) String sn) {
-//    	logger.error(sn);
-    	return Optional.ofNullable(sn)
+    	logger.traceEntry("sn: {}", sn);
+
+    	final CalibrationInfo info = Optional.ofNullable(sn)
 
     			.map(
     					s->{
@@ -129,6 +144,8 @@ public class CalibrationRestController {
     						return null;
     					})
     			.orElse(null);
+    	logger.debug(info);
+    	return info;
     }
 
 	@PostMapping(path="irt_array", produces = "application/json;charset=utf-8")
@@ -136,6 +153,14 @@ public class CalibrationRestController {
 		logger.traceEntry("name: {}; id: {};", name, id);
 		IrtArrayId irtArrayId = new IrtArrayId(name, id);
 		return arrayRepository.findById(irtArrayId);
+	}
+
+	@PostMapping(path="irt_array/save", produces = "application/json;charset=utf-8")
+	IrtArray irtArraySave(@RequestParam String name, @RequestParam String id, @RequestParam String value) {
+		logger.traceEntry("name: {}; id: {}; value: {}", name, id, value);
+		IrtArrayId irtArrayId = new IrtArrayId(name, id);
+		IrtArray irtArray = new IrtArray(irtArrayId, value);
+		return arrayRepository.save(irtArray);
 	}
 
 	@PostMapping(path="calib_rw_info", produces = "application/json;charset=utf-8")
@@ -200,54 +225,150 @@ public class CalibrationRestController {
 
     @PostMapping(path="outputpower", consumes = MediaType.APPLICATION_JSON_VALUE)
     String saveCalibrationOutputPowerSettings(@RequestBody CalibrationOutputPowerSettings settings) {
+    	logger.traceEntry("settings: {}", settings);
 
-    	return calibrationOutputPowerSettingRepository.findById(settings.getPartNumber())
-    			.map(
-    					ops->{
+		try {
 
-    						ops.setStartValue(settings.getStartValue());
-    						ops.setStopValue(settings.getStopValue());
-    						ops.setName(settings.getName());
-    						calibrationOutputPowerSettingRepository.save(ops);
+			final String serialNumber = settings.getPartNumber();	// Serial Number set by java script
+			final Function<String, String> consumer = partNumber->{
 
-    						return "The setings has been updated.";
-    					})
-    			.orElseGet(
-    					()->{
+				return calibrationOutputPowerSettingRepository.findById(partNumber)
+		    			.map(
+		    					ops->{
 
-    						calibrationOutputPowerSettingRepository.save(settings);
+		    						ops.setStartValue(settings.getStartValue());
+		    						ops.setStopValue(settings.getStopValue());
+		    						ops.setName(settings.getName());
+		    						calibrationOutputPowerSettingRepository.save(ops);
 
-    						return "The setings has been saved.";
-    					});
+		    						return "The setings has been updated.";
+		    					})
+		    			.orElseGet(
+		    					()->{
+
+		    						settings.setPartNumber(partNumber);
+		    						calibrationOutputPowerSettingRepository.save(settings);
+
+		    						return "The setings has been saved.";
+		    					});
+			};
+
+			return getPartNumber(serialNumber, consumer);
+
+		} catch (InterruptedException | ExecutionException | TimeoutException e) {
+			logger.catching(e);
+		}
+
+		return "Something went wrong.";
+    }
+
+    @GetMapping("power_offset")
+    CalibrationPowerOffsetSettings getCalibrationPowerOffsetSettings(@RequestParam String sn) throws InterruptedException, ExecutionException, TimeoutException {
+    	AtomicReference<CalibrationPowerOffsetSettings> ar = new AtomicReference<>();
+    	getPartNumber(sn,
+    			pn->{
+    				calibrationPowerOffsetSettingRepository.findById(pn)
+    				.ifPresent(ar::set);
+    				return "";
+    			});
+		return ar.get();
     }
 
     @PostMapping(path="power_offset", consumes = MediaType.APPLICATION_JSON_VALUE)
     String saveCalibrationPowerOffsetSettings(@RequestBody CalibrationPowerOffsetSettings settings) {
+    	logger.traceEntry("settings: {}", settings);
 
-    	return calibrationPowerOffsetSettingRepository.findById(settings.getPartNumber())
-    			.map(
-    					ops->{
+		try {
 
-    						ops.setStartValue(settings.getStartValue());
-    						ops.setStopValue(settings.getStopValue());
-    						ops.setName(settings.getName());
+			final String serialNumber = settings.getPartNumber();	// Serial Number set by java script
+			final Function<String, String> consumer = partNumber->{
+
+				return calibrationPowerOffsetSettingRepository.findById(partNumber)
+						.map(
+								ops->{
+
+									ops.setStartValue(settings.getStartValue());
+									ops.setStopValue(settings.getStopValue());
+									ops.setName(settings.getName());
  
-    						calibrationPowerOffsetSettingRepository.save(ops);
+									calibrationPowerOffsetSettingRepository.save(ops);
 
-    						return "The setings has been updated.";
-    					})
-    			.orElseGet(
-    					()->{
+									return "The setings has been updated.";
+								})
+						.orElseGet(
+								()->{
+									settings.setPartNumber(partNumber);
+									calibrationPowerOffsetSettingRepository.save(settings);
 
-    						calibrationPowerOffsetSettingRepository.save(settings);
+									return "The setings has been saved.";
+								});
+			};
 
-    						return "The setings has been saved.";
-    					});
+			return getPartNumber(serialNumber, consumer);
+
+		} catch (InterruptedException | ExecutionException | TimeoutException e) {
+			logger.catching(e);
+		}
+
+		return "Something went wrong.";
     }
 
-    @PostMapping("gain")
-    String saveGainSettings(@RequestParam String partNumber, int startValue, int stopValue, int fields, boolean p1dB) {
+	public String getPartNumber(String serialNumber, Function<String, String> consumer) throws InterruptedException, ExecutionException, TimeoutException {
 
+		return Optional.ofNullable(OneCeRestController.getOneCHeader(oneCeApiUrl, serialNumber).get(10, TimeUnit.SECONDS))
+
+				.map(
+						och->{
+							final CalibrationGainSettings gainSettings = calibrationGainSettingRepository.findById(och.getProduct()).orElseGet(()->calibrationGainSettingRepository.findById(och.getSalesSKU()).orElse(null));
+							final String partNumber = Optional.ofNullable(gainSettings).map(CalibrationGainSettings::getLocalPn).map(local->local ? och.getProduct() : och.getSalesSKU()).orElseGet(()->och.getSalesSKU());
+							return consumer.apply(partNumber);
+						})
+				.orElseGet(
+						()->{
+							try {
+
+								final PartNumber partNumber = BtrController.getSerialNumber(serialNumber).get(10, TimeUnit.SECONDS).getPartNumber();
+								return consumer.apply(partNumber.getPartNumber());
+
+							} catch (InterruptedException | ExecutionException | TimeoutException e) {
+								logger.catching(e);
+							}
+							return "Something went wrong...";
+						});
+	}
+
+    @PostMapping("gain")
+    String saveGainSettings(@RequestParam String serialNumber, int startValue, int stopValue, int fields, boolean p1dB, boolean localPn) {
+
+    	OneCeHeader oneCeHeader = null;
+		try {
+			oneCeHeader = OneCeRestController.getOneCHeader(oneCeApiUrl, serialNumber).get(5, TimeUnit.SECONDS);
+		} catch (InterruptedException | ExecutionException | TimeoutException e) {
+			logger.catching(e);
+		}
+    	final String partNumber = Optional.ofNullable(oneCeHeader)
+
+    			.map(och->localPn ? och.getProduct() : och.getSalesSKU())
+    			.orElseGet(
+    					()->{
+    						try {
+
+    							return BtrController.getSerialNumber(serialNumber).get(10, TimeUnit.SECONDS).getPartNumber().getPartNumber();
+ 
+    						} catch (InterruptedException | ExecutionException | TimeoutException e) {
+    							logger.catching(e);
+    						}
+    						return null;
+    					});
+
+    	if(partNumber==null)
+    		return "The part number cannot be found out.";
+
+    	if(!localPn && oneCeHeader!=null) 
+    		calibrationGainSettingRepository.findById(oneCeHeader.getProduct())
+    		.ifPresent(calibrationGainSettingRepository::delete);
+
+    	final boolean isLocal = oneCeHeader!=null && localPn;
     	return calibrationGainSettingRepository.findById(partNumber)
     			.map(
     					ops->{
@@ -256,6 +377,7 @@ public class CalibrationRestController {
     						ops.setStopValue(stopValue);
     						ops.setFields(fields);
     						ops.setP1dB(p1dB);
+    						ops.setLocalPn(isLocal);
     						calibrationGainSettingRepository.save(ops);
 
     						return "The setings has been updated.";
@@ -269,6 +391,7 @@ public class CalibrationRestController {
     						settings.setStopValue(stopValue);
     						settings.setFields(fields);
     						settings.setP1dB(p1dB);
+    						settings.setLocalPn(isLocal);
 							calibrationGainSettingRepository.save(settings);
 
     						return "The setings has been saved.";
@@ -291,6 +414,16 @@ public class CalibrationRestController {
 		return HttpRequest.postForString(url.toString(), params);
     }
 
+    @GetMapping("sn")
+    SerialNumber getSerialNumber(String sn){
+    	final FutureTask<SerialNumber> ft = BtrController.getSerialNumber(sn);
+    	try {
+			return ft.get(10, TimeUnit.SECONDS);
+		} catch (InterruptedException | ExecutionException | TimeoutException e) {
+			logger.catching(Level.DEBUG, e);
+		}
+		return null;
+    }
     @PostMapping("login")
     String login(@RequestParam String sn) throws IOException {
 
@@ -309,13 +442,14 @@ public class CalibrationRestController {
 					final InputStreamReader inputStreamReader = new InputStreamReader(inputStream);
 					final BufferedReader reader = new BufferedReader(inputStreamReader);){
 
-				String line;
-				while ((line = reader.readLine()) != null)
-					logger.debug(line);
+				CharBuffer chb = CharBuffer.allocate(2000);
+				reader.read(chb);
 				
 			}
 		}catch(UnknownHostException e) {
 			logger.catching(Level.DEBUG, e);
+			connection.disconnect();
+			return e.getLocalizedMessage();
 		}
 
 		connection.disconnect();
@@ -536,14 +670,14 @@ public class CalibrationRestController {
     	return sn;
     }
 
-	@PostMapping("all-modules")
+	@RequestMapping("all-modules")
 	Map<String, Integer> allModules(@RequestParam String sn) throws IOException, InterruptedException, ExecutionException, TimeoutException, ScriptException {
     	logger.traceEntry("{}", sn);
 		return HttpRequest.getAllModules(sn);
     }
 
     @PostMapping("pll_register")
-    RegisterPLL pllRegister(@RequestParam String sn, String addr, String value) throws MalformedURLException, InterruptedException, ExecutionException, ScriptException{
+    RegisterPLL pllRegister(@RequestParam String sn, String addr, String value, String regIndex) throws MalformedURLException, InterruptedException, ExecutionException, ScriptException{
     	logger.traceEntry(sn);
     	return Optional.ofNullable(sn)
 
@@ -557,7 +691,7 @@ public class CalibrationRestController {
     				    				new BasicNameValuePair[]{
     				    						new BasicNameValuePair("devid", "1"),
     				    						new BasicNameValuePair("command", "regs"),
-    				    						new BasicNameValuePair("group", "102"),
+    				    						new BasicNameValuePair("group", regIndex), // 102 or 103
     				    						new BasicNameValuePair("address", addr),
     				    						new BasicNameValuePair("value", value)}));
     				    		FutureTask<RegisterPLL> o = HttpRequest.postForIrtObgect(url.toString(), RegisterPLL.class, params);
@@ -577,13 +711,22 @@ public class CalibrationRestController {
     }
 
     @PostMapping("pll_registers")
-    RegisterPLL pllRegisters(@RequestParam String sn) throws MalformedURLException, InterruptedException, ExecutionException, ScriptException{
-    	return diagnostics(RegisterPLL.class, sn, "regs", "1", "102", null, null, PostFor.IRT_OBJECT);
+    RegisterPLL pllRegisters(@RequestParam String sn, String regIndex) throws MalformedURLException, InterruptedException, ExecutionException, ScriptException{
+    	logger.traceEntry("sn: {}; regIndex: {}", sn, regIndex);
+    	return diagnostics(RegisterPLL.class, sn, "regs", "1", regIndex, null, null, PostFor.IRT_OBJECT);
     }
 
 	@PostMapping("module-info")
 	Info info(@RequestParam String sn, Integer moduleIndex) {
 		return diagnostics(Info.class, sn, "info", moduleIndex.toString(), null, null, null, PostFor.IRT_OBJECT);
+    }
+
+	@GetMapping("module-info")
+	String infoString(@RequestParam String sn, String moduleIndex) throws IOException {
+		final String url = new URL("http", sn, "/device_debug_read.cgi").toString();
+		List<NameValuePair> params = new ArrayList<>();
+		params.addAll(Arrays.asList(new BasicNameValuePair[]{new BasicNameValuePair("devid", moduleIndex), new BasicNameValuePair("command", "info")}));
+		return HttpRequest.postForString(url, params);
     }
 
 	@PostMapping("hw-info")
@@ -603,10 +746,90 @@ public class CalibrationRestController {
 		return diagnostics(RegisterGates.class, sn, "regs", deviceId.toString(), "27", address, value, PostFor.STRING);
     }
 
+    @PostMapping("sticker")
+    Map<String, Map<String, String>> getSticker(@RequestParam String sn) throws IOException, InterruptedException, ExecutionException, TimeoutException, ScriptException{
+    	logger.traceEntry("sn: {};", sn);
+
+    	final Map<String, Map<String, String>> map = new TreeMap<>();
+
+    	HttpRequest.getAllModules(sn).entrySet()
+    	.forEach(es->{
+			try {
+
+				final Map<String, String> values = new HashMap<>();
+				// Info
+				final BasicNameValuePair paieDevId = new BasicNameValuePair("devid", es.getValue().toString());
+				final FutureTask<Info> ftInfo = CalibrationController.getHttpDeviceDebug(sn, Info.class, paieDevId, new BasicNameValuePair("command", "info"));
+
+				final URL url = new URL("http", sn, "/device_debug_read.cgi");
+				List<NameValuePair> list = new ArrayList<>();
+				list.add(paieDevId);
+				list.add(new BasicNameValuePair("command", "hwinfo"));
+				// CPU Info
+				final BasicNameValuePair groupIndex = new BasicNameValuePair("groupindex", "0");
+				list.add(groupIndex);
+				final String cpuInfo = HttpRequest.postForString(url.toString(), list);
+				values.put("cpu", cpuInfo);
+
+				// Help
+				list.remove(groupIndex);
+				list.add(new BasicNameValuePair("groupindex", "100"));
+				final String help = HttpRequest.postForString(url.toString(), list);
+
+				final Info info = ftInfo.get(10, TimeUnit.SECONDS);
+				if(info==null)
+					return;
+
+				if(!help.contains("ETC")) {
+					map.put(info.getSerialNumber(), values);
+					return;
+				}
+
+				try(Scanner scanner = new Scanner(help);){
+					while(scanner.hasNextLine()) {
+						final String line = scanner.nextLine();
+						if(line.contains("ETC")) {
+							Arrays.stream(line.split("\\s+")).parallel().map(s->s.replaceAll("\\D", "")).filter(s->!s.isEmpty()).findAny()
+							.ifPresent(
+									index->{
+										try {
+
+											final String u = new URL("http", "irt-2415015", "/device_debug_read.cgi").toString();
+											final List<NameValuePair> params = new ArrayList<>();
+											params.add(new BasicNameValuePair("devid", "1002"));
+											params.add(new BasicNameValuePair("command", "regs"));
+											params.add(new BasicNameValuePair("groupindex", "28"));
+											final Etc etc = HttpRequest.postForIrtObgect(u, Etc.class, params).get(10, TimeUnit.SECONDS);
+
+											values.put("sticker", etc.getEtc());
+											map.put(info.getSerialNumber(), values);
+
+										} catch (MalformedURLException | InterruptedException | ExecutionException | TimeoutException e) {
+											logger.catching(e);
+										}
+									});
+						}
+					}
+				}
+
+			} catch (IOException | InterruptedException | ExecutionException | TimeoutException e) {
+				logger.catching(e);
+			}
+    	});
+
+    	return map;
+    }
+
     @PostMapping("register/write")
     String rwRegister(@RequestParam String sn, String moduleId, String index, String address, String value){
     	diagnostics(RegisterEmpty.class, sn, "regs", moduleId, index, address, value, PostFor.IRT_OBJECT);
     	return sn;
+    }
+
+    @GetMapping("converter-info")
+    NameIndexPair[] converterInfo(@RequestParam String sn) throws MalformedURLException, InterruptedException, ExecutionException, TimeoutException{
+
+    	return CalibrationController.getAllIndex(sn);
     }
 
 	public static  <T extends Diagnostics> T diagnostics(Class<T> registerClass, String sn, String command, String moduleIndex, String index, String address, String value, PostFor postFor) {

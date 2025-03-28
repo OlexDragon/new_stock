@@ -35,6 +35,8 @@
         				<label for="sensitivity">Sensitivity (+/- dB)</label>
  	     			</div>
  	     			<div id="radioButtons">
+						<input name="testBy" id="byPM" type="radio" class="btn-check" autocomplete="off" data-property-path="data.outpower" data-unit= "dBn">
+						<label for="byPM" class="btn btn-outline-primary" title="By Power Meter">←PM</label>
 						<input name="testBy" id="byPower" type="radio" class="btn-check" autocomplete="off" checked="checked" data-property-path="data.outpower" data-unit= "dBn">
 						<label for="byPower" class="btn btn-outline-primary">By Power</label>
 					</div>
@@ -121,227 +123,103 @@
 			chartRun = false;
 			function update(){
 
-				interval = setInterval(function() {
-
-					if(chartRun) return;
-					chartRun = true;
-
-					let url;
-					switch(testBy){
-					case 'byPower':
-						url = '/calibration/rest/monitorInfo';
-						break;
-					default:
-						url = urlCalibrationInfo;
-					}
-
-					$.post(url, {sn : ip})
-					.done(function(unitInfo){
-
-						if(!unitInfo){
-							console.warn('POST ' + url + ' returns NULL.');
-							let $alarmStatus = $('#alarmStatus');
-							let $children = $alarmStatus.children();
-							if($children.length==1 || !$($children.get(1)).text().endsWith('Communication lost.'))
-								$children.first().after($('<div>', {class: 'alert alert-secondary', text: formater.format(new Date()) + ' -> Communication lost.'}));
-							chartRun = false;
-							return;
-						}						
-
-						let date = formater.format(new Date());
-						// Temperature
-						let temperature = getTemperature(unitInfo);
-						// Power
-						let valueAsString = getValueAsString(unitInfo);
-						if(valueAsString==null){
-							chartRun = false;
-							return;
-						}
-						let unit;
-						let value;
-						if(valueAsString.unit){
-							unit = valueAsString.unit;
-							value = valueAsString = valueAsString.value;
-						}else{
-							unit = 'dBm';
-							value = parseFloat((valueAsString && valueAsString.length) ? valueAsString.replace('<', '').replace('>', '') : 0);
-						}
-						$lastPoint.text('( ' + date + '; ' + valueAsString + ' ' + unit + '; ' + temperature + ' °C; )');
-						
-
-						let y1 = yPower.length - 1;
-						if(replacePointOrNot(y1)){
-							xLabels[y1] = date;
-							yTemperature[y1] = temperature;
-							yPower[y1] = value;
-							chart.update();
-							chartRun = false;
-							return;
-						}
-
-						yTemperature.push(temperature);
-						yPower.push(value);
-						xLabels.push(formater.format(new Date()));
-
-						if(xLabels.length>500 || yPower[0]==''){
-							xLabels.shift();
-							yPower.shift();
-							yTemperature.shift();
-						}
-
-						chart.update();
-						getAlarms(ip);
-
-						chartRun = false;
-					})
-					.fail(function(error) {
-
-						if(error.statusText!='abort')
-							alert(error.responseText);
-						chartRun = false;
-				   	});
-				},3000);
-			}
-			function replacePointOrNot(y1){
-
-				if(yPower[0]=='')
-					return false;	// Replace Point
-
-				let y2 = y1-1;
-				let v = $('#sensitivity').val();
-				let val = parseFloat(v);
-
-				if(!val){
-					$('#sensitivity').val(0.5);
-					val = 0.5;
-				}
-
-				// By Value
-				let min = yPower[y2] - val;
-				let max =  yPower[y2] + val;
-				if( yPower[y1]<min || yPower[y1]>max)
-					return false; 						// Out off renge - add point.
-
-				// By Temperature
-				min = yTemperature[y2] - 5;
-				max =  yTemperature[y2] + 5;
-				if(yTemperature[y1]<min || yTemperature[y1]>max)
-					return false;  						// Out off renge - add point.
-
-				// By Time
-				let date1 = new Date(xLabels[y1]);
-				let date2 =  new Date(xLabels[y2]);
-				let t = date1 - date2;
-				return t<10*60*60*1000; // if in renge replace point. If out off renge add point
-			}
-			$('#restart').click(restart);
-
-			function restart(){
+				if(chartRun) return;
+				chartRun = true;
 
 				clearInterval(interval);
+				interval = setInterval(function() {
 
-				for(;xLabels.length>3;){
-					xLabels.shift();
-					yPower.pop();
-					yTemperature.pop();
+				let url;
+				switch(testBy){
+				case 'byPM':
+				case 'byPower':
+					url = '/calibration/rest/monitorInfo';
+					break;
+				default:
+					url = urlCalibrationInfo;
 				}
 
-				yPower[0] = yPower[1] = yPower[2] = yTemperature[0] = yTemperature[1] = yTemperature[2] = '';
-
-				update();
-
-				$('#alarmStatus').remove();
-			}
-			$("input[name=testBy]").change(function(){
-				testByChange(this);
-			})
-			function testByChange(b){
-				testBy = b.id;
-				restart();
-				if(testBy=='byPower'){
-					$('label[for="sensitivity"]').text('Sensitivity (+/- dB)');
-					chart.data.datasets[0].label='Power(dBm)';
-				}else{
-					$('label[for="sensitivity"]').text('Sensitivity (+/- ' + b.dataset.unit + ')');
-					chart.data.datasets[0].label='Current(' + b.dataset.unit + ')';
-				}
-			}
-			function getTemperature(unitInfo){
-
-				if(unitInfo.data)
-					return parseFloat(unitInfo.data.temperature ? unitInfo.data.temperature : 0);
-
-				if(unitInfo.bias)
-					return parseFloat(unitInfo.bias.temperature ? unitInfo.bias.temperature : 0);
-
-				return parseFloat(unitInfo.temperature);
-			}
-			function getValueAsString(unitInfo){
-
-				let propPath = $('#' + testBy).data('property-path');
-				let split = propPath.split(':');
-				let pp = split[0].split('.');
-
-				let value = unitInfo;
-				for(let i=0; i<pp.length; i++){
-					value = value[pp[i]]
-					if(value==null){
-						console.warn('Something is wrong with the properties. propPath=' + propPath + '; properties=' + unitInfo);
-						return null;
-					}
-				}
-				if(split.length>1){
-					value = value.filter(v=>v.name==split[1]);
-					if(value.length==1)
-						value = value[0].value;
-				}
-
-				return value;
-			}
-			function addButton(id, propertyPath, text, unit){
-				$('#radioButtons')
-				.append($('<input>', {id: id, name: 'testBy', type: 'radio', class: 'btn-check', autocomplete: 'off', 'data-property-path': propertyPath, onchange: 'testByChange(this);', 'data-unit': unit}))
-				.append($('<label>', {for: id, class: 'btn btn-outline-primary', text: text}));
-			}
-			function addTestByButtons(unitInfo){
-				if(unitInfo.hss1)
-					addButton('hss1', 'hss1', 'HSS1', 'A');
-				if(unitInfo.hss2)
-					addButton('hss2', 'hss2', 'HSS2', 'A');
-				if(unitInfo.boards && unitInfo.boards.data){
-					let properties = unitInfo.boards.data.filter(d=>d.name!=null)
-					if(properties.length){
-						properties.forEach((p,i1)=>{
-							let data = p.powerSuplyData;
-							let d = data.filter(d=>d.value.unit=='A' || d.value.unit=='mA');
-							d.forEach((v,i2)=>{
-								addButton('testBy' + '_' + i1 + '_' + i2, 'boards.data.' + i1 + '.powerSuplyData:' + v.name, v.name, v.value.unit);
-							});
-						})
-					}else
-						console.warn('Something is wrong with the properties. properties=' + properties);
-				}
-			}
-			async function postCalibrationInfo(){
-
-				$.post(urlCalibrationInfo, {sn : ip})
+				$.post(url, {sn : ip})
 				.done(function(unitInfo){
 
-					if(!unitInfo)
+					if(!unitInfo){
+						console.warn('POST ' + url + ' returns NULL.');
+						let $alarmStatus = $('#alarmStatus');
+						let $children = $alarmStatus.children();
+						if($children.length==1 || !$($children.get(1)).text().endsWith('Communication lost.'))
+							$children.first().after($('<div>', {class: 'alert alert-secondary', text: formater.format(new Date()) + ' -> Communication lost.'}));
+						chartRun = false;
 						return;
+					}						
 
-					if(!unitInfo.bias && unitInfo.hss1==null){
-						var href = $('#unitLogin').prop('href');
-						$.post(href)
-						.done(function(data){
-							if(data.startsWith('Authorized on'))
-								postCalibrationInfo();
-						})
-						.fail(conectionFail);
+					let date = formater.format(new Date());
+					// Temperature
+					let temperature = getTemperature(unitInfo);
+					// Power
+					let valueAsString = getValueAsString(unitInfo);
+					if(valueAsString==null){
+						chartRun = false;
+						return;
+					}
+					let unit;
+					let value;
+					if(valueAsString.unit){
+						unit = valueAsString.unit;
+						value = valueAsString = valueAsString.value;
+					}else{
+						unit = 'dBm';
+							value = parseFloat((valueAsString && valueAsString.length) ? valueAsString.replace('<', '').replace('>', '') : 0);
+					}
+					$lastPoint.text('( ' + date + '; ' + valueAsString + ' ' + unit + '; ' + temperature + ' °C; )');
+						
+					const y1 = yPower.length - 1;
+
+					if(testBy==='byPM'){
+						if($outputGet.hasClass('disabled')){
+							$('#byPower').click();
+							alert('It is impossible to get the power value from the tool.');
+						}
+						outputGet(data=>{
+							if(!data.getAnswer)
+								return;
+
+							const toFixed = dataToValue(data);
+							if(!toFixed){
+								alert('There was a mistake in the information that was received from the tool.');
+								if(y1>=0){
+									yPower.splice(y1, 1);	// Remove this point
+									yTemperature.splice(y1, 1);	// Remove this point
+								}
+								return;
+							}
+							if(y1>=0)
+								yPower[y1] = toFixed;
+						});
+					}
+
+					if(replacePointOrNot(y1)){
+						xLabels[y1] = date;
+						yTemperature[y1] = temperature;
+						yPower[y1] = value;
+						chart.update();
+						chartRun = false;
 						return;
 					}
 
-					addTestByButtons(unitInfo);
+					yTemperature.push(temperature);
+					yPower.push(value);
+					xLabels.push(formater.format(new Date()));
+
+					if(xLabels.length>500 || yPower[0]==''){
+						xLabels.shift();
+						yPower.shift();
+						yTemperature.shift();
+					}
+
+					chart.update();
+					getAlarms(ip);
+
+					chartRun = false;
 				})
 				.fail(function(error) {
 
@@ -349,51 +227,214 @@
 						alert(error.responseText);
 					chartRun = false;
 			   	});
+			},3000);
+		}
+		function replacePointOrNot(y1){
 
+			if(yPower[0]=='')
+				return false;	// Replace Point
+
+			let y2 = y1-1;
+			let v = $('#sensitivity').val();
+			let val = parseFloat(v);
+
+			if(!val){
+				$('#sensitivity').val(0.5);
+				val = 0.5;
 			}
-			async function getAlarms(ip){
-				$.post('/calibration/rest/alarm_info', {sn: ip})
-				.done(function(data){
 
-					let $alarmStatus = $('#alarmStatus');
-					if(!$alarmStatus.length){
-						$alarmStatus = $('<div>', { id: 'alarmStatus', class: 'alert alert-warning', role: 'alert'}).append($('<h4>', {class: 'alert-heading', text: 'Alarms'}));
-						$('#modal-body').append($alarmStatus);
-					}
+			// By Value
+			let min = yPower[y2] - val;
+			let max =  yPower[y2] + val;
+			if( yPower[y1]<min || yPower[y1]>max)
+				return false; 						// Out off renge - add point.
 
-					let $children = $alarmStatus.children();
-					//No Alarms
-					if(data.summary=='cleared' || data.summary=='no alarm'){
+			// By Temperature
+			min = yTemperature[y2] - 5;
+			max =  yTemperature[y2] + 5;
+			if(yTemperature[y1]<min || yTemperature[y1]>max)
+				return false;  						// Out off renge - add point.
 
-						let text = 'summary - No Alarms';
+			// By Time
+			let date1 = new Date(xLabels[y1]);
+			let date2 =  new Date(xLabels[y2]);
+			let t = date1 - date2;
+			return t<10*60*60*1000; // if in renge replace point. If out off renge add point
+		}
+		$('#restart').click(restart);
 
-						if( $children.length>1 && $($children.get(1)).text().endsWith(text))
-							return;
+		function restart(){
 
-						$children.first().after($('<div>', {class: 'alert alert-success', text: formater.format(new Date()) + ' -> ' + text}));
+			clearInterval(interval);
 
-						return;
-					}
+			for(;xLabels.length>3;){
+				xLabels.shift();
+				yPower.pop();
+				yTemperature.pop();
+			}
 
-					let text = data.alarms.filter(a=>a.status!='cleared').filter(a=>a.status!='no alarm').map(a=>a.desc + ' - ' + a.status).toString();
-					if($children.length>1){
-						let lastText = $($children.get(1)).text();
-						let split = lastText.split(' -> ');
+			yPower[0] = yPower[1] = yPower[2] = yTemperature[0] = yTemperature[1] = yTemperature[2] = '';
 
-						if(split.length>1 && split[1]==text)
-							return;
-					}
+			update();
 
-					$children.first().after($('<div>', {class: 'alert alert-danger', text: formater.format(new Date()) + ' -> ' + text}));
+			$('#alarmStatus').remove();
+		}
+		$("input[name=testBy]").change(function(){
+			testByChange(this);
+		})
+		function testByChange(b){
+			testBy = b.id;
+			restart();
+			if(testBy=='byPower' || testBy=='byPM'){
+				$('label[for="sensitivity"]').text('Sensitivity (+/- dB)');
+				chart.data.datasets[0].label='Power(dBm)';
+			}else{
+				$('label[for="sensitivity"]').text('Sensitivity (+/- ' + b.dataset.unit + ')');
+				chart.data.datasets[0].label='Current(' + b.dataset.unit + ')';
+			}
+		}
+		function getTemperature(unitInfo){
+
+			if(unitInfo.data)
+				return parseFloat(unitInfo.data.temperature ? unitInfo.data.temperature : 0);
+
+			if(unitInfo.bias)
+				return parseFloat(unitInfo.bias.temperature ? unitInfo.bias.temperature : 0);
+
+			return parseFloat(unitInfo.temperature);
+		}
+		function getValueAsString(unitInfo){
+
+			const propPath = $('#' + testBy).data('property-path');
+			if(!propPath)
+				return;
+			const split = propPath.split(':');
+			const pp = split[0].split('.');
+
+			let value = unitInfo;
+			for(let i=0; i<pp.length; i++){
+				value = value[pp[i]]
+				if(value==null){
+					console.warn('Something is wrong with the properties. propPath=' + propPath + '; properties=' + unitInfo);
+					return null;
+				}
+			}
+			if(split.length>1){
+				value = value.filter(v=>v.name==split[1]);
+				if(value.length==1)
+					value = value[0].value;
+			}
+			return value;
+		}
+		function addButton(id, propertyPath, text, unit){
+			$('#radioButtons')
+			.append($('<input>', {id: id, name: 'testBy', type: 'radio', class: 'btn-check', autocomplete: 'off', 'data-property-path': propertyPath, onchange: 'testByChange(this);', 'data-unit': unit}))
+			.append($('<label>', {for: id, class: 'btn btn-outline-primary', text: text}));
+		}
+		function addTestByButtons(unitInfo){
+			if(unitInfo.hss1)
+				addButton('hss1', 'hss1', 'HSS1', 'A');
+			if(unitInfo.hss2)
+				addButton('hss2', 'hss2', 'HSS2', 'A');
+			if(unitInfo?.boards?.data){
+				const data = unitInfo.boards.data;
+				addOtherButtons(data);
+			}else if(unitInfo?.epsu?.data){
+				const data = unitInfo.epsu.data;
+				addOtherButtons(data, 'epsu');
+			}
+		}
+		function addOtherButtons(data, objectName){
+			if(!objectName)
+				objectName = 'boards';
+			const properties = data.filter(d=>d.name!=null)
+			if(properties.length){
+				properties.forEach((p,i1)=>{
+					let data = p.powerSuplyData;
+					let d = data.filter(d=>d.value.unit=='A' || d.value.unit=='mA');
+					d.forEach((v,i2)=>{
+						addButton('testBy' + '_' + i1 + '_' + i2, objectName + '.data.' + i1 + '.powerSuplyData:' + v.name, v.name, v.value.unit);
+					});
 				})
-				.fail(conectionFail);
-			}
+			}else
+				console.warn('Something is wrong with the properties. properties=' + properties);
 
-			function setupModal(){
-				$modal.on('shown.bs.modal', update);
-				$modal.on('hidden.bs.modal', function () { clearInterval(interval); });
-				return true;
-			}
+		}
+		async function postCalibrationInfo(){
+
+			$.post(urlCalibrationInfo, {sn : ip})
+			.done(function(unitInfo){
+
+				if(!unitInfo)
+					return;
+
+				if(!unitInfo.bias && unitInfo.hss1==null){
+					var href = $('#unitLogin').prop('href');
+					$.post(href)
+					.done(function(data){
+						if(data.startsWith('Authorized on'))
+							postCalibrationInfo();
+					})
+					.fail(conectionFail);
+					return;
+				}
+
+				addTestByButtons(unitInfo);
+			})
+			.fail(function(error) {
+
+				if(error.statusText!='abort')
+					alert(error.responseText);
+				chartRun = false;
+		   	});
+		}
+		async function getAlarms(ip){
+			$.post('/calibration/rest/alarm_info', {sn: ip})
+			.done(function(data){
+
+				let $alarmStatus = $('#alarmStatus');
+				if(!$alarmStatus.length){
+					$alarmStatus = $('<div>', { id: 'alarmStatus', class: 'alert alert-warning', role: 'alert'}).append($('<h4>', {class: 'alert-heading', text: 'Alarms'}));
+					$('#modal-body').append($alarmStatus);
+				}
+
+				let $children = $alarmStatus.children();
+				//No Alarms
+				if(data.summary=='cleared' || data.summary=='no alarm'){
+
+					let text = 'summary - No Alarms';
+
+					if( $children.length>1 && $($children.get(1)).text().endsWith(text))
+						return;
+
+					$children.first().after($('<div>', {class: 'alert alert-success', text: formater.format(new Date()) + ' -> ' + text}));
+
+					return;
+				}
+
+				let text = data.alarms.filter(a=>a.status!='cleared').filter(a=>a.status!='no alarm').map(a=>a.desc + ' - ' + a.status).toString();
+				if($children.length>1){
+					let lastText = $($children.get(1)).text();
+					let split = lastText.split(' -> ');
+
+					if(split.length>1 && split[1]==text)
+						return;
+				}
+				$children.first().after($('<div>', {class: 'alert alert-danger', text: formater.format(new Date()) + ' -> ' + text}));
+			})
+			.fail(conectionFail);
+		}
+
+		function setupModal(){
+			$modal.on('shown.bs.modal', update);
+			$modal.on('hidden.bs.modal', function () { clearInterval(interval); });
+
+			$modal.on('hide.bs.modal', function () {
+				if (document.activeElement) 
+		            document.activeElement.blur();
+			});
+			return true;
+		}
 
 			/*]]>*/
 		//# sourceURL=power_chart.js

@@ -23,7 +23,7 @@ public abstract class TarToBytes implements ToUpload {
 		if(file.exists() && file.isFile())
 			bytes = Files.readAllBytes(path);
 		else
-			throw new IllegalArgumentException(fileName + " Profile file does not exists.");
+			throw new IllegalArgumentException(fileName + " IrtProfile file does not exists.");
 	}
 
 	public TarToBytes(String fileName, byte[] bytes) {
@@ -42,7 +42,7 @@ public abstract class TarToBytes implements ToUpload {
 				TarArchiveOutputStream tarArchiveOutputStream = new TarArchiveOutputStream(byteArrayOutputStream);){
 
 
-			// Profile
+			// IrtProfile
 			 final TarArchiveEntry ieSoft = new TarArchiveEntry(fileName);
 			 ieSoft.setSize(bytes.length);
 			 tarArchiveOutputStream.putArchiveEntry(ieSoft);

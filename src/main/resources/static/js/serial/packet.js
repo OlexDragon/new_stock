@@ -455,7 +455,7 @@ class Payload{
 			this.parameter = new Parameter(parameter.subarray(0, PARAMETER_SIZE));
 			if(this.parameter.size)
 				this.data = parameter.subarray(PARAMETER_SIZE);
-				return;
+			return;
 		}
 		this.parameter = (parameter == undefined ? new Parameter() : parameter);
 		if(data){

@@ -62,7 +62,7 @@ public class InventoryRestController {
 		inventory.setLineNumber(2);
 		inventory.setProductKey(productKey);
 		inventory.setQty(qty);
-		final InventoryValues inventoryValues = new InventoryValues();
+		final InventoryValues inventoryValues = new InventoryValues(new StringBuilder(protocol).append(login).append(url).append("$metadata#Document_InventoryTransfer_Inventory/@Element").toString());
 		inventoryValues.getInventories().add(inventory);
 
 		return postInventory(postUrl, inventoryTransfer, InventoryTransfer.class);

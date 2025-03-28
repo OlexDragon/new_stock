@@ -13,5 +13,11 @@ class InfoTest {
 		assertEquals(250, info.getDeviceType());
 		assertEquals(31, info.getTypeVersion());
 	}
+	@Test
+	void test2() {
+		String str = "-25  -24,/ -15, -21/25";
+		final String[] split = str.split("[ ,/]+");
+		assertEquals(5, split.length);
+	}
 
 }

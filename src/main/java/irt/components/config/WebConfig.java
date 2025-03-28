@@ -23,13 +23,19 @@ public class WebConfig implements WebServerFactoryCustomizer<ConfigurableServlet
 	@Value("${irt.url}")
 	private String url;
 
+	@Value("${irt.url.api}")
+	private String urlApi;
+
 
     @Bean
     public OneCeUrl oneCeUrl() throws Exception {
-
 		return new OneCeUrl(protocol, login, url);
 	}
 
+    @Bean("oneCeApiUrl")
+    public OneCeUrl oneCeApiUrl() throws Exception {
+		return new OneCeUrl(protocol, login, urlApi);
+	}
 
 	@Override
 	public void customize(ConfigurableServletWebServerFactory factory) {

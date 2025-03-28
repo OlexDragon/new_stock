@@ -25,7 +25,9 @@ import java.util.concurrent.TimeoutException;
 import java.util.stream.Collectors;
 import java.util.stream.IntStream;
 
+import javax.management.InvalidApplicationException;
 import javax.script.ScriptException;
+import javax.servlet.http.HttpServletResponse;
 
 import org.apache.http.NameValuePair;
 import org.apache.http.message.BasicNameValuePair;
@@ -280,7 +282,7 @@ public class CurrentRestController {
 	}
 
     @PostMapping("offset")
-    List<CurrentOffset> currentOffset(@RequestParam String sn, @RequestParam Boolean local) throws UnknownHostException {
+    List<CurrentOffset> currentOffset(@RequestParam String sn, @RequestParam Boolean local, HttpServletResponse response) throws UnknownHostException, InvalidApplicationException {
     	logger.traceEntry("Serial Number: {}; local: {}", sn, local);
 
     	final InetAddress byName = InetAddress.getByName(sn);
@@ -315,6 +317,7 @@ public class CurrentRestController {
 
     		 final Process process = builder.start();
 
+
     		 final FutureTask<Void> ft = new FutureTask<>(()->null);
 
     		 ThreadRunner.runThread(
@@ -326,6 +329,7 @@ public class CurrentRestController {
     			            	CurrentOffset offset = null;
     			            	while ((line = reader.readLine()) != null) {
     			            		logger.debug(line);
+    			            		response.setHeader("error-line", line);
     			            		if(!ft.isDone())
     			            			ThreadRunner.runThread(ft);
 
@@ -357,14 +361,19 @@ public class CurrentRestController {
 				logger.catching(Level.DEBUG, e);
 			}
 
+    		try(final OutputStream os = process.getOutputStream();){
+    			while(process.isAlive()) {
+    				os.write(("\n").getBytes());
+    				os.flush();
+    	    		Thread.sleep(3000);
+    			}
+    		}
 
-    		 try(final OutputStream os = process.getOutputStream();){
-    			 while(process.isAlive()) {
-    				 os.write(("\n").getBytes());
-    				 os.flush();
-    	    		 Thread.sleep(3000);
-    			 }
-    		 }
+    		final Integer exitValue = process.exitValue();
+    		if(exitValue<0) {
+        		response.setHeader("error-code", exitValue.toString());
+    			throw new InvalidApplicationException("Script Error");
+    		}
 
     		 return offsets.stream().filter(os->!os.getOffsets().isEmpty()).collect(Collectors.toList());
 

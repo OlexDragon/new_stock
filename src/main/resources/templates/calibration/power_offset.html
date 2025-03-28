@@ -345,13 +345,12 @@
 				$('#dropdownSettingsButton').on('hidden.bs.dropdown', function () {
 					if(confirm('Do you want to save your changes to the database?')){
 
-						let pn = $serialNumber.prop('title');
 						var min = $minValue.val();
 						var max = $('#maxValue').val();
 						var step = $('#step').val();
 						let name = $('#name').val();
 
-						if(!(pn && min && max)){
+						if(!(min && max)){
 							alert('One of the values is missing.')
 							return;
 						}
@@ -361,7 +360,7 @@
 							type: 'POST',
 							contentType: "application/json",
 							data: JSON.stringify({
-								partNumber: pn,
+								partNumber: serialNumber,
 								startValue: min,
 								stopValue:  max,
 								name:  name
@@ -381,7 +380,11 @@
 		});
 
 		$modal.on('hide.bs.modal', e=>{
-    		var array = [];
+
+			if (document.activeElement)
+	            document.activeElement.blur();
+
+			var array = [];
 
     		$modalBody.find('.row').each(function(){
     			let $row = $(this);

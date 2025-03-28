@@ -8,8 +8,9 @@ import org.apache.http.NameValuePair;
 import org.apache.http.message.BasicNameValuePair;
 
 import lombok.RequiredArgsConstructor;
+import lombok.ToString;
 
-@RequiredArgsConstructor
+@RequiredArgsConstructor @ToString
 public class OneCeUrl {
 
 	private static final int SIZE = 5;
@@ -20,13 +21,17 @@ public class OneCeUrl {
 
 	public String createUrl(String category) {
 
-		final StringBuilder sb = new StringBuilder(protocol).append(login).append(url).append(category).append('?');
-
 		List<NameValuePair> params = new ArrayList<NameValuePair>();
 //		params.add(new BasicNameValuePair("$format", "json"));
 		params.add(new BasicNameValuePair("$top", "" + SIZE));
-		 final String collectPatams = params.stream().map(pair->pair.getName() + "=" + pair.getValue()).collect(Collectors.joining("&"));
 
+		return createUrl(category, params);
+	}
+
+	public String createUrl(String category, List<NameValuePair> params) {
+		final StringBuilder sb = new StringBuilder(protocol).append(login).append(url).append(category).append('?');
+
+		 final String collectPatams = params.stream().map(pair->pair.getName() + "=" + pair.getValue()).collect(Collectors.joining("&"));
 		 sb.append(collectPatams);
 
 		 return sb.toString();

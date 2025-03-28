@@ -111,7 +111,7 @@ public class SoftRestController {
     	final ProfileWorker profileWorker = new ProfileWorker(profileFolder, sn);
 
 		if(!profileWorker.exists())
-			return "Profile does not exists.";
+			return "IrtProfile does not exists.";
 
 		final Properties properties = new Properties();
 		properties.load(new FileInputStream(flashFile));

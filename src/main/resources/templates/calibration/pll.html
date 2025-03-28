@@ -13,13 +13,17 @@
 <body>
 
 <!-- Modal Message -->
-	<div id="modal" class="modal" tabindex="-1" role="dialog">
+	<div id="modal" class="modal" data-bs-backdrop="static" data-bs-keyboard="false" tabindex="-1" aria-hidden="true">
 	<th:block th:fragment="modal">
   		<div class="modal-dialog modal-xl">
     		<div class="modal-content">
 <!-- Modal Header -->
       			<div class="modal-header">
         			<h5 class="modal-title">PLL</h5>
+        			<div class="col"></div>
+        			<div class="col-xl-1 col-lg-2 col-sm-2 col-es-3 col-4">
+        				<input id="regIndex" type="number" class="form-control" th:value="${regIndex}==null ? 102 : ${regIndex}">
+        			</div>
 <!-- X Button -->
         			<button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
       			</div>
@@ -536,12 +540,12 @@
 //
 // ***** ST0 *****
 //
-			let $st0 = $('#st0');
+			var $st0 = $('#st0');
 
-			let $VCO_CALB_DISABLE = $('#VCO_CALB_DISABLE');
-			let $CP_SEL = $('#CP_SEL');
-			let $PFD_DEL = $('#PFD_DEL');
-			let $N = $('#N');
+			var $VCO_CALB_DISABLE = $('#VCO_CALB_DISABLE');
+			var $CP_SEL = $('#CP_SEL');
+			var $PFD_DEL = $('#PFD_DEL');
+			var $N = $('#N');
 
 			if(!serialNumber){
 				alert("Unknown serial number.");
@@ -569,14 +573,14 @@
 //
 // ***** ST1 *****
 //
-			let $st1 = $('#st1');
+			var $st1 = $('#st1');
 
-			let $DBR_ST1 = $('#DBR_ST1');
-			let $RF1_OUT_PD = $('#RF1_OUT_PD');
-			let $MAN_CALB_EN = $('#MAN_CALB_EN');
-			let $PLL_SEL = $('#PLL_SEL');
-			let $RF1_SEL = $('#RF1_SEL');
-			let $FRAC = $('#FRAC');
+			var $DBR_ST1 = $('#DBR_ST1');
+			var $RF1_OUT_PD = $('#RF1_OUT_PD');
+			var $MAN_CALB_EN = $('#MAN_CALB_EN');
+			var $PLL_SEL = $('#PLL_SEL');
+			var $RF1_SEL = $('#RF1_SEL');
+			var $FRAC = $('#FRAC');
 
 			function setST1(){
 
@@ -601,12 +605,12 @@
 //
 // ***** ST2 *****
 //
-			let $st2 = $('#st2');
+			var $st2 = $('#st2');
 
-			let $DBR_ST2	 = $('#DBR_ST2');
-			let $DSM_CLK_DISABLE = $('#DSM_CLK_DISABLE')
-			let $RF2_OUT_PD	 = $('#RF2_OUT_PD');
-			let $MOD		 = $('#MOD');
+			var $DBR_ST2	 = $('#DBR_ST2');
+			var $DSM_CLK_DISABLE = $('#DSM_CLK_DISABLE')
+			var $RF2_OUT_PD	 = $('#RF2_OUT_PD');
+			var $MOD		 = $('#MOD');
 
 			function setST2(){
 
@@ -722,11 +726,11 @@
 //
 // ***** ST5 *****
 //
-			let $st5 = $('#st5');
+			var $st5 = $('#st5');
 
-			let $RF2_OUTBUF_LP	 = $('#RF2_OUTBUF_LP');
-			let $DEMUX_LP		 = $('#DEMUX_LP')
-			let $REF_BUFF_LP	 = $('#REF_BUFF_LP');
+			var $RF2_OUTBUF_LP	 = $('#RF2_OUTBUF_LP');
+			var $DEMUX_LP		 = $('#DEMUX_LP')
+			var $REF_BUFF_LP	 = $('#REF_BUFF_LP');
 
 			function setST5(){
 
@@ -745,19 +749,19 @@
 //
 //***** ST6 *****
 //
-			let $st6 = $('#st6');
+			var $st6 = $('#st6');
 
-			let $DITHERING	 = $('#DITHERING');
-			let $CP_UP_OFF	 = $('#CP_UP_OFF')
-			let $CP_DN_OFF	 = $('#CP_DN_OFF');
-			let $DSM_ORDER	 = $('#DSM_ORDER');
-			let $EN_AUTOCAL	 = $('#EN_AUTOCAL');
-			let $VCO_SEL	 = $('#VCO_SEL');
-			let $VCO_WORD	 = $('#VCO_WORD');
-			let $CAL_TEMP_COMP = $('#CAL_TEMP_COMP');
-			let $PRCHG_DEL	 = $('#PRCHG_DEL');
-			let $CAL_ACC_EN	 = $('#CAL_ACC_EN');
-			let $CAL_DIV	 = $('#CAL_DIV');
+			var $DITHERING	 = $('#DITHERING');
+			var $CP_UP_OFF	 = $('#CP_UP_OFF')
+			var $CP_DN_OFF	 = $('#CP_DN_OFF');
+			var $DSM_ORDER	 = $('#DSM_ORDER');
+			var $EN_AUTOCAL	 = $('#EN_AUTOCAL');
+			var $VCO_SEL	 = $('#VCO_SEL');
+			var $VCO_WORD	 = $('#VCO_WORD');
+			var $CAL_TEMP_COMP = $('#CAL_TEMP_COMP');
+			var $PRCHG_DEL	 = $('#PRCHG_DEL');
+			var $CAL_ACC_EN	 = $('#CAL_ACC_EN');
+			var $CAL_DIV	 = $('#CAL_DIV');
 
 			function setST6(){
 
@@ -793,17 +797,17 @@
 //
 //***** ST7 *****
 //
-			let $st7 = $('#st7');
+			var $st7 = $('#st7');
 
-			let $LD_SDO_tristate	 = $('#LD_SDO_tristate');
-			let $LD_SDO_MODE		 = $('#LD_SDO_MODE')
-			let $SPI_DATA_OUT_DISABLE = $('#SPI_DATA_OUT_DISABLE');
-			let $LD_SDO_SEL			 = $('#LD_SDO_SEL');
-			let $REGDIG_OCP_DIS		 = $('#REGDIG_OCP_DIS');
-			let $CYCLE_SLIP_EN		 = $('#CYCLE_SLIP_EN');
-			let $FSTLCK_EN			 = $('#FSTLCK_EN');
-			let $CP_SEL_FL			 = $('#CP_SEL_FL');
-			let $FSTLCK_CNT			 = $('#FSTLCK_CNT');
+			var $LD_SDO_tristate	 = $('#LD_SDO_tristate');
+			var $LD_SDO_MODE		 = $('#LD_SDO_MODE')
+			var $SPI_DATA_OUT_DISABLE = $('#SPI_DATA_OUT_DISABLE');
+			var $LD_SDO_SEL			 = $('#LD_SDO_SEL');
+			var $REGDIG_OCP_DIS		 = $('#REGDIG_OCP_DIS');
+			var $CYCLE_SLIP_EN		 = $('#CYCLE_SLIP_EN');
+			var $FSTLCK_EN			 = $('#FSTLCK_EN');
+			var $CP_SEL_FL			 = $('#CP_SEL_FL');
+			var $FSTLCK_CNT			 = $('#FSTLCK_CNT');
 
 			function setST7(){
 
@@ -834,20 +838,20 @@
 //
 //***** ST8 *****
 //
-			let $st8 = $('#st8');
+			var $st8 = $('#st8');
 
-			let $PD_RF2_DISABLE	 = $('#PD_RF2_DISABLE');
-			let $REG_OCP_DIS	 = $('#REG_OCP_DIS')
-			let $REG_DIG_PD		 = $('#REG_DIG_PD');
-			let $REG_DIG_VOUT	 = $('#REG_DIG_VOUT');
-			let $REG_REF_PD		 = $('#REG_REF_PD');
-			let $REG_REF_VOUT	 = $('#REG_REF_VOUT');
-			let $REG_RF_PD		 = $('#REG_RF_PD');
-			let $REG_RF_VOUT	 = $('#REG_RF_VOUT');
-			let $REG_VCO_PD		 = $('#REG_VCO_PD');
-			let $REG_VCO_VOUT	 = $('#REG_VCO_VOUT');
-			let $REG_VCO_4V5_PD	 = $('#REG_VCO_4V5_PD');
-			let $REG_VCO_4V5_VOUT= $('#REG_VCO_4V5_VOUT');
+			var $PD_RF2_DISABLE	 = $('#PD_RF2_DISABLE');
+			var $REG_OCP_DIS	 = $('#REG_OCP_DIS')
+			var $REG_DIG_PD		 = $('#REG_DIG_PD');
+			var $REG_DIG_VOUT	 = $('#REG_DIG_VOUT');
+			var $REG_REF_PD		 = $('#REG_REF_PD');
+			var $REG_REF_VOUT	 = $('#REG_REF_VOUT');
+			var $REG_RF_PD		 = $('#REG_RF_PD');
+			var $REG_RF_VOUT	 = $('#REG_RF_VOUT');
+			var $REG_VCO_PD		 = $('#REG_VCO_PD');
+			var $REG_VCO_VOUT	 = $('#REG_VCO_VOUT');
+			var $REG_VCO_4V5_PD	 = $('#REG_VCO_4V5_PD');
+			var $REG_VCO_4V5_VOUT= $('#REG_VCO_4V5_VOUT');
 
 			function setST8(){
 
@@ -884,9 +888,9 @@
 //
 //***** ST9 *****
 //
-			let $st9 = $('#st9');
+			var $st9 = $('#st9');
 
-			let $RESERVED_ST9	 = $('#RESERVED_ST9');
+			var $RESERVED_ST9	 = $('#RESERVED_ST9');
 
 			function setST9(){
 
@@ -959,9 +963,9 @@
 //
 //***** ST11 *****
 //
-			let $st11 = $('#st11');
+			var $st11 = $('#st11');
 
-			let $Device_ID	 = $('#Device_ID');
+			var $Device_ID	 = $('#Device_ID');
 
 			function setST11(){
 
@@ -1098,7 +1102,7 @@
 			$MAN_CALB_EN.on('input', (e)=>{
 				disableIgnored();
 			});
-			let $refSet = $('#refSet');
+			var $refSet = $('#refSet');
 			$N.add($R).add($FRAC).add($MOD).add($DITHERING).add($refSet).on('input', freqCalculator);
 			$('.freqCalc').click(freqCalculator);
 			$('.btnSet').click(e=>{
@@ -1108,8 +1112,9 @@
 				let id = $strong.attr('id');
 				let addr = id.replace(/\D/g, '');
 				let newValue = $strong.text();
+				const regIndex = $('#regIndex').val();
 
-				$.post('/calibration/rest/pll_register', {sn: serialNumber, addr: addr, value: newValue})
+				$.post('/calibration/rest/pll_register', {sn: serialNumber, addr: addr, value: newValue, regIndex: regIndex})
 				.done(function(reg){
 					let value = reg[id.toUpperCase()];
 					setTitle($strong, value)
@@ -1235,7 +1240,8 @@
 			}
 			function getPllReg(){
 
-				$.post('/calibration/rest/pll_registers', {sn: serialNumber})
+				const regIndex = $('#regIndex').val();
+				$.post('/calibration/rest/pll_registers', {sn: serialNumber, regIndex: regIndex})
 				.done(function(reg){
 					if(!reg){
 						alert('Can not get PLL Registers.');
@@ -1323,7 +1329,7 @@
 					$EN_AUTOCAL.prop('disabled', true);
 				}
 			}
-			let $freqSet = $('#freqSet');
+			var $freqSet = $('#freqSet');
 			function freqCalculator(){
 				let refSet = parseFloat($refSet.val());
 				let r	 = parseInt($R.val());
@@ -1354,6 +1360,32 @@
 					$FRAC.prop('disabled', false);
 					$MOD.prop('disabled', false);
 				}
+			}
+
+			var pllIndexValue;
+			$('#regIndex').focusout(e=>{
+
+				if(!e.currentTarget.value)
+					e.currentTarget.value = 102;
+				if(pllIndexValue == e.currentTarget.value)
+					return;
+				pllIndexValue = e.currentTarget.value;
+				getPllReg();
+				 /*[# sec:authorize="hasAuthority('CALIBRATION_SETTINGS')"]*/
+				 if(info?.deviceType && confirm(e.currentTarget.value + ' - Should the index value be saved?')){
+					const moduleId = info.deviceType + '.' + info.typeVersion
+					postWithParam('/calibration/rest/irt_array/save', {name: 'PLL_index', id: moduleId, value: e.currentTarget.value}, null, error=>console.error(e));
+				 	return;
+				 }
+				/*[/]*/
+				alert(e.currentTarget.value + ' - index was not saved.');
+			});
+			function setupModal(){
+				$modal.on('hide.bs.modal', function () {
+					if (document.activeElement) 
+			            document.activeElement.blur();
+				});
+				return true;
 			}
 			/*]]>*/
 			//# sourceURL=Pll.js

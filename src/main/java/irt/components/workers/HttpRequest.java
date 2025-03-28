@@ -88,6 +88,26 @@ public class HttpRequest {
 		return ft;
 	}
 
+	public static FutureTask<String> postString(String url, String string) {
+
+
+		final FutureTask<String> ft = new FutureTask<>(
+				()->{
+
+					final HttpPost httpPost = new HttpPost(url);
+					httpPost.setEntity(new StringEntity(string));
+
+					try(	final CloseableHttpClient httpclient = HttpClients.createDefault();
+							final CloseableHttpResponse response = httpclient.execute(httpPost);){
+
+						return entityToString(response);
+					}
+				});
+		ThreadRunner.runThread(ft);
+
+		return ft;
+	}
+
 	public static <T> FutureTask<T>postForObgect(URL url, Class<T> classToReturn, Object object) {
 		logger.traceEntry("url: {}; classToReturn: {}; object: {};", url, classToReturn, object);
 
@@ -125,6 +145,7 @@ public class HttpRequest {
 	}
 
 	public static <T> FutureTask<T> postForIrtObgect(String url, Class<T> classToReturn, List<NameValuePair> params) {
+//		logger.catching(new Throwable());
 
 		final FutureTask<T> ft = new FutureTask<T>(
 				()->{
@@ -250,6 +271,9 @@ public class HttpRequest {
 
 	private static <T> T httpForObject(Class<T> classToReturn, final HttpUriRequest uriRequest) throws IOException{
 
+		if(classToReturn==null)
+			return null;
+
 		uriRequest.addHeader("Accept", "text/html,application/json;metadata=full;charset=utf-8;");
 
 		String json = null;
@@ -262,9 +286,15 @@ public class HttpRequest {
 			if (entity != null) {
 
 				json = EntityUtils.toString(entity);
+				if(json.startsWith("<!DOCTYPE html")) {
+					logger.error(json);
+					logger.catching(new Throwable(uriRequest.getURI().toString()));
+					return null;
+				}
+				
 				logger.debug("json: ({})", json);
 
-				if(classToReturn==null)
+				if(json.contains("not found"))
 					return null;
 
 				final ObjectMapper mapper = new ObjectMapper();
@@ -376,11 +406,19 @@ public class HttpRequest {
 	}
 
 	public static String getForString(String url) throws InterruptedException, ExecutionException, TimeoutException{
-		 return  getForString(url, 500, TimeUnit.MILLISECONDS);
+		 return  getForString(url, 1000, TimeUnit.MILLISECONDS);
 	 }
 
 	public static String getForString(String url, int timeout, TimeUnit timeUnit) throws InterruptedException, ExecutionException, TimeoutException {
 		logger.debug("url: {}; timeout: {}; timeUnit: {}", url, timeout, timeUnit);
+
+		FutureTask<String> ft = getForStringFT(url);
+
+		return ft.get(timeout, timeUnit);
+	}
+
+	public static FutureTask<String> getForStringFT(String url) {
+		logger.traceEntry(url);
 
 		Callable<String> callable = ()->{
 			final HttpGet httpGet = new HttpGet(url);
@@ -393,8 +431,7 @@ public class HttpRequest {
 		};
 		FutureTask<String> ft = new FutureTask<>(callable);
 		ThreadRunner.runThread(ft);
-
-		return ft.get(timeout, timeUnit);
+		return ft;
 	}
 
 	private static String entityToString(final CloseableHttpResponse response) {
@@ -459,7 +496,7 @@ public class HttpRequest {
 			final URL url = new URL("http", sn.trim(), "/diagnostics.asp?devices=1");
 			logger.debug(url);
 
-			final String html = getForString(url.toString(), 3, TimeUnit.SECONDS);
+			final String html = getForString(url.toString(), 5, TimeUnit.SECONDS);
 			logger.debug(html);
 			final String str = Optional.of(html.indexOf("devices = [")).filter(index->index>=0)
 								.flatMap(start->Optional.of(html.indexOf("]", start)).filter(index->index>=0)

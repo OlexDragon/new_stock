@@ -34,10 +34,12 @@ import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
+import org.springframework.web.multipart.MultipartFile;
 
 import irt.components.beans.IrtMessage;
 import irt.components.beans.irt.calibration.ProfileTableTypes;
-import irt.components.beans.irt.update.Profile;
+import irt.components.beans.irt.update.IrtPackageInPackage;
+import irt.components.beans.irt.update.IrtProfile;
 import irt.components.beans.irt.update.Table;
 import irt.components.workers.HtmlParsel;
 import irt.components.workers.HttpRequest;
@@ -86,7 +88,7 @@ public class ProfileRestController {
     	final ProfileWorker profileWorker = new ProfileWorker(profileFolder, sn);
 
 		if(!profileWorker.exists())
-			return "Profile does not exists.";
+			return "IrtProfile does not exists.";
 
     	return profileWorker.getOPath().get().toString();
 	}
@@ -145,7 +147,7 @@ public class ProfileRestController {
 		final Optional<Path> oPath = profileWorker.getOPath();
 
 		final Path path = oPath.get();
-		final Profile profile = new Profile(path);
+		final IrtProfile profile = new IrtProfile(path);
 		profile.setModule(moduleSn!=null && !moduleSn.equals(sn));
 		HttpRequest.upload(sn, profile);
 
@@ -163,7 +165,8 @@ public class ProfileRestController {
 		final Optional<Path> oPath = profileWorker.getOPath();
 
 		final Path path = oPath.get();
-		final Profile profile = new Profile(path);
+		final IrtProfile profile = new IrtProfile(path);
+		profile.setModule(moduleSn!=null && !moduleSn.equals(sn));
 	    ByteArrayResource resource = new ByteArrayResource(profile.toBytes());
 
 	    return ResponseEntity.ok()
@@ -195,4 +198,24 @@ public class ProfileRestController {
     	private final String message;
     	private final boolean changeDon;
     }
+
+    @PostMapping("package-package")
+    String packageInPackage(@RequestParam String sn, @RequestParam(required = false) String moduleSn, @RequestParam MultipartFile file) throws IOException {
+		logger.traceEntry("sn: {}; moduleSn: {};", sn, moduleSn);
+		
+
+		final String toUpdate = Optional.ofNullable(moduleSn).orElse(sn);
+		final String fileName = file.getOriginalFilename();
+		if(!fileName.endsWith(".pkg"))
+			return "Only files with extension '.pkg' are accepted";
+
+		final IrtPackageInPackage p = new IrtPackageInPackage(toUpdate, file);
+
+//		try (FileOutputStream fos = new FileOutputStream("C:\\Users\\Alex\\Desktop\\package.pkg")) {
+//			   fos.write(p.toBytes());
+//		}
+		HttpRequest.upload(sn, p);
+
+		return "Wait for the package to load.";
+	}
 }

@@ -50,6 +50,8 @@ function init(subInit){
 	$maxVal		 = $('#maxVal');
 	$unitSerialPort =  $('#unitSerialPort');
 	$unitVal	 = $('#unitVal');
+	if(calChart)
+		calChart.destroy();
 	calChart	 = getChart();
 	prefix		 = $('.modal-dialog').data('prefix');
 	commandIndex = $('.modal-dialog').data('commandIndex');
@@ -353,8 +355,7 @@ function f_run(run){
 	calIntervalID = setInterval(f_toRun, runTimeout);
 }
 function f_stop(){
-	v_stop = true;;
-	console.warn('f_stop()');
+	v_stop = true;
 	clearInterval(calIntervalID);
 	$toolVal.prop('readonly', false);
 	$stepVal.prop('readonly', false);
@@ -371,11 +372,9 @@ function startButtonText(start){
 function f_toolValue(){
 	
 	if($toolVal.val())
-		$inputPower.val($toolVal.val());
+		$inputPower.val($toolVal.val()).change();
 	else
-		$inputPower.val('');
-
-	$inputPowerBtn.click();
+		$inputPower.val('').change();
 }
 function reset(){
 	if(startToolValue)

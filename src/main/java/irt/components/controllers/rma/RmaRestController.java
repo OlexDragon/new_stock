@@ -89,7 +89,7 @@ public class RmaRestController {
 		final boolean exists = profileWorker.exists();
 
 		if(!exists)
-			return "The Profile with sn:'" + profileWorker.getSerialNumber() + "' was not found.";
+			return "The IrtProfile with sn:'" + profileWorker.getSerialNumber() + "' was not found.";
 
 		final String sn = profileWorker.getSerialNumber();
 		final List<Rma> oRma = rmaRepository.findBySerialNumberAndStatusNotIn(sn, Rma.Status.SHIPPED);
@@ -104,7 +104,7 @@ public class RmaRestController {
 							return "";
 						})
 
-				.orElse("Profile scan error.");
+				.orElse("IrtProfile scan error.");
 	}
 
 	@PostMapping("add_rma")

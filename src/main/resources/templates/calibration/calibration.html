@@ -50,6 +50,11 @@
     			<a id="btrMeasurement" 
     				class="dropdown-item calibrate" 
     				th:href="@{${info==null} ? (${sn} == null ? '#' : '/calibration/btr?sn=' + ${sn}) : '/calibration/btr?sn=' + ${info.serialNumber}}">Measurement</a>
+<!-- BTR PowerDetector -->
+    			<a id="btrPowerDetector" 
+    				class="dropdown-item calibrate"
+    				th:classappend="${info==null} ? 'disabled'"
+    				th:href="@{${info==null} ? (${sn} == null ? '#' : '/calibration/btr/pd?sn=' + ${sn}) : '/calibration/btr/pd?sn=' + ${info.serialNumber}}">Power Detector</a>
   			</div>
 		</div>
 <!-- Unit Dropdown menu -->
@@ -191,6 +196,38 @@
 						th:classappend="${info==null ? 'disabled list-group-item-light' : ''}"
 						th:href="@{${info==null} ? '#' : '/calibration/rest/profile/package?sn=' + ${info.serialNumber}}">Profile Package</a>
  				</div>
+<!-- Package in Package -->
+				<div class="btn-group" style="width:100%;">
+					<div class="btn-group dropstart" role="group">
+ 						<button id="menuModulePackageInPackage"
+ 								type="button"
+ 								class="btn dropdown-toggle dropdown-toggle-split submenu modules"
+ 								th:classappend="${info==null ? 'disabled list-group-item-light' : ''}"
+ 								data-bs-toggle="dropdown"
+ 								aria-expanded="false">
+    						<span class="visually-hidden">Toggle Dropdown</span>
+  						</button>
+   						<div class="dropdown-menu " aria-labelledby="menuModulePackageInPackage">
+
+    						<a class="dropdown-item disabled">Modules:</a>
+<!-- Select Modules Package -->
+<th:block th:remove="all">
+<th:block th:fragment="menuModulePackageInPackage" th:each="info : ${modules}">
+							<label for="attachProfile"
+								class="dropdown-item soft-select"
+								th:classappend="${info==null ? 'disabled list-group-item-light' : ''}"
+								th:text="${info.serialNumber}">Profile in Package</label>
+							<input id="attachProfile" type="file" data-th-data-sn="${serialNumber}" data-th-data-module-sn="${info.serialNumber}" accept=".bin, .pkg" onchange="packageInPackage(this);" hidden="hidden">
+</th:block>
+</th:block>
+    					</div>
+					</div>
+<!-- Select System Package-->
+					<label for="attachFiles"
+						class="dropdown-item soft-select"
+						th:classappend="${info==null ? 'disabled list-group-item-light' : ''}">Package in Package</label>
+					<input id="attachFiles" type="file" data-th-data-sn="${serialNumber}" accept=".pkg" onchange="packageInPackage(this);" hidden="hidden">
+ 				</div>
     			<div><hr class="dropdown-divider"></div>
 <!-- Soft Path -->
 				<div class="btn-group" style="width:100%;">
@@ -305,7 +342,7 @@
 								class="dropdown-item soft-select"
 								th:classappend="${info==null ? 'disabled list-group-item-light' : ''}"
 								th:text="${info.serialNumber}">Soft Select</label>
-							<input id="attachFiles" type="file" data-th-data-sn="${serialNumber}" data-th-data-module-sn="${info.serialNumber}" accept=".bin, .pkg" onchange="softSelected(this);" hidden>
+							<input id="attachFiles" type="file" data-th-data-sn="${serialNumber}" data-th-data-module-sn="${info.serialNumber}" accept=".bin, .pkg" onchange="softSelected(this);" hidden="hidden">
 </th:block>
 </th:block>
     					</div>
@@ -314,7 +351,7 @@
 					<label for="attachFiles"
 						class="dropdown-item soft-select"
 						th:classappend="${info==null ? 'disabled list-group-item-light' : ''}">Soft Select</label>
-					<input id="attachFiles" type="file" data-th-data-sn="${serialNumber}" accept=".bin, .pkg" onchange="softSelected(this);" hidden>
+					<input id="attachFiles" type="file" data-th-data-sn="${serialNumber}" accept=".bin, .pkg" onchange="softSelected(this);" hidden="hidden">
  				</div>
     			<div><hr class="dropdown-divider"></div>
 <!-- Power Chart -->
@@ -372,7 +409,7 @@
     				th:classappend="${(info==null or info.deviceId==null) ? 'disabled list-group-item-light' : ''}"
     				th:href="@{${(info==null or info.deviceId==null)} ? '#' : '/calibration/power_offset?sn=' + ${info.serialNumber} + '&pn=' + ${partNumber} + '&deviceId=' + ${#strings.substring(info.deviceId, 1, info.deviceId.length()-1)}}">Power Offset</a>
 <!-- Gain -->
-    			<a id="menuGain" class="dropdown-item calibrate disabled" th:classappend="${info==null ? 'disabled list-group-item-light' : ''}" th:href="@{${info==null} ? '/calibration/converter/gain' : '/calibration/gain?sn=' + ${info.serialNumber} + '&pn=' + ${partNumber}}">Gain</a>
+    			<a id="menuGain" class="dropdown-item calibrate disabled" th:classappend="${info==null ? 'disabled list-group-item-light' : ''}" th:href="@{${info==null} ? '/calibration/converter/gain' : '/calibration/gain?sn=' + ${info.serialNumber}}">Gain</a>
     			<div><hr class="dropdown-divider"></div>
 <!-- Calibration Mode -->
     			<a class="dropdown-item" id="calMode" th:classappend="${info==null ? 'disabled list-group-item-light' : ''}" href="#">Calibration Mode</a>
@@ -543,7 +580,7 @@
 		        				<select id="inputTool" class="form-select save-to-cookies tool" title="Input Tool">
 									<option selected="selected" disabled="disabled" hidden="hidden" title="Input Tool" value="">Select Input</option>
 									<option value="HP438A" 
-											th:each="inputTool, stat : ${T(irt.components.beans.irt.calibration.tools.InputTools).values()}" 
+											th:each="inputTool : ${T(irt.components.beans.irt.calibration.tools.InputTools).values()}" 
 											th:text="${inputTool.name}" 
 											th:value="${inputTool.commands}"
 											th:data-read-format="${inputTool.toRead}"
@@ -650,6 +687,39 @@
 				</div>
 			</div>
 		</div>
+		<div class="row">
+			<div class="card col-xxl-2 col-lg-3 col-md-6 col-sm-6">
+				<div class="card-body">
+					<h5 id="webSn" class="card-title">Serial Number</h5>
+					<div id="webId">0000000</div>
+					<div id="webPn">Part Number</div>
+					<div  id="webDescr">Description</div>
+				</div>
+			</div>
+			<div class="card col-xxl-2 col-lg-4 col-md-6 col-sm-6">
+				<div class="card-body">
+					<h5 id="tunedBy" class="card-title">Unit Tuning</h5>
+					<div class="row">
+						<div class="col-auto">IMD:</div>
+						<div id="oneCImd" class="col">0000000</div>
+					</div>
+					<div id="oneCNotes" class="pre-line">Notes</div>
+				</div>
+			</div>
+			<div class="card col-xxl-4 col-lg-5 col-md-12 col-sm-12">
+				<div id="stickers" class="card-body">
+					<h5 class="card-title">Stickers</h5>
+				</div>
+			</div>
+			<div class="card col-xxl-4 col-12">
+				<div class="card-body">
+					<h5 id="oneCHeadDescr" class="card-title">Description</h5>
+					<div id="oneCHeadNotes" class="pre-line">Notes</div>
+					<div id="oneCHeadPn">Part Number</div>
+					<div  id="oneCHeadIntern">Internal PN</div>
+				</div>
+			</div>
+		</div>
 	</div>
 <!-- Modal Message -->
 	<div id="modal" class="modal fade" tabindex="-1">
@@ -692,7 +762,7 @@
 		let serialNumber =  /*[[${serialNumber}]]*/ 'IRT-2121021';
 		const info =  /*[[${info}]]*/ '';
 		const topId = info ? info.deviceType + '.' + info.typeVersion : null;
-// 		let devid =  /*[[${devid}]]*/ 'IRT-2121021';
+		const devid =  /*[[${devid}]]*/ 'IRT-2121021';
 	/*]]>*/
 	//# sourceURL=sn.js
 	</script>

@@ -10,7 +10,7 @@ prologixElements($outputComPorts, $outputToolAddress, $outputButtons);
 
 let $outputGet = $('#outputGet').click(()=>outputGet());
 
-function outputGet(){
+function outputGet(action){
 
 	$outputToolValue.val('');
 
@@ -57,14 +57,24 @@ function outputGet(){
 	toSend.timeout = 10000;
 
 	toSend.commands[toSend.commands.length-1].getAnswer = true;
-	$('#outputValue').text('');
-	sendPrologixCommands(toSend, outputAction);
+	if(action)
+		sendPrologixCommands(toSend, action);
+	else{
+		$('#outputValue').text('');
+		sendPrologixCommands(toSend, outputAction);
+	}
 }
 function outputAction(data){
 
 	if(!data.getAnswer){
 		return;
 	}
+
+	const toFixed = dataToValue(data);
+	if(toFixed)
+		$outputToolValue.val(toFixed);
+}
+function dataToValue(data){
 
 	if(!data.answer){
 		let title = 'Communication problem.'
@@ -78,7 +88,6 @@ function outputAction(data){
 		dataProcessing(data);
 
 	var answer = $.trim(String.fromCharCode.apply(String, data.answer));
-	console.log(answer);
 
 	var s = answer.split(/\s+/);
 	var a;
@@ -101,6 +110,5 @@ function outputAction(data){
 		return;
 	}
 
-	let toFixed = a.toFixed(1)
-	$outputToolValue.val(toFixed);
+	return a.toFixed(1);
 }

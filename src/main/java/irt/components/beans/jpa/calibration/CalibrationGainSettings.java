@@ -20,4 +20,5 @@ public class CalibrationGainSettings {
 	private Integer stopValue;
 	private Integer fields;
 	private Boolean p1dB;
+	private Boolean localPn;
 }

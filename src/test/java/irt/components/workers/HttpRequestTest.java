@@ -5,10 +5,12 @@ import java.net.URL;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
+import java.util.Optional;
 import java.util.Set;
 import java.util.concurrent.ExecutionException;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.TimeoutException;
+import java.util.stream.Stream;
 
 import javax.script.ScriptEngine;
 import javax.script.ScriptEngineManager;
@@ -27,6 +29,7 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 
 import irt.components.beans.irt.Info;
 import irt.components.beans.irt.calibration.NameIndexPair;
+import irt.components.controllers.calibration.CalibrationController;
 import lombok.Getter;
 import lombok.Setter;
 import lombok.ToString;
@@ -119,6 +122,34 @@ public class HttpRequestTest {
 		final ClassToGet[] object = toObject(js, ClassToGet[].class);
 
 		logger.error("{}", (Object[])object);
+	}
+
+	@Test
+	public void systemConfiguration() throws MalformedURLException, InterruptedException, ExecutionException, TimeoutException{
+
+		final String serialNumber = "IRT-2510006";
+		final NameIndexPair[] allIndex = CalibrationController.getAllIndex(serialNumber);
+		logger.error("{} : {}", allIndex.length, allIndex);
+
+		Optional.ofNullable(allIndex).map(Arrays::stream).orElse(Stream.empty())
+		.filter(
+				p->{
+					final String name = p.getName();
+					return name!=null && name.equals("System");
+				})
+		.findAny().map(NameIndexPair::getIndex)
+		.ifPresent(
+				i->{
+					try {
+
+						final Object string = CalibrationController.getHttpDeviceDebug(serialNumber, Object.class, new BasicNameValuePair("devid", i.toString()), new BasicNameValuePair("command", "config")).get(5, TimeUnit.SECONDS);
+						logger.error(string);
+
+					} catch (MalformedURLException | InterruptedException | ExecutionException | TimeoutException e) {
+						logger.catching(e);
+					}
+					logger.error(i);
+				});
 	}
 
 	public <T> T toObject(String js, Class<T> classToReturn) throws ScriptException, JsonMappingException, JsonProcessingException {

@@ -285,10 +285,10 @@ var loginSent;
 function login(){
 	if(!loginSent){
 		var href = $('#unitLogin').prop('href');
+		console.log('Log In to ' + href);
 		loginWhithHref(href);
 		loginSent = true;
 		setTimeout(()=>{loginSent = false;}, 6000);
-		console.log('Log In to ' + href);
 	}else
 		console.log('Skipped Log In to ' + href);
 }
@@ -303,9 +303,8 @@ function loginWhithHref(href){
 	$.post(href)
 	.done(function(data){
 		let title = 'Login.'
-		let message = data.content;
-		console.log(title + ' : ' + message);
-		showToast(title, message, 'text-bg-success');
+		console.log(title + ' : ' + data);
+		showToast(title, data, 'text-bg-success');
 	})
 	.fail(conectionFail);
 }
@@ -497,11 +496,11 @@ function calibrationModeError(error) {
 	if(error)
 		console.error(error);
 
-	$('#calMode').removeClass('text-primary text-success').text('Calibration Mode');
+	$calMode.removeClass('text-primary text-success').text('Calibration Mode');
 	alert('Unable to connect to Unit.');
 }
 
-$('#calMode').click(function(e){
+$calMode.click(function(e){
 	e.preventDefault();
 
 	$.post('/calibration/rest/calibration_mode_toggle', { ip: serialNumber })
@@ -521,7 +520,7 @@ function hasValue(inputs){
 
 function toArray($inputs){
 	var values = [];
-	$inputs.map((i, v)=>v.value).filter((i, v)=>v).map((i, v)=>parseFloat(v)).sort().each((i, v)=>values.push(v));
+	$inputs.map((_, v)=>v.value).filter((i, v)=>v).map((_, v)=>parseFloat(v)).sort().each((_, v)=>values.push(v));
 	return values;
 }
 const typeVersion = $('#typeVersion').val();
@@ -537,17 +536,19 @@ $('#currents').click(function(e){
 	loadModal(`/calibration/currents?sn=${serialNumber}`);
 });
 function loadModal(href){
-	$modal.modal('hide')
-//	$modal.off('shown.bs.modal').off('hide.bs.modal');
-	$modal.load(href, function(body, error){
+	setupModal = undefined;
+	$modal.modal('hide');
+//	$modal.empty();
+	$modal.load(href, function(_, error){
 		if(error=='error'){
-			alert('Unable to connect to the Unit.');
+			setTimeout(()=>alert('Unable to connect to the Unit.'), 10);
 			console.log(error);
 			return;
 		}
-  		$modal.off('shown.bs.modal');
-  		$modal.off('hide.bs.modal');
-		if(setupModal())
+
+  		$modal.off('shown.bs.modal').off('hide.bs.modal');
+
+		if(setupModal && setupModal())
 			setTimeout(()=>$modal.modal('show'), 600);
 	});
 }
@@ -569,7 +570,7 @@ function getProfile(e, link){
 	})
 	.fail(function(error) {
 		if(conectionFail(error))
-			$('#calMode').removeClass('text-primary text-success').text('Calibration Mode');
+			$calMode.removeClass('text-primary text-success').text('Calibration Mode');
 	});
 }
 
@@ -577,7 +578,7 @@ const $profilePath = $('.profilePath').click(function(e){
 	getProfilePath(e, this);
  });
  
- function getProfilePath(e, link){
+function getProfilePath(e, link){
  	e.preventDefault();
  
  	$.get(link.href)
@@ -599,7 +600,7 @@ const $profilePath = $('.profilePath').click(function(e){
 	})
 	.fail(function(error) {
 		if(conectionFail(error))
-			$('#calMode').removeClass('text-primary text-success').text('Calibration Mode');
+			$calMode.removeClass('text-primary text-success').text('Calibration Mode');
 	});
  }
 function selectAndCopy(element) {
@@ -621,10 +622,16 @@ function selectAndCopy(element) {
 }
  
  function conectionFail(error) {
+	const errorCode = error.getResponseHeader('error-code');
+	if(errorCode && errorCode<0){
+		alert(error.getResponseHeader('error-line'));
+		return true;
+	}
+
 	if(error.statusText!='abort'){
 		if(error.responseText)
 			alert(error.responseText);
-		if(error.statusText)
+		else if(error.statusText)
 			alert(error.statusText);
 		else{
 			let status;
@@ -776,7 +783,7 @@ function sendPrologixCommands(commands, responseProcessing){
 			alert(data.error);
 			return;
 		}
-		$.each(data.commands, function(i, c){
+		$.each(data.commands, function(_, c){
 			responseProcessing(c);
 		});
 	})
@@ -847,7 +854,32 @@ function softSelected(el){
 		}
 	});
 }
+function packageInPackage(el){
 
+	if(!el.files || !el.files.length)
+		return;
+
+	const url = '/calibration/rest/profile/package-package'
+	const fd = new FormData();
+	fd.append('file', el.files[0]);
+	if(el.dataset.sn)
+		fd.append('sn', el.dataset.sn);
+	fd.append('moduleSn', el.dataset.moduleSn);
+
+	postFormData(url, fd)
+	.done(data=>{
+		alert(data);
+	})
+	.fail(function(error) {
+		if(error.statusText!='abort'){
+		var responseText = error.responseText;
+			if(responseText)
+				alert(error.responseText);
+			else
+				alert("Server error. Status = " + error.status)
+		}
+	});
+}
 const $fixedTop = $('.fixed-top');
 const $accordion = $('#accordion');
 setMarginTop();
@@ -863,4 +895,244 @@ function downloadURL(href) {
   link.click();
   document.body.removeChild(link);
   delete link;
+}
+if(serialNumber){	
+
+	$.get(`/calibration/rest/sn?sn=${serialNumber}`)
+	.done(data=>{
+
+		if(!data)
+			return;
+
+		$('#webSn').text(data.serialNumber);
+		$('#webId').text(data.id);
+		$('#webPn').text(data.partNumber.partNumber);
+		$('#webDescr').text(data.partNumber.description);
+	});
+
+	const $tunedBy =$('#tunedBy');
+	$.get(`/btr/rest/unit-tuning?sn=${serialNumber}`)
+	.done(data=>{
+
+		if(!data)
+			return;
+
+		if(data.payload.startsWith('<!DOCTYPE html')){
+			alert('Unable to connect to the 1C server. (unit-tuning)');
+			return;
+		}
+
+				const o = JSON.parse(data.payload);
+		if(!o.length)
+			return;
+		if(o[0].TunedBy)
+			$tunedBy.text('Tuned by ' + o[0].TunedBy);
+		$('#oneCImd').text(o[0].IMD);
+		$('#oneCNotes').text(o[0].Notes);
+	});
+
+	$.get(`/btr/rest/header?sn=${serialNumber}`)
+	.done(data=>{
+
+		if(!data)
+			return;
+
+		if(data.payload.startsWith('<!DOCTYPE html')){
+			alert('Unable to connect to the 1C server. (header)');
+			return;
+		}
+
+		const o = JSON.parse(data.payload);
+
+		$('#oneCHeadDescr').text(o.Description);
+		$('#oneCHeadNotes').text(o.Notes);
+		$('#oneCHeadPn').text(o.SalesSKU);
+		$('#oneCHeadIntern').text(o.Product).click(()=>{
+			const split = o.Product.split('-');
+			let message = '';
+
+			switch(split[0].charAt(0)){
+				case 'A':
+					message = "AntBUC\n";
+					break;
+				case 'P':
+					message = "PicoBUC\n";
+					break;
+				case 'K':
+					message = "KiloBUC\n";
+					break;
+				case 'R':
+					message = "Rack Mount\n";
+					break;
+				case 'F':
+					message = "FemtoBUC\n";
+					break;
+			}
+
+			switch(split[1].charAt(0)){
+				case '1':
+					message += "S-Band\n";
+					break;
+				case '2':
+					message += "C-Band\n";
+					break;
+				case '3':
+					message += "X-Band\n";
+					break;
+				case '4':
+					message += "Ku-Band\n";
+					break;
+					case '5':
+						message += "Ka-Band\n";
+						break;
+			}			
+
+			switch(split[1].substring(0,2)){
+				case '21':
+					message += "LMI 5.725-6.025 GHz\n";
+					break;
+				case '22':
+					message += "Standard 5.85-6.425 GHz\n";
+					break;
+				case '23':
+					message += "Full 5.85-6.75 GHz\n";
+					break;
+				case '24':
+					message += "Russian 5.975-6.475 GHz\n";
+					break;
+				case '25':
+					message += "Txt. 6.425-6.725 GHz\n";
+					break;
+				case '26':
+					message += "Palapa 6.425-6.665 GHz\n";
+					break;
+				case '27':
+					message += "Insat 6.725-7.025 GHz\n";
+					break;
+				case '28':
+					message += "Tropo 4.4-5.0 GHz\n";
+					break;
+				case '31':
+					message += "Std. 7.9-8.1 GHz\n";
+					break;
+				case '32':
+					message += "Ext. 7.9-8.4 GHz\n";
+					break;
+				case '41':
+					message += "Low. 12.75-13.25 GHz\n";
+					break;
+				case '42':
+					message += "Ext. 13.75-14.5 GHz\n";
+					break;
+				case '43':
+					message += "Std. 14.0-14.5 GHz\n";
+					break;
+				case '44':
+					message += "Hifg. 14.5-14.8 GHz\n";
+					break;
+			}
+
+			message += parseInt(split[2]) + ' W\n';
+
+			if(split[3].charAt(0)==='A')
+				message += 'GaAs\n';
+			else
+				message += 'GaN\n';
+
+			switch(split[3].charAt(1)){
+				case '1':
+					message += "External\n";
+					break;
+				case '2':
+					message += "Internal\n";
+					break;
+				case '3':
+					message += "Autosense\n";
+					break;
+			}
+
+			if(split[3].charAt(2)==='A')
+				message += 'AC\n';
+			else
+				message += 'DC\n';
+
+			if(split[3].charAt(4)==='1')
+				message += 'Redundant\n';
+
+			alert(message);
+		});
+	});
+}
+if(!$calMode.hasClass('disabled')){
+	$.post('/calibration/rest/sticker', {sn: serialNumber})
+	.done(data=>{
+		const $stickers = $('#stickers');
+		Object.keys(data).forEach(k=>{
+			const val = data[k];
+			let toShow = val['sticker'];
+			if(toShow)
+				toShow = parseInt(toShow);
+			else
+				toShow = 'N/A'
+			$stickers.append($('<div>', {class: 'row', title: val['cpu']}).append($('<div>', {class: 'col', text: k})).append($('<div>', {class: 'col', text: toShow})));
+		});
+	});
+	checkSerialNumbers();
+}
+function checkSerialNumbers(){
+	$.get('/calibration/rest/all-modules', {sn: serialNumber})
+	.done(data=>{
+		const keys = Object.keys(data);
+		for(let i=0;i<keys.length;++i){
+			setTimeout(checkForKey, i*1000, data, keys[i]);
+		}
+	});
+}
+function checkForKey(data, key){
+	
+	if(key.startsWith('FCM'))
+		getSerialNumber(data[key], 'converter');
+
+	else if(key.startsWith('RCM'))
+		getSerialNumber(data[key], 'reference-clock-module');
+}
+function getSerialNumber(moduleIndex, oneCeGroup){
+
+	$.get('/calibration/rest/one-c/profile', {sn: serialNumber, section: oneCeGroup})
+	.done(data=>{
+
+		if(!data)
+			return;
+
+		const o = JSON.parse(data);
+		for(let i=0;i<o.length;++i){
+
+			const object = o[i];
+			if(object.Profile)
+				continue;
+
+			$.get('/calibration/rest/module-info', {sn: serialNumber, moduleIndex: moduleIndex})
+			.done(moduleInfo=>{
+
+				const line = moduleInfo.split(/\r?\n/).filter(l=>l.includes('Serial number'));
+				if(!line.length)
+					return;
+
+				object.serialNumber = serialNumber;
+				object.section = oneCeGroup;
+				object.fieldName = 'Profile';
+				object.value = line[0].split(':')[1].trim();
+
+				const exists = o.filter(v=>v.Profile===object.value);
+				if(exists.length)
+					return;
+
+				postObject('/calibration/rest/one-c/profile', object)
+				.done(message=>{
+					console.log(message);
+				});
+			});
+			break;
+		}
+	});
 }

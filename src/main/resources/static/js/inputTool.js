@@ -8,7 +8,6 @@ const $inputFrequency		 = $('#inputFrequency');
 const $inputFrequencyUnit	 = $('#inputFrequencyUnit');
 const $collapseInput		 = $('#collapseInput');
 const $inputPower			 = $('#inputPower');
-const $inputPowerBtn		 = $('#inputPowerBtn');
 
 let $inputTool			 = $('#inputTool')
 .change(function(){
@@ -81,12 +80,67 @@ $('.input-value').on('input', e=>{
 
 		if(step<0.1)
 			return;
-		
+
 		el.dataset.step = step / 10;
 		showStepValue(e);
 		break;
 
-	case 'ArrowLeft':
+		case 'ArrowLeft':
+
+			if(!e.ctrlKey)
+				return;
+
+			if(showStepValue(e))
+				break;
+
+			if(step>10)
+				return;
+
+			el.dataset.step = step * 10;
+			showStepValue(e);
+			break;
+
+		case 'NumpadAdd':
+		case 'Equal':
+
+			if(!(e.ctrlKey || e.shiftKey))
+				brack;
+
+			if(showStepValue(e))
+				break;
+
+			if(e.ctrlKey)
+				el.dataset.step = step * 2;
+
+			else
+				el.dataset.step = newStep(step, true);
+				
+
+			showStepValue(e);
+		break;
+
+		case 'NumpadSubtract':
+		case 'Minus':
+
+			if(!(e.ctrlKey || e.shiftKey))
+				brack;
+
+			if(showStepValue(e))
+				break;
+
+			if(e.ctrlKey)
+				el.dataset.step = (step / 2).toFixed(2);
+
+			else
+				el.dataset.step = newStep(step).toFixed(2);
+
+			if(el.dataset.step < 0.01)
+				el.dataset.step = 0.1;
+
+			showStepValue(e);
+		break;
+
+	case 'Backspace':
 
 		if(!e.ctrlKey)
 			return;
@@ -94,10 +148,44 @@ $('.input-value').on('input', e=>{
 		if(showStepValue(e))
 			break;
 
-		if(step>10)
+		if(el.dataset.step.length > 1)
+			el.dataset.step = parseFloat(el.dataset.step.slice(0,-1));
+
+		if(el.dataset.step < 0.01)
+			el.dataset.step = 0.1;
+
+		showStepValue(e);
+		break;
+
+	case 'Numpad0':
+	case 'Numpad1':
+	case 'Numpad2':
+	case 'Numpad3':
+	case 'Numpad4':
+	case 'Numpad5':
+	case 'Numpad6':
+	case 'Numpad7':
+	case 'Numpad8':
+	case 'Numpad9':
+	case 'Digit0':
+	case 'Digit1':
+	case 'Digit2':
+	case 'Digit3':
+	case 'Digit4':
+	case 'Digit5':
+	case 'Digit6':
+	case 'Digit7':
+	case 'Digit8':
+	case 'Digit9':
+
+		if(!e.ctrlKey)
 			return;
 
-		el.dataset.step = step * 10;
+		if(showStepValue(e))
+			break;
+
+		el.dataset.step = el.dataset.step + e.originalEvent.key;
+
 		showStepValue(e);
 		break;
 
@@ -133,6 +221,36 @@ $('.input-value').on('input', e=>{
 
 	e.preventDefault();
 });
+
+function newStep(step, add){
+
+	const sing = add ? 1 : -1;
+	let diminutive;
+
+	if(compareStep(step, 100, add))
+		diminutive = 100 * sing;
+
+	else if(compareStep(step, 10, add))
+		diminutive = 10 * sing;
+
+	else if(compareStep(step, 1, add))
+		diminutive = 1 * sing;
+
+	else if(compareStep(step, 0.1, add))
+		diminutive = 0.1 * sing;
+
+	else
+		diminutive = 0.01 * sing;
+
+	return step + diminutive;
+}
+function compareStep(step, toCompare, add){
+
+	if(add)
+		return step >= toCompare;
+	else
+		return step > toCompare
+}
 function doStep(el, arrow){
 	switch(arrow){
 
@@ -177,6 +295,7 @@ function showStepValue(e){
 	return true; 	// Open
 }
 prologixElements($inputComPorts, $inputToolAddress, $inputButtons);
+let externalInputAction;
 function inputAction(data, $valueField, divider){
 
 	if(!data.getAnswer)
@@ -193,6 +312,8 @@ function inputAction(data, $valueField, divider){
 	let fl = parseFloat(answer);
 	$valueField.val(fl/divider);
 	$valueField.trigger('input');
+	if(externalInputAction)
+		externalInputAction($valueField);
 }
 function showSetupToast(target){
 

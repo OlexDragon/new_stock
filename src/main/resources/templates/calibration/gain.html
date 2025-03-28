@@ -58,10 +58,24 @@
     							</div>
   							</div>
   							<div class="row">
+    							<label class="col-sm-6 col-form-label text-end" for="gainOffset">Offset:</label>
+    							<div class="col-sm-6">
+    								<input type="number" class="form-control settings" id="gainOffset" placeholder="Gain Offset" value="40">
+    							</div>
+  							</div>
+  							<div class="row">
   								<div class="col ps-5">
 									<div class="form-check form-switch text-center">
 										<input class="form-check-input" type="checkbox" role="switch" id="p1dB" th:checked="${settings.p1dB}">
 										<label class="form-check-label" for="p1dB">P1dBt</label>
+									</div>
+								</div>
+  							</div>
+  							<div class="row">
+  								<div class="col ps-5">
+									<div class="form-check form-switch text-center">
+										<input class="form-check-input" type="checkbox" role="switch" id="localPn" th:checked="${settings.localPn!=null ? settings.localPn : false}">
+										<label class="form-check-label" for="localPn">Local PN</label>
 									</div>
 								</div>
   							</div>
@@ -75,13 +89,16 @@
       			</div>
  <!-- Modal Footer -->
       			<div class="modal-footer">
-	        		<button type="button" id="save" class="btn btn-primary disabled"
-    					th:text="${#authentication.principal=='anonymousUser'} ? 'Save - Login required' : 'Save to Profile'">
+	        		<button type="button" id="save" class="btn btn-outline-success disabled"
+    					th:text="${#authentication.principal=='anonymousUser'} ? 'Save - Login required' : 'Save to Profile'"
+    					th:disabled="${#authentication.principal=='anonymousUser'}">
     						Save to Profile
     				</button>
-	        		<button type="button" id="calc" class="btn btn-secondary disabled">Calculate Min., Max.</button>
-	        		<button type="button" id="clear" class="btn btn-secondary disabled">Clear</button>
+	        		<button type="button" id="calc" class="btn btn-outline-secondary disabled">Calculate Min., Max.</button>
+	        		<button id="gainPmValue" type="button" class="btn btn-outline-primary">←PM</button>
+	        		<button type="button" id="clear" class="btn btn-outline-secondary disabled">Clear</button>
 	        		<button type="button" class="btn btn-outline-secondary" data-bs-dismiss="modal">Close</button>
+      				<div id="modalMessage" class="col-12"></div>
 	    		</div>
     		</div>
   		</div>
@@ -212,7 +229,7 @@
 								$.post('/calibration/rest/calibrationInfo', {sn : serialNumber })
 								.done(function(data){
 
-									if(!data || !data.bias){
+									if(!data || !data.bias || !data.bias.temperature){
 										login();
 										return;
 									}
@@ -348,7 +365,8 @@
 			function addRow(inputValue, outputValue, btr){
 
 				const fieldsCount = $('#fieldsCount').val();
-				const $inputRow = $('<div>', {class: 'col-12'}).append(addInputFields('Gain', fieldsCount, 'Gain', btr));
+				const $gainInputs = addInputFields('Gain', fieldsCount, 'Gain', btr);
+				const $inputRow = $('<div>', {class: 'col-12'}).append($gainInputs);
 
 				const p1dB = $('#p1dB').is(':checked');
 				if(p1dB)
@@ -365,6 +383,7 @@
 
 				sortModalBody();
 				disableButtons();
+				setTimeout(()=>$gainInputs.find('input:first').focus(), 1000);
 			}
 
 			function addInputFields(name, fieldsCount, rowIndex, btr){
@@ -373,7 +392,7 @@
 
 				for(let i=0; i<fieldsCount; i++){
 					const key = rowIndex + '.' + i;
-					const $input = $('<input>', {type: 'number', placeholder: name, class: 'form-control btr-field', 'data-btr-field': key, step: 0.1}).keydown(moveAround);
+					const $input = $('<input>', {type: 'number', placeholder: name, class: 'form-control btr-field', 'data-btr-field': key, step: 0.1}).keyup(moveAround).focus(onFocusGain);
 					if(btr){
 						const val = btr[key];
 						if(val)
@@ -451,7 +470,10 @@
 
 		    	postObject('/calibration/rest/profile/save', table)
 				.done(function(data){
-					alert(data.content);
+
+					if(data && data.content)
+						alert(data.content);
+
 					$save.addClass('disabled');
 					$modal.modal('hide');
 				})
@@ -460,7 +482,9 @@
 		    	if(Object.keys(btr.data).length)
 		    		postObject('/btr/rest/save', btr)
 					.done(function(data){
-						alert(data.content);
+
+						if(data && data.content)
+							alert(data.content);
 					})
 					.fail(conectionFail);
 		    });
@@ -556,20 +580,21 @@
 				$('#dropdownSettingsButton').on('hidden.bs.dropdown', function () {
 					if(confirm('Do you want to save your changes to the database?')){
 
-						const pn = $serialNumber.prop('title');
 						const min = $('#minValue').val();
 						const max = $('#maxValue').val();
 						const filds = $('#fieldsCount').val();
 						const p1dB = $('#p1dB').is(':checked');
+						const localPn = $('#localPn').is(':checked');
 
-						if(!(pn && min && max)){
+						if(!(min && max)){
 							alert('One of the values is missing.')
 							return;
 						}
 
-						$.post('/calibration/rest/gain', {partNumber: pn, startValue: min, stopValue:  max, fields: filds, p1dB: p1dB })
+						$.post('/calibration/rest/gain', {serialNumber: serialNumber, startValue: min, stopValue:  max, fields: filds, p1dB: p1dB, localPn: localPn })
     					.done(function(data){
-    						alert(data);
+    						if(data)
+    							alert(data);
 						})
 						.fail(function(error) {
 							if(error.statusText!='abort'){
@@ -607,7 +632,8 @@
 					if(confirm(`The Profile gain ( ${profGain} ) does not match the BTR gain ( ${btrlGain} ).\nIf you whant to put BTR gain in the profile, press OK button.`)){
 						$.post('/calibration/rest/profile/save/property', {sn: serialNumber, property: 'zero-attenuation-gain', value: btrlGain})
 						.done(profileMessage=>{
-							alert(profileMessage.message);
+							if(profileMessage && profileMessage.message)
+								alert(profileMessage.message);
 							if(profileMessage.changeDon)
 								$profileGain.text(`Gain: ${btrlGain} dB`);
 						})
@@ -642,16 +668,29 @@
 				$step = $('#step');
 				$addRow = $('#addRow');
 				$setDacValue = $('#setDacValue').on('keypress', function (e) {
-					 if(e.which === 13){	// Enter key
+
+					if(e.which === 13){	// Enter key
 						 var newValue = $(this).val();
 						 if($('#dacValue').text()==newValue)
 						 	onAddRow();
 						 else
 							 postNewValue(newValue);
 					 }
-				});;
-
+				});
+				$('#gainOffset').focusout(e=>{
+					const newValue = e.currentTarget.value;
+					if(newValue)
+						Cookies.set("gainOffset", newValue, { expires: 7, path: '' });
+				});
+				const gainOffset = Cookies.get("gainOffset");
+				if(gainOffset)
+					$('#gainOffset').val(gainOffset);
 				$modal.on('shown.bs.modal', update);
+
+				$modal.on('hide.bs.modal', function () {
+					if (document.activeElement) 
+			            document.activeElement.blur();
+				});
 
 				$modal.on('hidden.bs.modal', function () {
 					clearInterval(interval);
@@ -661,7 +700,14 @@
 				return true;
 			}
 
+			var notShift;
+			var $modalMessage = $('#modalMessage');
+			var storeTableTimeout;
+
 			function moveAround(e){
+
+				if(notShift)
+					return;
 
 				const $row = $(e.currentTarget).parents('.row.mb-2');
 				const $children = $row.parent().children();
@@ -723,12 +769,56 @@
 					$inputs = $($children[rowIndex]).find('input');
 					break;
 
-					default:
-						return;
+				case "ControlLeft":
+				case "ControlRight":
+					notShift = true;
+					setTimeout(()=>notShift=false, 10000);
+					break;
+
+				case "Enter":
+				case "NumpadEnter":
+					$("#gainPmValue").click();
+					break;
+
+				default:
+					$modalMessage.text('');
+					clearTimeout(storeTableTimeout);
+					storeTableTimeout = setTimeout(function(){storeTable();$modalMessage.text('Saved in cookies.');}, 10*60*1000)
+					return;
 				}
 
 				$inputs[index].focus();
 			}
+			var selectedField;
+			function onFocusGain(e){
+				const $inputs = $('.modal-body').find('input').css('background-color','');
+				selectedField = e.currentTarget;
+				selectedField.style.backgroundColor = "yellow";
+			}
+			$('#gainPmValue').click(()=>{
+
+				// Return focus to the selected field
+				if(selectedField)
+					selectedField.focus();
+
+				outputGet(data=>{
+					if(!data.getAnswer)
+						return;
+
+					const toFixed = dataToValue(data);
+					if(!toFixed)
+						return;
+
+					if(!selectedField){
+						alert('Select one of the text fields.');
+						return;
+					}
+					if(selectedField.placeholder === 'Gain')
+						selectedField.value = parseFloat(toFixed) + parseFloat($('#gainOffset').val());
+					else
+						selectedField.value = toFixed;
+				});
+			});
 		/*]]>*/
 		//# sourceURL=gain.js
   		</script>

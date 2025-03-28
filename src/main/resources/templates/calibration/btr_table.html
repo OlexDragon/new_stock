@@ -39,8 +39,7 @@
      						<div class="col" th:text="${#dates.format(meas.date, 'MMMM dd, yyyy HH:mm') + ' - ' + meas.user.firstname + ' ' + meas.user.lastname}"></div>
  							<button
 								class="btn btn-outline-info col-auto"
-								title="Add Template"
-								data-th-data-part-number="${sn.partNumber.partNumber}"
+								th:title="${profileExists} ? 'load Excel' : 'Add Template'"
 								data-th-data-meas-id="${meas.id}"
 								th:classappend="${profileExists} ? 'get-excel' : 'add-template'"
 								th:text="${profileExists} ? 'Excel' : 'Add'">Add</button>
@@ -60,7 +59,42 @@
   		</div>
    		<script type="application/javascript" th:inline="javascript">
 			/*<![CDATA[*/
-			$('.add-template').click(e=>{
+			$('.add-template').click(uploadTemplate);
+			$('.get-excel').click(e=>{
+
+		    	if (e.ctrlKey || e.currentTarget.innerText === 'Save'){
+		    		uploadTemplate(e);
+		    		return;
+
+		    	}else if (e.shiftKey || e.currentTarget.innerText === 'Local'){
+		    		uploadTemplate(e, true);
+		    		return;
+		    	}
+				const measId = e.currentTarget.dataset.measId;
+				const sn = /*[[${sn}]]*/ 'SERIAL-NUMBER';
+				if(sn){
+					const url = `/btr/rest/template?sn=${sn.serialNumber}&measId=${measId}`;
+					downloadURL(url);
+				}
+			}).on({
+			    mouseenter: e=>{
+			    	if (e.ctrlKey){
+						$('.modal-header h5').text(/*[[${sn.serialNumber + ' - ' + salesSKU + ' - ' + sn.partNumber.description}]]*/);
+			    		e.currentTarget.title = 'Add Template';
+				        e.currentTarget.innerText = 'Save';
+			    	}else if (e.shiftKey){
+						$('.modal-header h5').text(/*[[${sn.serialNumber + ' - ' + product + ' - ' + sn.partNumber.description}]]*/);
+			    		e.currentTarget.title = 'Add Template';
+				        e.currentTarget.innerText = 'Local';
+			    	}
+			    },
+			    mouseleave: e=>{
+		    		e.currentTarget.title = 'load Excel';
+			        e.currentTarget.innerText = 'Excel';
+			    }
+			});;
+
+			function uploadTemplate(e, localPN){
 				const input = document.createElement('input');
 				input.type = 'file';
 				input.accept = '.xlsx';
@@ -73,7 +107,9 @@
 						alert('This operation cannot be performed.')
 						return
 					}
-					fd.append('pn', sn.partNumber.partNumber);
+					fd.append('sn', sn.serialNumber);
+					const local = localPN ? true : false;
+					fd.append('localPN', local);
 
 					const url = '/btr/rest/template/upload';
 					postFormData(url, fd)
@@ -92,18 +128,12 @@
 				}
 
 				input.click();
-			});
-			$('.get-excel').click(e=>{
-				const measId = e.currentTarget.dataset.measId;
-				const partNumber = e.currentTarget.dataset.partNumber;
-				const sn = /*[[${sn}]]*/ 'SERIAL-NUMBER';
-				if(sn){
-					const url = `/btr/rest/template?sn=${sn.serialNumber}&measId=${measId}&pn=${partNumber}`;
-					downloadURL(url);
-				}
-			});
-
+			}
 			function setupModal(){
+				$modal.on('hide.bs.modal', function () {
+					if (document.activeElement) 
+			            document.activeElement.blur();
+				});
 				return true;
 			}
 
