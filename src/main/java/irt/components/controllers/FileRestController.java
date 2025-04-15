@@ -244,4 +244,10 @@ public class FileRestController {
 			}
 		};
 	}
+
+	public static void saveImage(File file, byte[] imageByte) throws FileNotFoundException, IOException {
+		try(final FileOutputStream os = new FileOutputStream(file);){
+			os.write(imageByte);
+		}
+	}
 }

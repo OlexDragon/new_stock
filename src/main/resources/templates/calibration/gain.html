@@ -40,7 +40,7 @@
     							</div>
   							</div>
  							<div class="form-group row">
-    							<label class="col-sm-6 col-form-label text-end" for="maxValue">Mac:</label>
+    							<label class="col-sm-6 col-form-label text-end" for="maxValue">Max:</label>
     							<div class="col-sm-6">
     								<input type="number" class="form-control settings" id="maxValue" placeholder="Max. Temperarue" value="85" th:value="${settings.stopValue}">
     							</div>
@@ -783,7 +783,7 @@
 				default:
 					$modalMessage.text('');
 					clearTimeout(storeTableTimeout);
-					storeTableTimeout = setTimeout(function(){storeTable();$modalMessage.text('Saved in cookies.');}, 10*60*1000)
+					storeTableTimeout = setTimeout(()=>{storeTable();$modalMessage.text('Saved in cookies.');}, 10*60*1000)
 					return;
 				}
 

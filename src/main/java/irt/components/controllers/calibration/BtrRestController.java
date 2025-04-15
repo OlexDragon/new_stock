@@ -380,7 +380,7 @@ public class BtrRestController {
 			@Override
 			public MessageHeaders getHeaders() {
 				Map<String, Object> header = new HashMap<>();
-				header.put("section", "unit-tuning");
+				header.put("section", "unit-tuning-imd-3");
 				header.put("serial-number", sn);
 				return new MessageHeaders(header);
 			}};
@@ -389,7 +389,7 @@ public class BtrRestController {
 	public FutureTask<String> getUnitTuningFT(String serialNumber) {
 		final List<NameValuePair> params = new ArrayList<>();
 		params.add(new BasicNameValuePair("sn", serialNumber.replaceAll("\\D", "")));
-		params.add(new BasicNameValuePair("section", "unit-tuning"));
+		params.add(new BasicNameValuePair("section", "unit-tuning-imd-3"));
 		String url = oneCeApiUrl.createUrl("travelers", params);
 		return HttpRequest.getForStringFT(url);
 	}
@@ -430,6 +430,7 @@ public class BtrRestController {
 		try {
 
 			final String string = ftConverter.get(5, TimeUnit.SECONDS);
+			logger.debug(string);
 			Map<String, String> map = stringToMap(string);
 			measurement.putAll(map);
 
@@ -517,12 +518,13 @@ public class BtrRestController {
 
         		         map.put(".IMD." + i, v);
         			 }
+        			 logger.error(map);
         		});
 
         Optional.ofNullable(map.remove("Notes")).map(s->s.split("\\n"))
         .ifPresent(
         		s->{
-        			final List<String> collect = Arrays.stream(s).filter(m->m.toUpperCase().contains("MONITOR")).map(m->m.split("[:=]", 2)).filter(m->m.length>1).map(m->m[1].split("[,/]"))
+        			final List<String> collect = Arrays.stream(s).filter(m->m.toUpperCase().contains("MONITOR")).map(m->m.split("[:=]", 2)).filter(m->m.length>1).map(m->m[1].trim().split("[;/, ]+"))
         					.flatMap(m->Arrays.stream(m)).map(m->m.replaceAll("[^\\d.-]", "")).collect(Collectors.toList());
 
         			if(collect.isEmpty())

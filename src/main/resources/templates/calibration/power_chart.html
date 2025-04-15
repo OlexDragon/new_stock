@@ -127,107 +127,128 @@
 				chartRun = true;
 
 				clearInterval(interval);
-				interval = setInterval(function() {
+				interval = setInterval(measure,3000);
+		}
+		function measure(){
+			console.log('measure()');
 
-				let url;
-				switch(testBy){
-				case 'byPM':
-				case 'byPower':
-					url = '/calibration/rest/monitorInfo';
-					break;
-				default:
-					url = urlCalibrationInfo;
+			let url;
+			switch(testBy){
+			case 'byPM':
+			case 'byPower':
+				url = '/calibration/rest/monitorInfo';
+				break;
+			default:
+				url = urlCalibrationInfo;
+			}
+
+			$.post(url, {sn : ip})
+			.done(function(unitInfo){
+
+				if(!unitInfo){
+					console.warn('POST ' + url + ' returns NULL.');
+					let $alarmStatus = $('#alarmStatus');
+					let $children = $alarmStatus.children();
+					if($children.length==1 || !$($children.get(1)).text().endsWith('Communication lost.'))
+						$children.first().after($('<div>', {class: 'alert alert-secondary', text: formater.format(new Date()) + ' -> Communication lost.'}));
+					chartRun = false;
+					return;
+				}						
+
+				let date = formater.format(new Date());
+				// Temperature
+				let temperature = getTemperature(unitInfo);
+				// Power
+				let valueAsString = getValueAsString(unitInfo);
+				if(valueAsString==null){
+					chartRun = false;
+					return;
+				}
+				let unit;
+				let value;
+				if(valueAsString.unit){
+					unit = valueAsString.unit;
+					value = valueAsString = valueAsString.value;
+				}else{
+					unit = 'dBm';
+						value = parseFloat((valueAsString && valueAsString.length) ? valueAsString.replace('<', '').replace('>', '') : 0);
+				}
+				$lastPoint.text('( ' + date + '; ' + valueAsString + ' ' + unit + '; ' + temperature + ' °C; )');
+					
+				const y1 = yPower.length - 1;
+				const byPM = testBy==='byPM';
+
+				if(byPM){
+					if($outputGet.hasClass('disabled')){
+						$('#byPower').click();
+						alert('It is impossible to get the power value from the tool.');
+					}
+					outputGet(data=>{
+
+						if(data.error){
+							$modal.hide();
+							alert(data.error);
+							chartRun = false;
+							return;
+						}
+console.log(data);
+						if(!data.getAnswer)
+							return;
+
+						const toFixed = dataToValue(data);
+						if(!toFixed){
+							alert('There was a mistake in the information that was received from the tool.');
+							if(y1>=0){
+								yPower.splice(y1, 1);	// Remove this point
+								yTemperature.splice(y1, 1);	// Remove this point
+							}
+							chartRun = false;
+							return;
+						}
+						if(y1>=0)
+							yPower[y1] = toFixed;
+
+						if(!byPM){
+							chart.update();
+							getAlarms(ip);
+
+							chartRun = false;
+						}
+					});
 				}
 
-				$.post(url, {sn : ip})
-				.done(function(unitInfo){
+				if(replacePointOrNot(y1)){
+					xLabels[y1] = date;
+					yTemperature[y1] = temperature;
+					yPower[y1] = value;
+					chart.update();
+					chartRun = false;
+					return;
+				}
 
-					if(!unitInfo){
-						console.warn('POST ' + url + ' returns NULL.');
-						let $alarmStatus = $('#alarmStatus');
-						let $children = $alarmStatus.children();
-						if($children.length==1 || !$($children.get(1)).text().endsWith('Communication lost.'))
-							$children.first().after($('<div>', {class: 'alert alert-secondary', text: formater.format(new Date()) + ' -> Communication lost.'}));
-						chartRun = false;
-						return;
-					}						
+				yTemperature.push(temperature);
+				yPower.push(value);
+				xLabels.push(formater.format(new Date()));
 
-					let date = formater.format(new Date());
-					// Temperature
-					let temperature = getTemperature(unitInfo);
-					// Power
-					let valueAsString = getValueAsString(unitInfo);
-					if(valueAsString==null){
-						chartRun = false;
-						return;
-					}
-					let unit;
-					let value;
-					if(valueAsString.unit){
-						unit = valueAsString.unit;
-						value = valueAsString = valueAsString.value;
-					}else{
-						unit = 'dBm';
-							value = parseFloat((valueAsString && valueAsString.length) ? valueAsString.replace('<', '').replace('>', '') : 0);
-					}
-					$lastPoint.text('( ' + date + '; ' + valueAsString + ' ' + unit + '; ' + temperature + ' °C; )');
-						
-					const y1 = yPower.length - 1;
+				if(xLabels.length>500 || yPower[0]==''){
+					xLabels.shift();
+					yPower.shift();
+					yTemperature.shift();
+				}
 
-					if(testBy==='byPM'){
-						if($outputGet.hasClass('disabled')){
-							$('#byPower').click();
-							alert('It is impossible to get the power value from the tool.');
-						}
-						outputGet(data=>{
-							if(!data.getAnswer)
-								return;
-
-							const toFixed = dataToValue(data);
-							if(!toFixed){
-								alert('There was a mistake in the information that was received from the tool.');
-								if(y1>=0){
-									yPower.splice(y1, 1);	// Remove this point
-									yTemperature.splice(y1, 1);	// Remove this point
-								}
-								return;
-							}
-							if(y1>=0)
-								yPower[y1] = toFixed;
-						});
-					}
-
-					if(replacePointOrNot(y1)){
-						xLabels[y1] = date;
-						yTemperature[y1] = temperature;
-						yPower[y1] = value;
-						chart.update();
-						chartRun = false;
-						return;
-					}
-
-					yTemperature.push(temperature);
-					yPower.push(value);
-					xLabels.push(formater.format(new Date()));
-
-					if(xLabels.length>500 || yPower[0]==''){
-						xLabels.shift();
-						yPower.shift();
-						yTemperature.shift();
-					}
-
+				if(!byPM){
 					chart.update();
 					getAlarms(ip);
 
 					chartRun = false;
-				})
-				.fail(function(error) {
+				}
+			})
+			.fail(function(error) {
 
-					if(error.statusText!='abort')
-						alert(error.responseText);
-					chartRun = false;
-			   	});
-			},3000);
+				if(error.statusText!='abort')
+					alert(error.responseText);
+				chartRun = false;
+		   	});
 		}
 		function replacePointOrNot(y1){
 

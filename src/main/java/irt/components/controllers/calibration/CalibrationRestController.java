@@ -801,7 +801,12 @@ public class CalibrationRestController {
 											params.add(new BasicNameValuePair("groupindex", "28"));
 											final Etc etc = HttpRequest.postForIrtObgect(u, Etc.class, params).get(10, TimeUnit.SECONDS);
 
-											values.put("sticker", etc.getEtc());
+											Optional.ofNullable(etc)
+											.ifPresent(
+													e->{
+														values.put("sticker", etc.getEtc());
+													});
+
 											map.put(info.getSerialNumber(), values);
 
 										} catch (MalformedURLException | InterruptedException | ExecutionException | TimeoutException e) {

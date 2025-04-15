@@ -210,11 +210,12 @@ function intToBytes(intValue){
 // *** Packet
 const FLAG_SEQUENCE	= 0x7E;
 const CONTROL_ESCAPE = 0x7D;
+const LINK_HEADER_SIZE = 4;
 const HEADER_SIZE = 7;
 const PARAMETER_SIZE= 3;
 const PAYLOAD_MIN_SIZE = PARAMETER_SIZE;
 const ACKNOWLEDGEMENT_SIZE = 5; // 3 bytes - packet type and packet ID plus 2 byte checksum
-const ACKNOWLEDGEMENT_HEADER_SIZE = 3; // 3 bytes - packet type and packet ID 
+const ACKNOWLEDGEMENT_HEADER_SIZE = 4; // 3 bytes - packet type and packet ID
 const packetError = {};
 packetError.noError					 = 0;
 packetError.internalError			 = 1;
@@ -231,18 +232,18 @@ packetError.timedout				 = 11;
 packetError.noCommunication			 = 20;
 const PACKET_ERROR = {};
 PACKET_ERROR[packetError.noError]		 = 'No Error';
-PACKET_ERROR[packetError.internalError]	 = 'Internal System Error';
-PACKET_ERROR[packetError.WriteError]	 = 'Write Error';
-PACKET_ERROR[packetError.functionNotImplemented] = 'Function not implemented';
-PACKET_ERROR[packetError.notInRange]	 = 'Value outside of valid range';
-PACKET_ERROR[packetError.canNotGenerate] = 'Requested information can’t be generated';
-PACKET_ERROR[packetError.canNotExecute]	 = 'Command can’t be executed';
-PACKET_ERROR[packetError.InvalidFormat]	 = 'Invalid data format';
-PACKET_ERROR[packetError.InvalidValue]	 = 'Invalid value';
-PACKET_ERROR[packetError.noMemory]		 = 'Not enough memory';
-PACKET_ERROR[packetError.notFoundr]		 = 'Requested element not foundr';
-PACKET_ERROR[packetError.timedout]		 = 'Timed out';
-PACKET_ERROR[packetError.noCommunication] = 'Communication problem';
+PACKET_ERROR[packetError.internalError]	 = 'Packet ERROR:\n Internal System Error';
+PACKET_ERROR[packetError.WriteError]	 = 'Packet ERROR:\n Write Error';
+PACKET_ERROR[packetError.functionNotImplemented] = 'Packet ERROR:\n Function not implemented';
+PACKET_ERROR[packetError.notInRange]	 = 'Packet ERROR:\n Value outside of valid range';
+PACKET_ERROR[packetError.canNotGenerate] = 'Packet ERROR:\n Requested information can’t be generated';
+PACKET_ERROR[packetError.canNotExecute]	 = 'Packet ERROR:\n Command can’t be executed';
+PACKET_ERROR[packetError.InvalidFormat]	 = 'Packet ERROR:\n Invalid data format';
+PACKET_ERROR[packetError.InvalidValue]	 = 'Packet ERROR:\n Invalid value';
+PACKET_ERROR[packetError.noMemory]		 = 'Packet ERROR:\n Not enough memory';
+PACKET_ERROR[packetError.notFoundr]		 = 'Packet ERROR:\n Requested element not foundr';
+PACKET_ERROR[packetError.timedout]		 = 'Packet ERROR:\n Timed out';
+PACKET_ERROR[packetError.noCommunication] = 'Packet ERROR:\n Communication problem';
 
 // Packet type
 const packetType = {};
@@ -280,7 +281,7 @@ PACKET_GROUP_ID[packetGroupId.alarm]		 = 'alarm';
 PACKET_GROUP_ID[packetGroupId.configuration] = 'configuration';
 PACKET_GROUP_ID[packetGroupId.filetransfer]	 = 'filetransfer';
 PACKET_GROUP_ID[packetGroupId.measurement]	 = 'measurement';
-PACKET_GROUP_ID[packetGroupId.reset]			 = 'reset';
+PACKET_GROUP_ID[packetGroupId.reset]		 = 'reset';
 PACKET_GROUP_ID[packetGroupId.deviceInfo]	 = 'device info';
 PACKET_GROUP_ID[packetGroupId.control]		 = 'control';
 PACKET_GROUP_ID[packetGroupId.protocol]		 = 'protocol';
@@ -288,7 +289,7 @@ PACKET_GROUP_ID[packetGroupId.network]		 = 'network';
 PACKET_GROUP_ID[packetGroupId.redundancy]	 = 'redundancy';
 PACKET_GROUP_ID[packetGroupId.deviceDebug]	 = 'device debug';
 PACKET_GROUP_ID[packetGroupId.production]	 = 'production generic set 1';
-PACKET_GROUP_ID[packetGroupId.developer]		 = 'developer generic set 1';
+PACKET_GROUP_ID[packetGroupId.developer]	 = 'developer generic set 1';
 const deviceInfo = {};
 deviceInfo.serialNumber	 = 5;
 deviceInfo.description	 = 6;
@@ -315,6 +316,10 @@ parameterCode[packetGroupId.deviceDebug][deviceDebug.parameter.readWrite] = {};
 parameterCode[packetGroupId.deviceDebug][deviceDebug.parameter.readWrite].description	 = 'Device Debug Register Read/Write'
 parameterCode[packetGroupId.deviceDebug][deviceDebug.parameter.readWrite].parseFunction = parseIrtRegister; // IRT Register
 
+parameterCode[packetGroupId.deviceDebug][deviceDebug.parameter.debugDump] = {};
+parameterCode[packetGroupId.deviceDebug][deviceDebug.parameter.debugDump].description	 = 'Dump Registers'
+parameterCode[packetGroupId.deviceDebug][deviceDebug.parameter.debugDump].parseFunction = parseToString;
+
 // Default InfoPacket
 class Packet{
 	// Default constuctor converter INFO Packet
@@ -322,10 +327,18 @@ class Packet{
 		// From bytes
 		if(Array.isArray(header)){
 			const bytes = header;
+			if(bytes[0]==FLAG_SEQUENCE)
+				bytes.splice(0,1)
+			if(bytes[bytes.length-1]==FLAG_SEQUENCE)
+				bytes.splice(bytes.length-1)
 //			console.log(bytes);
-			const packetArray = bytes.splice(0,bytes.length-2);
+			const packetArray = byteStuffing(bytes.splice(0,bytes.length-2));
 			const chcksm = checksumToBytes(packetArray);
 			if(chcksm[0]==(bytes[0]&0xff) && chcksm[1]==(bytes[1]&0xff)){
+				if(payloads){	// Has Link Header
+					const linkHeaderArray = packetArray.splice(0, LINK_HEADER_SIZE);
+					this.linkHeader = new LinkHeader(linkHeaderArray);
+				}
 				const headerArray = packetArray.length==ACKNOWLEDGEMENT_HEADER_SIZE ? packetArray.splice(0) : packetArray.splice(0, HEADER_SIZE);
 				this.header = new Header(headerArray);
 				if(packetArray.length>=PARAMETER_SIZE)
@@ -350,7 +363,7 @@ class Packet{
 	}
 	getAcknowledgement(){
 		const header = new Header(packetType.acknowledgement, this.header.packetId);
-		return new Packet(header);
+		return new Packet(header, undefined, this.linkHeader);
 	}
 	toBytesAcknowledgement(){
 		return this.header.toBytesAcknowledgement();
@@ -370,9 +383,10 @@ class Packet{
 		return pl;
 	}
 	toBytes(){
+		const linkHeaderrBytes = this.linkHeader?.toBytes();
 		const headerBytes = this.header.toBytes();
 		const payloadBytes = this.payloadsToBytes();
-		return headerBytes.concat(payloadBytes);
+		return linkHeaderrBytes ? linkHeaderrBytes.concat(headerBytes).concat(payloadBytes) : headerBytes.concat(payloadBytes);
 	}
 	payloadsToBytes(){
 
@@ -385,20 +399,31 @@ class Packet{
 		return bytes;
 	}
 	toString(){
-		return this.header.toString() + (this.payloads ? ', ' + this.payloads.map(pl=>pl.toString(this.header.groupId)) : '');
+		const linkHeader = this.linkHeader ? 'linkHeader: ' + this.linkHeader.toString() + ', ' : '';
+		return linkHeader + this.header.toString() + (this.payloads ? ', ' + this.payloads.map(pl=>pl.toString(this.header.groupId)) : '');
 	}
 	getData(parameterCode){
 		if(parameterCode)
-			return this.payloads.filter(pl=>(pl.parameter.code&0xff)==parameterCode).map(pl=>pl.getData(this.header.groupId));
-		if(this.payloads.length)
+			return this.payloads?.filter(pl=>(pl.parameter.code&0xff)==parameterCode).map(pl=>pl.getData(this.header.groupId));
+		if(this.payloads?.length)
 			return this.payloads[0].getData(this.header.groupId);
 	}
 }
 class LinkHeader{
 	constructor(unitAddr){
+	// From bytes
+		if(Array.isArray(unitAddr)){
+			if(unitAddr.length==LINK_HEADER_SIZE)
+				this.unitAddr = unitAddr;
+			else
+				this.unitAddr = unitAddr[0];
+			return
+		}
 		this.unitAddr = unitAddr;
 	}
 	toBytes(){
+		if(Array.isArray(this.unitAddr))
+			return this.unitAddr;
 		return [this.unitAddr, 0, 0];
 	}
 	toString(){
@@ -414,11 +439,11 @@ class Header{
 			this.packetId 	= (bytes[2]&0xff) * 256 + (bytes[1]&0xff);		// short packetId;	1,2 
 
 			if(bytes.length>=HEADER_SIZE && this.type != packetType.acknowledgement){
-				this.groupId 	= bytes[3]&0xff;				// byte groupId;	3
-				this.reserved	= 0;							// short reserved;	4,5
-				this.error		= (packetId == undefined ? bytes[6]&0xff : packetId);
+				this.groupId 	= bytes[3]&0xff;											// byte groupId;	3
+				this.reserved	= 0;														// short reserved;	4,5
+				this.error		= (packetId == undefined ? bytes[6]&0xff : packetId);		// byte errorCode;	6
 			}
-			return;							// byte errorCode;	6
+			return;	
 		}
 
 		this.type 		= (type == undefined ? packetType.request : type);								// byte	type;		0
@@ -429,7 +454,7 @@ class Header{
 
 		this.groupId 	= (groupId == undefined ? packetGroupId.deviceInfo : (typeof groupId == "number") ? groupId : undefined);	// byte groupId;	3; 
 		this.reserved	= 0;															// short reserved;	4,5
-		this.error		= (error == undefined ? groupId : error);						// byte errorCode;	6
+		this.error		= (error == undefined ? 0 : error);						// byte errorCode;	6
 	}
 	toBytes(){
 		const id = shortToBytes(this.packetId);
@@ -445,7 +470,9 @@ class Header{
 	toString(){
 		if(this.type == packetType.acknowledgement)
 			return 'type = ' + PACKET_TYPE[this.type] + ', ID = ' + this.packetId;
-		return 'type = ' + PACKET_TYPE[this.type] + ', ID = ' + this.packetId + ', groupId = ' + PACKET_GROUP_ID[this.groupId] + ', error = ' + ((typeof this.error != "number") ? this.error : PACKET_ERROR[this.error]);
+
+		const grId = PACKET_GROUP_ID[this.groupId];
+		return 'type = ' + PACKET_TYPE[this.type] + ', ID = ' + this.packetId + ', groupId = ' + (grId ? grId : this.groupId) + ', error = ' + ((typeof this.error != "number") ? this.error : PACKET_ERROR[this.error]);
 	}
 }
 class Payload{
@@ -473,7 +500,9 @@ class Payload{
 		if(!this.data)
 			str = '';
 		else if(packetGroupId){
-			const tmp = parameterCode[packetGroupId][this.parameter.code];
+			let tmp = parameterCode[packetGroupId]
+			if(tmp)
+				tmp = tmp[this.parameter.code];
 			if(tmp)
 				str = tmp.parseFunction(this.data);
 			else
@@ -497,7 +526,8 @@ class Payload{
 }
 
 const PARAMETER_ALL			= 255;
-const PARAMETER_READ_WRITE	= 3;
+const PARAMETER_READ_WRITE	= deviceDebug.parameter.readWrite ;
+const DUMP_REGISTERS	= deviceDebug.parameter.debugDump ;
 class Parameter{
 	constructor(code, size){
 		// From bytes
@@ -518,7 +548,9 @@ class Parameter{
 		let str;
 
 		if(packetGroupId){
-			const tmp = parameterCode[packetGroupId][this.code];
+			let tmp = parameterCode[packetGroupId]
+			if(tmp)
+				tmp = tmp[this.code];
 			if(tmp)
 				str = ' (' + tmp.description + ')';
 			else
@@ -533,6 +565,23 @@ const IS_FCM = true;
 const IS_BUC = !IS_FCM;
 class Register{
 	constructor(index, addr, value){
+		if(Array.isArray(index)){		// index is an array
+			let tmp;
+			switch(index.length){
+				case 12:
+					tmp = index.splice(8);
+					this.value = bytesToInt(tmp);
+				case 8:
+					tmp = index.splice(4);
+					this.addr = bytesToInt(tmp);
+				case 4:
+					this.index = bytesToInt(index);
+					break;
+
+				default:
+					console.warn(index);
+			}
+		}
 		this.index = index;
 		this.addr = addr;
 		this.value = value;
@@ -545,9 +594,15 @@ class Register{
 			return indexAddr;
 		return indexAddr.concat(intToBytes(this.value));
 	}
+	toString(){
+		return 'index: ' + this.index + ', addr: ' + this.addr + ', value: ' + this.value;
+	}
 }
+const FCM_DUMP_REGISTERS_10	 = [0, 0, 0, 10];
 const DEVICE_FCM_ADC_INPUT_POWER	 = ()=>new Register(10,0);
+const DEVICE_FCM_ADC_INPUT_POWER_732 = ()=>new Register(10,33554432);
 const DEVICE_FCM_ADC_OUTPUT_POWER	 = ()=>new Register(10,1);
+const DEVICE_FCM_ADC_OUTPUT_POWER_732 = ()=>new Register(10,36700161);
 const DEVICE_CONVERTER_DAC1		 = ()=>new Register(1,0);
 const DEVICE_CONVERTER_DAC2		 = ()=>new Register(2,0);
 const DEVICE_CONVERTER_DAC3		 = ()=>new Register(3,0);

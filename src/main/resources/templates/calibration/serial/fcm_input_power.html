@@ -20,6 +20,13 @@
 <!-- Modal Header -->
       			<div class="modal-header">
         			<h5 class="modal-title ml-3 text-primary col">Input Power</h5>
+        			<div class="col"></div>
+        			<div class="col">
+        				<select id="cpuType" class="form-control">
+        					<option value="0">Default</option>
+        					<option value="732">CPU 732</option>
+        				</select>
+        			</div>
 <!-- X Button -->
         			<button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
       			</div>
@@ -197,6 +204,18 @@
   	  			setConfirmStart();
   	  			return true;
   			}
+  			$('#cpuType').change(e=>{
+
+  				switch(e.currentTarget.value){
+
+  				case '732':
+  	  	  			payloadReadWrite = new Payload(new Parameter(PARAMETER_READ_WRITE), DEVICE_FCM_ADC_INPUT_POWER_732().toBytes());
+  	  	  			break;
+
+  				default:
+  	  	  			payloadReadWrite = new Payload(new Parameter(PARAMETER_READ_WRITE), DEVICE_FCM_ADC_INPUT_POWER().toBytes());
+  				}
+  			});
   			/*]]>*/
   			//# sourceURL=fcm-input-power.js
   			</script>

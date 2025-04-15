@@ -1,0 +1,65 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org">
+<head>
+    <title>RMA Camera.</title>
+    <link rel="shortcut icon" href="http://irttechnologies.com/favicon.ico">
+<th:block th:replace="components :: bootstrapLink">
+    <link rel="stylesheet" href="https://stackpath.bootstrapcdn.com/bootstrap/4.4.1/css/bootstrap.min.css">
+</th:block>
+    <link rel="stylesheet" href="/css/camera.css">
+</head>
+<body>
+
+    <div class="container-fluid">
+		<div class="row" th:if="${message}==null">
+    		<div class="col-auto video">
+    			<video id="video" autoplay playsinline muted></video>
+	    	</div>
+    		<div class="col-auto button"><img id="snapshotBtn" class="btn btn-outline-secondary" src="/images/camera-button.png"  width="80" height="65"></img></div>
+		 	<canvas id="canvas" style="display:none;"></canvas>
+    	</div>
+	   	<div class="row" th:text="${message}"></div>
+
+<th:block th:if="${message}==null">
+    	<div class="row">
+    		<div class="col"></div>
+    		<div class="col-auto fw-bold">Chron:</div>
+    		<div class="col-8 text-truncate">chrome://flags/#unsafely-treat-insecure-origin-as-secure</div>
+    	</div>
+    	<div class="row">
+    		<div class="col"></div>
+    		<div class="col-auto fw-bold">Edge:</div>
+    		<div class="col-8 text-truncate">edge://flags/#Iunsafely-treat-insecure-origin-as-secure</div>
+    	</div>
+    	<div class="row">
+    		<div class="col"></div>
+    		<div class="col-auto fw-bold">FireFox:</div>
+    		<div class="col-8 text-truncate">about:config/#media.devices.insecure.enabled</div>
+    	</div>
+    	<div class="row">
+    		<div class="col"></div>
+    		<div class="col-auto fw-bold">Opera:</div>
+    		<div class="col-8 text-truncate">opera://flags/#Block insecure private network requests</div>
+    	</div>
+   		<div class="row">
+    		<div class="col"></div>
+    		<div class="col-9 text-truncate">http://irttechnologies:8089,http://oleksandr:8089</div>
+    	</div>
+</th:block>
+<th:block th:if="${message} eq 'Android'">
+		<div class="row mt-5">
+		<div class="col">		</div>
+		<div class="col-auto">
+			<label for="attachImages" class="btn btn-outline-secondary btn-lg form-control">Open Camera</label>
+			<input id="attachImages" type="file" accept="image/*" capture="environment" hidden>
+		</div>
+		<div class="col"></div>
+		</div>
+</th:block>
+    </div>
+<script src="https://ajax.googleapis.com/ajax/libs/jquery/3.7.1/jquery.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.5/dist/js/bootstrap.bundle.min.js" integrity="sha384-k6d4wzSIapyDyv1kpU366/PK5hCdSbCRGRCMv+eplOQJWyd1fbcAu9OCUj5zNLiq" crossorigin="anonymous"></script>
+<script src="../static/js/camera.js" th:src="@{'/js/camera.js'}"></script>
+
+</body>
+</html>

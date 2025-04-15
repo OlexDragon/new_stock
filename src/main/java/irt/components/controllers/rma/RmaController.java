@@ -150,6 +150,8 @@ public class RmaController {
 					model.addAttribute("rmaStatuses", statuses);
 				});
 
+		model.addAttribute("timestamp", System.currentTimeMillis());
+
 		return "rma";
     }
 
@@ -191,6 +193,20 @@ public class RmaController {
 
 		return "redirect:/rma";
 	}
+
+//	@GetMapping("camera/{rmaId}/{userId}/{timestamp}")
+//    String cameraPage(@PathVariable String rmaId, @PathVariable Long userId, @PathVariable Long timestamp, HttpServletRequest request, Model model) {
+//		logger.traceEntry("rmaId: {}; userId: {}; timestamp: {}", rmaId, userId, timestamp);
+//
+//		if(request.getHeader("user-agent").contains("Android"))
+//			model.addAttribute("message", "Android");
+//
+//		final boolean b = (System.currentTimeMillis() - timestamp)/60000 > 30;
+//		if(b)	// 30 minutes
+//			model.addAttribute("message", "The QR code has expired.\nPlease reopen the RMA message.");
+//
+//		return "camera";
+//	}
 
 	private void statusToRmaFilter(Status status, HttpServletResponse response) {
 		logger.traceEntry("status: {}", status);

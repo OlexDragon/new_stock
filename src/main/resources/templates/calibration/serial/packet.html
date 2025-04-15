@@ -1,0 +1,230 @@
+<!DOCTYPE html>
+<html 	xmlns="http://www.w3.org/1999/xhtml"
+		xmlns:th="https://www.thymeleaf.org"
+      	xmlns:sec="https://www.thymeleaf.org/thymeleaf-extras-springsecurity5"
+      	lang="en">
+	<head>
+	<meta charset="utf-8">
+    <title>M&amp;S Packet Test</title>
+    <link rel="shortcut icon" href="http://irttechnologies.com/favicon.ico">
+<th:block th:replace="components :: bootstrapLink">
+    <link rel="stylesheet" href="https://stackpath.bootstrapcdn.com/bootstrap/4.4.1/css/bootstrap.min.css">
+</th:block>
+	</head>
+	<body class="container">
+		<div class="row">
+			<div class="col"><select id="packetType" class="form-control input" title="Packet Type"></select></div>
+			<div class="col"><input id="linkAddr" type="number" class="form-control input" placeholder="link Addr"></div>
+			<div class="col"><input id="groupId" type="number" class="form-control input" placeholder="Group Id"></div>
+			<div class="col"><input id="parameterHeaderCode" type="number" class="form-control input" placeholder="Parameter Header Code"></div>
+			<div class="col-auto"><select id="valueType" class="form-control" title="Value Type">
+				<option>Byte</option>
+				<option>Short</option>
+				<option>3Bytes</option>
+				<option>Int</option>
+				<option>Long</option>
+				<option>Array</option>
+				<option>Register</option>
+			</select></div>
+			<div class="col"><input id="packetValue" type="number" class="form-control input" placeholder="Value"></div>
+		</div>
+		<div class="row mt-3">
+			<div id="toString" class="col">
+			</div>
+		</div>
+		<div class="row mt-3">
+			<div id="toBytes" class="col">
+			</div>
+		</div>
+		<div class="row mt-3">
+			<div class="col"><input id="parsePacket" type="text" class="form-control" placeholder="Parse Packet"></div>
+		</div>
+		<div class="row mt-3">
+			<div id="parsedPacket" class="col"></div>
+		</div>
+		<div class="row mt-3">
+			<div id="parsedValue" class="col" style="white-space: pre-wrap;">The packet value will be here.</div>
+		</div>
+<th:block th:replace="components :: scripts">
+    <script src="https://ajax.googleapis.com/ajax/libs/jquery/3.5.1/jquery.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/popper.js/2.9.2/umd/popper.min.js"></script>
+    <script src="https://stackpath.bootstrapcdn.com/bootstrap/4.4.1/js/bootstrap.min.js"></script>
+	<script src="https://cdn.jsdelivr.net/npm/js-cookie@2/src/js.cookie.min.js"></script>
+</th:block>
+	<script src="../../../static/js/serial/packet.js" th:src="@{/js/serial/packet.js}"></script>
+		<script>
+		/*<![CDATA[*/
+			const $packetType = $("#packetType");
+			const $linkAddr = $("#linkAddr");
+			const $groupId = $("#groupId");
+			const $parameterHeaderCode = $("#parameterHeaderCode");
+			const $toString = $('#toString');
+			const $toBytes = $('#toBytes');
+			const $parsePacket = $('#parsePacket');
+			const $parsedPacket = $('#parsedPacket');
+			const $parsedValue = $('#parsedValue');
+			const $valueType = $('#valueType').change(typeChange);
+			const $packetValue =$('#packetValue');
+
+			Object.keys(packetType).forEach(key=>{
+				const selected = key === 'request'
+				$packetType.append($('<option>', {text: key.toUpperCase(), value: packetType[key], selected: selected}));
+			});
+
+			function typeChange(e){
+
+				if(e.currentTarget.value==='Register' || e.currentTarget.value==='Array')
+					$packetValue.attr('type', 'text');
+				else
+					$packetValue.attr('type', 'number');
+				inputEvent();
+			}
+			var haseLinkHeader;
+			const $inputs = $('.input').on('input', inputEvent);
+			function inputEvent(){
+				const values = {};
+
+				let val = $packetType.val();
+				if(val)
+					values.type = parseInt(val);
+
+				val = $linkAddr.val();
+				if(val)
+					values.linkAddr = parseInt(val);
+
+				val = $groupId.val();
+				if(val)
+					values.groupId = parseInt(val);
+
+				val = $parameterHeaderCode.val();
+				if(val)
+					values.parameterHeaderCode = parseInt(val);
+
+
+				if(values.groupId<0 || values.parameterHeaderCode<0){
+					return;
+				}
+
+				haseLinkHeader = values.linkAddr ? true : false;
+				const packet = new Packet(new Header(values.type, undefined, values.groupId), new Payload(new Parameter(values.parameterHeaderCode), valueToBytes()), values.linkAddr);
+				$toString.text(packet.toString());
+				$toBytes.text(packetToSend(packet).toString());
+			}
+			function valueToBytes(){
+				const val = $packetValue.val();
+				if(!val)
+					return;
+
+				const number = Number(val);
+				const type = $valueType.val();
+				switch(type){
+
+				case 'Long':
+				case 'Int':
+				case '3Bytes':
+				case 'Short':
+				case 'Byte':
+					return numberToBytes(val, type);
+
+				case 'Register':
+					let arr = [];
+					const reg = val.split(',');
+					for(let i=0; i<3; i++){
+						if(reg.length>i){
+							const v = numberToBytes(reg[i]);
+							arr = arr.concat(v);
+						}else if(i<2){
+							const v = numberToBytes(0);
+							arr = arr.concat(v);
+						}
+					}
+					return arr;
+
+				case 'Array':
+					break;
+				}
+			}
+			function numberToBytes(val, type){
+
+				if(!val)
+					val = '0';
+				const number = Number(val.trim());
+				if(!type)
+					type = 'Int';
+
+				const arr = [];
+
+				switch(type){
+
+				case 'Long':
+					const halfOfLong = number / 4294967296;
+					arr.push((halfOfLong>>>24)&0xff);
+					arr.push((halfOfLong>>>16)&0xff);
+					arr.push((halfOfLong>>>8)&0xff);
+					arr.push(halfOfLong&0xff);
+
+				case 'Int':
+					arr.push((number>>>24)&0xff);
+
+				case '3Bytes':
+					arr.push((number>>>16)&0xff);
+
+				case 'Short':
+					arr.push((number>>>8)&0xff);
+
+				case 'Byte':
+					arr.push(number&0xff);
+					return arr;
+				}
+
+			}
+			$parsePacket.on('input', e=>{
+				e.preventDefault();
+				if(!e.currentTarget.value){
+					console.log('nothing to parse');
+					return;
+				}
+				if(!haseLinkHeader && !$inputs.filter((_,el)=>el.id!='packetType').filter((_,el)=>el.value).length)
+					haseLinkHeader = confirm('Does this package contain a Link Header?\nIf yes, click OK.');
+
+				let array = e.currentTarget.value.split(',').map(v=>parseInt(v.trim()));
+				const packet = new Packet(array, haseLinkHeader);
+				$parsedPacket.text(packet.toString());
+				if(packet?.payloads?.length && packet.payloads[0]?.data){
+					const data = packet.payloads[0].data;
+					switch(data.length){
+					case 1:
+						$parsedValue.text(data[0]);
+						return;
+
+					case 2:
+					case 4:
+						let val = 0
+						const shift = 8;
+						for(let x=data.length, i=0; x>=0; i++){
+							x--;
+							val += data[i]<<(x*shift);
+						}
+						$parsedValue.text(val);
+						break;
+
+					case 8:
+					case 12:
+						const reg = packet.getData() + '\n' + data;
+						$parsedValue.text(reg);
+						break;
+
+					default:
+						const text = String.fromCharCode.apply(String, data);
+						$parsedValue.text(text);
+					}
+				}
+			});
+			function dec2bin(dec) {
+			  return (dec >>> 0).toString(2);
+			}
+		/*]]>*/
+		//# sourceURL=packet-worker.js
+		</script>
+	</body>
+</html>

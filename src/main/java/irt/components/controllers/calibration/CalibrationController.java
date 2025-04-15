@@ -169,21 +169,27 @@ public class CalibrationController {
     }
 
 	@GetMapping("converter/input-power")
-    String inputPowerConverter() throws ExecutionException {
+    String inputPowerConverter(){
 		logger.traceEntry();
 		return "calibration/serial/fcm_input_power :: converter";
     }
 
     @GetMapping("converter/output-power")
-    String outputPowerConverter() throws ExecutionException {
+    String outputPowerConverter(){
 		logger.traceEntry();
 		return "calibration/serial/fcm_output_power :: converter";
     }
 
     @GetMapping("converter/gain")
-    String gainConverter() throws ExecutionException {
+    String gainConverter(){
 		logger.traceEntry();
 		return "calibration/serial/fcm_gain :: converter";
+    }
+
+    @GetMapping("packet/test")
+    String packetTest(){
+		logger.traceEntry();
+		return "calibration/serial/packet";
     }
 
     @GetMapping("initialize")

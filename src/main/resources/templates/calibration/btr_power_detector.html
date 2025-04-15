@@ -279,7 +279,14 @@
 				console.log('setFrequenceFronCookies(); Function to be implemented.');
 			}
 			function getPM(){
+
 				outputGet(data=>{
+
+					if(data.error){
+						alert(data.error);
+						return;
+					}
+
 					if(!data.getAnswer){
 						return;
 					}

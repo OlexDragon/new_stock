@@ -26,7 +26,7 @@ import lombok.ToString;
 @Entity
 @Table(name = "rma_comments_web")
 @NoArgsConstructor @AllArgsConstructor @Getter @Setter @ToString
-public class RmaCommentWeb {
+public class RmaCommentWeb implements Comment{
 
 	@Id @GeneratedValue(strategy = GenerationType.IDENTITY)
 	private Long	 id;

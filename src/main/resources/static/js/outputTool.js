@@ -16,22 +16,40 @@ function outputGet(action){
 
 	const outputComPorts = $outputComPorts.val();
 	if(!outputComPorts){
-		console.log("The Serial Port is not selected.");
-		alert('The Serial Port is not selected.');
+		if(action){
+			var data = {};
+			data.error = 'The Serial Port is not selected.';
+			action(data);
+		}else{
+			console.log("The Serial Port is not selected.");
+			alert('The Serial Port is not selected.');
+		}
 		return;
 	}
 
 	const toolCommands = $outputTool.val();
 	if(!toolCommands){
-		console.log("Tool not selected.");
-		alert('Tool not selected.');
+		if(action){
+			var data = {};
+			data.error = 'Tool not selected.';
+			action(data);
+		}else{
+			console.log("Tool not selected.");
+			alert('Tool not selected.');
+		}
 		return;
 	}
 
 	const toolAddress = $outputToolAddress.val();
 	if(!toolAddress){
-		console.log("Type the Output Tool Address.");
-		alert('Type the Tool Address.');
+		if(action){
+			var data = {};
+			data.error = 'Type the Tool Address.';
+			action(data);
+		}else{
+			console.log("Type the Output Tool Address.");
+			alert('Type the Tool Address.');
+		}
 		return;
 	}
 
@@ -57,6 +75,7 @@ function outputGet(action){
 	toSend.timeout = 10000;
 
 	toSend.commands[toSend.commands.length-1].getAnswer = true;
+	console.log(toSend);
 	if(action)
 		sendPrologixCommands(toSend, action);
 	else{

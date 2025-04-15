@@ -12,6 +12,7 @@ import java.net.HttpURLConnection;
 import java.net.URL;
 import java.net.UnknownHostException;
 import java.util.AbstractMap;
+import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -39,6 +40,7 @@ import org.apache.http.client.methods.HttpUriRequest;
 import org.apache.http.entity.StringEntity;
 import org.apache.http.impl.client.CloseableHttpClient;
 import org.apache.http.impl.client.HttpClients;
+import org.apache.http.message.BasicNameValuePair;
 import org.apache.http.util.EntityUtils;
 import org.apache.logging.log4j.Level;
 import org.apache.logging.log4j.LogManager;
@@ -294,7 +296,7 @@ public class HttpRequest {
 				
 				logger.debug("json: ({})", json);
 
-				if(json.contains("not found"))
+				if(json.contains("not found") || json.contains("Whitelabel Error Page"))
 					return null;
 
 				final ObjectMapper mapper = new ObjectMapper();
@@ -516,5 +518,18 @@ public class HttpRequest {
 
 			logger.debug("No Answer.");
 		return new HashMap<>();
+	}
+
+	public static Object postForSystemConfig(String sn) throws IOException{
+		logger.traceEntry("sn: {}", sn);
+
+		final List<NameValuePair> list = new ArrayList<>();
+		list.add(new BasicNameValuePair("devid", "1"));
+		list.add(new BasicNameValuePair("command", "config"));
+		String url = new URL("http", "IRT-2508001", "/device_debug_read.cgi").toString();
+		final String postForString = postForString(url, list);
+		logger.debug(postForString);
+
+		return null;
 	}
 }

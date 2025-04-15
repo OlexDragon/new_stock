@@ -943,6 +943,10 @@ if(serialNumber){
 		}
 
 		const o = JSON.parse(data.payload);
+		if(typeof o === "string"){
+			console.log(o);
+			return;
+		}
 
 		$('#oneCHeadDescr').text(o.Description);
 		$('#oneCHeadNotes').text(o.Notes);
@@ -1135,4 +1139,8 @@ function getSerialNumber(moduleIndex, oneCeGroup){
 			break;
 		}
 	});
+}
+if(window.location.search.includes('.') && serialNumber && !serialNumber.includes('.')){
+	const newUrl = window.location.origin + window.location.pathname + '?sn=' + serialNumber;
+	history.replaceState({replace: true}, "", newUrl);
 }

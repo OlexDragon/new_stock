@@ -1,5 +1,6 @@
 package irt.components.workers;
 
+import java.io.IOException;
 import java.net.MalformedURLException;
 import java.net.URL;
 import java.util.ArrayList;
@@ -150,6 +151,11 @@ public class HttpRequestTest {
 					}
 					logger.error(i);
 				});
+	}
+
+	@Test
+	public void postForSystemConfigTest() throws IOException{
+		HttpRequest.postForSystemConfig("IRT-2508001");
 	}
 
 	public <T> T toObject(String js, Class<T> classToReturn) throws ScriptException, JsonMappingException, JsonProcessingException {
