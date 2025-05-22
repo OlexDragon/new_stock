@@ -14,6 +14,7 @@ public class HWInfo implements Diagnostics{
 
 	@Setter
 	private Integer moduleIndex;
+
 	@JsonProperty("sequence")
 	@JsonAlias("Bias sequence")
 	private String sequence;

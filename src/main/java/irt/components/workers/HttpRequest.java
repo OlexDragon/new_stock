@@ -74,6 +74,26 @@ public class HttpRequest {
 		return ft;
 	}
 
+	public static FutureTask<Integer> postForCode(URL url, List<NameValuePair> params) {
+
+		final FutureTask<Integer> ft = new FutureTask<>(
+				()->{
+
+					final HttpPost httpPost = new HttpPost(url.toURI());
+					setEntity(httpPost, params);
+
+					try(	final CloseableHttpClient httpclient = HttpClients.createDefault();
+							final CloseableHttpResponse response = httpclient.execute(httpPost);){
+
+						return response.getStatusLine().getStatusCode();
+					}
+
+				});
+		ThreadRunner.runThread(ft);
+
+		return ft;
+	}
+
 	public static <T> FutureTask<T> postForObgect(String url, Class<T> classToReturn, List<NameValuePair> params) {
 		logger.traceEntry("*** postForObgect classToReturn: {}; url: {}", classToReturn, url);
 
@@ -253,7 +273,7 @@ public class HttpRequest {
 
 		try(Scanner scanner = new Scanner(text.replaceAll("'", "\\\\'"))){
 			while (scanner.hasNextLine()) {
-				Optional.of(scanner.nextLine()).map(line->line.split(":", 2)).filter(split->split.length==2)
+				Optional.of(scanner.nextLine()).filter(line->!line.contains("'")).map(line->line.split(":", 2)).filter(split->split.length==2)
 				.ifPresent(
 						split->{
 							sb.append("\"").append(split[0].trim()).append("\":\"").append(split[1].trim().replace("N/A", "NotAplicable")).append("\",");
@@ -498,7 +518,7 @@ public class HttpRequest {
 			final URL url = new URL("http", sn.trim(), "/diagnostics.asp?devices=1");
 			logger.debug(url);
 
-			final String html = getForString(url.toString(), 5, TimeUnit.SECONDS);
+			final String html = getForString(url.toString(), 8, TimeUnit.SECONDS);
 			logger.debug(html);
 			final String str = Optional.of(html.indexOf("devices = [")).filter(index->index>=0)
 								.flatMap(start->Optional.of(html.indexOf("]", start)).filter(index->index>=0)

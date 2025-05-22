@@ -2,23 +2,30 @@ package irt.components.controllers.calibration;
 
 import java.io.IOException;
 import java.io.StringReader;
+import java.net.InetAddress;
 import java.net.URISyntaxException;
 import java.net.URL;
 import java.nio.file.Path;
 import java.util.ArrayList;
 import java.util.Arrays;
+import java.util.Enumeration;
+import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Optional;
+import java.util.concurrent.Callable;
 import java.util.concurrent.ExecutionException;
+import java.util.concurrent.FutureTask;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.TimeoutException;
 
+import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
 
 import org.apache.http.NameValuePair;
 import org.apache.http.client.utils.URIBuilder;
 import org.apache.http.message.BasicNameValuePair;
+import org.apache.logging.log4j.Level;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 import org.springframework.beans.factory.annotation.Value;
@@ -83,14 +90,60 @@ public class ProfileRestController {
 	}
 
     @GetMapping("path")
-    String profilePath(@RequestParam String sn) throws IOException {
+    Map<String, Object> profilePath(@RequestParam String sn, HttpServletRequest request) throws IOException {
+
+    	final Map<String, Object> response = new HashMap<>();
+    	final String remoteAddr = "http://" + request.getRemoteAddr() + ":8088";
+    	final FutureTask<Boolean> forString = HttpRequest.getForObgect(remoteAddr + "/ping", Boolean.class);
+
 
     	final ProfileWorker profileWorker = new ProfileWorker(profileFolder, sn);
 
-		if(!profileWorker.exists())
-			return "IrtProfile does not exists.";
+		if(!profileWorker.exists()) {
+			response.put("message", "IrtProfile does not exists.");
+			return response;
+		}
 
-    	return profileWorker.getOPath().get().toString();
+		try {
+
+			response.put("remoteAddr", remoteAddr);
+			response.put("serial-exists", forString.get(1, TimeUnit.MICROSECONDS));
+
+		} catch (InterruptedException | ExecutionException | TimeoutException e) {
+			logger.catching(Level.DEBUG, e);
+		}
+
+		response.put("message", profileWorker.getOPath().get().toString());
+
+		return response;
+	}
+
+    @GetMapping("dir")
+    Map<String, Object> profileDir(@RequestParam String sn, HttpServletRequest request) throws IOException {
+
+    	final Map<String, Object> response = new HashMap<>();
+    	final String remoteAddr = "http://" + request.getRemoteAddr() + ":8088";
+    	final FutureTask<Boolean> forString = HttpRequest.getForObgect(remoteAddr + "/ping", Boolean.class);
+
+    	final ProfileWorker profileWorker = new ProfileWorker(profileFolder, sn);
+
+		if(!profileWorker.exists()) {
+			response.put("message", "The directory does not exists.");
+			return response;
+		}
+
+		try {
+
+			response.put("remoteAddr", remoteAddr);
+			response.put("serial-exists", forString.get(1, TimeUnit.MICROSECONDS));
+
+		} catch (InterruptedException | ExecutionException | TimeoutException e) {
+			logger.catching(Level.DEBUG, e);
+		}
+
+		response.put("message", profileWorker.getOPath().get().getParent().toString());
+
+    	return response;
 	}
 
     @GetMapping("by-property")

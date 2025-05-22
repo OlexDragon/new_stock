@@ -192,6 +192,11 @@ public class CalibrationController {
 		return "calibration/serial/packet";
     }
 
+    @GetMapping("diagnostic")
+    String diagnostic(@RequestParam String sn, Model model) {
+		return sn;
+    }
+
     @GetMapping("initialize")
     String initialize(@RequestParam String sn, Model model) throws ExecutionException, IOException, InterruptedException, TimeoutException, ScriptException {
 		logger.traceEntry("sn: {}", sn);

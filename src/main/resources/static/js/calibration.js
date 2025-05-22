@@ -164,16 +164,18 @@ function setToolsSerialPorts(ports){
 
 	$('<option>', {selected: 'selected', disabled: 'disabled', hidden: 'hidden', title:'Remote Serial Port.'}).text('Select Remote Serial Port.').appendTo($comPorts);
 
-	$.each(ports, function(i, portName){
+	$.each(ports, function(_, portName){
 		$('<option>', {value: portName}).text(portName).appendTo($comPorts);
 	});
 
-	$.each($comPorts, (i, select)=>{
+	$.each($comPorts, (_, select)=>{
 		var value = Cookies.get(select.id)
 		if(value){
 			var $option = $(select).children('[value="' + value + '"]');
 			$option.prop('selected', true);
 			comPortSelected(select);
+			if($option?.val() != 'NI GPIB')
+				setTimeout(()=>$option.parents('.accordion-body').find('.btn-auto').click(), 1000);
 		}
 	});
 }
@@ -438,6 +440,11 @@ $scan.click(function(e){
 		++ip;
 	}, 100);
 
+	$modal.on('hide.bs.modal', function () {
+		if (document.activeElement) 
+	        document.activeElement.blur();
+	});
+
 	$modal.on('hidden.bs.modal', function () {
 		clearInterval(scanIpInterval);
 	});
@@ -464,7 +471,7 @@ $('#dropdownCalibrateButton').on('show.bs.dropdown', function(){
 	if(!serialNumber || $calMode.hasClass('disabled'))
 		return;
 
-	$.post('/calibration/rest/calibration_mode', { ip: serialNumber })
+	$.post('/calibration/rest/calibration-mode', { sn: serialNumber })
 	.done(function(calMode){
 
 		if(!calMode)
@@ -503,7 +510,7 @@ function calibrationModeError(error) {
 $calMode.click(function(e){
 	e.preventDefault();
 
-	$.post('/calibration/rest/calibration_mode_toggle', { ip: serialNumber })
+	$.post('/calibration/rest/calibration-mode-toggle', { sn: serialNumber })
 	.fail(conectionFail);
 });
 
@@ -574,35 +581,55 @@ function getProfile(e, link){
 	});
 }
 
-const $profilePath = $('.profilePath').click(function(e){
-	getProfilePath(e, this);
- });
+$('.profilePath').click((e)=>getPath(e));
+$('.profileDir').click((e)=>getPath(e));
+
+ function getPath(e){
+  	e.preventDefault();
+  
+	$.get(e.currentTarget.href)
+ 	.done((map)=>{
+
+ 		const $btnCopy = $('<button>', {type: 'button', class: 'btn col-auto copy', title: 'Copy to clipboard', 'aria-label': 'Copy to clipboard', text: 'Copy'});
+
+ 		const $message = $('<div>', { class: "alert alert-warning alert-dismissible fade show row", role: "alert"})
+ 						.append($('<strong>', {class: 'col'}).text(map.message))	
+						.append($btnCopy);
+
+		if(map["serial-exists"]){
+
+			const $btnOpen = $('<button>', {class: 'btn col-auto', title: 'Open Dir', 'aria-label': 'Open Directory', text: 'Open'});
+			$message.append($btnOpen)
+			$btnOpen.click(()=>
+				$.post('/calibration/rest/open', {path: map.message, url: map.remoteAddr})
+				.done(open=>{
+					if(!open)
+						alert('There is no such file.');
+				})
+				.fail(()=>alert('It is impossible to open the file.')));
+		}
+
+ 		$message.append($('<button>', {type: 'button', class: 'btn-close col-auto', 'data-bs-dismiss': 'alert', 'aria-label': 'Close'}));
+ 		$('body').append($message);
+
+ 		$btnCopy.click(function(){
+ 			var strong = $(this).parent().children('strong')[0];
+ 			selectAndCopy(strong);
+ 		});
+
+//		$btnOpen.click(()=>{
+//			showFilePicker();
+//			window.open("file:" + path);
+//		});
+
+ 		$message.get(0).scrollIntoView({behavior: 'smooth'});
+ 	})
+ 	.fail(function(error) {
+ 		if(conectionFail(error))
+ 			$calMode.removeClass('text-primary text-success').text('Calibration Mode');
+ 	});
+}
  
-function getProfilePath(e, link){
- 	e.preventDefault();
- 
- 	$.get(link.href)
-	.done(function(path){
-
-		const $btnCopy = $('<button>', {type: 'button', class: 'btn col-auto copy', title: 'Copy to clipboard', 'aria-label': 'Copy to clipboard', text: 'Copy'});
-		const $message = $('<div>', { class: "alert alert-warning alert-dismissible fade show row", role: "alert"})
-						.append($('<strong>', {class: 'col'}).text(path))			
-						.append($btnCopy)
-						.append($('<button>', {type: 'button', class: 'btn-close col-auto', 'data-bs-dismiss': 'alert', 'aria-label': 'Close'}));
-		$('body').append($message);
-
-		$btnCopy.click(function(){
-			var strong = $(this).parent().children('strong')[0];
-			selectAndCopy(strong);
-		});
-
-		$message.get(0).scrollIntoView({behavior: 'smooth'});
-	})
-	.fail(function(error) {
-		if(conectionFail(error))
-			$calMode.removeClass('text-primary text-success').text('Calibration Mode');
-	});
- }
 function selectAndCopy(element) {
     if (document.body.createTextRange) {
         var range = document.body.createTextRange();
@@ -736,7 +763,6 @@ $('#btn-http-comport').click(()=>{
 			alert('Please allow popups for this website');
 	}
 });
-let $toastContaner = $('#toast-container');
 function showToast(title, message, headerClass){
 
 	let $toast = $('<div>', {class: 'toast', role: 'alert', 'aria-live': 'assertive', 'aria-atomic': true})
@@ -752,7 +778,7 @@ function showToast(title, message, headerClass){
 		.append(
 			$('<div>', {class: 'toast-body', text: message})
 		)
-	.appendTo($toastContaner)
+	.appendTo($toastContainer)
 	.on('hide.bs.toast', function(){this.remove();});
 
 	if(headerClass)
@@ -789,7 +815,8 @@ function sendPrologixCommands(commands, responseProcessing){
 	})
 	.fail(function(error) {
 		if(error.statusText!='abort'){
-		var responseText = error.responseText;
+			responseProcessing(error);
+			var responseText = error.responseText;
 			if(responseText)
 				alert(error.responseText);
 			else

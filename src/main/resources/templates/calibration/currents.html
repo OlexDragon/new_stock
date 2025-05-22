@@ -6,7 +6,7 @@
 <head>
     <meta charset="UTF-8" />
     <title>Modal Current.</title>
-    <link rel="shortcut icon" href="http://irttechnologies.com/favicon.ico">
+    <link rel="shortcut icon" href="http://www.irttechnologies.com/favicon.ico">
     <link rel="stylesheet" href="https://stackpath.bootstrapcdn.com/bootstrap/4.4.1/css/bootstrap.min.css" data-integrity="sha384-Vkoo8x4CGsO3+Hhxv8T/Q5PaXtkKtu6ug5TOeNV6gBiFeWPGFN9MuhOf23Q9Ifjh" data-crossorigin="anonymous">
     <link rel="stylesheet" href="../../static/css/calibrationTest.css">
     <script type="application/javascript" src="https://ajax.googleapis.com/ajax/libs/jquery/3.5.1/jquery.min.js"></script>
@@ -679,7 +679,7 @@
 			var $currentFactor = $('#currentFactor');
 			var $currentMin = $('#currentMin');
 			var $currentMax = $('#currentMax');
-			var $calibrationMode = $('#calibrationMode').click(e=>postWithParam('/calibration/rest/calibration_mode_toggle', {ip: serialNumber}, getRwInfo, conectionFail));
+			var $calibrationMode = $('#calibrationMode').click(e=>postWithParam('/calibration/rest/calibration-mode-toggle', {ip: serialNumber}, getRwInfo, conectionFail));
 			function changeStep(arrowLeft){
 				checkSetting();
 				let step = parseInt($currentStep.val());
@@ -1386,7 +1386,7 @@
 		});
 		function f_showGatesSelect(e){
 
-			$toastContaner.empty();
+			$toastContainer.empty();
 
 			const $ch = $channels.filter((i,el)=>el.value===e.currentTarget.dataset.channel)
 			if(!$ch.length){
@@ -1443,7 +1443,7 @@
 					)
 				)
 				.append($body)
-			.appendTo($toastContaner)
+			.appendTo($toastContainer)
 			.on('hide.bs.toast', function(){this.remove();});
 
 			new bootstrap.Toast($toast).show();

@@ -6,7 +6,7 @@
 <head>
     <meta charset="UTF-8" />
     <title>IRT Bom.</title>
-    <link rel="shortcut icon" href="http://irttechnologies.com/favicon.ico">
+    <link rel="shortcut icon" href="http://www.irttechnologies.com/favicon.ico">
     <link rel="stylesheet" href="https://stackpath.bootstrapcdn.com/bootstrap/4.4.1/css/bootstrap.min.css" data-integrity="sha384-Vkoo8x4CGsO3+Hhxv8T/Q5PaXtkKtu6ug5TOeNV6gBiFeWPGFN9MuhOf23Q9Ifjh" data-crossorigin="anonymous">
     <link rel="stylesheet" href="../../static/css/components.css" th:href="@{/css/components.css}">
 </head>
@@ -216,6 +216,11 @@
   	  	  			payloadReadWrite = new Payload(new Parameter(PARAMETER_READ_WRITE), DEVICE_FCM_ADC_INPUT_POWER().toBytes());
   				}
   			});
+			$modal.on('hide.bs.modal', function () {
+				if (document.activeElement) 
+		            document.activeElement.blur();
+			});
+
   			/*]]>*/
   			//# sourceURL=fcm-input-power.js
   			</script>

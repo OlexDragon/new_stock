@@ -6,7 +6,7 @@
 <head>
 	<meta charset="utf-8">
     <title th:inline="text">[[${info==null ? 'IRT' : info.serialNumber + ' -'}]] Calibration.</title>
-    <link rel="shortcut icon" href="http://irttechnologies.com/favicon.ico">
+    <link rel="shortcut icon" href="http://www.irttechnologies.com/favicon.ico">
 <th:block th:replace="components :: bootstrapLink">
     <link rel="stylesheet" href="https://stackpath.bootstrapcdn.com/bootstrap/4.4.1/css/bootstrap.min.css">
 </th:block>
@@ -123,7 +123,7 @@
     							th:text="${info.serialNumber}"
     							th:title="${info.name}"
     							class="dropdown-item"
-    							onclick="getProfilePath(event, this);"
+    							onclick="getPath(event, this);"
    								th:href="@{${info==null} ? '#' : '/calibration/rest/profile/path?sn=' + ${info.serialNumber}}"
    								target="_blank">Module Profile Path</a>
 </th:block>
@@ -132,6 +132,36 @@
 					</div>
 <!-- System Profile Path -->
    					<a class="dropdown-item profilePath" th:href="@{'/calibration/rest/profile/path?sn=' + ${info==null ? serialNumber : info.serialNumber}}" target="_blank">Profile Path</a>
+ 				</div>
+<!-- Profile Dir -->
+				<div class="btn-group" style="width:100%;">
+					<div class="btn-group dropstart" role="group">
+ 						<button id="menuModuleProfilePath"
+ 								type="button"
+ 								class="btn dropdown-toggle dropdown-toggle-split submenu modules"
+ 								th:classappend="${info==null ? 'disabled list-group-item-light' : ''}"
+ 								data-bs-toggle="dropdown"
+ 								aria-expanded="false">
+    						<span class="visually-hidden">Toggle Dropdown</span>
+  						</button>
+   						<div class="dropdown-menu" aria-labelledby="menuModuleProfilePath">
+    						<a class="dropdown-item disabled">Modules:</a>
+<!--  Profile Dir Modules -->
+<th:block th:remove="all">
+<th:block th:fragment="menuModuleProfilePath">
+    						<a	th:each="info : ${modules}"
+    							th:text="${info.serialNumber}"
+    							th:title="${info.name}"
+    							class="dropdown-item"
+    							onclick="getPath(event, this);"
+   								th:href="@{${info==null} ? '#' : '/calibration/rest/profile/dir?sn=' + ${info.serialNumber}}"
+   								target="_blank">Module Profile Path</a>
+</th:block>
+</th:block>
+    					</div>
+					</div>
+<!-- System Profile Dir -->
+   					<a class="dropdown-item profileDir" th:href="@{'/calibration/rest/profile/dir?sn=' + ${info==null ? serialNumber : info.serialNumber}}" target="_blank">Profile Dir</a>
  				</div>
 <!-- Upload Profile-->
 				<div class="btn-group" style="width:100%;">
@@ -249,7 +279,7 @@
     							th:text="${info.serialNumber}"
     							th:title="${info.name}"
     							class="dropdown-item"
-    							onclick="getProfilePath(event, this);"
+    							onclick="getPath(event, this);"
    								th:href="@{${info==null} ? '#' : '/calibration/rest/soft/path?sn=' + ${info.serialNumber}}"
    								target="_blank">Module Soft Path</a>
 </th:block>
@@ -774,5 +804,7 @@
 	<script src="../../static/js/serial/packet.js" th:src="@{/js/serial/packet.js}"></script>
 	<script src="../../static/js/serial/chart.js" th:src="@{/js/serial/chart.js}"></script>
   	<script src="../../static/js/serial/calModalInit.js" th:src="@{/js/serial/calModalInit.js}"></script>
+  	<script src="../../static/js/management/unit-control.js" th:src="@{/js/management/unit-control.js}"></script>
+  	<script src="../../static/js/management/calibration-management.js" th:src="@{/js/management/calibration-management.js}"></script>
 </body>
 </html>

@@ -75,7 +75,6 @@ function outputGet(action){
 	toSend.timeout = 10000;
 
 	toSend.commands[toSend.commands.length-1].getAnswer = true;
-	console.log(toSend);
 	if(action)
 		sendPrologixCommands(toSend, action);
 	else{
@@ -130,4 +129,20 @@ function dataToValue(data){
 	}
 
 	return a.toFixed(1);
+}
+let outputToolBusy = false;
+function getOutputPower(action){
+
+	if(outputToolBusy)
+		return false;
+
+	outputToolBusy = true;
+	outputGet(data=>{
+
+		if(!data.getAnswer)
+			return;
+
+		action(parseFloat(dataToValue(data)));
+		outputToolBusy = false;
+	});
 }

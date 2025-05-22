@@ -488,7 +488,7 @@ $('.accordion').click(e=>{
 	showToast('Copy to Clipboard', `The text '${e.target.innerText}' has been copied to the clipboard.`, 'text-bg-success');
 });
 
-let $toastContaner = $('#toast-container');
+let $toastContainer = $('#toast-container');
 function showToast(title, message, headerClass){
 
 	let $toast = $('<div>', {class: 'toast', role: 'alert', 'aria-live': 'assertive', 'aria-atomic': true})
@@ -504,7 +504,7 @@ function showToast(title, message, headerClass){
 		.append(
 			$('<div>', {class: 'toast-body', text: message})
 		)
-	.appendTo($toastContaner)
+	.appendTo($toastContainer)
 	.on('hide.bs.toast', function(){this.remove();});
 
 	if(headerClass)

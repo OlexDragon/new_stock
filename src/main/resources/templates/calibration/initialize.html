@@ -6,7 +6,7 @@
 <head>
     <meta charset="UTF-8" />
     <title>IRT Bom.</title>
-    <link rel="shortcut icon" href="http://irttechnologies.com/favicon.ico">
+    <link rel="shortcut icon" href="http://www.irttechnologies.com/favicon.ico">
     <link rel="stylesheet" href="https://stackpath.bootstrapcdn.com/bootstrap/4.4.1/css/bootstrap.min.css" data-integrity="sha384-Vkoo8x4CGsO3+Hhxv8T/Q5PaXtkKtu6ug5TOeNV6gBiFeWPGFN9MuhOf23Q9Ifjh" data-crossorigin="anonymous">
     <link rel="stylesheet" href="../../static/css/components.css" th:href="@{/css/components.css}">
 </head>
@@ -151,7 +151,7 @@
 				$initializeLinks.click();
 			})
 			var $calibrationMode = $('#calibration-mode').click(e=>{
-					$.post('/calibration/rest/calibration_mode_toggle', {ip: serialNumber})
+					$.post('/calibration/rest/calibration-mode-toggle', {ip: serialNumber})
 					.fail(conectionFail);
 			});
 			var postRwInfo = false;

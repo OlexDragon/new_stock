@@ -214,7 +214,7 @@ public class BtrController {
 	}
 
 	public static FutureTask<SerialNumber> getSerialNumber(String sn) {
-		String url = "http://irttechnologies.com/rest/serial-number/by-sn?serialNumber=" + sn.toUpperCase();
+		String url = "http://www.irttechnologies.com/rest/serial-number/by-sn?serialNumber=" + sn.toUpperCase();
 		final FutureTask<SerialNumber> ft = HttpRequest.getForObgect(url, SerialNumber.class);
 		return ft;
 	}

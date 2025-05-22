@@ -125,7 +125,7 @@ public class BtrRestController {
 		final Object pr = ((UsernamePasswordAuthenticationToken)principal).getPrincipal();
 		final User user = ((UserPrincipal)pr).getUser();
 
-		String url = "http://irttechnologies.com/rest/serial-number/get-id?serialNumber=" + btr.getSerialNumber();
+		String url = "http://www.irttechnologies.com/rest/serial-number/get-id?serialNumber=" + btr.getSerialNumber();
 		try {
 
 			final String id = HttpRequest.getForString(url, 3, TimeUnit.SECONDS);
@@ -426,7 +426,7 @@ public class BtrRestController {
 	}
 
 	private void addToMeasurement(final Map<String, String> measurement, final FutureTask<String> ftConverter) {
-		logger.error(measurement);
+		logger.traceEntry("{}", measurement);
 		try {
 
 			final String string = ftConverter.get(5, TimeUnit.SECONDS);
@@ -518,7 +518,7 @@ public class BtrRestController {
 
         		         map.put(".IMD." + i, v);
         			 }
-        			 logger.error(map);
+        			 logger.debug(map);
         		});
 
         Optional.ofNullable(map.remove("Notes")).map(s->s.split("\\n"))

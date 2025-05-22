@@ -17,7 +17,7 @@ class SerialNumberScanerTest {
 	@Autowired SerialNumberScaner scaner;
 
 	@Test
-	void test() throws IOException {
+	void scanProfiles() throws IOException {
 		scaner.scan();
 	}
 

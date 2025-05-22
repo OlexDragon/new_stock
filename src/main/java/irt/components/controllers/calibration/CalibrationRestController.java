@@ -9,7 +9,6 @@ import java.io.OutputStreamWriter;
 import java.lang.reflect.Constructor;
 import java.net.HttpURLConnection;
 import java.net.MalformedURLException;
-import java.net.URISyntaxException;
 import java.net.URL;
 import java.net.UnknownHostException;
 import java.nio.CharBuffer;
@@ -50,6 +49,7 @@ import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
+import org.springframework.web.server.ResponseStatusException;
 
 import irt.components.beans.OneCeHeader;
 import irt.components.beans.OneCeUrl;
@@ -70,6 +70,7 @@ import irt.components.beans.irt.calibration.HPBMRegisterV31;
 import irt.components.beans.irt.calibration.NameIndexPair;
 import irt.components.beans.irt.calibration.RegisterEmpty;
 import irt.components.beans.irt.calibration.RegisterGates;
+import irt.components.beans.irt.calibration.RegisterMeasurement;
 import irt.components.beans.irt.calibration.RegisterPLL;
 import irt.components.beans.irt.calibration.RegisterPm2Fpga;
 import irt.components.beans.jpa.IrtArray;
@@ -83,7 +84,6 @@ import irt.components.beans.jpa.repository.calibration.BtrSettingRepository;
 import irt.components.beans.jpa.repository.calibration.CalibrationGainSettingRepository;
 import irt.components.beans.jpa.repository.calibration.CalibrationOutputPowerSettingRepository;
 import irt.components.beans.jpa.repository.calibration.CalibrationPowerOffsetSettingRepository;
-import irt.components.workers.HtmlParsel;
 import irt.components.workers.HttpRequest;
 import lombok.Getter;
 import lombok.RequiredArgsConstructor;
@@ -187,7 +187,7 @@ public class CalibrationRestController {
 
 	@PostMapping("calibration-cgi")
 	String calibrationCgi(@RequestParam Map<String, String> map) {
-    	logger.error("{}", map);
+    	logger.traceEntry("{}", map);
     	return "";
     }
 
@@ -205,7 +205,7 @@ public class CalibrationRestController {
 
 	@PostMapping(path="deviceDebug", produces = "application/json;charset=utf-8")
     Object deviceDebug(@RequestParam String sn, @RequestParam String devid, @RequestParam String command, @RequestParam String groupindex, @RequestParam String className) throws MalformedURLException, ClassNotFoundException, InterruptedException, ExecutionException, TimeoutException {
-//    	logger.error(sn);
+//    	logger.err.traceEntry;
 
 			try {
 				return CalibrationController.getHttpDeviceDebug(
@@ -446,14 +446,18 @@ public class CalibrationRestController {
 				reader.read(chb);
 				
 			}
-		}catch(UnknownHostException e) {
+		}catch(Exception e) {
 			logger.catching(Level.DEBUG, e);
 			connection.disconnect();
-			return e.getLocalizedMessage();
+
+			throw new ResponseStatusException(HttpStatus.NOT_FOUND, e.getLocalizedMessage());
 		}
 
+		final int responseCode = connection.getResponseCode();
 		connection.disconnect();
-    	return "Authorized on  " + sn;
+
+		logger.debug("responseCode: {}", responseCode);
+		return "Authorized on  " + sn;
     }
 
     @PostMapping("scan")
@@ -488,15 +492,46 @@ public class CalibrationRestController {
 		return null;
     }
 
-    @PostMapping("calibration_mode")
-    CalibrationMode getCalibrationMode(@RequestParam String ip) throws IOException, ScriptException {
+    @PostMapping("calibration-mode")
+    CalibrationMode calibrationMode(@RequestParam String sn, CalibrationMode.Status status) throws IOException, ScriptException {
+    	logger.traceEntry("sn: {}; status: {}", sn, status);
 
 		try {
+			final URL url = new URL("http", sn, "/device_debug_read.cgi");
+			logger.debug(url);
+	    	final Integer systemIndex = CalibrationController.getSystemIndex(sn);
+			final List<NameValuePair> params = new ArrayList<>();
+	    	final BasicNameValuePair devId = new BasicNameValuePair("devid", systemIndex.toString());
+			params.add(devId);
 
-			final URL url = new URL("http", ip, "/device_debug_read.cgi");
-			List<NameValuePair> params = new ArrayList<>();
-	    	final Integer systemIndex = CalibrationController.getSystemIndex(ip);
-			params.addAll(Arrays.asList(new BasicNameValuePair[]{new BasicNameValuePair("devid", systemIndex.toString()), new BasicNameValuePair("command", "hwinfo"), new BasicNameValuePair("groupindex", "4")}));
+			Optional.ofNullable(status).map(Enum::ordinal)
+
+					.map(
+							ordinal->{
+								params.add(new BasicNameValuePair("command", "regs"));
+								params.add(new BasicNameValuePair("group", "51"));
+								params.add(new BasicNameValuePair("address", "0"));
+								params.add(new BasicNameValuePair("value", "" + ordinal));
+								return HttpRequest.postForCode(url, params);
+							})
+					.ifPresent(
+							ft->{
+								try {
+
+									params.clear();
+									params.add(devId);
+
+									final Integer statusCode = ft.get(5, TimeUnit.SECONDS);
+									logger.debug(statusCode);
+
+								} catch (InterruptedException | ExecutionException | TimeoutException e) {
+									logger.catching(Level.DEBUG, e);
+								}
+					});
+
+	    	//	Get status
+	    	params.add(new BasicNameValuePair("command", "hwinfo"));
+	    	params.add(new BasicNameValuePair("groupindex", "4"));
 
 			return HttpRequest.postForIrtObgect(url.toString(), CalibrationMode.class, params).get(5, TimeUnit.SECONDS);
 
@@ -506,7 +541,7 @@ public class CalibrationRestController {
 		}
     }
 
-    @PostMapping("calibration_mode_toggle")
+    @PostMapping("calibration-mode-toggle")
     ResponseEntity<String> setCalibrationMode(@RequestParam String ip) throws MalformedURLException {
 
 		final URL url = new URL("http", ip, "/calibration.cgi");
@@ -658,18 +693,6 @@ public class CalibrationRestController {
     			.orElse("No Setial Number.");
 	}
 
-    @GetMapping("calibration-mode")
-    String calibrationMode(@RequestParam String sn) throws URISyntaxException, IOException, InterruptedException, ExecutionException, TimeoutException{
-
-    	final URL url = new URL("http", sn, "/calibration.asp");
-		String str = HttpRequest.getForString( url.toString(), 100, TimeUnit.MILLISECONDS);
-    	logger.error(str);
-		final HtmlParsel htmlParsel = new HtmlParsel("script");
-		final List<String> all = htmlParsel.parseAll(str);
-    	logger.error(all);
-    	return sn;
-    }
-
 	@RequestMapping("all-modules")
 	Map<String, Integer> allModules(@RequestParam String sn) throws IOException, InterruptedException, ExecutionException, TimeoutException, ScriptException {
     	logger.traceEntry("{}", sn);
@@ -744,6 +767,11 @@ public class CalibrationRestController {
     @RequestMapping("register-gates")
     RegisterGates getRegisterDacs(@RequestParam String sn, Integer deviceId, @RequestParam(required = false) String address, @RequestParam(required = false) String value){
 		return diagnostics(RegisterGates.class, sn, "regs", deviceId.toString(), "27", address, value, PostFor.STRING);
+    }
+
+    @RequestMapping("measurement")
+    RegisterMeasurement measurement(@RequestParam String sn, Integer moduleIndex){
+		return diagnostics(RegisterMeasurement.class, sn, "status", moduleIndex.toString(), null, null, null, PostFor.IRT_OBJECT);
     }
 
     @PostMapping("sticker")
@@ -825,10 +853,32 @@ public class CalibrationRestController {
     	return map;
     }
 
+    @PostMapping("diagnostic")
+    String diagnostic(@RequestParam String sn, @RequestParam String moduleIndex, @RequestParam String command, String index, String address, String value) throws IOException{
+    	logger.traceEntry("sn: {}; moduleIndex: {}; command: {}; index: {}; address: {}; value: {}", sn, moduleIndex, command, index, address, value);
+
+    	URL url = new URL("http", sn, "/device_debug_read.cgi");
+		List<NameValuePair> params = new ArrayList<>();
+		params.addAll(Arrays.asList(new BasicNameValuePair[]{new BasicNameValuePair("devid", moduleIndex), new BasicNameValuePair("command", command)}));
+
+		Optional.ofNullable(index).ifPresent(i->params.add(new BasicNameValuePair("groupindex", i)));
+		Optional.ofNullable(address).ifPresent(a->params.add(new BasicNameValuePair("address", a)));
+		Optional.ofNullable(value).ifPresent(v->params.add(new BasicNameValuePair("value", v)));
+		return HttpRequest.postForString(url.toString(), params);
+    }
+
     @PostMapping("register/write")
     String rwRegister(@RequestParam String sn, String moduleId, String index, String address, String value){
     	diagnostics(RegisterEmpty.class, sn, "regs", moduleId, index, address, value, PostFor.IRT_OBJECT);
     	return sn;
+    }
+
+    @RequestMapping("open")
+    Boolean open(@RequestParam String url, @RequestParam String path) throws InterruptedException, ExecutionException, TimeoutException{
+    	logger.traceEntry("url: {}; path: {}", url, path);
+    	List<NameValuePair> params = new ArrayList<>();
+    	params.add(new BasicNameValuePair("path", path));
+    	return HttpRequest.postForObgect(url + "/open", Boolean.class, params).get(1, TimeUnit.SECONDS);
     }
 
     @GetMapping("converter-info")

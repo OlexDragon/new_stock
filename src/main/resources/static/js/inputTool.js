@@ -8,6 +8,8 @@ const $inputFrequency		 = $('#inputFrequency');
 const $inputFrequencyUnit	 = $('#inputFrequencyUnit');
 const $collapseInput		 = $('#collapseInput');
 const $inputPower			 = $('#inputPower');
+const $inputOutputBtn		 = $('#inputOutputBtn');
+const $inputPowerBtn		 = $('#inputPowerBtn');
 
 let $inputTool			 = $('#inputTool')
 .change(function(){
@@ -27,17 +29,17 @@ $('.input-value').on('input', e=>{
 .change(e=>$(`#${e.currentTarget.id}Btn`).click())
 .on('mouseenter', e=>{
 
-	if(!e.ctrlKey || e.currentTarget.localName != 'input' || $toastContaner.html().trim())
+	if(!e.ctrlKey || e.currentTarget.localName != 'input' || $toastContainer.html().trim())
 		return;
 
 	showSetupToast(e.currentTarget)
 })
-.on( "focusin", e=>{
+.on( "focusin", _=>{
 	const $toast = $('.toast');
 	if($toast.length)
 		$toast.remove();
 })
-.each((i,el)=>{
+.each((_,el)=>{
 
 	if(el.localName != 'input')
 		return;
@@ -342,7 +344,7 @@ function showSetupToast(target){
 			$('<div>', {class: 'toast-body'})
 			.append($input)
 		)
-	.appendTo($toastContaner)
+	.appendTo($toastContainer)
 	.on('hide.bs.toast', function(){this.remove();});
 
 	new bootstrap.Toast($toast).show();
@@ -376,6 +378,9 @@ $('.input-tool-buton').click(e=>{
 	sendPrologixCommands(toSend, data=>inputAction(data, $valueField, divider));	// See calibration.js
 });
 function getToSendIT(commandIndex, value, unit){
+
+	if(!commandIndex)
+		throw new Error("The command index must be set..");
 
 	// Prepare the data to send
 	const toSend = {}
@@ -433,4 +438,22 @@ function checkInputTool(toSend){
 		return false;
 	}
 	return true;
+}
+function toolOutputPower(action, value){
+
+	if(value === undefined)
+		value = '';
+	else if(typeof value === 'number')
+		value = value.toFixed(1);
+
+	const unit = $inputPowerUnit.val();
+	const toSend = getToSendIT($inputPowerBtn.val(), value, unit);
+	sendPrologixCommands(toSend, data=>{
+
+		if(!data.getAnswer)
+			return;
+
+		let answer = String.fromCharCode.apply(String, data.answer).trim();
+		action(parseFloat(answer));
+	});
 }

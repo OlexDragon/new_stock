@@ -197,7 +197,7 @@ function getToSendPrologix(prologixComPorts, commands, getAnswer){
 
 	var commands = JSON.parse(commands);
 
-	$.each(commands, function(index, command){
+	$.each(commands, function(_, command){
 		let c = {};
 		c.getAnswer = getAnswer;
 		c.command = command;
@@ -210,12 +210,12 @@ $('.accordion-collapse').on('show.bs.collapse', e=>{
 	let $parent = $(e.currentTarget);
 	let comPort = $parent.find('.com-ports').val();
 	if(comPort && comPort!='NI GPIB'){
-		let $btns = $parent.find('.btn-prologix').filter((i,el)=>!el.dataset.commands.includes(' '));
+		let $btns = $parent.find('.btn-prologix').filter((_,el)=>!el.dataset.commands.includes(' '));
 		$btns.not('.btn-outline-secondary')
-		.each((i,el)=>{
+		.each((_,el)=>{
 			let commands = JSON.parse(el.dataset.commands);
 			let c = [];
-			$.each(commands, function(index, command){
+			$.each(commands, function(_, command){
 				let t = command.split(' ')[0];
 				c.push(t);
 			});
@@ -224,3 +224,6 @@ $('.accordion-collapse').on('show.bs.collapse', e=>{
 		$btns.click();
 	}
 });
+function getPrologixAuto(){
+	
+}
