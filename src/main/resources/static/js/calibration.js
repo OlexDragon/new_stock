@@ -1135,6 +1135,11 @@ function getSerialNumber(moduleIndex, oneCeGroup){
 		if(!data)
 			return;
 
+		if(typeof data === 'string'){
+			console.warn(data);
+			return;
+		}
+
 		const o = JSON.parse(data);
 		for(let i=0;i<o.length;++i){
 

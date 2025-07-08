@@ -379,7 +379,7 @@
 
 			const switches = data[channel];
 			if(!switches){
-				console.wran('There is no information in the response.')
+				console.warn('There is no information in the response.')
 				return;
 			}
 			const swIds = Object.keys(switches);
@@ -461,7 +461,7 @@
 				return;
 			}
 
-			let url = URLs.filter(u=>u.irtArrayId.id==data[0].moduleId);
+			let url = URLs.filter(u=>u.irtArrayId.id==data[0]?.layout[0]?.moduleId);
 			if(url.length)
 				regUrl = '/calibration/rest/' + url[0].description;
 			else

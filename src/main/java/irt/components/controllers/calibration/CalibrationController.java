@@ -401,7 +401,19 @@ public class CalibrationController {
 														.map(SerialNumber::getPartNumber)
 														.map(PartNumber::getPartNumber)
 														.flatMap(calibrationGainSettingRepository::findById)
-														.orElseGet(()->new CalibrationGainSettings(oneCeHeader.getSalesSKU(), -40, 85, 4, true, false));
+														.orElseGet(()->{
+
+															Info info;
+															try {
+
+																info = getInfo(sn, devid);
+																return new CalibrationGainSettings(info.getPartNumber(), -40, 85, 4, true, false);
+
+															} catch (MalformedURLException | InterruptedException | ExecutionException | TimeoutException e) {
+																logger.catching(e);
+																return null;
+															}
+														});
 
 											} catch (InterruptedException | ExecutionException | TimeoutException e) {
 												logger.catching(e);

@@ -252,52 +252,57 @@ public class BtrRestController {
 						measurement.entrySet()
 						.forEach(
 								m->{
-									final String key = m.getKey();
-									final Name name = names.get(key);
-									if(name==null) {
-										logger.warn("{} does not contain this name: {}", file, m);
-										return;
-									}
+									try {
+										final String key = m.getKey();
+										final Name name = names.get(key);
+										if(name==null) {
+											logger.warn("{} does not contain this name: {}", file, m);
+											return;
+										}
 
-									final CellReference cr = new CellReference(name.getRefersToFormula());
-									final String value = m.getValue();
+										final String refersToFormula = name.getRefersToFormula();
+										final CellReference cr = new CellReference(refersToFormula);
+										final String value = m.getValue();
 
-									if(value.isEmpty())
-										return;
-
-									final Cell cell = sheet.getRow(cr.getRow()).getCell(cr.getCol());
-									Double val = null; 
-									if(value.replaceAll("[\\d\\.-]", "").isEmpty()) {
-										val = Double.parseDouble(value);
-										cell.setCellValue(val);
-									}else
-										cell.setCellValue(value);
-
-									final String n = name.getNameName();
-									final String[] split = n.split("\\.");
-									final String[] cellRange = getCellValue(workbook, (split.length>1 ? split[1] : split[0]) + "_range", file.getName());
-									if(cellRange.length!=0 && val!=null) {
-										final double cellVal = val;
-
-										final Map<String, List<String>> collect = Arrays.stream(cellRange).collect(Collectors.groupingBy(collect()));
-
-										// Minimum
-										final Optional<List<String>> oMin = Optional.ofNullable(collect.get("min"));
-										oMin.filter(l->!l.isEmpty()).map(l->l.get(0)).map(v->v.replaceAll("[^\\d.]", "")).filter(v->!v.isEmpty()).map(Double::parseDouble)
-										.ifPresent(min->{
-											if(Double.compare(cellVal, min)<0) 
-												setCellBackground(workbook, cell);
-										});
-										if(oMin.isPresent())
+										if(value.isEmpty())
 											return;
 
-										// Maximum
-										final Optional<List<String>> oMax = Optional.ofNullable(collect.get("max"));
-										oMax.filter(l->!l.isEmpty()).map(l->l.get(0)).map(v->v.replaceAll("[^\\d.-]", "")).filter(v->!v.isEmpty()).map(Double::parseDouble)
-										.ifPresent(max->{
-											if(Double.compare(cellVal, max)>0) 
-												setCellBackground(workbook, cell);
-										});
+										final Cell cell = sheet.getRow(cr.getRow()).getCell(cr.getCol());
+										Double val = null; 
+										if(value.replaceAll("[\\d\\.-]", "").isEmpty()) {
+											val = Double.parseDouble(value);
+											cell.setCellValue(val);
+										}else
+											cell.setCellValue(value);
+
+										final String n = name.getNameName();
+										final String[] split = n.split("\\.");
+										final String[] cellRange = getCellValue(workbook, (split.length>1 ? split[1] : split[0]) + "_range", file.getName());
+										if(cellRange.length!=0 && val!=null) {
+											final double cellVal = val;
+
+											final Map<String, List<String>> collect = Arrays.stream(cellRange).collect(Collectors.groupingBy(collect()));
+
+											// Minimum
+											final Optional<List<String>> oMin = Optional.ofNullable(collect.get("min"));
+											oMin.filter(l->!l.isEmpty()).map(l->l.get(0)).map(v->v.replaceAll("[^\\d.]", "")).filter(v->!v.isEmpty()).map(Double::parseDouble)
+											.ifPresent(min->{
+												if(Double.compare(cellVal, min)<0) 
+													setCellBackground(workbook, cell);
+											});
+											if(oMin.isPresent())
+												return;
+
+											// Maximum
+											final Optional<List<String>> oMax = Optional.ofNullable(collect.get("max"));
+											oMax.filter(l->!l.isEmpty()).map(l->l.get(0)).map(v->v.replaceAll("[^\\d.-]", "")).filter(v->!v.isEmpty()).map(Double::parseDouble)
+											.ifPresent(max->{
+												if(Double.compare(cellVal, max)>0) 
+													setCellBackground(workbook, cell);
+											});
+										}
+									} catch (Exception e) {
+										logger.catching(e);
 									}
 								});
 

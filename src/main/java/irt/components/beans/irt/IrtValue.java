@@ -26,7 +26,7 @@ public class IrtValue {
 		Optional.of(valueAsString).map(String::trim).filter(s->!s.isEmpty()).map(s->s.split("\\s+"))
 		.ifPresent(
 				s->{
-					LogManager.getLogger().error("\n\t{}\n\tlength: {} : {}", valueAsString, s.length, s);
+//					LogManager.getLogger().error("\n\t{}\n\tlength: {} : {}", valueAsString, s.length, s);
 					int index = 0;
 					if(s.length==3)
 						setStatus(Status.valueOf(s[index++].charAt(0)));
