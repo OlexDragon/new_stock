@@ -11,6 +11,7 @@ const $menuOPAutoByInput = $('#menuOPAutoByInput');
 const $nemuOPAutoByGain	 = $('#nemuOPAutoByGain');
 const $tool				 = $('.tool');
 const $toastContainer = $('#toast-container');
+const $stickers = $('#stickers');
 
 const sn = new URLSearchParams(window.location.search).get('sn');
 if(sn && !sn.includes('.'))
@@ -527,7 +528,7 @@ function hasValue(inputs){
 
 function toArray($inputs){
 	var values = [];
-	$inputs.map((_, v)=>v.value).filter((i, v)=>v).map((_, v)=>parseFloat(v)).sort().each((_, v)=>values.push(v));
+	$inputs.map((_, v)=>v.value).filter((_, v)=>v).map((_, v)=>parseFloat(v)).sort().each((_, v)=>values.push(v));
 	return values;
 }
 const typeVersion = $('#typeVersion').val();
@@ -1094,22 +1095,6 @@ if(serialNumber){
 		});
 	});
 }
-if(!$calMode.hasClass('disabled')){
-	$.post('/calibration/rest/sticker', {sn: serialNumber})
-	.done(data=>{
-		const $stickers = $('#stickers');
-		Object.keys(data).forEach(k=>{
-			const val = data[k];
-			let toShow = val['sticker'];
-			if(toShow)
-				toShow = parseInt(toShow);
-			else
-				toShow = 'N/A'
-			$stickers.append($('<div>', {class: 'row', title: val['cpu']}).append($('<div>', {class: 'col', text: k})).append($('<div>', {class: 'col', text: toShow})));
-		});
-	});
-	checkSerialNumbers();
-}
 function checkSerialNumbers(){
 	$.get('/calibration/rest/all-modules', {sn: serialNumber})
 	.done(data=>{
@@ -1175,4 +1160,68 @@ function getSerialNumber(moduleIndex, oneCeGroup){
 if(window.location.search.includes('.') && serialNumber && !serialNumber.includes('.')){
 	const newUrl = window.location.origin + window.location.pathname + '?sn=' + serialNumber;
 	history.replaceState({replace: true}, "", newUrl);
+}
+if(!$calMode.hasClass('disabled')){
+	checkSerialNumbers();
+
+		// Stickers
+	(async ()=>{
+		const moduleIndexies = await $.get('/calibration/rest/all-modules', {sn: serialNumber});
+		let deley = 300;
+		Object.values(moduleIndexies).sort((a,b)=>a-b).forEach(index=>{
+			setTimeout(getInfo, deley, index, parseSerialNumber);
+			deley += 300;
+		});
+	})()
+	async function getInfo(devid, parseInfo){
+		const info = await getDiagnostic(devid, 'info');
+		parseInfo(info, devid);
+	}
+	function parseSerialNumber(info, devid){
+		const lines = info.split('\n');
+		let sn;
+		for(let line of lines)
+			if(line.includes('Serial number:')){
+				const split = line.split(/\s+/)
+				sn = split[split.length-1];
+				break;
+			}
+		$stickers.append($('<div>', {class: 'row'}).append($('<div>', {class: 'col', text: sn, title: info})).append($('<div>', {id: `sticker${devid}`, class: 'col'})));
+		getHelp(devid, parseETC);
+		getCPU(devid);
+	}
+	async function getHelp(devid, parseHelp){
+		const help = await getDiagnostic(devid, 'hwinfo', 100);
+		parseHelp(help, devid);
+	}
+	function getDiagnostic(devid, command, groupindex){
+		return $.get('/calibration/rest/diagnostic', {sn: serialNumber, devid: devid, command: command, groupindex: groupindex})
+	}
+	function parseETC(help, devid){
+		const lines = help.split('\n');
+		let etc;
+		for(let line of lines)
+			if(line.endsWith('ETC')){
+				etc = +line.replace(/\D/g,'');
+				break;
+			}
+		if(etc)
+			getSticker(devid, etc);
+	}
+	async function getSticker(devid, etc){
+		const regs = await getDiagnostic(devid, 'regs', etc);
+		const lines = regs.split('\n');
+		let sticker;
+		for(let line of lines)
+			if(line.includes('ETC')){
+				const split = line.trim().split(/\s+/);
+				sticker = parseInt(split[split.length-1].replace('0x', ''), 16);
+				break;
+			}
+		$stickers.find(`#sticker${devid}`).text(sticker);
+	}
+	async function getCPU(devid){
+		const cpu = await getDiagnostic(devid, 'hwinfo', 0);
+		$stickers.find(`#sticker${devid}`).attr('title', cpu);
+	}
 }

@@ -733,6 +733,17 @@ public class CalibrationRestController {
     			.orElse(null);
     }
 
+    @GetMapping("diagnostic")
+    String diagnostic(@RequestParam String sn, Integer devid, String command, Integer groupindex) throws IOException {
+    	logger.traceEntry("sn: {}, devid: {}, command: {}, groupindex: {}", sn, devid, command, groupindex);
+   		List<NameValuePair> params = new ArrayList<>();
+		params.addAll(Arrays.asList(new BasicNameValuePair[]{new BasicNameValuePair("devid", devid.toString()), new BasicNameValuePair("command", command)}));
+		Optional.ofNullable(groupindex).ifPresent(gi->params.add(new BasicNameValuePair("groupindex", gi.toString())));
+		URL url = new URL("http", sn, "/device_debug_read.cgi");
+		return HttpRequest.postForString(url.toString(), params);
+    }
+
+
     @PostMapping("pll_registers")
     RegisterPLL pllRegisters(@RequestParam String sn, String regIndex) throws MalformedURLException, InterruptedException, ExecutionException, ScriptException{
     	logger.traceEntry("sn: {}; regIndex: {}", sn, regIndex);
@@ -775,9 +786,12 @@ public class CalibrationRestController {
     }
 
     @PostMapping("sticker")
-    Map<String, Map<String, String>> getSticker(@RequestParam String sn) throws IOException, InterruptedException, ExecutionException, TimeoutException, ScriptException{
-    	logger.traceEntry("sn: {};", sn);
+    Map<String, Map<String, String>> getSticker(@RequestParam String sn, Integer devid, Integer groupindex) throws IOException, InterruptedException, ExecutionException, TimeoutException, ScriptException{
+    	logger.traceEntry("sn: {}; devid: {}, groupindex: {};", sn, devid, groupindex);
 
+    	if(devid!=null) {
+    		logger.error("devid: {}; groupindex: {}", devid);
+    	}
     	final Map<String, Map<String, String>> map = new TreeMap<>();
 
     	HttpRequest.getAllModules(sn).entrySet()
