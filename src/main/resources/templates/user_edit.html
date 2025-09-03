@@ -1,0 +1,153 @@
+<!DOCTYPE html>
+<html xmlns="http://www.w3.org/1999/xhtml" xmlns:th="http://www.thymeleaf.org" xmlns:sec="http://www.thymeleaf.org/extras/spring-security">
+<head>
+<link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/bootstrap/4.0.0/css/bootstrap.min.css" integrity="sha384-Gn5384xqQ1aoWXA+058RXPxPg6fy4IWvTNh0E263XmFcJlSAwiGgFAW/dAiS6JXm" crossorigin="anonymous">
+<script src="https://code.jquery.com/jquery-3.2.1.slim.min.js" integrity="sha384-KJ3o2DKtIkvYIK3UENzmM7KCkRr/rE9/Qpg6aAZGJwFDMVNA/GpGFF93hXpG5KkN" crossorigin="anonymous"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/popper.js/1.12.9/umd/popper.min.js" integrity="sha384-ApNbgh9B+Y1QKtv3Rn7W3mgPxhU9K/ScQsAP7hUibX39j7fakFPskvXusvfa0b4Q" crossorigin="anonymous"></script>
+<script src="https://maxcdn.bootstrapcdn.com/bootstrap/4.0.0/js/bootstrap.min.js" integrity="sha384-JZR6Spejh4U02d8jOt6vLEHfe/JQGiRRSQQxSfFWpi1MquVdAyjUar5+76PVCmYl" crossorigin="anonymous"></script>
+</head>
+<body>
+
+	<!-- Confirm Set Modal -->
+	<div id="modalMessage" class="modal fade" tabindex="-1" role="dialog" aria-labelledby="costTitleLabel" style="display: block; padding-right: 17px;"  th:fragment="edit_user">
+		<div class="modal-dialog" role="document">
+
+    		<!-- Modal content-->
+    		<div class="modal-content">
+      			<div class="modal-header">
+         			<h4 id="costTitleLabel" class="modal-title" th:text="${user==null ? 'Add User.' : 'Edit User.'}">Edit User.</h4>
+        			<button type="button" class="close" data-dismiss="modal" aria-label="Close"><span aria-hidden="true">&times;</span></button>
+      			</div>
+ 
+      			<form id="mdal_form" action="#" th:class="${user!=null} ? ${user.status==activeUser ? 'table-success' : 'table-danger'}">
+      			<input id="user_id" name="user_id" type="hidden" th:if="${user!=null}" th:value="${user.id}">
+      			<div class="modal-body">
+					<select id="u_status" name="u_status" class="form-control" >
+   						<option th:each="st : ${statusValues}" th:value="${st}" th:text="${st}"  th:selected="${user!=null and user.status == activeUser}"></option>
+					</select>
+					<div class="input-group">
+						<input id="u_name" name="u_name" type="text" class="form-control" required="required" placeholder="Username" th:value="${user!=null ? user.username : ''}">
+						<div class="input-group-prepend">
+							<div class="input-group-text"> </div>
+						</div>
+						<input id="u_password" name="u_password" type="password" class="form-control" required="required" placeholder="Password" th:value="${user!=null ? (user.password=='?' ? user.password : user.decodedPassword) : ''}">
+					</div>
+					<div class="input-group">
+						<input id="f_name" name="f_name" type="text" class="form-control" placeholder="First Name" th:value="${user!=null ? user.firstname : ''}">
+						<div class="input-group-prepend">
+							<div class="input-group-text"> </div>
+						</div>
+						<input id="l_name" name="l_name" type="text" class="form-control" placeholder="Last Name" th:value="${user!=null ? user.lastname : ''}">
+					</div>
+					<div class="input-group">
+						<input id="u_extension" name="u_extension" type="text" class="form-control" placeholder="Extension" th:value="${user!=null ? user.extension : ''}">
+						<div class="input-group-prepend">
+							<div class="input-group-text"> </div>
+						</div>
+						<input id="u_email" name="u_email" type="text" class="form-control" placeholder="Email" th:value="${user!=null ? user.email : ''}">
+					</div>
+ 					<div class="form-check" th:each="role : ${roles}">
+ 						<input
+ 							th:id="${role}"
+ 							class="form-check-input"
+ 							type="checkbox"
+ 							th:value="${role}"
+ 							name="user_roles"
+ 							th:disabled="${ not(#authorization.expression('hasAuthority(''ADMIN'')') or role != T(irt.components.beans.UserRoles).ADMIN)}"
+ 							th:checked="${user!=null and role.hasRole(user.permission)}">
+ 						<label th:for="${role}" class="form-check-label" th:text="${role}" th:title="${role.description}">checkbox </label>
+ 					</div>
+				</div>
+ 
+
+     			<div class="modal-footer">
+						<button type="submit" class="btn btn-outline-success mr-2" disabled>Save User</button>
+						<input type="button" class="btn btn-secondary" data-dismiss="modal" value="Cancel" />
+     			</div>
+ 				</form>
+		<script type="text/javascript" th:inline="javascript">
+		/*<![CDATA[*/
+			$('#modalMessage').modal('show');
+			$('#modalMessage').on('hidden.bs.modal', function(e) { $(this).remove(); });
+			$("#mdal_form input:checkbox").change(enableButton);
+			$('select').change(function(){
+				enableButton();
+
+				var val = $(this).val();
+				var $form = $('#mdal_form');
+
+				if(val == 'ACTIVE')
+					$form.removeClass('table-danger').addClass('table-success');
+				else
+					$form.removeClass('table-success').addClass('table-danger');
+			});
+			$('input').on('input', enableButton);
+			function enableButton(){
+				var username = $('#u_name').val();
+				var password = $('#u_password').val();
+				var permissions = $("#mdal_form input:checkbox:checked");
+				$('button[type=submit]').prop('disabled', !(username && password && permissions.length>0));
+			}
+
+			$('#mdal_form').submit(function(e){
+				e.preventDefault();
+
+// 				var t = $(this).serialize();
+
+				var user = {};
+				user['_csrf'] 		= $("input[name='_csrf']").val();
+				user['userId']		= $('#user_id').val();
+				user['username'] 	= $('#u_name').val();
+				user['password'] 	= $('#u_password').val();
+				user['firstname'] 	= $('#f_name').val();
+				user['lastname'] 	= $('#l_name').val();
+				user['extension'] 	= $('#u_extension').val();
+				user['email'] 		= $('#u_email').val();
+				user['status'] 		= $('#u_status option:selected').val();
+				user['permission'] 	= $("#mdal_form input:checkbox:checked").map(function(){  return $(this).val(); }).get();
+
+				$.post("/users/save", user)
+				.done(function(data){
+
+					var $buttonClose = $('<button>', {type : 'button', class : 'close', 'data-dismiss' : 'alert', 'aria-label' : 'Close'});
+					var $span = $('<span>', {'aria-hidden' : 'true', html : '&times;'});
+
+					if(data==true){
+						var $mainDiv = $('<div>', {id : 'alert_message', class : 'alert alert-success alert-dismissible fade show', role : 'alert'});
+						var $title = $('<h4>', {class : 'alert-heading', text : 'Well done!'});
+						var $content =$('<p>', {text : 'The user with username "'+ user['username']  + '" saved to the database.'});
+
+						$('#allUsers')
+						.prepend(
+								$mainDiv
+								.append($title)
+								.append($content)
+								.append($buttonClose.append($span)));
+						$mainDiv.on('closed.bs.alert', function () { location.reload(); });
+					}else{
+						var $maimDiv = $('<div>', {class : 'alert alert-warning alert-dismissible fade show', role : 'alert'});
+						var $title = $('<h4>', {class : 'alert-heading', text : 'Warning.'});
+						var $content = $('<p>', {text : 'The user with username "'+ user['username']  + '" can not be saved to the database.'});
+
+						$('#allUsers')
+						.prepend(
+								$maimDiv
+								.append($title)
+								.append($content)
+								.append($buttonClose.append($span)));
+					}
+					$('#modalMessage').modal('hide');
+				})
+				.fail(function(error) {
+					alert(error.responseText);
+				});
+			})
+			/*]]>*/
+   				//# sourceURL= edit_user.js
+		</script>
+    		</div>
+  		</div>
+	</div>
+
+</body>
+</html>

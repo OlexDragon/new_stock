@@ -5,7 +5,6 @@
       	lang="en">
 <head>
     <title>IRT Components</title>
-    <link rel="shortcut icon" href="http://www.irttechnologies.com/favicon.ico">
 <th:block th:fragment="bootstrapLink">
     <meta charset="utf-8">
     <meta name="viewport" content="width=device-width, initial-scale=1">
@@ -37,6 +36,10 @@
     					href="wip.html" th:href="@{/wip}" 
     					th:classappend="${#authentication.principal=='anonymousUser'} ? 'disabled' : ''"
     					th:text="${#authentication.principal=='anonymousUser'} ? 'WIP - Login required' : 'WIP'">WIP</a>
+    				<a	id="userMenu"
+    					sec:authorize="hasAuthority('ADMIN') or hasAuthority('USER') or hasAuthority('USER_EDIT')"
+    					class="dropdown-item"
+    					href="/users">USERS</a>
     				<div class="dropdown-divider"></div>
     				<div sec:authorize="isAuthenticated()" class="dropdown-item">
 <!-- Log out -->
@@ -166,8 +169,8 @@
 	/*]]>*/
 	//# sourceURL=testLogin.js
 	</script>
-</th:block>
 	<script type="application/javascript" src="../static/js/irt.js" th:src="@{/js/irt.js}"></script>
+</th:block>
 	<script type="application/javascript" src="../static/js/components.js" th:src="@{/js/components.js}"></script>
 	<script type="application/javascript">
 	/*<![CDATA[*/

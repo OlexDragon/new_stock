@@ -1,4 +1,8 @@
-
+window.addEventListener('hide.bs.modal', () => {
+    if (document.activeElement instanceof HTMLElement) {
+        document.activeElement.blur();
+    }
+});
 function onClick(id){
 
 	if(id){
