@@ -41,7 +41,7 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 import irt.components.beans.inventory.InventiryTransferResponse;
 import irt.components.beans.inventory.InventoryTransfer;
 import irt.components.controllers.components.ComponentsRestController;
-import irt.components.workers.HttpRequest;
+import irt.components.workers.IrtHttpRequest;
 
 @Controller
 @RequestMapping("inventory")
@@ -93,7 +93,7 @@ public class InventoryController {
 
 		String url = createUrl(name, value);
 		logger.error(url);
-		final FutureTask<InventiryTransferResponse> futureTask = HttpRequest.getForObgect(url, InventiryTransferResponse.class);
+		final FutureTask<InventiryTransferResponse> futureTask = IrtHttpRequest.getForObgect(url, InventiryTransferResponse.class);
 
 		try {
 

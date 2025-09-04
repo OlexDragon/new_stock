@@ -22,7 +22,7 @@ import irt.components.beans.ComponentFullData;
 import irt.components.beans.ComponentQuantityResponse;
 import irt.components.beans.LinkToFile;
 import irt.components.beans.RelatedFilesResponse;
-import irt.components.workers.HttpRequest;
+import irt.components.workers.IrtHttpRequest;
 
 @RestController
 @RequestMapping("/components")
@@ -64,16 +64,16 @@ public class ComponentsRestController {
 //		logger.error(componentKey);
 
 		String url = createComponentQtyUrl(componentKey);
-		final FutureTask<ComponentQuantityResponse> quantityFutureTask = HttpRequest.getForObgect(url, ComponentQuantityResponse.class);
+		final FutureTask<ComponentQuantityResponse> quantityFutureTask = IrtHttpRequest.getForObgect(url, ComponentQuantityResponse.class);
 		logger.debug(url);
 
 		url = createBomUrl(componentKey);
 //		logger.error(url);
-		final FutureTask<BomsResponse> bomFutureTask = HttpRequest.getForObgect(url, BomsResponse.class);
+		final FutureTask<BomsResponse> bomFutureTask = IrtHttpRequest.getForObgect(url, BomsResponse.class);
 
 		url = createFilesUrl(componentKey);
 //		logger.error(url);
-		final FutureTask<RelatedFilesResponse> filesFutureTask = HttpRequest.getForObgect(url, RelatedFilesResponse.class);
+		final FutureTask<RelatedFilesResponse> filesFutureTask = IrtHttpRequest.getForObgect(url, RelatedFilesResponse.class);
 
 		try {
 

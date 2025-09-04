@@ -1,6 +1,9 @@
 package irt.components.controllers.calibration;
 
+import java.io.IOException;
 import java.io.UnsupportedEncodingException;
+import java.net.MalformedURLException;
+import java.net.URI;
 import java.net.URLEncoder;
 import java.nio.charset.StandardCharsets;
 import java.util.ArrayList;
@@ -26,7 +29,7 @@ import org.springframework.web.bind.annotation.RestController;
 import irt.components.beans.OneCeHeader;
 import irt.components.beans.OneCeUrl;
 import irt.components.beans.irt.calibration.OneCeSection;
-import irt.components.workers.HttpRequest;
+import irt.components.workers.IrtHttpRequest;
 
 @RestController
 @RequestMapping("calibration/rest/one-c")
@@ -36,16 +39,16 @@ public class OneCeRestController {
 	@Autowired private OneCeUrl oneCeApiUrl;
 
 	@GetMapping("profile")
-	String getProfileSection(@RequestParam String sn, String section) throws InterruptedException, ExecutionException, TimeoutException {
+	String getProfileSection(@RequestParam String sn, String section) throws InterruptedException, ExecutionException, TimeoutException, IOException {
 		logger.traceEntry("sn: {}; section: {}",sn, section);
 
-		final String url = getOneCeUrl(oneCeApiUrl, sn, Optional.ofNullable(section).orElse("header"));
-		logger.debug(url);
-		return HttpRequest.getForString(url);
+		final URI uri = getOneCeUrl(oneCeApiUrl, sn, Optional.ofNullable(section).orElse("header"));
+		logger.debug(uri);
+		return IrtHttpRequest.getForString(uri);
 	}
 
 	@PostMapping("profile")
-	String postProfileSection(@RequestBody OneCeSection oneCeSection) throws InterruptedException, ExecutionException, TimeoutException, UnsupportedEncodingException {
+	String postProfileSection(@RequestBody OneCeSection oneCeSection) throws InterruptedException, ExecutionException, TimeoutException, UnsupportedEncodingException, MalformedURLException {
 		logger.error("{}",oneCeSection);
 
 		final String extra = Optional.of(oneCeSection.getSetting())
@@ -64,21 +67,21 @@ public class OneCeRestController {
 
 		String json = String.format("{ \"%s\": \"%s\"}", oneCeSection.getFieldName(), oneCeSection.getValue());
 		logger.debug(json);
-		return HttpRequest.postString(url, json).get(5, TimeUnit.SECONDS);
+		return IrtHttpRequest.postString(url, json).get(5, TimeUnit.SECONDS);
 	}
 
-	public static FutureTask<OneCeHeader> getOneCHeader(OneCeUrl oneCeApiUrl, String sn) {
+	public static FutureTask<OneCeHeader> getOneCHeader(OneCeUrl oneCeApiUrl, String sn) throws MalformedURLException {
 		final String section = "header";
-		String url = getOneCeUrl(oneCeApiUrl, sn, section);
+		String url = getOneCeUrl(oneCeApiUrl, sn, section).toString();
 		logger.debug(url);
-		return  HttpRequest.getForObgect(url, OneCeHeader.class);
+		return  IrtHttpRequest.getForObgect(url, OneCeHeader.class);
 	}
 
-	public static String getOneCeUrl(OneCeUrl oneCeApiUrl, String sn, final String section) {
+	public static URI getOneCeUrl(OneCeUrl oneCeApiUrl, String sn, final String section) throws MalformedURLException {
+
 		final List<NameValuePair> params = new ArrayList<>();
 		params.add(new BasicNameValuePair("sn", sn.replaceAll("\\D", "")));
 		params.add(new BasicNameValuePair("section", section));
-		String url = oneCeApiUrl.createUrl("travelers", params);
-		return url;
+		return oneCeApiUrl.createUrl("travelers", params);
 	}
 }

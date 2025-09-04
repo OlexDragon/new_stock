@@ -24,7 +24,7 @@ import org.springframework.web.bind.annotation.RequestParam;
 
 import irt.components.beans.Component;
 import irt.components.beans.ComponentsResponse;
-import irt.components.workers.HttpRequest;
+import irt.components.workers.IrtHttpRequest;
 
 @Controller
 public class ComponentsController {
@@ -56,7 +56,7 @@ public class ComponentsController {
 		String url = createComponentUrl(id, value, page);
 //		logger.error(url);
 		
-		final FutureTask<ComponentsResponse> futureTask = HttpRequest.getForObgect(url, ComponentsResponse.class);
+		final FutureTask<ComponentsResponse> futureTask = IrtHttpRequest.getForObgect(url, ComponentsResponse.class);
 
 		try {
 

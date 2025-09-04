@@ -2,7 +2,6 @@ package irt.components.controllers.calibration;
 
 import java.io.IOException;
 import java.net.MalformedURLException;
-import java.net.URL;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Optional;
@@ -15,10 +14,11 @@ import org.apache.http.message.BasicNameValuePair;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 import org.junit.jupiter.api.Test;
+import org.springframework.web.util.UriComponentsBuilder;
 
 import irt.components.beans.irt.ConverterInfo;
 import irt.components.beans.irt.HomePageInfo;
-import irt.components.workers.HttpRequest;
+import irt.components.workers.IrtHttpRequest;
 
 class CalibrationControllerTest {
 	private final static Logger logger = LogManager.getLogger();
@@ -37,11 +37,16 @@ class CalibrationControllerTest {
 	@Test
 	void configTest() throws MalformedURLException, InterruptedException, ExecutionException, TimeoutException{
 
+		String url = UriComponentsBuilder.newInstance()
+				.scheme("http")
+				.host("IRT-BUC-EMU3")
+				.path("/device_debug_read.cgi")
+				.toUriString();
+
 		final List<NameValuePair> list = new ArrayList<>();
 		list.add(new BasicNameValuePair("devid", "1"));
 		list.add(new BasicNameValuePair("command", "config"));
-		String url = new URL("http", "IRT-2508001", "/device_debug_read.cgi").toString();
-		final ConverterInfo converterInfo = HttpRequest.postForIrtYaml(url, ConverterInfo.class, list).get(5, TimeUnit.SECONDS);
+		final ConverterInfo converterInfo = IrtHttpRequest.postForIrtYaml(url, ConverterInfo.class, list).get(5, TimeUnit.SECONDS);
 
 		logger.error("converterInfo: {}", converterInfo);
 	}

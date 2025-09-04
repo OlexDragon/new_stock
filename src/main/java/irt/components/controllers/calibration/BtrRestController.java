@@ -8,6 +8,8 @@ import java.io.FileNotFoundException;
 import java.io.IOException;
 import java.io.InputStream;
 import java.net.InetAddress;
+import java.net.MalformedURLException;
+import java.net.URI;
 import java.net.UnknownHostException;
 import java.security.Principal;
 import java.text.DateFormat;
@@ -34,7 +36,6 @@ import javax.annotation.PostConstruct;
 import org.apache.commons.collections4.map.HashedMap;
 import org.apache.http.NameValuePair;
 import org.apache.http.message.BasicNameValuePair;
-import org.apache.logging.log4j.Level;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 import org.apache.poi.ss.usermodel.Cell;
@@ -65,6 +66,7 @@ import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
 import org.springframework.web.multipart.MultipartFile;
+import org.springframework.web.util.UriComponentsBuilder;
 
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.core.type.TypeReference;
@@ -81,7 +83,7 @@ import irt.components.beans.jpa.btr.BtrMeasurements;
 import irt.components.beans.jpa.btr.BtrPowerDetector;
 import irt.components.beans.jpa.repository.btr.BtrMeasurementsRepository;
 import irt.components.beans.jpa.repository.btr.BtrPowerDetectorRepository;
-import irt.components.workers.HttpRequest;
+import irt.components.workers.IrtHttpRequest;
 
 @RestController
 @RequestMapping("btr/rest")
@@ -125,10 +127,16 @@ public class BtrRestController {
 		final Object pr = ((UsernamePasswordAuthenticationToken)principal).getPrincipal();
 		final User user = ((UserPrincipal)pr).getUser();
 
-		String url = "http://www.irttechnologies.com/rest/serial-number/get-id?serialNumber=" + btr.getSerialNumber();
 		try {
 
-			final String id = HttpRequest.getForString(url, 3, TimeUnit.SECONDS);
+			URI uri = UriComponentsBuilder.newInstance()
+					.scheme("https")
+					.host("www.irttechnologies.com")
+					.path("/rest/serial-number/get-id")
+					.queryParam("serialNumber", btr.getSerialNumber())
+					.build().toUri();
+
+			final String id = IrtHttpRequest.getForString(uri, 3, TimeUnit.SECONDS);
 			if(id.isEmpty())
 				return new IrtMessage("Failed to get serial number ID. Refresh the page and try again.");
 
@@ -159,9 +167,9 @@ public class BtrRestController {
 				return new IrtMessage("");
 			}
 
-		} catch (InterruptedException | ExecutionException | TimeoutException e) {
-			logger.catching(Level.DEBUG, e);
-			return  new IrtMessage("TimeoutException.\nTry again.");
+		} catch (NumberFormatException | IOException e) {
+			logger.catching(e);
+			return new IrtMessage(e.getLocalizedMessage());
 		}
 	}
 
@@ -198,8 +206,8 @@ public class BtrRestController {
 		params.add(new BasicNameValuePair("sn", serialNumber));
 		final BasicNameValuePair section = new BasicNameValuePair("section", "converter-tuning");
 		params.add(section);
-		String url = oneCeApiUrl.createUrl("travelers", params);
-		final FutureTask<String> ftConverter = HttpRequest.getForStringFT(url);
+		String url = oneCeApiUrl.createUrl("travelers", params).toString();
+		final FutureTask<String> ftConverter = IrtHttpRequest.getForStringFT(url);
 
 		params.remove(section);
 		final FutureTask<String> ftUnit = getUnitTuningFT(serialNumber);
@@ -348,12 +356,12 @@ public class BtrRestController {
 	}
 
 	@GetMapping("header")
-	public Message<String> getHeader(@RequestParam String sn) throws InterruptedException, ExecutionException, TimeoutException {
+	public Message<String> getHeader(@RequestParam String sn) throws InterruptedException, ExecutionException, TimeoutException, MalformedURLException {
 		final List<NameValuePair> params = new ArrayList<>();
 		params.add(new BasicNameValuePair("sn", sn.replaceAll("\\D", "")));
 		params.add(new BasicNameValuePair("section", "header"));
-		String url = oneCeApiUrl.createUrl("travelers", params);
-		final String string = HttpRequest.getForStringFT(url).get(3, TimeUnit.SECONDS);
+		String url = oneCeApiUrl.createUrl("travelers", params).toString();
+		final String string = IrtHttpRequest.getForStringFT(url).get(3, TimeUnit.SECONDS);
 	
 		return new Message<String>() {
 
@@ -373,7 +381,7 @@ public class BtrRestController {
 	}
 
 	@GetMapping("unit-tuning")
-	public Message<String> getUnitTuning(@RequestParam String sn) throws InterruptedException, ExecutionException, TimeoutException{
+	public Message<String> getUnitTuning(@RequestParam String sn) throws InterruptedException, ExecutionException, TimeoutException, MalformedURLException{
 		final String string = getUnitTuningFT(sn).get(3, TimeUnit.SECONDS);
 		return new Message<String>() {
 
@@ -391,12 +399,12 @@ public class BtrRestController {
 			}};
 	}
 
-	public FutureTask<String> getUnitTuningFT(String serialNumber) {
+	public FutureTask<String> getUnitTuningFT(String serialNumber) throws MalformedURLException {
 		final List<NameValuePair> params = new ArrayList<>();
 		params.add(new BasicNameValuePair("sn", serialNumber.replaceAll("\\D", "")));
 		params.add(new BasicNameValuePair("section", "unit-tuning-imd-3"));
-		String url = oneCeApiUrl.createUrl("travelers", params);
-		return HttpRequest.getForStringFT(url);
+		String url = oneCeApiUrl.createUrl("travelers", params).toString();
+		return IrtHttpRequest.getForStringFT(url);
 	}
 
 	private Function<String, String> collect() {

@@ -27,7 +27,7 @@ import org.springframework.web.multipart.MultipartFile;
 
 import irt.components.beans.irt.update.IrtPackage;
 import irt.components.beans.irt.update.Soft;
-import irt.components.workers.HttpRequest;
+import irt.components.workers.IrtHttpRequest;
 import irt.components.workers.ProfileWorker;
 
 @RestController
@@ -50,7 +50,7 @@ public class SoftRestController {
     		return (String) tnp;
 
     	final Soft soft = (Soft) tnp;
-		HttpRequest.upload(sn, soft);
+		IrtHttpRequest.upload(sn, soft);
 
 		return "Wait for the software to load.";
 	}
@@ -63,7 +63,7 @@ public class SoftRestController {
 		if(fileName.endsWith(".pkg")) {
 
 			final IrtPackage toUpload = new IrtPackage(file);
-			HttpRequest.upload(sn, toUpload);
+			IrtHttpRequest.upload(sn, toUpload);
 			return "Wait for the software to load.";
 		}
     	final String serialNumber = Optional.ofNullable(moduleSn).orElse(sn);
@@ -79,7 +79,7 @@ public class SoftRestController {
 		final Soft soft = new Soft(typeRev, file.getName(), file.getBytes());
 		soft.setModule(Optional.ofNullable(moduleSn).map(m->true).orElse(null));	// Three states: null = System; true = Module; false = Module of Module;
 
-		HttpRequest.upload(sn, soft);
+		IrtHttpRequest.upload(sn, soft);
 
 		return "Wait for the software to load.";
 	}

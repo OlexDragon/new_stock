@@ -2,8 +2,8 @@ package irt.components.controllers.calibration;
 
 import java.io.IOException;
 import java.io.StringReader;
+import java.net.URI;
 import java.net.URISyntaxException;
-import java.net.URL;
 import java.nio.file.Path;
 import java.util.ArrayList;
 import java.util.Arrays;
@@ -20,7 +20,6 @@ import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
 
 import org.apache.http.NameValuePair;
-import org.apache.http.client.utils.URIBuilder;
 import org.apache.http.message.BasicNameValuePair;
 import org.apache.logging.log4j.Level;
 import org.apache.logging.log4j.LogManager;
@@ -39,6 +38,7 @@ import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
 import org.springframework.web.multipart.MultipartFile;
+import org.springframework.web.util.UriComponentsBuilder;
 
 import irt.components.beans.IrtMessage;
 import irt.components.beans.irt.calibration.ProfileTableTypes;
@@ -46,7 +46,7 @@ import irt.components.beans.irt.update.IrtPackageInPackage;
 import irt.components.beans.irt.update.IrtProfile;
 import irt.components.beans.irt.update.Table;
 import irt.components.workers.HtmlParsel;
-import irt.components.workers.HttpRequest;
+import irt.components.workers.IrtHttpRequest;
 import irt.components.workers.ProfileWorker;
 import lombok.Getter;
 import lombok.RequiredArgsConstructor;
@@ -63,13 +63,16 @@ public class ProfileRestController {
     String profile(@RequestParam String sn, @RequestParam(required = false) Integer moduleId) throws IOException, URISyntaxException, InterruptedException, ExecutionException, TimeoutException {
     	logger.traceEntry("{}; {};", sn, moduleId);
 
-    	final URIBuilder builder;
-
     	if(moduleId==null) {
+    		URI uri = UriComponentsBuilder.newInstance()
+    				.scheme("http")
+    				.host(sn)
+    				.path("/diagnostics.asp")
+    				.queryParam("profile", 1)
+    				.build()
+    				.toUri();
 
-    		final URL url = new URL("http", sn, "/diagnostics.asp");
-        	builder = new URIBuilder(url.toString()).setParameter("profile", "1");
-			String str = HttpRequest.getForString(builder.build().toString(), 10, TimeUnit.SECONDS);
+			String str = IrtHttpRequest.getForString(uri, 10, TimeUnit.SECONDS);
         	logger.debug(str);
         	try(final StringReader reader = new StringReader(str);){
  
@@ -79,10 +82,15 @@ public class ProfileRestController {
 
     	}else {
 
-    		final URL url = new URL("http", sn, "/device_debug_read.cgi");
+      		String url = UriComponentsBuilder.newInstance()
+    				.scheme("http")
+    				.host(sn)
+    				.path("/device_debug_read.cgi")
+    				.toUriString();
+
     		List<NameValuePair> params = new ArrayList<>();
     		params.addAll(Arrays.asList(new BasicNameValuePair[]{new BasicNameValuePair("devid", moduleId.toString()), new BasicNameValuePair("command", "profile")}));
-       		return HttpRequest.postForString(url.toString(), params);
+       		return IrtHttpRequest.postForString(url, params);
     	}
 	}
 
@@ -91,7 +99,7 @@ public class ProfileRestController {
 
     	final Map<String, Object> response = new HashMap<>();
     	final String remoteAddr = "http://" + request.getRemoteAddr() + ":8088";
-    	final FutureTask<Boolean> forString = HttpRequest.getForObgect(remoteAddr + "/ping", Boolean.class);
+    	final FutureTask<Boolean> forString = IrtHttpRequest.getForObgect(remoteAddr + "/ping", Boolean.class);
 
 
     	final ProfileWorker profileWorker = new ProfileWorker(profileFolder, sn);
@@ -120,7 +128,7 @@ public class ProfileRestController {
 
     	final Map<String, Object> response = new HashMap<>();
     	final String remoteAddr = "http://" + request.getRemoteAddr() + ":8088";
-    	final FutureTask<Boolean> forString = HttpRequest.getForObgect(remoteAddr + "/ping", Boolean.class);
+    	final FutureTask<Boolean> forString = IrtHttpRequest.getForObgect(remoteAddr + "/ping", Boolean.class);
 
     	final ProfileWorker profileWorker = new ProfileWorker(profileFolder, sn);
 
@@ -199,7 +207,7 @@ public class ProfileRestController {
 		final Path path = oPath.get();
 		final IrtProfile profile = new IrtProfile(path);
 		profile.setModule(moduleSn!=null && !moduleSn.equals(sn));
-		HttpRequest.upload(sn, profile);
+		IrtHttpRequest.upload(sn, profile);
 
 		return "Wait for the profile to load.";
 	}
@@ -264,7 +272,7 @@ public class ProfileRestController {
 //		try (FileOutputStream fos = new FileOutputStream("C:\\Users\\Alex\\Desktop\\package.pkg")) {
 //			   fos.write(p.toBytes());
 //		}
-		HttpRequest.upload(sn, p);
+		IrtHttpRequest.upload(sn, p);
 
 		return "Wait for the package to load.";
 	}

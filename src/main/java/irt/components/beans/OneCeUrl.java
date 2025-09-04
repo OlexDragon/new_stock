@@ -1,11 +1,14 @@
 package irt.components.beans;
 
+import java.net.MalformedURLException;
+import java.net.URI;
 import java.util.ArrayList;
 import java.util.List;
-import java.util.stream.Collectors;
 
 import org.apache.http.NameValuePair;
 import org.apache.http.message.BasicNameValuePair;
+import org.apache.logging.log4j.LogManager;
+import org.springframework.web.util.UriComponentsBuilder;
 
 import lombok.RequiredArgsConstructor;
 import lombok.ToString;
@@ -19,7 +22,7 @@ public class OneCeUrl {
 	private final String login;
 	private final String url;
 
-	public String createUrl(String category) {
+	public URI createUrl(String category) throws MalformedURLException {
 
 		List<NameValuePair> params = new ArrayList<NameValuePair>();
 //		params.add(new BasicNameValuePair("$format", "json"));
@@ -28,12 +31,17 @@ public class OneCeUrl {
 		return createUrl(category, params);
 	}
 
-	public String createUrl(String category, List<NameValuePair> params) {
-		final StringBuilder sb = new StringBuilder(protocol).append(login).append(url).append(category).append('?');
+	public URI createUrl(String category, List<NameValuePair> params) throws MalformedURLException {
+		LogManager.getLogger().error("login: {}", login);
 
-		 final String collectPatams = params.stream().map(pair->pair.getName() + "=" + pair.getValue()).collect(Collectors.joining("&"));
-		 sb.append(collectPatams);
+		final UriComponentsBuilder builder = UriComponentsBuilder.newInstance()
+				.scheme(protocol)
+				.userInfo(login)
+				.host(url)
+				.path(category);
 
-		 return sb.toString();
+		params.forEach(p->builder.queryParam(p.getName(), p.getValue()));
+
+		return builder.build().toUri();
 	}
 }

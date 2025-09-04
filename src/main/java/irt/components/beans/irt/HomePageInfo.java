@@ -13,7 +13,7 @@ import com.fasterxml.jackson.databind.DeserializationFeature;
 import com.fasterxml.jackson.databind.JsonMappingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
 
-import irt.components.workers.HttpRequest;
+import irt.components.workers.IrtHttpRequest;
 import lombok.AccessLevel;
 import lombok.Getter;
 import lombok.ToString;
@@ -64,7 +64,7 @@ public class HomePageInfo {
 
 		final int stop = str.indexOf("}", start) + 1;
 		final String js = str.substring(start, stop);
-		final String json = HttpRequest.javaScriptToJSon(js);
+		final String json = IrtHttpRequest.javaScriptToJSon(js);
 
 		final ObjectMapper mapper = new ObjectMapper();
 		mapper.configure(DeserializationFeature.FAIL_ON_UNKNOWN_PROPERTIES, false);

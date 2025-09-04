@@ -50,6 +50,7 @@ import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
 import org.springframework.web.server.ResponseStatusException;
+import org.springframework.web.util.UriComponentsBuilder;
 
 import irt.components.beans.OneCeHeader;
 import irt.components.beans.OneCeUrl;
@@ -84,7 +85,7 @@ import irt.components.beans.jpa.repository.calibration.BtrSettingRepository;
 import irt.components.beans.jpa.repository.calibration.CalibrationGainSettingRepository;
 import irt.components.beans.jpa.repository.calibration.CalibrationOutputPowerSettingRepository;
 import irt.components.beans.jpa.repository.calibration.CalibrationPowerOffsetSettingRepository;
-import irt.components.workers.HttpRequest;
+import irt.components.workers.IrtHttpRequest;
 import lombok.Getter;
 import lombok.RequiredArgsConstructor;
 
@@ -192,7 +193,13 @@ public class CalibrationRestController {
     }
 
 	public static String diagnosticsReg(String sn, Integer moduleId, final Integer regIndex) throws MalformedURLException, IOException {
-		final URL url = new URL("http", sn, "/device_debug_read.cgi");
+
+		String url = UriComponentsBuilder.newInstance()
+				.scheme("http")
+				.host(sn)
+				.path("/device_debug_read.cgi")
+				.toUriString();
+
 		final List<NameValuePair> params = new ArrayList<>();
 		params.addAll(Arrays.asList(
 				new BasicNameValuePair[]{
@@ -200,7 +207,7 @@ public class CalibrationRestController {
 						new BasicNameValuePair("command", "regs"),
 						new BasicNameValuePair("groupindex", regIndex.toString())}));
 
-		return HttpRequest.postForString(url.toString(), params);
+		return IrtHttpRequest.postForString(url, params);
 	}
 
 	@PostMapping(path="deviceDebug", produces = "application/json;charset=utf-8")
@@ -224,7 +231,7 @@ public class CalibrationRestController {
     }
 
     @PostMapping(path="outputpower", consumes = MediaType.APPLICATION_JSON_VALUE)
-    String saveCalibrationOutputPowerSettings(@RequestBody CalibrationOutputPowerSettings settings) {
+    String saveCalibrationOutputPowerSettings(@RequestBody CalibrationOutputPowerSettings settings) throws MalformedURLException {
     	logger.traceEntry("settings: {}", settings);
 
 		try {
@@ -263,7 +270,7 @@ public class CalibrationRestController {
     }
 
     @GetMapping("power_offset")
-    CalibrationPowerOffsetSettings getCalibrationPowerOffsetSettings(@RequestParam String sn) throws InterruptedException, ExecutionException, TimeoutException {
+    CalibrationPowerOffsetSettings getCalibrationPowerOffsetSettings(@RequestParam String sn) throws InterruptedException, ExecutionException, TimeoutException, MalformedURLException {
     	AtomicReference<CalibrationPowerOffsetSettings> ar = new AtomicReference<>();
     	getPartNumber(sn,
     			pn->{
@@ -275,7 +282,7 @@ public class CalibrationRestController {
     }
 
     @PostMapping(path="power_offset", consumes = MediaType.APPLICATION_JSON_VALUE)
-    String saveCalibrationPowerOffsetSettings(@RequestBody CalibrationPowerOffsetSettings settings) {
+    String saveCalibrationPowerOffsetSettings(@RequestBody CalibrationPowerOffsetSettings settings) throws MalformedURLException {
     	logger.traceEntry("settings: {}", settings);
 
 		try {
@@ -313,7 +320,7 @@ public class CalibrationRestController {
 		return "Something went wrong.";
     }
 
-	public String getPartNumber(String serialNumber, Function<String, String> consumer) throws InterruptedException, ExecutionException, TimeoutException {
+	public String getPartNumber(String serialNumber, Function<String, String> consumer) throws InterruptedException, ExecutionException, TimeoutException, MalformedURLException {
 
 		return Optional.ofNullable(OneCeRestController.getOneCHeader(oneCeApiUrl, serialNumber).get(10, TimeUnit.SECONDS))
 
@@ -338,7 +345,7 @@ public class CalibrationRestController {
 	}
 
     @PostMapping("gain")
-    String saveGainSettings(@RequestParam String serialNumber, int startValue, int stopValue, int fields, boolean p1dB, boolean localPn) {
+    String saveGainSettings(@RequestParam String serialNumber, int startValue, int stopValue, int fields, boolean p1dB, boolean localPn) throws MalformedURLException {
 
     	OneCeHeader oneCeHeader = null;
 		try {
@@ -401,7 +408,12 @@ public class CalibrationRestController {
     @GetMapping("dumps")
     String dumps(@RequestParam String sn, @RequestParam String devid, @RequestParam String command, @RequestParam(required = false) String groupindex, Model model) throws IOException {
 
-		final URL url = new URL("http", sn, "/device_debug_read.cgi");
+		String url = UriComponentsBuilder.newInstance()
+				.scheme("http")
+				.host(sn)
+				.path("/device_debug_read.cgi")
+				.toUriString();
+
 		List<NameValuePair> params = new ArrayList<>();
 
 		final BasicNameValuePair[] pairs = Optional.ofNullable(groupindex)
@@ -411,7 +423,7 @@ public class CalibrationRestController {
 
 		params.addAll(Arrays.asList(pairs));
 
-		return HttpRequest.postForString(url.toString(), params);
+		return IrtHttpRequest.postForString(url, params);
     }
 
     @GetMapping("sn")
@@ -427,7 +439,12 @@ public class CalibrationRestController {
     @PostMapping("login")
     String login(@RequestParam String sn) throws IOException {
 
-    	final URL url = new URL("http", sn, "/hidden.cgi");
+		URL url = UriComponentsBuilder.newInstance()
+				.scheme("http")
+				.host(sn)
+				.path("/hidden.cgi")
+				.build().toUri().toURL();
+
 		HttpURLConnection connection = (HttpURLConnection) url.openConnection();	
 		connection.setRequestMethod("POST");
 		connection.setDoOutput(true);
@@ -476,12 +493,17 @@ public class CalibrationRestController {
 
 		try {
 
+			String url = UriComponentsBuilder.newInstance()
+					.scheme("http")
+					.host(ip)
+					.path("/device_debug_read.cgi")
+					.toUriString();
+
 	    	final Integer systemIndex = CalibrationController.getSystemIndex(ip);
-			final URL url = new URL("http", ip, "/device_debug_read.cgi");
 			List<NameValuePair> params = new ArrayList<>();
 			params.addAll(Arrays.asList(new BasicNameValuePair[]{new BasicNameValuePair("devid", systemIndex.toString()), new BasicNameValuePair("command", "info")}));
 
-			return HttpRequest.postForIrtObgect(url.toString(), Info.class, params).get(1, TimeUnit.SECONDS);
+			return IrtHttpRequest.postForIrtObgect(url, Info.class, params).get(1, TimeUnit.SECONDS);
 
 		} catch (InterruptedException | ExecutionException | TimeoutException | HttpHostConnectException e) {
 			logger.catching(Level.DEBUG, e);
@@ -497,7 +519,13 @@ public class CalibrationRestController {
     	logger.traceEntry("sn: {}; status: {}", sn, status);
 
 		try {
-			final URL url = new URL("http", sn, "/device_debug_read.cgi");
+
+			URL url = UriComponentsBuilder.newInstance()
+					.scheme("http")
+					.host(sn)
+					.path("/device_debug_read.cgi")
+					.build().toUri().toURL();
+
 			logger.debug(url);
 	    	final Integer systemIndex = CalibrationController.getSystemIndex(sn);
 			final List<NameValuePair> params = new ArrayList<>();
@@ -512,7 +540,7 @@ public class CalibrationRestController {
 								params.add(new BasicNameValuePair("group", "51"));
 								params.add(new BasicNameValuePair("address", "0"));
 								params.add(new BasicNameValuePair("value", "" + ordinal));
-								return HttpRequest.postForCode(url, params);
+								return IrtHttpRequest.postForCode(url, params);
 							})
 					.ifPresent(
 							ft->{
@@ -533,7 +561,7 @@ public class CalibrationRestController {
 	    	params.add(new BasicNameValuePair("command", "hwinfo"));
 	    	params.add(new BasicNameValuePair("groupindex", "4"));
 
-			return HttpRequest.postForIrtObgect(url.toString(), CalibrationMode.class, params).get(5, TimeUnit.SECONDS);
+			return IrtHttpRequest.postForIrtObgect(url.toString(), CalibrationMode.class, params).get(5, TimeUnit.SECONDS);
 
 		} catch (InterruptedException | ExecutionException | TimeoutException | UnknownHostException e) {
 			logger.catching(Level.DEBUG, e);
@@ -544,11 +572,16 @@ public class CalibrationRestController {
     @PostMapping("calibration-mode-toggle")
     ResponseEntity<String> setCalibrationMode(@RequestParam String ip) throws MalformedURLException {
 
-		final URL url = new URL("http", ip, "/calibration.cgi");
+		String url = UriComponentsBuilder.newInstance()
+				.scheme("http")
+				.host(ip)
+				.path("/calibration.cgi")
+				.toUriString();
+
 		List<NameValuePair> params = new ArrayList<>();
 		params.addAll(Arrays.asList(new BasicNameValuePair[]{new BasicNameValuePair("en_toggle", "1")}));
 
-		final FutureTask<Object> ft = HttpRequest.postForIrtObgect(url.toString(), Object.class, params);
+		final FutureTask<Object> ft = IrtHttpRequest.postForIrtObgect(url, Object.class, params);
 		try {
 
 			ft.get(5, TimeUnit.SECONDS);
@@ -589,13 +622,18 @@ public class CalibrationRestController {
     SimpleEntry<String, HPBMRegisterV31> hpbmRegisterV21(@RequestParam String sn, @RequestParam String devid) throws MalformedURLException, InterruptedException, ExecutionException{
     	logger.traceEntry("sn: {}, devid: {}", sn, devid);
 
-		final URL url = new URL("http", sn, "/device_debug_read.cgi");
+		String url = UriComponentsBuilder.newInstance()
+				.scheme("http")
+				.host(sn)
+				.path("/device_debug_read.cgi")
+				.toUriString();
+
 		List<NameValuePair> params = new ArrayList<>();
 		final BasicNameValuePair deviceId = new BasicNameValuePair("devid", devid);
 
 		params.addAll(Arrays.asList(new BasicNameValuePair[]{new BasicNameValuePair("command", "regs"), deviceId, new BasicNameValuePair("groupindex", "20")}));
 
-		final FutureTask<HPBMRegisterV21> postForIrtObgect1 = HttpRequest.postForIrtYaml(url.toString(), HPBMRegisterV21.class, params);
+		final FutureTask<HPBMRegisterV21> postForIrtObgect1 = IrtHttpRequest.postForIrtYaml(url, HPBMRegisterV21.class, params);
 
 		SimpleEntry<String, HPBMRegisterV31> entry = new AbstractMap.SimpleEntry<>(devid, null);
 		try {
@@ -621,13 +659,18 @@ public class CalibrationRestController {
     SimpleEntry<String, HPBMRegisterV31> hpbmRegisterV31(@RequestParam String sn, @RequestParam String devid) throws MalformedURLException, InterruptedException, ExecutionException{
     	logger.traceEntry("sn: {}, devid: {}", sn, devid);
 
-		final URL url = new URL("http", sn, "/device_debug_read.cgi");
+		String url = UriComponentsBuilder.newInstance()
+				.scheme("http")
+				.host(sn)
+				.path("/device_debug_read.cgi")
+				.toUriString();
+
 		List<NameValuePair> params = new ArrayList<>();
 		final BasicNameValuePair deviceId = new BasicNameValuePair("devid", devid);
 
 		params.addAll(Arrays.asList(new BasicNameValuePair[]{new BasicNameValuePair("command", "regs"), deviceId, new BasicNameValuePair("groupindex", "20")}));
 
-		final FutureTask<HPBMRegisterV31> postForIrtObgect1 = HttpRequest.postForIrtObgect(url.toString(), HPBMRegisterV31.class, params);
+		final FutureTask<HPBMRegisterV31> postForIrtObgect1 = IrtHttpRequest.postForIrtObgect(url, HPBMRegisterV31.class, params);
 
 		SimpleEntry<String, HPBMRegisterV31> entry = null;
 		try {
@@ -677,11 +720,16 @@ public class CalibrationRestController {
     					s->{
     						try {
 
-    							final URL url = new URL("http", sn, "/control.cgi");
+    							String url = UriComponentsBuilder.newInstance()
+    									.scheme("http")
+    									.host(sn)
+    									.path("/control.cgi")
+    									.toUriString();
+
     							List<NameValuePair> params = new ArrayList<>();
     							params.add(new BasicNameValuePair("mute", mute.value));
 
-    							HttpRequest.postForString(url.toString(), params);
+    							IrtHttpRequest.postForString(url, params);
     							return "Done";
 
     						} catch (IOException e) {
@@ -696,7 +744,7 @@ public class CalibrationRestController {
 	@RequestMapping("all-modules")
 	Map<String, Integer> allModules(@RequestParam String sn) throws IOException, InterruptedException, ExecutionException, TimeoutException, ScriptException {
     	logger.traceEntry("{}", sn);
-		return HttpRequest.getAllModules(sn);
+		return IrtHttpRequest.getAllModules(sn);
     }
 
     @PostMapping("pll_register")
@@ -708,7 +756,12 @@ public class CalibrationRestController {
     					s->{
     						try {
 
-    							final URL url = new URL("http", sn, "/device_debug_write.cgi");
+    							String url = UriComponentsBuilder.newInstance()
+    									.scheme("http")
+    									.host(sn)
+    									.path("/device_debug_write.cgi")
+    									.toUriString();
+
     				    		List<NameValuePair> params = new ArrayList<>();
     				    		params.addAll(Arrays.asList(
     				    				new BasicNameValuePair[]{
@@ -717,13 +770,11 @@ public class CalibrationRestController {
     				    						new BasicNameValuePair("group", regIndex), // 102 or 103
     				    						new BasicNameValuePair("address", addr),
     				    						new BasicNameValuePair("value", value)}));
-    				    		FutureTask<RegisterPLL> o = HttpRequest.postForIrtObgect(url.toString(), RegisterPLL.class, params);
+    				    		FutureTask<RegisterPLL> o = IrtHttpRequest.postForIrtObgect(url, RegisterPLL.class, params);
     				    		final RegisterPLL pllRegister = o.get(5, TimeUnit.SECONDS);
     				    		logger.debug(pllRegister);
 								return pllRegister;
 
-    						} catch (IOException e) {
-    							logger.catching(new Throwable(sn, e));
     						} catch (InterruptedException | ExecutionException | TimeoutException e) {
     							logger.catching(Level.DEBUG, e);
 							}
@@ -739,8 +790,14 @@ public class CalibrationRestController {
    		List<NameValuePair> params = new ArrayList<>();
 		params.addAll(Arrays.asList(new BasicNameValuePair[]{new BasicNameValuePair("devid", devid.toString()), new BasicNameValuePair("command", command)}));
 		Optional.ofNullable(groupindex).ifPresent(gi->params.add(new BasicNameValuePair("groupindex", gi.toString())));
-		URL url = new URL("http", sn, "/device_debug_read.cgi");
-		return HttpRequest.postForString(url.toString(), params);
+
+		String url = UriComponentsBuilder.newInstance()
+				.scheme("http")
+				.host(sn)
+				.path("/device_debug_write.cgi")
+				.toUriString();
+
+		return IrtHttpRequest.postForString(url, params);
     }
 
 
@@ -757,10 +814,16 @@ public class CalibrationRestController {
 
 	@GetMapping("module-info")
 	String infoString(@RequestParam String sn, String moduleIndex) throws IOException {
-		final String url = new URL("http", sn, "/device_debug_read.cgi").toString();
+
+		String url = UriComponentsBuilder.newInstance()
+				.scheme("http")
+				.host(sn)
+				.path("/device_debug_write.cgi")
+				.toUriString();
+
 		List<NameValuePair> params = new ArrayList<>();
 		params.addAll(Arrays.asList(new BasicNameValuePair[]{new BasicNameValuePair("devid", moduleIndex), new BasicNameValuePair("command", "info")}));
-		return HttpRequest.postForString(url, params);
+		return IrtHttpRequest.postForString(url, params);
     }
 
 	@PostMapping("hw-info")
@@ -794,7 +857,7 @@ public class CalibrationRestController {
     	}
     	final Map<String, Map<String, String>> map = new TreeMap<>();
 
-    	HttpRequest.getAllModules(sn).entrySet()
+    	IrtHttpRequest.getAllModules(sn).entrySet()
     	.forEach(es->{
 			try {
 
@@ -803,20 +866,25 @@ public class CalibrationRestController {
 				final BasicNameValuePair paieDevId = new BasicNameValuePair("devid", es.getValue().toString());
 				final FutureTask<Info> ftInfo = CalibrationController.getHttpDeviceDebug(sn, Info.class, paieDevId, new BasicNameValuePair("command", "info"));
 
-				final URL url = new URL("http", sn, "/device_debug_read.cgi");
+				String url = UriComponentsBuilder.newInstance()
+						.scheme("http")
+						.host(sn)
+						.path("/device_debug_write.cgi")
+						.toUriString();
+
 				List<NameValuePair> list = new ArrayList<>();
 				list.add(paieDevId);
 				list.add(new BasicNameValuePair("command", "hwinfo"));
 				// CPU Info
 				final BasicNameValuePair groupIndex = new BasicNameValuePair("groupindex", "0");
 				list.add(groupIndex);
-				final String cpuInfo = HttpRequest.postForString(url.toString(), list);
+				final String cpuInfo = IrtHttpRequest.postForString(url, list);
 				values.put("cpu", cpuInfo);
 
 				// Help
 				list.remove(groupIndex);
 				list.add(new BasicNameValuePair("groupindex", "100"));
-				final String help = HttpRequest.postForString(url.toString(), list);
+				final String help = IrtHttpRequest.postForString(url, list);
 
 				final Info info = ftInfo.get(10, TimeUnit.SECONDS);
 				if(info==null)
@@ -836,12 +904,17 @@ public class CalibrationRestController {
 									index->{
 										try {
 
-											final String u = new URL("http", "irt-2415015", "/device_debug_read.cgi").toString();
+			    							String u = UriComponentsBuilder.newInstance()
+			    									.scheme("http")
+			    									.host(sn)
+			    									.path("/device_debug_write.cgi")
+			    									.toUriString();
+
 											final List<NameValuePair> params = new ArrayList<>();
 											params.add(new BasicNameValuePair("devid", "1002"));
 											params.add(new BasicNameValuePair("command", "regs"));
 											params.add(new BasicNameValuePair("groupindex", "28"));
-											final Etc etc = HttpRequest.postForIrtObgect(u, Etc.class, params).get(10, TimeUnit.SECONDS);
+											final Etc etc = IrtHttpRequest.postForIrtObgect(u, Etc.class, params).get(10, TimeUnit.SECONDS);
 
 											Optional.ofNullable(etc)
 											.ifPresent(
@@ -851,7 +924,7 @@ public class CalibrationRestController {
 
 											map.put(info.getSerialNumber(), values);
 
-										} catch (MalformedURLException | InterruptedException | ExecutionException | TimeoutException e) {
+										} catch (InterruptedException | ExecutionException | TimeoutException e) {
 											logger.catching(e);
 										}
 									});
@@ -871,14 +944,19 @@ public class CalibrationRestController {
     String diagnostic(@RequestParam String sn, @RequestParam String moduleIndex, @RequestParam String command, String index, String address, String value) throws IOException{
     	logger.traceEntry("sn: {}; moduleIndex: {}; command: {}; index: {}; address: {}; value: {}", sn, moduleIndex, command, index, address, value);
 
-    	URL url = new URL("http", sn, "/device_debug_read.cgi");
+		String url = UriComponentsBuilder.newInstance()
+				.scheme("http")
+				.host(sn)
+				.path("/device_debug_write.cgi")
+				.toUriString();
+
 		List<NameValuePair> params = new ArrayList<>();
 		params.addAll(Arrays.asList(new BasicNameValuePair[]{new BasicNameValuePair("devid", moduleIndex), new BasicNameValuePair("command", command)}));
 
 		Optional.ofNullable(index).ifPresent(i->params.add(new BasicNameValuePair("groupindex", i)));
 		Optional.ofNullable(address).ifPresent(a->params.add(new BasicNameValuePair("address", a)));
 		Optional.ofNullable(value).ifPresent(v->params.add(new BasicNameValuePair("value", v)));
-		return HttpRequest.postForString(url.toString(), params);
+		return IrtHttpRequest.postForString(url, params);
     }
 
     @PostMapping("register/write")
@@ -892,7 +970,7 @@ public class CalibrationRestController {
     	logger.traceEntry("url: {}; path: {}", url, path);
     	List<NameValuePair> params = new ArrayList<>();
     	params.add(new BasicNameValuePair("path", path));
-    	return HttpRequest.postForObgect(url + "/open", Boolean.class, params).get(1, TimeUnit.SECONDS);
+    	return IrtHttpRequest.postForObgect(url + "/open", Boolean.class, params).get(1, TimeUnit.SECONDS);
     }
 
     @GetMapping("converter-info")
@@ -914,10 +992,22 @@ public class CalibrationRestController {
 
     				    		final URL url;
     				    		if(address==null || value == null) {
-    				    			url = new URL("http", sn, "/device_debug_read.cgi");
+
+        							url = UriComponentsBuilder.newInstance()
+        									.scheme("http")
+        									.host(sn)
+        									.path("/device_debug_read.cgi")
+        									.build().toUri().toURL();
+
     				    			Optional.ofNullable(index).ifPresent(i->params.add(new BasicNameValuePair("groupindex", i)));
     				    		}else {
-    				    			url = new URL("http", sn, "/device_debug_write.cgi");
+
+        							url = UriComponentsBuilder.newInstance()
+        									.scheme("http")
+        									.host(sn)
+        									.path("/device_debug_write.cgi")
+        									.build().toUri().toURL();
+
 	    							params.add(new BasicNameValuePair("group", index));
 	    							params.add(new BasicNameValuePair("address", address));
 	    							params.add(new BasicNameValuePair("value", value));
@@ -942,11 +1032,11 @@ public class CalibrationRestController {
 		logger.traceEntry("url: {}; registerClass: {}; params: {};postFor postFor: {}", url, registerClass, params, postFor);
 		switch(postFor) {
 		case IRT_OBJECT:
-			return HttpRequest.postForIrtObgect(url.toString(), registerClass, params);
+			return IrtHttpRequest.postForIrtObgect(url.toString(), registerClass, params);
 		case IRT_YAML:
-			return HttpRequest.postForIrtYaml(url.toString(), registerClass, params);
+			return IrtHttpRequest.postForIrtYaml(url.toString(), registerClass, params);
 		case STRING:
-			String str = HttpRequest.postForString(url.toString(), params);
+			String str = IrtHttpRequest.postForString(url.toString(), params);
 			Callable<T> callable = () ->{
 				final Constructor<T> constructor = registerClass.getConstructor(String.class);
 					return constructor.newInstance(str);

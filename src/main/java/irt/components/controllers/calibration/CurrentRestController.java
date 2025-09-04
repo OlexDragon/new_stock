@@ -8,7 +8,6 @@ import java.io.InputStreamReader;
 import java.io.OutputStream;
 import java.net.InetAddress;
 import java.net.MalformedURLException;
-import java.net.URL;
 import java.net.UnknownHostException;
 import java.nio.file.Files;
 import java.text.SimpleDateFormat;
@@ -43,6 +42,7 @@ import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
+import org.springframework.web.util.UriComponentsBuilder;
 
 import irt.components.beans.CurrentAlias;
 import irt.components.beans.CurrentOffset;
@@ -57,7 +57,7 @@ import irt.components.beans.jpa.repository.IrtArrayRepository;
 import irt.components.beans.jpa.repository.calibration.CurrentLayoutRepository;
 import irt.components.controllers.calibration.CalibrationRestController.PostFor;
 import irt.components.services.converter.CurrentAliastListConverter;
-import irt.components.workers.HttpRequest;
+import irt.components.workers.IrtHttpRequest;
 import irt.components.workers.ThreadRunner;
 
 @RestController
@@ -84,7 +84,7 @@ public class CurrentRestController {
 
 		final List<ModuleInfo> list = new ArrayList<>();
 		try {
-			HttpRequest.getAllModules(sn)
+			IrtHttpRequest.getAllModules(sn)
 			.forEach(
 					(n,i)->{
 
@@ -440,7 +440,12 @@ public class CurrentRestController {
 
 		try {
 
-			final URL url = new URL("http", sn, "/calibration.cgi");
+			String url = UriComponentsBuilder.newInstance()
+					.scheme("http")
+					.host(sn)
+					.path("/calibration.cgi")
+					.toUriString();
+
 			List<NameValuePair> params = new ArrayList<>();
 			final List<BasicNameValuePair> asList = new ArrayList<>();
 
@@ -459,11 +464,9 @@ public class CurrentRestController {
 
 			params.addAll(asList);
 
-			HttpRequest.postForIrtObgect(url.toString(), Object.class, params).get(5, TimeUnit.SECONDS);
+			IrtHttpRequest.postForIrtObgect(url, Object.class, params).get(5, TimeUnit.SECONDS);
 			return true;
 
-		} catch (MalformedURLException e) {
-			logger.catching(e);
 		} catch (InterruptedException | ExecutionException | TimeoutException e) {
 			logger.catching(Level.DEBUG, e);
 		}

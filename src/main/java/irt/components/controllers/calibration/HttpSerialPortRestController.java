@@ -1,7 +1,7 @@
 package irt.components.controllers.calibration;
 
 import java.net.MalformedURLException;
-import java.net.URISyntaxException;
+import java.net.URI;
 import java.net.URL;
 import java.util.ArrayList;
 import java.util.List;
@@ -21,13 +21,14 @@ import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
 import org.springframework.web.client.RestClientException;
 import org.springframework.web.client.RestTemplate;
+import org.springframework.web.util.UriComponentsBuilder;
 
 import irt.components.beans.irt.calibration.Command;
 import irt.components.beans.irt.calibration.CommandBytesRequest;
 import irt.components.beans.irt.calibration.CommandRequest;
 import irt.components.beans.irt.calibration.RequestData;
 import irt.components.services.HttpSerialPortServersKeeper;
-import irt.components.workers.HttpRequest;
+import irt.components.workers.IrtHttpRequest;
 
 @RestController
 @RequestMapping("serial_port/rest")
@@ -54,8 +55,16 @@ public class HttpSerialPortRestController {
     	.flatMap(
     			port->{
     				try {
+    					URL url = UriComponentsBuilder.newInstance()
+    							.scheme("http")
+    							.host(hostName)
+    							.port(port)
+    							.path("/serial-ports/")
+    							.build()
+    							.toUri()
+    							.toURL();
 
-    					return Optional.of(new URL("http", hostName, ":" + port + "/serial-ports/"));
+    					return Optional.of(url);
 
     				} catch (MalformedURLException e) {
     					logger.catching(e);
@@ -65,7 +74,7 @@ public class HttpSerialPortRestController {
     	.flatMap(url->{
 			try {
 
-				return Optional.of(HttpRequest.postForObgect(url.toString(), List.class, null).get(3, TimeUnit.SECONDS));
+				return Optional.of(IrtHttpRequest.postForObgect(url.toString(), List.class, null).get(3, TimeUnit.SECONDS));
 
 			} catch (InterruptedException | ExecutionException | TimeoutException e) {
 				logger.warn("Can not get Serial Ports from {}", url);
@@ -95,11 +104,17 @@ public class HttpSerialPortRestController {
     	}
 
     	try {
+			URL url = UriComponentsBuilder.newInstance()
+					.scheme("http")
+					.host(hostName)
+					.port(port)
+					.build()
+					.toUri()
+					.toURL();
 
-    		final URL url =  new URL("http", hostName, ":" + port);
 			logger.debug(url);
 
-			return HttpRequest.postForObgect(url, CommandRequest.class, commandRequest).get(15, TimeUnit.SECONDS);
+			return IrtHttpRequest.postForObgect(url, CommandRequest.class, commandRequest).get(15, TimeUnit.SECONDS);
 
     	} catch (InterruptedException | ExecutionException | TimeoutException e) {
 
@@ -125,13 +140,20 @@ public class HttpSerialPortRestController {
 
 		try {
 
-			final URL url =  new URL("http", hostName, ":" + port + "/bytes");
-			logger.debug(url);
+			URI uri = UriComponentsBuilder.newInstance()
+					.scheme("http")
+					.host(hostName)
+					.port(port)
+					.path("/bytes")
+					.build()
+					.toUri();
 
-			CommandBytesRequest result = new RestTemplate().postForObject(url.toURI(), commandRequest, CommandBytesRequest.class);
+			logger.debug(uri);
+
+			CommandBytesRequest result = new RestTemplate().postForObject(uri, commandRequest, CommandBytesRequest.class);
 			return result;
 
-		} catch (MalformedURLException | RestClientException | URISyntaxException e) {
+		} catch (RestClientException e) {
 			logger.catching(e);
 			commandRequest.setErrorMessage(e.getLocalizedMessage());
 		}
@@ -156,13 +178,20 @@ public class HttpSerialPortRestController {
     	}
 
 		try {
+			
+			URI uri = UriComponentsBuilder.newInstance()
+					.scheme("http")
+					.host(hostName)
+					.port(port)
+					.path("/read")
+					.build()
+					.toUri();
 
-			final URL url =  new URL("http", hostName, ":" + port + "/read");
-			logger.debug(url);
+			logger.debug(uri);
 
-			return new RestTemplate().postForObject(url.toURI(), requestData, CommandBytesRequest.class);
+			return new RestTemplate().postForObject(uri, requestData, CommandBytesRequest.class);
 
-		} catch (MalformedURLException | RestClientException | URISyntaxException e) {
+		} catch (RestClientException e) {
 			logger.catching(e);
 			final CommandBytesRequest commandRequest = new CommandBytesRequest();
 			commandRequest.setErrorMessage(e.getLocalizedMessage());
@@ -183,13 +212,20 @@ public class HttpSerialPortRestController {
     	}
 
 		try {
+			
+			URI uri = UriComponentsBuilder.newInstance()
+					.scheme("http")
+					.host(hostName)
+					.port(port)
+					.path("/read")
+					.build()
+					.toUri();
 
-			final URL url =  new URL("http", hostName, ":" + port + "/read");
-			logger.debug(url);
+			logger.debug(uri);
 
-			return new RestTemplate().postForObject(url.toURI(), requestData, CommandBytesRequest.class);
+			return new RestTemplate().postForObject(uri, requestData, CommandBytesRequest.class);
 
-		} catch (MalformedURLException | RestClientException | URISyntaxException e) {
+		} catch (RestClientException e) {
 			logger.catching(e);
 			final CommandBytesRequest commandRequest = new CommandBytesRequest();
 			commandRequest.setErrorMessage(e.getLocalizedMessage());

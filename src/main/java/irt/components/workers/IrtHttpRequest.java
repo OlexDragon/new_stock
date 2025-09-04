@@ -9,6 +9,7 @@ import java.io.OutputStream;
 import java.io.UnsupportedEncodingException;
 import java.net.ConnectException;
 import java.net.HttpURLConnection;
+import java.net.URI;
 import java.net.URL;
 import java.net.UnknownHostException;
 import java.util.AbstractMap;
@@ -25,13 +26,12 @@ import java.util.concurrent.TimeUnit;
 import java.util.concurrent.TimeoutException;
 import java.util.stream.Collectors;
 
-import javax.script.ScriptEngine;
-import javax.script.ScriptEngineManager;
 import javax.script.ScriptException;
 
 import org.apache.http.HttpEntity;
 import org.apache.http.NameValuePair;
 import org.apache.http.ParseException;
+import org.apache.http.client.config.RequestConfig;
 import org.apache.http.client.entity.UrlEncodedFormEntity;
 import org.apache.http.client.methods.CloseableHttpResponse;
 import org.apache.http.client.methods.HttpGet;
@@ -39,12 +39,17 @@ import org.apache.http.client.methods.HttpPost;
 import org.apache.http.client.methods.HttpUriRequest;
 import org.apache.http.entity.StringEntity;
 import org.apache.http.impl.client.CloseableHttpClient;
+import org.apache.http.impl.client.DefaultHttpRequestRetryHandler;
 import org.apache.http.impl.client.HttpClients;
 import org.apache.http.message.BasicNameValuePair;
 import org.apache.http.util.EntityUtils;
 import org.apache.logging.log4j.Level;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
+import org.mozilla.javascript.Context;
+import org.mozilla.javascript.ScriptableObject;
+import org.springframework.web.reactive.function.client.WebClient;
+import org.springframework.web.util.UriComponentsBuilder;
 
 import com.fasterxml.jackson.annotation.JsonInclude.Include;
 import com.fasterxml.jackson.core.JsonParseException;
@@ -56,7 +61,8 @@ import com.fasterxml.jackson.dataformat.yaml.YAMLFactory;
 import irt.components.beans.irt.CalibrationRwInfo;
 import irt.components.beans.irt.update.ToUpload;
 
-public class HttpRequest {
+
+public class IrtHttpRequest {
 	private final static Logger logger = LogManager.getLogger();
 	private static final String LINE_SEPARATOR = System.getProperty("line.separator");
 
@@ -259,11 +265,12 @@ public class HttpRequest {
 		logger.traceEntry(javaScript);
 		javaScript = javaScript.replace("var ", ""); 
 
-		final ScriptEngineManager scriptEngineManager = new ScriptEngineManager();
-		final ScriptEngine scriptEngine = scriptEngineManager.getEngineByName("JavaScript");
-		scriptEngine.eval("variable = " + javaScript);
-	    scriptEngine.eval("json= JSON.stringify(variable);");
-	    return (String) scriptEngine.get("json");
+		try(Context context = Context.enter();){
+			ScriptableObject scope = context.initStandardObjects();
+			context.evaluateString(scope, "variable = " + javaScript, "variable", 1, null);
+			Object result = context.evaluateString(scope, "json= JSON.stringify(variable);", "json", 1, null);
+			return Context.toString(result);
+		}
 	}
 
 	private static String textToJSON(String text) {
@@ -341,7 +348,13 @@ public class HttpRequest {
 
 		HttpURLConnection connection = null;
 		try {
-			URL url = new URL("http", sn, "/upgrade.cgi");
+			URL url = UriComponentsBuilder.newInstance()
+					.scheme("http")
+					.host(sn)
+					.path("/upgrade.cgi")
+					.build()
+					.toUri()
+					.toURL();
 			connection = (HttpURLConnection) url.openConnection();
 			connection.setRequestMethod("POST");
 			connection.setRequestProperty("Content-Type", "multipart/form-data;");
@@ -404,11 +417,9 @@ public class HttpRequest {
 		httpPost.addHeader("Accept", "text/html,application/json;metadata=full;charset=utf-8;");
 		setEntity(httpPost, params);
 
-		try(	final CloseableHttpClient httpclient = HttpClients.createDefault();
-				final CloseableHttpResponse response = httpclient.execute(httpPost);){
+		try(	final CloseableHttpResponse response = HttpClients.createDefault().execute(httpPost);){
 
 			return entityToString(response);
-
 		}
 	}
 
@@ -427,29 +438,33 @@ public class HttpRequest {
 		.ifPresent(httpPost::setEntity);
 	}
 
-	public static String getForString(String url) throws InterruptedException, ExecutionException, TimeoutException{
-		 return  getForString(url, 1000, TimeUnit.MILLISECONDS);
+	public static String getForString(URI uri) throws IOException{
+		 return  getForString(uri, 1000, TimeUnit.MILLISECONDS);
 	 }
 
-	public static String getForString(String url, int timeout, TimeUnit timeUnit) throws InterruptedException, ExecutionException, TimeoutException {
-		logger.debug("url: {}; timeout: {}; timeUnit: {}", url, timeout, timeUnit);
+	public static String getForString(URI uri, int timeout, TimeUnit timeUnit) throws IOException {
+		logger.traceEntry("url: {}; timeout: {}; timeUnit: {}", uri, timeout, timeUnit);
 
-		FutureTask<String> ft = getForStringFT(url);
+		RequestConfig config = RequestConfig.custom().setConnectTimeout((int) timeUnit.toMillis(timeout)).setSocketTimeout((int) timeUnit.toMillis(timeout)).build();
+		DefaultHttpRequestRetryHandler retryHandler = new DefaultHttpRequestRetryHandler(0, false);
 
-		return ft.get(timeout, timeUnit);
+		final HttpGet httpGet = new HttpGet(uri);
+		try(final CloseableHttpResponse response = HttpClients.custom().setDefaultRequestConfig(config).setRetryHandler(retryHandler).build().execute(httpGet);){
+
+			return entityToString(response);
+		}
 	}
 
 	public static FutureTask<String> getForStringFT(String url) {
-		logger.traceEntry(url);
+		logger.error(url);
+		logger.catching(new Throwable());
 
 		Callable<String> callable = ()->{
-			final HttpGet httpGet = new HttpGet(url);
-
-			try(	final CloseableHttpClient httpclient = HttpClients.createDefault();
-					final CloseableHttpResponse response = httpclient.execute(httpGet);){
-				return entityToString(response);
-			}
-
+			return WebClient.create(url)
+					.get()
+					.retrieve()
+					.bodyToMono(String.class)
+					.block();
 		};
 		FutureTask<String> ft = new FutureTask<>(callable);
 		ThreadRunner.runThread(ft);
@@ -515,10 +530,17 @@ public class HttpRequest {
 
 	public static Map<String, Integer> getAllModules(String sn) throws IOException, InterruptedException, ExecutionException, TimeoutException, ScriptException{
 
-			final URL url = new URL("http", sn.trim(), "/diagnostics.asp?devices=1");
-			logger.debug(url);
+		URI uri = UriComponentsBuilder.newInstance()
+				.scheme("http")
+				.host(sn)
+				.path("/diagnostics.asp")
+				.queryParam("devices", 1)
+				.build()
+				.toUri();
 
-			final String html = getForString(url.toString(), 8, TimeUnit.SECONDS);
+			logger.debug(uri);
+
+			final String html = getForString(uri, 8, TimeUnit.SECONDS);
 			logger.debug(html);
 			final String str = Optional.of(html.indexOf("devices = [")).filter(index->index>=0)
 								.flatMap(start->Optional.of(html.indexOf("]", start)).filter(index->index>=0)
@@ -543,13 +565,18 @@ public class HttpRequest {
 	public static Object postForSystemConfig(String sn) throws IOException{
 		logger.traceEntry("sn: {}", sn);
 
+		String url = UriComponentsBuilder.newInstance()
+				.scheme("http")
+				.host(sn)
+				.path("device_debug_read.cgi")
+				.toUriString();
+
 		final List<NameValuePair> list = new ArrayList<>();
 		list.add(new BasicNameValuePair("devid", "1"));
 		list.add(new BasicNameValuePair("command", "config"));
-		String url = new URL("http", "IRT-2508001", "/device_debug_read.cgi").toString();
 		final String postForString = postForString(url, list);
 		logger.debug(postForString);
 
-		return null;
+		return postForString;
 	}
 }

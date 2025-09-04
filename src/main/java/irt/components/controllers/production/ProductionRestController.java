@@ -18,7 +18,7 @@ import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 
 import irt.components.beans.ProductionOrderResponse;
-import irt.components.workers.HttpRequest;
+import irt.components.workers.IrtHttpRequest;
 
 @RestController
 @RequestMapping("production/Rest")
@@ -45,7 +45,7 @@ public class ProductionRestController {
 
 		String url = createUrl(productionOrder);
 		logger.error(url);
-		final FutureTask<ProductionOrderResponse> ftProductionOrderResponse = HttpRequest.getForObgect(url, ProductionOrderResponse.class);
+		final FutureTask<ProductionOrderResponse> ftProductionOrderResponse = IrtHttpRequest.getForObgect(url, ProductionOrderResponse.class);
 		final ProductionOrderResponse productionOrderResponse = ftProductionOrderResponse.get(10, TimeUnit.SECONDS);
 		logger.error(productionOrderResponse);
 		return productionOrderResponse;
@@ -56,7 +56,7 @@ public class ProductionRestController {
 
 		String url = createUrl(productionOrder);
 		logger.error(url);
-		final FutureTask<ProductionOrderResponse> ftProductionOrderResponse = HttpRequest.getForObgect(url, ProductionOrderResponse.class);
+		final FutureTask<ProductionOrderResponse> ftProductionOrderResponse = IrtHttpRequest.getForObgect(url, ProductionOrderResponse.class);
 		final ProductionOrderResponse productionOrderResponse = ftProductionOrderResponse.get(10, TimeUnit.SECONDS);
 		logger.error(productionOrderResponse);
 		return productionOrderResponse;

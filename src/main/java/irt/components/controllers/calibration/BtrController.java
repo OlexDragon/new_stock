@@ -3,6 +3,7 @@ package irt.components.controllers.calibration;
 import java.io.File;
 import java.io.IOException;
 import java.net.InetAddress;
+import java.net.MalformedURLException;
 import java.net.UnknownHostException;
 import java.util.List;
 import java.util.Map;
@@ -38,7 +39,7 @@ import irt.components.beans.jpa.repository.btr.BtrMeasurementsRepository;
 import irt.components.beans.jpa.repository.btr.BtrPowerDetectorRepository;
 import irt.components.beans.jpa.repository.calibration.CalibrationGainSettingRepository;
 import irt.components.beans.jpa.repository.calibration.CalibrationOutputPowerSettingRepository;
-import irt.components.workers.HttpRequest;
+import irt.components.workers.IrtHttpRequest;
 
 @Controller
 @RequestMapping("calibration/btr")
@@ -130,7 +131,7 @@ public class BtrController {
     }
 
 	@GetMapping("pd")
-    String modalPowerDetector(@RequestParam String sn, Model model) {
+    String modalPowerDetector(@RequestParam String sn, Model model) throws MalformedURLException {
 		logger.traceEntry("sn: {}", sn);
 
 		model.addAttribute("sn", sn);
@@ -215,7 +216,7 @@ public class BtrController {
 
 	public static FutureTask<SerialNumber> getSerialNumber(String sn) {
 		String url = "http://www.irttechnologies.com/rest/serial-number/by-sn?serialNumber=" + sn.toUpperCase();
-		final FutureTask<SerialNumber> ft = HttpRequest.getForObgect(url, SerialNumber.class);
+		final FutureTask<SerialNumber> ft = IrtHttpRequest.getForObgect(url, SerialNumber.class);
 		return ft;
 	}
 }

@@ -29,7 +29,7 @@ import irt.components.beans.BomContent;
 import irt.components.beans.BomContentResponse;
 import irt.components.beans.BomsResponse;
 import irt.components.controllers.components.ComponentsRestController;
-import irt.components.workers.HttpRequest;
+import irt.components.workers.IrtHttpRequest;
 
 @Controller
 @RequestMapping("bom")
@@ -66,7 +66,7 @@ public class BomController {
     		    		final String url = createBomUrl(key);
 //    		    		logger.error(url);
     		    	
-    		    		final FutureTask<BomsResponse> futureTask = HttpRequest.getForObgect(url, BomsResponse.class);
+    		    		final FutureTask<BomsResponse> futureTask = IrtHttpRequest.getForObgect(url, BomsResponse.class);
 
     					final BomsResponse bomsResponse = futureTask.get(10, TimeUnit.SECONDS);
 //     			    	logger.error(bomsResponse);
@@ -102,7 +102,7 @@ public class BomController {
     		    		final String url = createBomContentsUrl(key);
 //    		    		logger.error(url);
     		    	
-    		    		final FutureTask<BomContentResponse> futureTask = HttpRequest.getForObgect(url, BomContentResponse.class);
+    		    		final FutureTask<BomContentResponse> futureTask = IrtHttpRequest.getForObgect(url, BomContentResponse.class);
 
     					final BomContentResponse bomContentResponse = futureTask.get(10, TimeUnit.SECONDS);
 //     			    	logger.error(bomContentResponse);
@@ -136,7 +136,7 @@ public class BomController {
 		logger.traceEntry("{} : {}", id, value);
 		final String url = createSearchByBomUrl(id, value);
 
-		final FutureTask<BomsResponse> futureTask = HttpRequest.getForObgect(url, BomsResponse.class);
+		final FutureTask<BomsResponse> futureTask = IrtHttpRequest.getForObgect(url, BomsResponse.class);
 
 		try {
 

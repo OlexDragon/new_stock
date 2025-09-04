@@ -3,6 +3,7 @@ package irt.components.services;
 import static java.util.concurrent.TimeUnit.MINUTES;
 
 import java.net.MalformedURLException;
+import java.net.URI;
 import java.net.URL;
 import java.util.ArrayList;
 import java.util.HashMap;
@@ -16,6 +17,7 @@ import java.util.concurrent.ScheduledFuture;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 import org.springframework.web.client.RestTemplate;
+import org.springframework.web.util.UriComponentsBuilder;
 
 import lombok.Getter;
 
@@ -42,7 +44,12 @@ public class HttpSerialPortServersKeeper {
 		return Optional.ofNullable(port).map(p->{
 			try {
 
-				return new URL("http", hostName, ":" + port);
+				return UriComponentsBuilder.newInstance()
+						.scheme("http")
+						.port(port)
+						.build()
+						.toUri()
+						.toURL();
 
 			} catch (MalformedURLException e) {
 				logger.catching(e);
@@ -63,9 +70,16 @@ public class HttpSerialPortServersKeeper {
 			.forEach(
 					entry->{
 						try {
+							
+							URI uri = UriComponentsBuilder.newInstance()
+									.scheme("http")
+									.host(entry.getKey())
+									.port(entry.getValue())
+									.path("/ping/")
+									.build()
+									.toUri();
 
-							final URL url = new URL("http", entry.getKey(), ":" + entry.getValue() + "/ping/");
-							new RestTemplate().getForObject(url.toURI(), Boolean.class);
+							new RestTemplate().getForObject(uri, Boolean.class);
 
 						} catch (Exception e) {
 							logger.info("Can not connect  to http://{}:{}/ping", entry.getKey(), entry.getValue());

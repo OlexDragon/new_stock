@@ -14,11 +14,11 @@ import irt.components.beans.OneCeUrl;
 @EnableScheduling
 public class WebConfig implements WebServerFactoryCustomizer<ConfigurableServletWebServerFactory> {
 
-	@Value("${irt.url.protocol}")
-	private String protocol;
+	@Value("${irt.url.scheme}")
+	private String scheme;
 
-	@Value("${irt.url.login}")
-	private String login;
+	@Value("${irt.url.userInfo}")
+	private String userInfo;
 
 	@Value("${irt.url}")
 	private String url;
@@ -29,12 +29,12 @@ public class WebConfig implements WebServerFactoryCustomizer<ConfigurableServlet
 
     @Bean
     public OneCeUrl oneCeUrl() throws Exception {
-		return new OneCeUrl(protocol, login, url);
+		return new OneCeUrl(scheme, userInfo, url);
 	}
 
     @Bean("oneCeApiUrl")
     public OneCeUrl oneCeApiUrl() throws Exception {
-		return new OneCeUrl(protocol, login, urlApi);
+		return new OneCeUrl(scheme, userInfo, urlApi);
 	}
 
 	@Override

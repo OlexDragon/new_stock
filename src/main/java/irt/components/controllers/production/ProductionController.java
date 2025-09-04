@@ -1,5 +1,6 @@
 package irt.components.controllers.production;
 
+import java.net.MalformedURLException;
 import java.util.concurrent.ExecutionException;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.TimeoutException;
@@ -15,7 +16,7 @@ import org.springframework.web.bind.annotation.RequestMapping;
 
 import irt.components.beans.OneCeUrl;
 import irt.components.beans.SalesOrderResponse;
-import irt.components.workers.HttpRequest;
+import irt.components.workers.IrtHttpRequest;
 
 @Controller
 @RequestMapping("/production")
@@ -38,13 +39,13 @@ public class ProductionController {
     }
 
     @GetMapping("sales_orders")
-    String salesOrders(Model model) throws InterruptedException, ExecutionException, TimeoutException {
+    String salesOrders(Model model) throws InterruptedException, ExecutionException, TimeoutException, MalformedURLException {
 		logger.traceEntry();
 
-		String url = oneCeUrl.createUrl(salesOrder);
+		String url = oneCeUrl.createUrl(salesOrder).toString();
 		logger.debug(url);
 
-		final SalesOrderResponse productionOrderResponse = HttpRequest.getForObgect(url, SalesOrderResponse.class).get(10, TimeUnit.SECONDS);
+		final SalesOrderResponse productionOrderResponse = IrtHttpRequest.getForObgect(url, SalesOrderResponse.class).get(10, TimeUnit.SECONDS);
 		logger.debug(productionOrderResponse);
 		model.addAttribute("salesOrders", productionOrderResponse.getSalesOrders());
 

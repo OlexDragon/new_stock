@@ -4,7 +4,7 @@ import java.io.IOException;
 import java.math.BigDecimal;
 import java.math.MathContext;
 import java.net.MalformedURLException;
-import java.net.URL;
+import java.net.URI;
 import java.net.UnknownHostException;
 import java.util.ArrayList;
 import java.util.Arrays;
@@ -34,6 +34,7 @@ import org.springframework.ui.Model;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestParam;
+import org.springframework.web.util.UriComponentsBuilder;
 
 import irt.components.beans.OneCeHeader;
 import irt.components.beans.OneCeUrl;
@@ -61,7 +62,7 @@ import irt.components.beans.jpa.repository.calibration.CalibrationGainSettingRep
 import irt.components.beans.jpa.repository.calibration.CalibrationPowerOffsetSettingRepository;
 import irt.components.services.HttpSerialPortServersKeeper;
 import irt.components.services.converter.InitializeSettingConverter;
-import irt.components.workers.HttpRequest;
+import irt.components.workers.IrtHttpRequest;
 import irt.components.workers.ProfileWorker;
 import irt.components.workers.ThreadRunner;
 
@@ -206,7 +207,7 @@ public class CalibrationController {
 		List<NameValuePair> params = new ArrayList<>();
 		params.addAll(Arrays.asList(new BasicNameValuePair("command", "devices" )));
 
-		final Map<String, Integer> devices = HttpRequest.getAllModules(sn);
+		final Map<String, Integer> devices = IrtHttpRequest.getAllModules(sn);
 		final List<Info> infos = getInfos(sn, devices);
 		infos.sort((a,b)->b.getDeviceId().compareTo(a.getDeviceId()));
 		model.addAttribute("infos", infos);
@@ -330,10 +331,16 @@ public class CalibrationController {
 
 	public static NameIndexPair[] getAllIndex(String serialNumber) throws MalformedURLException, InterruptedException, ExecutionException, TimeoutException {
 		// Get Converter Index.
-		URL url = new URL("http", serialNumber, "/update.cgi");
+
+		String url = UriComponentsBuilder.newInstance()
+				.scheme("http")
+				.host(serialNumber)
+				.path("/update.cgi")
+				.toUriString();
+
 		List<NameValuePair> params = new ArrayList<>();
 		params.add(new BasicNameValuePair("exec", "debug_devices"));
-		final NameIndexPair[] pairs = HttpRequest.postForIrtObgect(url.toString(), NameIndexPair[].class,  params).get(5, TimeUnit.SECONDS);
+		final NameIndexPair[] pairs = IrtHttpRequest.postForIrtObgect(url, NameIndexPair[].class,  params).get(5, TimeUnit.SECONDS);
 		return pairs;
 	}
 
@@ -347,12 +354,12 @@ public class CalibrationController {
     	.ifPresent(
     			s->{
 
-    				final FutureTask<OneCeHeader> ftHeader = OneCeRestController.getOneCHeader(oneCeApiUrl, sn);
-					model.addAttribute("serialNumber", s);
-
-					FutureTask<Void> ftProfile = gainFromProfile(sn, model);
-
 					try {
+
+	    				final FutureTask<OneCeHeader> ftHeader = OneCeRestController.getOneCHeader(oneCeApiUrl, sn);
+						model.addAttribute("serialNumber", s);
+
+						FutureTask<Void> ftProfile = gainFromProfile(sn, model);
 
     					final Integer devid = getSystemIndex(sn);
     					model.addAttribute("devid", devid);
@@ -591,7 +598,7 @@ public class CalibrationController {
 
 	private List<Info> getModulesInfo(String sn) throws IOException, InterruptedException, ExecutionException, TimeoutException, ScriptException {
 
-		final Map<String, Integer> allDevices = HttpRequest.getAllModules(sn);
+		final Map<String, Integer> allDevices = IrtHttpRequest.getAllModules(sn);
     	allDevices.remove("System");
 
     	return getInfos(sn, allDevices);
@@ -618,12 +625,17 @@ public class CalibrationController {
 
 	public static Info getInfo(String sn, final Integer moduleIndex) throws MalformedURLException, InterruptedException, ExecutionException, TimeoutException {
 
-		final URL url = new URL("http", sn, "/device_debug_read.cgi");
+		String url = UriComponentsBuilder.newInstance()
+				.scheme("http")
+				.host(sn)
+				.path("/device_debug_read.cgi")
+				.toUriString();
+
 		final List<NameValuePair> params = new ArrayList<>();
 
 		params.addAll(Arrays.asList(new BasicNameValuePair[]{new BasicNameValuePair("devid", moduleIndex.toString()), new BasicNameValuePair("command", "info")}));
 
-		final Info info = HttpRequest.postForIrtObgect(url.toString(), Info.class, params).get(1, TimeUnit.SECONDS);
+		final Info info = IrtHttpRequest.postForIrtObgect(url, Info.class, params).get(1, TimeUnit.SECONDS);
 		logger.debug(info);
 
 		Optional.ofNullable(info).ifPresent(inf->{
@@ -656,37 +668,52 @@ public class CalibrationController {
 
 	public static Integer getSystemIndex(String sn) throws IOException, InterruptedException, ExecutionException, TimeoutException, ScriptException{
 
-		final Map<String, Integer> allDevices = HttpRequest.getAllModules(sn);
+		final Map<String, Integer> allDevices = IrtHttpRequest.getAllModules(sn);
 		return Optional.ofNullable(allDevices.get("System")).orElse(1);
 	}
 
 	public static <T> FutureTask<T> getHttpUpdate(String ipAddress, Class<T> toClass, BasicNameValuePair...basicNameValuePairs) throws MalformedURLException {
 
-		final URL url = new URL("http", ipAddress, "/update.cgi");
+		String url = UriComponentsBuilder.newInstance()
+				.scheme("http")
+				.host(ipAddress)
+				.path("/update.cgi")
+				.toUriString();
+
 		logger.debug("{} {}", url, basicNameValuePairs);
 
 		List<NameValuePair> params = new ArrayList<>();
 		params.addAll(Arrays.asList(basicNameValuePairs));
 
-		return HttpRequest.postForIrtObgect(url.toString(), toClass, params);
+		return IrtHttpRequest.postForIrtObgect(url.toString(), toClass, params);
 }
 
 	public static <T> FutureTask<T> getHttpDeviceDebug(String ipAddress, Class<T> toClass, BasicNameValuePair...basicNameValuePairs) throws MalformedURLException{
 
-		final URL url = new URL("http", ipAddress, "/device_debug_read.cgi");
+		String url = UriComponentsBuilder.newInstance()
+				.scheme("http")
+				.host(ipAddress)
+				.path("/device_debug_read.cgi")
+				.toUriString();
+
 		logger.debug("{} {}", url, basicNameValuePairs);
 
 		List<NameValuePair> params = new ArrayList<>();
 		params.addAll(Arrays.asList(basicNameValuePairs));
 
-		return HttpRequest.postForIrtObgect(url.toString(), toClass, params);
+		return IrtHttpRequest.postForIrtObgect(url, toClass, params);
 	}
 
 	private static String getHonePage(String ipAddress, int timeout, TimeUnit timeUnit) throws IOException, InterruptedException, ExecutionException, TimeoutException {
 
-		final URL url = new URL("http", ipAddress, "/overview.asp");
-		logger.debug(url);
+		URI uri = UriComponentsBuilder.newInstance()
+				.scheme("http")
+				.host(ipAddress)
+				.path("/overview.asp")
+				.build().toUri();
 
-		return HttpRequest.getForString(url.toString(), timeout, timeUnit);
+		logger.debug(uri);
+
+		return IrtHttpRequest.getForString(uri, timeout, timeUnit);
 	}
 }

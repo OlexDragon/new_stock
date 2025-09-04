@@ -22,7 +22,7 @@
 		<logger name="irt.components.controllers.calibration.CurrentRestController" level="all" />
 		<logger name="irt.components.workers.HttpRequest" level="all" />
 
-        <Root level="info">
+        <Root level="ALL">
             <AppenderRef ref="ConsoleAppender" />
         </Root>
     </Loggers>
