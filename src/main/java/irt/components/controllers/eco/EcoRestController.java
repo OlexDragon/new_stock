@@ -13,8 +13,6 @@ import java.util.Optional;
 import java.util.function.Consumer;
 import java.util.stream.Stream;
 
-import javax.annotation.PostConstruct;
-
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -31,6 +29,7 @@ import irt.components.beans.jpa.User;
 import irt.components.beans.jpa.eco.Eco;
 import irt.components.beans.jpa.eco.Eco.Status;
 import irt.components.beans.jpa.repository.EcoRepository;
+import jakarta.annotation.PostConstruct;
 
 @RestController
 @RequestMapping("/eco/rest")

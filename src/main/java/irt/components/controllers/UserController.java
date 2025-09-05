@@ -3,8 +3,6 @@ package irt.components.controllers;
 import java.util.Arrays;
 import java.util.Optional;
 
-import javax.transaction.Transactional;
-
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Controller;
 import org.springframework.ui.Model;
@@ -15,6 +13,7 @@ import irt.components.beans.UserRoles;
 import irt.components.beans.jpa.User;
 import irt.components.beans.jpa.User.Status;
 import irt.components.beans.jpa.repository.UserRepository;
+import jakarta.transaction.Transactional;
 
 @Controller
 @RequestMapping("users")

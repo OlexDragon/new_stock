@@ -31,8 +31,6 @@ import java.util.function.Function;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
 
-import javax.annotation.PostConstruct;
-
 import org.apache.commons.collections4.map.HashedMap;
 import org.apache.http.NameValuePair;
 import org.apache.http.message.BasicNameValuePair;
@@ -84,6 +82,7 @@ import irt.components.beans.jpa.btr.BtrPowerDetector;
 import irt.components.beans.jpa.repository.btr.BtrMeasurementsRepository;
 import irt.components.beans.jpa.repository.btr.BtrPowerDetectorRepository;
 import irt.components.workers.IrtHttpRequest;
+import jakarta.annotation.PostConstruct;
 
 @RestController
 @RequestMapping("btr/rest")

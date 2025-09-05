@@ -7,12 +7,11 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.http.HttpMethod;
+import org.springframework.security.authentication.ProviderManager;
 import org.springframework.security.authentication.dao.DaoAuthenticationProvider;
 import org.springframework.security.config.annotation.web.builders.HttpSecurity;
-import org.springframework.security.core.userdetails.UserDetailsService;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.security.web.SecurityFilterChain;
-import org.springframework.security.web.authentication.AuthenticationSuccessHandler;
 
 import irt.components.services.IrtUrlAuthenticationSuccessHandler;
 import irt.components.services.UserService;
@@ -20,16 +19,14 @@ import irt.components.services.UserService;
 @Configuration
 public class WebSecurityConfig {
 
-	@Autowired UserDetailsService userDetailsService;
 	@Autowired UserService userService;
-
 
     @Bean
     public SecurityFilterChain filterChain(HttpSecurity http) throws Exception {
 
-		http
-			.authorizeRequests()
-			.antMatchers(HttpMethod.GET,
+    	http.authorizeHttpRequests(
+    			request->
+    			request.requestMatchers(HttpMethod.GET,
 										"/",
 										"/bom",
 										"/files",
@@ -49,9 +46,8 @@ public class WebSecurityConfig {
 										"/wip/**",
 										"/production/**",
 										"/btr/**")
-			.permitAll()
-
-			.antMatchers(HttpMethod.POST,
+    			.permitAll()
+    			.requestMatchers(HttpMethod.POST,
 											"/components",
 											"/components/single",
 											"/bom/search",
@@ -68,36 +64,25 @@ public class WebSecurityConfig {
 											"/calibration/biasing/rest/save",
 											"/wo/**",
 											"/btr/**")
-			.permitAll()
-
-			.anyRequest().authenticated()
-				.and()
-			.formLogin()
-//				.loginPage("/")
-				.successHandler(irtUrlAuthenticationSuccessHandler())
-			.permitAll()
-				.and()
-			.logout()
-        	.logoutSuccessUrl("/")
-			.permitAll()
-				.and()
-	        .csrf().disable()
-	        .headers()
-				.frameOptions().sameOrigin()
-				.httpStrictTransportSecurity().disable()
-			.and()
-            	.rememberMe().userDetailsService(userService).tokenValiditySeconds((int) TimeUnit.DAYS.toSeconds(21));
+    			.permitAll()
+    			.anyRequest().authenticated())
+    	.formLogin(
+    			form->
+    			form
+    			.successHandler(new IrtUrlAuthenticationSuccessHandler()).permitAll())
+		.logout(logout->logout.logoutSuccessUrl("/").permitAll())
+	    .csrf(csrf->csrf.disable())
+	    .rememberMe(rememberMe->rememberMe.userDetailsService(userService).tokenValiditySeconds((int) TimeUnit.DAYS.toSeconds(21)));
 
 		return http.build();
 	}
 
     @Bean
-    public DaoAuthenticationProvider authenticationProvider() {
+    public ProviderManager authenticationProvider() {
 
-    	DaoAuthenticationProvider authProvider = new DaoAuthenticationProvider();
-        authProvider.setUserDetailsService(userService);
+    	DaoAuthenticationProvider authProvider = new DaoAuthenticationProvider(userService);
         authProvider.setPasswordEncoder(encoder());
-        return authProvider;
+        return new ProviderManager(authProvider);
     }
      
     @Bean
@@ -122,9 +107,5 @@ public class WebSecurityConfig {
 		        				: Base64.getEncoder().encodeToString(rawPassword.toString().getBytes());
 		    }
 		};
-    }
-
-    public AuthenticationSuccessHandler irtUrlAuthenticationSuccessHandler(){
-        return new IrtUrlAuthenticationSuccessHandler();
     }
 }

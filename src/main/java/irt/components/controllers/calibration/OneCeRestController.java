@@ -49,7 +49,7 @@ public class OneCeRestController {
 
 	@PostMapping("profile")
 	String postProfileSection(@RequestBody OneCeSection oneCeSection) throws InterruptedException, ExecutionException, TimeoutException, UnsupportedEncodingException, MalformedURLException {
-		logger.error("{}",oneCeSection);
+		logger.traceEntry("{}",oneCeSection);
 
 		final String extra = Optional.of(oneCeSection.getSetting())
 

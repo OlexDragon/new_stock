@@ -3,8 +3,7 @@ package irt.components.beans.jpa.calibration;
 import java.io.Serializable;
 import java.sql.Date;
 
-import javax.persistence.Id;
-
+import jakarta.persistence.Id;
 import lombok.AllArgsConstructor;
 import lombok.EqualsAndHashCode;
 import lombok.NoArgsConstructor;

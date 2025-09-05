@@ -12,8 +12,6 @@ import java.util.function.Consumer;
 import java.util.function.Function;
 import java.util.stream.Collectors;
 
-import javax.annotation.PostConstruct;
-
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -30,6 +28,7 @@ import irt.components.beans.jpa.rma.Rma.Status;
 import irt.components.beans.jpa.rma.RmaComment;
 import irt.components.controllers.FileRestController;
 import irt.components.controllers.rma.CameraRestController;
+import jakarta.annotation.PostConstruct;
 
 @Service
 public class RmaServiceLocal implements RmaService {

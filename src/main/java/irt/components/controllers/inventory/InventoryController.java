@@ -11,8 +11,8 @@ import java.util.concurrent.TimeUnit;
 import java.util.concurrent.TimeoutException;
 import java.util.stream.Collectors;
 
-import javax.servlet.http.Cookie;
-import javax.servlet.http.HttpServletResponse;
+import jakarta.servlet.http.Cookie;
+import jakarta.servlet.http.HttpServletResponse;
 
 import org.apache.http.NameValuePair;
 import org.apache.http.ParseException;
@@ -80,7 +80,7 @@ public class InventoryController {
 		postInventory(postUrl, inventoryTransfer, InventoryTransfer.class)
 		.ifPresent(
 				transfer->{
-					logger.error(transfer);
+//					logger.error(transfer);
 			    	Cookie cookie = new Cookie("inventorytSearch", "[\"Number\",\"" + transfer.getNumber() + "\"]");
 			    	response.addCookie(cookie);
 				});;
@@ -92,13 +92,13 @@ public class InventoryController {
     String searchInventories( @RequestParam String name, @RequestParam String value, Model model) throws UnsupportedEncodingException {
 
 		String url = createUrl(name, value);
-		logger.error(url);
+//		logger.error(url);
 		final FutureTask<InventiryTransferResponse> futureTask = IrtHttpRequest.getForObgect(url, InventiryTransferResponse.class);
 
 		try {
 
 			final InventiryTransferResponse transfer = futureTask.get(10, TimeUnit.SECONDS);
-			logger.error(transfer);
+//			logger.error(transfer);
 			model.addAttribute("transfers", transfer.getInventoryTransfers());
 
 		} catch (InterruptedException | ExecutionException | TimeoutException e) {
@@ -122,7 +122,7 @@ public class InventoryController {
 
 		final String joinContains = contains.stream().filter(c->c!=null && !c.isEmpty()).collect(Collectors.joining(" and "));
 
-		 logger.error("joinContains: '{}'", joinContains);
+//		 logger.error("joinContains: '{}'", joinContains);
 
 		 Optional.of(ComponentsRestController.encode(joinContains)).filter(c->!c.isEmpty()).ifPresent(c->params.add(new BasicNameValuePair("$filter", c)));
 
@@ -137,7 +137,7 @@ public class InventoryController {
 
 		final ObjectMapper mapper = new ObjectMapper().setSerializationInclusion(Include.NON_NULL).configure(DeserializationFeature.FAIL_ON_UNKNOWN_PROPERTIES, false);
 		final String json = mapper.writer().withDefaultPrettyPrinter().writeValueAsString(object);
-		logger.error("\n{}\n{}", postUrl, json);
+//		logger.error("\n{}\n{}", postUrl, json);
 
 		final HttpPost post = new HttpPost(postUrl);
 		post.addHeader("Accept", "text/html,application/json;metadata=full;charset=utf-8;");
@@ -153,7 +153,7 @@ public class InventoryController {
 								try {
 
 									final String string = EntityUtils.toString(entity);
-									logger.error(string);
+//									logger.error(string);
 
 									return mapper.readValue(string, classToReturn);
 

@@ -316,7 +316,7 @@ public class IrtHttpRequest {
 
 				json = EntityUtils.toString(entity);
 				if(json.startsWith("<!DOCTYPE html")) {
-					logger.error(json);
+//					logger.error(json);
 					logger.catching(new Throwable(uriRequest.getURI().toString()));
 					return null;
 				}
@@ -456,8 +456,8 @@ public class IrtHttpRequest {
 	}
 
 	public static FutureTask<String> getForStringFT(String url) {
-		logger.error(url);
-		logger.catching(new Throwable());
+//		logger.error(url);
+//		logger.catching(new Throwable());
 
 		Callable<String> callable = ()->{
 			return WebClient.create(url)

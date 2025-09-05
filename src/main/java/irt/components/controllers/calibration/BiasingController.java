@@ -41,7 +41,9 @@ public class BiasingController {
 	static final String PROFILE_BIASING_SEQUENCE = "#biasing-sequence ";
 	static final String BIASING_SEQUENCE = "biasing-sequence ";
 
-	@Value("${irt.profile.path}")private String profileFolder;
+	@Value("${irt.profile.path}")
+	private String profileFolder;
+
 	@Autowired private IrtArrayRepository arrayRepository;
 
 	@GetMapping

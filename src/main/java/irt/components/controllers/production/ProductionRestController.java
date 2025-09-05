@@ -41,13 +41,13 @@ public class ProductionRestController {
 
 	@GetMapping("/sales_order")
 	public ProductionOrderResponse salesOrder() throws InterruptedException, ExecutionException, TimeoutException{
-		logger.error("Yee");
+		logger.traceEntry("Yee");
 
 		String url = createUrl(productionOrder);
-		logger.error(url);
+//		logger.error(url);
 		final FutureTask<ProductionOrderResponse> ftProductionOrderResponse = IrtHttpRequest.getForObgect(url, ProductionOrderResponse.class);
 		final ProductionOrderResponse productionOrderResponse = ftProductionOrderResponse.get(10, TimeUnit.SECONDS);
-		logger.error(productionOrderResponse);
+//		logger.error(productionOrderResponse);
 		return productionOrderResponse;
 	}
 
@@ -55,10 +55,10 @@ public class ProductionRestController {
 	public ProductionOrderResponse productionOrder() throws InterruptedException, ExecutionException, TimeoutException{
 
 		String url = createUrl(productionOrder);
-		logger.error(url);
+//		logger.error(url);
 		final FutureTask<ProductionOrderResponse> ftProductionOrderResponse = IrtHttpRequest.getForObgect(url, ProductionOrderResponse.class);
 		final ProductionOrderResponse productionOrderResponse = ftProductionOrderResponse.get(10, TimeUnit.SECONDS);
-		logger.error(productionOrderResponse);
+//		logger.error(productionOrderResponse);
 		return productionOrderResponse;
 	}
 

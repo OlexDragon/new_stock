@@ -7,7 +7,6 @@ import java.util.List;
 
 import org.apache.http.NameValuePair;
 import org.apache.http.message.BasicNameValuePair;
-import org.apache.logging.log4j.LogManager;
 import org.springframework.web.util.UriComponentsBuilder;
 
 import lombok.RequiredArgsConstructor;
@@ -32,7 +31,6 @@ public class OneCeUrl {
 	}
 
 	public URI createUrl(String category, List<NameValuePair> params) throws MalformedURLException {
-		LogManager.getLogger().error("login: {}", login);
 
 		final UriComponentsBuilder builder = UriComponentsBuilder.newInstance()
 				.scheme(protocol)

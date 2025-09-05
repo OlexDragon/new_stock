@@ -1,13 +1,12 @@
 package irt.components.beans.irt.calibration;
 
-import javax.persistence.Convert;
-
 import com.fasterxml.jackson.annotation.JsonAlias;
 import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 import com.fasterxml.jackson.annotation.JsonProperty;
 
 import irt.components.beans.irt.IrtValue;
 import irt.components.services.converter.IrtValueConverter;
+import jakarta.persistence.Convert;
 import lombok.Getter;
 import lombok.ToString;
 

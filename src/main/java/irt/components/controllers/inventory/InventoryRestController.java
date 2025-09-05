@@ -46,7 +46,7 @@ public class InventoryRestController {
 
 	@PostMapping
 	public Optional<InventoryTransfer> fromStock(@RequestParam String productKey, @RequestParam int qty, @RequestParam String userName, @RequestParam String comments) throws IOException {
-		logger.error("{}; {}; {}; {};", productKey, qty, userName, comments);
+//		logger.error("{}; {}; {}; {};", productKey, qty, userName, comments);
 
 //		final String c = userName + ": " + comments;
 		final InventoryTransfer inventoryTransfer = new InventoryTransfer();
@@ -73,7 +73,7 @@ public class InventoryRestController {
 
 		final ObjectMapper mapper = new ObjectMapper().setSerializationInclusion(Include.NON_NULL).configure(DeserializationFeature.FAIL_ON_UNKNOWN_PROPERTIES, false);
 		final String json = mapper.writer().withDefaultPrettyPrinter().writeValueAsString(object);
-		logger.error("\n{}\n{}", postUrl, json);
+//		logger.error("\n{}\n{}", postUrl, json);
 
 		final HttpPost post = new HttpPost(postUrl);
 		post.addHeader("Accept", "text/html,application/json;metadata=full;charset=utf-8;");
@@ -89,7 +89,7 @@ public class InventoryRestController {
 								try {
 
 									final String string = EntityUtils.toString(entity);
-									logger.error(string);
+//									logger.error(string);
 
 									return mapper.readValue(string, classToReturn);
 

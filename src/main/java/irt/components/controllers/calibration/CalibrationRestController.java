@@ -570,11 +570,11 @@ public class CalibrationRestController {
     }
 
     @PostMapping("calibration-mode-toggle")
-    ResponseEntity<String> setCalibrationMode(@RequestParam String ip) throws MalformedURLException {
+    ResponseEntity<String> setCalibrationMode(@RequestParam String sn) throws MalformedURLException {
 
 		String url = UriComponentsBuilder.newInstance()
 				.scheme("http")
-				.host(ip)
+				.host(sn)
 				.path("/calibration.cgi")
 				.toUriString();
 

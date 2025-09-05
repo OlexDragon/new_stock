@@ -5,7 +5,7 @@
       	lang="en">
 <head>
     <title>Production.</title>
-<th:block th:replace="components :: bootstrapLink">
+<th:block th:replace="~{components :: bootstrapLink}">
     <link rel="stylesheet" href="https://stackpath.bootstrapcdn.com/bootstrap/4.4.1/css/bootstrap.min.css">
 </th:block>
     <link rel="stylesheet" href="../static/css/components.css" th:href="@{/css/components.css}">
@@ -16,7 +16,7 @@
 	<nav class="navbar fixed-top navbar-light bg-light row">
  
 <!-- Navigation Dropdown Menu from components.html -->
-		<div class="dropdown" th:replace="components :: dropdownMenu">
+		<div class="dropdown" th:replace="~{components :: dropdownMenu}">
   			<button class="btn btn-secondary dropdown-toggle" type="button" id="dropdownMenuButton" data-bs-toggle="dropdown" aria-expanded="false"></button>
   			<div class="dropdown-menu" aria-labelledby="dropdownMenuButton">
     			<a class="dropdown-item" href="production.html" th:href="@{/production}">Production</a>
@@ -48,7 +48,7 @@
 <th:block th:remove="all">
 	<div class="alert alert-warning" role="alert" th:fragment="alert">Your login has expired. Refresh the page, please, and <strong>login again.</strong></div>
 </th:block>
-<th:block th:replace="components :: scripts">
+<th:block th:replace="~{components :: scripts}">
     <script type="application/javascript" src="https://ajax.googleapis.com/ajax/libs/jquery/3.6.0/jquery.min.js"></script>
     <script type="application/javascript" src="https://cdnjs.cloudflare.com/ajax/libs/popper.js/2.9.2/umd/popper.min.js"></script>
     <script type="application/javascript" src="https://stackpath.bootstrapcdn.com/bootstrap/4.4.1/js/bootstrap.min.js"></script>

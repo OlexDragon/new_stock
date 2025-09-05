@@ -26,7 +26,7 @@ import java.util.stream.IntStream;
 
 import javax.management.InvalidApplicationException;
 import javax.script.ScriptException;
-import javax.servlet.http.HttpServletResponse;
+import jakarta.servlet.http.HttpServletResponse;
 
 import org.apache.http.NameValuePair;
 import org.apache.http.message.BasicNameValuePair;

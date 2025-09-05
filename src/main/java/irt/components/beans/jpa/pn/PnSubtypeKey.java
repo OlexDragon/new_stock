@@ -2,8 +2,7 @@ package irt.components.beans.jpa.pn;
 
 import java.io.Serializable;
 
-import javax.persistence.Id;
-
+import jakarta.persistence.Id;
 import lombok.EqualsAndHashCode;
 
 @EqualsAndHashCode

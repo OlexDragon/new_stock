@@ -16,14 +16,12 @@ import java.util.function.Consumer;
 import java.util.function.Function;
 import java.util.stream.Collectors;
 
-import javax.annotation.PostConstruct;
-
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.data.domain.Sort.Direction;
-import org.springframework.http.HttpStatus;
+import org.springframework.http.HttpStatusCode;
 import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
 import org.springframework.stereotype.Service;
@@ -41,6 +39,7 @@ import irt.components.beans.jpa.rma.RmaCommentWeb;
 import irt.components.controllers.FileRestController;
 import irt.components.controllers.rma.CameraRestController;
 import irt.components.controllers.rma.RmaController.RmaFilter;
+import jakarta.annotation.PostConstruct;
 
 @Service
 public class RmaServiceWeb implements RmaService {
@@ -151,7 +150,7 @@ public class RmaServiceWeb implements RmaService {
 						.build())
 				.retrieve()
 				.onStatus(
-						HttpStatus::isError, response -> response.bodyToMono(String.class)
+						HttpStatusCode::isError, response -> response.bodyToMono(String.class)
 						.map(Exception::new))
 				.bodyToFlux(RmaData.class)
 				.collectList()
@@ -170,7 +169,7 @@ public class RmaServiceWeb implements RmaService {
 		final List<RmaData> fromWeb = createWebClient()
 
 				.post().uri(byIds).contentType(MediaType.APPLICATION_JSON).body(BodyInserters.fromValue(rmaByIDsRequest))
-				.retrieve().onStatus(HttpStatus::isError, response -> response.bodyToMono(String.class).map(Exception::new)).bodyToFlux(RmaData.class).collectList().block();
+				.retrieve().onStatus(HttpStatusCode::isError, response -> response.bodyToMono(String.class).map(Exception::new)).bodyToFlux(RmaData.class).collectList().block();
 
 		return fromWeb;
 	}
@@ -194,7 +193,7 @@ public class RmaServiceWeb implements RmaService {
 						.build())
 				.retrieve()
 				.onStatus(
-						HttpStatus::isError, response -> response.bodyToMono(String.class)
+						HttpStatusCode::isError, response -> response.bodyToMono(String.class)
 						.map(Exception::new))
 				.bodyToFlux(Long.class)
 				.collectList()

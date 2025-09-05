@@ -10,8 +10,6 @@ import java.util.Arrays;
 import java.util.List;
 import java.util.stream.Collectors;
 
-import javax.annotation.PostConstruct;
-
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -26,6 +24,7 @@ import org.springframework.web.bind.annotation.RequestParam;
 
 import irt.components.beans.jpa.eco.Eco;
 import irt.components.beans.jpa.repository.EcoRepository;
+import jakarta.annotation.PostConstruct;
 
 @Controller
 @RequestMapping("eco")

@@ -249,7 +249,7 @@ public class CalibrationController {
    								()->{
 
    									final NameIndexPair[] pairs = getAllIndex(serialNumber);
-   									logger.error("{} : {}", pairs.length, pairs);
+//   									logger.error("{} : {}", pairs.length, pairs);
 
    									Optional.ofNullable(pairs)
    									.map(Arrays::stream)
