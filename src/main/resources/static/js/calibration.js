@@ -1132,8 +1132,7 @@ function getSerialNumber(moduleIndex, oneCeGroup){
 			if(object.Profile)
 				continue;
 
-			$.get('/calibration/rest/module-info', {sn: serialNumber, moduleIndex: moduleIndex})
-			.done(moduleInfo=>{
+			moduleInfo(moduleIndex, moduleInfo=>{
 
 				const line = moduleInfo.split(/\r?\n/).filter(l=>l.includes('Serial number'));
 				if(!line.length)
@@ -1157,71 +1156,95 @@ function getSerialNumber(moduleIndex, oneCeGroup){
 		}
 	});
 }
+function moduleInfo(devid, callback) {
+	$.get('/calibration/rest/module-info', { sn: serialNumber, moduleIndex: devid })
+	.done(callback)
+	.fail(conectionFail);
+}
+function connectFail(error) {
+	if (error.statusText != 'abort') {
+		if (error.responseText)
+			alert(error.responseText);
+		else
+			alert("Server error. Status = " + error.status)
+	}
+}
 if(window.location.search.includes('.') && serialNumber && !serialNumber.includes('.')){
 	const newUrl = window.location.origin + window.location.pathname + '?sn=' + serialNumber;
 	history.replaceState({replace: true}, "", newUrl);
 }
-if(!$calMode.hasClass('disabled')){
-	checkSerialNumbers();
+async function getInfo(devid, parseInfo){
+	moduleInfo(devid, info=>parseInfo(info, devid));
+}
+function parseSerialNumber(info, devid){
+	const lines = info.split('\n');
+	let sn;
+	for(let line of lines)
+		if(line.includes('Serial number:')){
+			const split = line.split(/\s+/);
+			sn = split[split.length-1];
+			break;
+		}
+	if(!sn){
+		console.warn('There is no way to get the serial number.');
+		return;
+	}
+	$stickers.append($('<div>', {class: 'row'}).append($('<div>', {class: 'col', text: sn, title: info})).append($('<div>', {id: `sticker${devid}`, class: 'col'})));
+	getHelp(devid, parseETC);
+	getCPU(devid);
+}
+async function getHelp(devid, parseHelp){
+	const help = await getDiagnostic(devid, 'hwinfo', 100);
+	parseHelp(help, devid);
+}
+function getDiagnostic(devid, command, groupindex){
+	return $.get('/calibration/rest/diagnostic', {sn: serialNumber, devid: devid, command: command, groupindex: groupindex});
+}
+function parseETC(help, devid){
+	const lines = help.split('\n');
+	let etc;
+	for(let line of lines)
+		if(line.endsWith('ETC')){
+			etc = +line.replace(/\D/g,'');
+			break;
+		}
+	if(etc)
+		getSticker(devid, etc);
+}
+async function getSticker(devid, etc){
+	const regs = await getDiagnostic(devid, 'regs', etc);
+	const lines = regs.split('\n');
+	let sticker;
+	for(let line of lines)
+		if(line.includes('ETC')){
+			const split = line.trim().split(/\s+/);
+			sticker = parseInt(split[split.length-1].replace('0x', ''), 16);
+			break;
+		}
+	$stickers.find(`#sticker${devid}`).text(sticker);
+}
+async function getCPU(devid){
+	const cpu = await getDiagnostic(devid, 'hwinfo', 0);
+	$stickers.find(`#sticker${devid}`).attr('title', cpu);
+}
+function atStart(){
+	if(!$calMode.hasClass('disabled')){
+		checkSerialNumbers();
 
-		// Stickers
-	(async ()=>{
-		const moduleIndexies = await $.get('/calibration/rest/all-modules', {sn: serialNumber});
-		let deley = 300;
-		Object.values(moduleIndexies).sort((a,b)=>a-b).forEach(index=>{
-			setTimeout(getInfo, deley, index, parseSerialNumber);
-			deley += 300;
-		});
-	})()
-	async function getInfo(devid, parseInfo){
-		const info = await getDiagnostic(devid, 'info');
-		parseInfo(info, devid);
-	}
-	function parseSerialNumber(info, devid){
-		const lines = info.split('\n');
-		let sn;
-		for(let line of lines)
-			if(line.includes('Serial number:')){
-				const split = line.split(/\s+/)
-				sn = split[split.length-1];
-				break;
+			// Stickers
+		(async ()=>{
+			const moduleIndexies = await $.get('/calibration/rest/all-modules', {sn: serialNumber});
+			let deley = 300;
+			if(typeof moduleIndexies === 'string'){
+				console.warn('There is no way to get indexex pf the modules')
+				return;
 			}
-		$stickers.append($('<div>', {class: 'row'}).append($('<div>', {class: 'col', text: sn, title: info})).append($('<div>', {id: `sticker${devid}`, class: 'col'})));
-		getHelp(devid, parseETC);
-		getCPU(devid);
-	}
-	async function getHelp(devid, parseHelp){
-		const help = await getDiagnostic(devid, 'hwinfo', 100);
-		parseHelp(help, devid);
-	}
-	function getDiagnostic(devid, command, groupindex){
-		return $.get('/calibration/rest/diagnostic', {sn: serialNumber, devid: devid, command: command, groupindex: groupindex})
-	}
-	function parseETC(help, devid){
-		const lines = help.split('\n');
-		let etc;
-		for(let line of lines)
-			if(line.endsWith('ETC')){
-				etc = +line.replace(/\D/g,'');
-				break;
-			}
-		if(etc)
-			getSticker(devid, etc);
-	}
-	async function getSticker(devid, etc){
-		const regs = await getDiagnostic(devid, 'regs', etc);
-		const lines = regs.split('\n');
-		let sticker;
-		for(let line of lines)
-			if(line.includes('ETC')){
-				const split = line.trim().split(/\s+/);
-				sticker = parseInt(split[split.length-1].replace('0x', ''), 16);
-				break;
-			}
-		$stickers.find(`#sticker${devid}`).text(sticker);
-	}
-	async function getCPU(devid){
-		const cpu = await getDiagnostic(devid, 'hwinfo', 0);
-		$stickers.find(`#sticker${devid}`).attr('title', cpu);
+			Object.values(moduleIndexies).sort((a,b)=>a-b).forEach(index=>{
+				setTimeout(getInfo, deley, index, parseSerialNumber);
+				deley += 300;
+			});
+		})()
 	}
 }
+setTimeout(atStart, 2000);
+

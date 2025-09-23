@@ -20,9 +20,9 @@
 <!-- 		<logger name="irt.components.controllers.calibration.CalibrationController" level="all" /> -->
 <!-- 		<logger name="irt.components.controllers.calibration.CalibrationRestController" level="all" /> -->
 		<logger name="irt.components.controllers.calibration.CurrentRestController" level="all" />
-		<logger name="irt.components.workers.HttpRequest" level="all" />
+		<logger name="irt.components.workers.IrtHttpRequest" level="all" />
 
-        <Root level="ALL">
+        <Root level="info">
             <AppenderRef ref="ConsoleAppender" />
         </Root>
     </Loggers>

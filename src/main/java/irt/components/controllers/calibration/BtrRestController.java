@@ -205,8 +205,8 @@ public class BtrRestController {
 		params.add(new BasicNameValuePair("sn", serialNumber));
 		final BasicNameValuePair section = new BasicNameValuePair("section", "converter-tuning");
 		params.add(section);
-		String url = oneCeApiUrl.createUrl("travelers", params).toString();
-		final FutureTask<String> ftConverter = IrtHttpRequest.getForStringFT(url);
+		URI uri = oneCeApiUrl.createUrl("travelers", params);
+		final FutureTask<String> ftConverter = IrtHttpRequest.getForStringFT(uri);
 
 		params.remove(section);
 		final FutureTask<String> ftUnit = getUnitTuningFT(serialNumber);
@@ -359,8 +359,8 @@ public class BtrRestController {
 		final List<NameValuePair> params = new ArrayList<>();
 		params.add(new BasicNameValuePair("sn", sn.replaceAll("\\D", "")));
 		params.add(new BasicNameValuePair("section", "header"));
-		String url = oneCeApiUrl.createUrl("travelers", params).toString();
-		final String string = IrtHttpRequest.getForStringFT(url).get(3, TimeUnit.SECONDS);
+		URI uri = oneCeApiUrl.createUrl("travelers", params);
+		final String string = IrtHttpRequest.getForStringFT(uri).get(3, TimeUnit.SECONDS);
 	
 		return new Message<String>() {
 
@@ -402,8 +402,8 @@ public class BtrRestController {
 		final List<NameValuePair> params = new ArrayList<>();
 		params.add(new BasicNameValuePair("sn", serialNumber.replaceAll("\\D", "")));
 		params.add(new BasicNameValuePair("section", "unit-tuning-imd-3"));
-		String url = oneCeApiUrl.createUrl("travelers", params).toString();
-		return IrtHttpRequest.getForStringFT(url);
+		URI uri = oneCeApiUrl.createUrl("travelers", params);
+		return IrtHttpRequest.getForStringFT(uri);
 	}
 
 	private Function<String, String> collect() {

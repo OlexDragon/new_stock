@@ -73,11 +73,11 @@ function init(subInit){
 		});
 		setFromCookies();
 	});
-	$btnInfo.click(getInfo);
+	$btnInfo.click(getInfoForModal);
 	$unitSerialPort.change(e=>{
 		if(e.currentTarget.value && e.currentTarget.value != 'Select Remote Serial Port.'){
 			$btnInfo.removeClass('disabled');
-			getInfo();
+			getInfoForModal();
 			setCookies(e.currentTarget);
 		}else
 			$btnInfo.addClass('disabled');
@@ -174,7 +174,7 @@ function fromCookies(element){
 	if(val)
 		element.value = val;
 }
-function getInfo(){
+function getInfoForModal(){
 	if($btnInfo.text()=='Clear'){
 		clear();
 		$btnStart.text('Restart');

@@ -48,7 +48,6 @@ import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 import org.mozilla.javascript.Context;
 import org.mozilla.javascript.ScriptableObject;
-import org.springframework.web.reactive.function.client.WebClient;
 import org.springframework.web.util.UriComponentsBuilder;
 
 import com.fasterxml.jackson.annotation.JsonInclude.Include;
@@ -60,6 +59,7 @@ import com.fasterxml.jackson.dataformat.yaml.YAMLFactory;
 
 import irt.components.beans.irt.CalibrationRwInfo;
 import irt.components.beans.irt.update.ToUpload;
+import irt.components.services.HttpPool;
 
 
 public class IrtHttpRequest {
@@ -417,7 +417,7 @@ public class IrtHttpRequest {
 		httpPost.addHeader("Accept", "text/html,application/json;metadata=full;charset=utf-8;");
 		setEntity(httpPost, params);
 
-		try(	final CloseableHttpResponse response = HttpClients.createDefault().execute(httpPost);){
+		try(final CloseableHttpResponse response = HttpClients.createDefault().execute(httpPost);){
 
 			return entityToString(response);
 		}
@@ -455,20 +455,10 @@ public class IrtHttpRequest {
 		}
 	}
 
-	public static FutureTask<String> getForStringFT(String url) {
-//		logger.error(url);
-//		logger.catching(new Throwable());
-
-		Callable<String> callable = ()->{
-			return WebClient.create(url)
-					.get()
-					.retrieve()
-					.bodyToMono(String.class)
-					.block();
-		};
-		FutureTask<String> ft = new FutureTask<>(callable);
-		ThreadRunner.runThread(ft);
-		return ft;
+	public static FutureTask<String> getForStringFT(URI uri) {
+		return runFutureTask(
+				()->HttpPool.requestToString(
+								new HttpGet(uri)));
 	}
 
 	private static String entityToString(final CloseableHttpResponse response) {
@@ -578,5 +568,20 @@ public class IrtHttpRequest {
 		logger.debug(postForString);
 
 		return postForString;
+	}
+
+	public static <R> Callable<R> exceptionHandler(Callable<R> callable){
+	        try {
+	            return ()->callable.call();
+	        } catch (Exception e) {
+	            logger.catching(e);
+	            throw new RuntimeException(e);
+	        }
+	}
+
+	public static <R> FutureTask<R> runFutureTask(Callable<R> callable) {
+		FutureTask<R> ft = new FutureTask<>(exceptionHandler(callable));
+		ThreadRunner.runThread(ft);
+		return ft;
 	}
 }

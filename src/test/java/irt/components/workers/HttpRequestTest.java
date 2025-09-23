@@ -1,14 +1,18 @@
 package irt.components.workers;
 
 import java.io.IOException;
+import java.io.InputStream;
 import java.net.MalformedURLException;
+import java.net.URI;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
 import java.util.Map;
 import java.util.Optional;
+import java.util.Properties;
 import java.util.Set;
 import java.util.concurrent.ExecutionException;
+import java.util.concurrent.FutureTask;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.TimeoutException;
 import java.util.stream.Stream;
@@ -19,11 +23,13 @@ import org.apache.http.NameValuePair;
 import org.apache.http.message.BasicNameValuePair;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
-import org.junit.Test;
+import org.junit.Before;
+import org.junit.jupiter.api.Test;
 import org.springframework.web.util.UriComponentsBuilder;
 
 import com.fasterxml.jackson.core.JsonProcessingException;
 
+import irt.components.beans.OneCeUrl;
 import irt.components.beans.irt.Info;
 import irt.components.beans.irt.calibration.NameIndexPair;
 import irt.components.controllers.calibration.CalibrationController;
@@ -33,6 +39,34 @@ import lombok.ToString;
 
 public class HttpRequestTest {
 	private final static Logger logger = LogManager.getLogger();
+
+	OneCeUrl oneCeUrl;
+	OneCeUrl oneCeApiUrl;
+
+	@Before
+	public void before() throws IOException {
+		try(final InputStream is = getClass().getClassLoader().getResourceAsStream("application-w.properties");){
+			Optional.ofNullable(is)
+			.ifPresent(
+					s->{
+						try {
+
+							Properties properties = new Properties();
+							properties.load(s);
+							String scheme = properties.getProperty("irt.url.scheme");
+							String userInfo = properties.getProperty("irt.url.userInfo");
+							String url = properties.getProperty("irt.url");
+							String urlApi = properties.getProperty("irt.url.api");
+
+							oneCeUrl = new OneCeUrl(scheme, userInfo, url);
+							oneCeApiUrl = new OneCeUrl(scheme, userInfo, urlApi);
+
+						} catch (IOException e) {
+							logger.catching(e);
+						}
+					});
+		}
+	}
 
 	@Test
 	public void javaScriptToJSonTest() throws JsonProcessingException, ScriptException{
@@ -126,6 +160,26 @@ public class HttpRequestTest {
 	public void getAllModulesTest() throws IOException, InterruptedException, ExecutionException, TimeoutException, ScriptException {
 		final Map<String, Integer> allModules = IrtHttpRequest.getAllModules("IRT-BUC-EMU3");
 		logger.info(allModules);
+	}
+
+	@Test
+	public void getForStringFTTest() throws MalformedURLException, InterruptedException, ExecutionException, TimeoutException {
+
+		final List<NameValuePair> params = new ArrayList<>();
+		params.add(new BasicNameValuePair("sn", "IRT-2518040".replaceAll("\\D", "")));
+		params.add(new BasicNameValuePair("section", "header"));
+		URI uri = oneCeApiUrl.createUrl("travelers", params);
+		final FutureTask<String> forStringFT = IrtHttpRequest.getForStringFT(uri);
+		logger.info(forStringFT.get(1000, TimeUnit.MILLISECONDS));
+	}
+
+	@Test
+	void deviceDebugWriteTest() throws IOException{
+		List<NameValuePair> params = new ArrayList<>();
+		params.add(new BasicNameValuePair("devid", "1"));
+		params.add(new BasicNameValuePair("command", "info"));
+		final String postForString = IrtHttpRequest.postForString("http://N2515003/device_debug_read.cgi", params);
+		logger.info(postForString);
 	}
 
 	@Getter @Setter @ToString
