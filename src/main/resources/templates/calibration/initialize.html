@@ -114,7 +114,7 @@
 					else
 						postWrite(message, e.currentTarget);
 				})
-				.fail(conectionFail);
+				.fail(connectionFail);
 			}
 			function postWrite(data, button){
 
@@ -136,7 +136,7 @@
 					clearTimeout(postWriteTimeout);
 					postWrite(data, button);
 				})
-				.fail(conectionFail);
+				.fail(connectionFail);
 			}
 			function postWriteDelay(data, button){
 				console.log('postWriteDelay');
@@ -151,7 +151,7 @@
 			})
 			var $calibrationMode = $('#calibration-mode').click(e=>{
 					$.post('/calibration/rest/calibration-mode-toggle', {ip: serialNumber})
-					.fail(conectionFail);
+					.fail(connectionFail);
 			});
 			var postRwInfo = false;
 			function getRwInfo(){
@@ -189,7 +189,7 @@
 				})
 				.fail(error=>{
 					$modal.modal('hide');
-					conectionFail(error);
+					connectionFail(error);
 					postRwInfo = false;
 				});
 			}
@@ -233,7 +233,7 @@
 	 						el.innerText = 'Done';
 	 					}
 	 				})
-	 				.fail(conectionFail);
+	 				.fail(connectionFail);
 				});
 			}
 			function enableAll(){
@@ -434,7 +434,7 @@
 					alert('The settings have been saved.');
 					e.currentTarget.disabled = false;
 				})
-				.fail(conectionFail);
+				.fail(connectionFail);
 			});
 			function strToInt(value){
 

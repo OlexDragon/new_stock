@@ -80,7 +80,7 @@ public class ComponentsController {
 
 	public static String createComponentUrl(String protocol, String login, String url, String componentsCatalog, String key, String value, Integer page) throws UnsupportedEncodingException {
 
-		final StringBuilder sb = new StringBuilder(protocol).append(login).append(url).append(ComponentsRestController.encode(componentsCatalog)).append('?');
+		final StringBuilder sb = new StringBuilder(protocol).append(login).append(url).append('/').append(ComponentsRestController.encode(componentsCatalog)).append('?');
 
 		List<NameValuePair> params = new ArrayList<NameValuePair>();
 //		params.add(new BasicNameValuePair("$format", "json"));

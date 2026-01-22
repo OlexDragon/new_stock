@@ -89,11 +89,9 @@ import jakarta.annotation.PostConstruct;
 public class BtrRestController {
 	private final static Logger logger = LogManager.getLogger();
 
-	@Value("${irt.btr.templates}")
-	private String templates;
-
-	@Value("${irt.url.travelers}")
-	private String urlTravelers;
+	@Value("${irt.btr.templates}") 	private String templates;
+	@Value("${irt.url.travelers}") 	private String urlTravelers;
+	@Value("${irt.onRender}") 		private String onRender;
 
 	@Autowired private BtrMeasurementsRepository measurementsRepository;
 	@Autowired private BtrPowerDetectorRepository	 powerDetectorRepository;
@@ -130,7 +128,7 @@ public class BtrRestController {
 
 			URI uri = UriComponentsBuilder.newInstance()
 					.scheme("https")
-					.host("www.irttechnologies.com")
+					.host(onRender)
 					.path("/rest/serial-number/get-id")
 					.queryParam("serialNumber", btr.getSerialNumber())
 					.build().toUri();

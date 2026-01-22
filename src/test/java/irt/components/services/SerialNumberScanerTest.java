@@ -39,7 +39,7 @@ class SerialNumberScanerTest {
 	@Autowired SerialNumberScaner scaner;
 
 	@Test
-	void test() throws IOException {
+	void scanTest() throws IOException {
 		scaner.scan();
 	}
 

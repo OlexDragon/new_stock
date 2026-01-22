@@ -139,7 +139,7 @@
 
 								err = error;
 								if(error.statusText!='abort'){
-									conectionFail(error);
+									connectionFail(error);
 									err = null;
 								};
 								buzy = false;
@@ -355,7 +355,7 @@
 						if(confirm(data.content + '\nDo you want to calibrate Power Offset by frequencies?'))
 							$menuPowerOffset.click();
 					})
-					.fail(conectionFail);
+					.fail(connectionFail);
 		    	});
 
 		    	$minValue.blur(e=>{
@@ -394,7 +394,7 @@
 							.fail(function(error) {
 								if(error.statusText!='abort'){
 									$modal.modal('hide');
-									conectionFail(error);
+									connectionFail(error);
 								}
 							});
 						}

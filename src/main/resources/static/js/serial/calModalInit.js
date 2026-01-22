@@ -234,7 +234,7 @@ function showTable(){
 		$btnInfo.removeClass('disabled').text('Info');
 		$modal.modal('hide');
 	})
-	.fail(conectionFail);
+	.fail(connectionFail);
 }
 function getCommand(packet, getAnswer){
 

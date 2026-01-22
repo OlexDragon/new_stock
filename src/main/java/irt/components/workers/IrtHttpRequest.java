@@ -68,6 +68,7 @@ public class IrtHttpRequest {
 
 	public static <T> FutureTask<T> getForObgect(String url, Class<T> classToReturn) {
 		logger.traceEntry("classToReturn: {}; url: {}", classToReturn, url);
+//		logger.catching(new Throwable());
 
 		final FutureTask<T> ft = new FutureTask<T>(
 				()->{
@@ -412,12 +413,23 @@ public class IrtHttpRequest {
 
 	public static String postForString(String url, List<NameValuePair> params) throws IOException {
 		logger.traceEntry("{}; {}", url, params);
+//		logger.catching(new Throwable());
+//
+//		// Configure timeouts
+//		RequestConfig requestConfig = RequestConfig.custom()
+//
+//				.setConnectTimeout(5000) // Connection timeout
+//				.setSocketTimeout(5000) // Socket timeout
+//				.setConnectionRequestTimeout(5000) // Request timeout
+//				.build();
 
 		final HttpPost httpPost = new HttpPost(url);
 		httpPost.addHeader("Accept", "text/html,application/json;metadata=full;charset=utf-8;");
+//		httpPost.setConfig(requestConfig);
 		setEntity(httpPost, params);
 
-		try(final CloseableHttpResponse response = HttpClients.createDefault().execute(httpPost);){
+		try(	final CloseableHttpClient httpClient = HttpClients.createDefault();
+				final CloseableHttpResponse response = httpClient.execute(httpPost);){
 
 			return entityToString(response);
 		}
@@ -462,7 +474,7 @@ public class IrtHttpRequest {
 	}
 
 	private static String entityToString(final CloseableHttpResponse response) {
-		return Optional.ofNullable(response.getEntity())
+		return logger.traceExit(Optional.ofNullable(response.getEntity())
 				.map(
 						t -> {
 							try {
@@ -473,7 +485,7 @@ public class IrtHttpRequest {
 								logger.catching(e);
 							}
 							return null;
-						}).orElse(null);
+						}).orElse(null));
 	}
 
 	private static <T> T httpForIrtYaml(Class<T> classToReturn, HttpPost uriRequest) throws IOException, ScriptException {

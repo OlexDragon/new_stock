@@ -39,6 +39,7 @@ import org.apache.logging.log4j.Level;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
@@ -93,6 +94,8 @@ import lombok.RequiredArgsConstructor;
 @RequestMapping("calibration/rest")
 public class CalibrationRestController {
 	private final static Logger logger = LogManager.getLogger();
+
+	@Value("${irt.onRender}") 	private String onRender;
 
 	@Autowired private OneCeUrl oneCeApiUrl;
 
@@ -334,7 +337,7 @@ public class CalibrationRestController {
 						()->{
 							try {
 
-								final PartNumber partNumber = BtrController.getSerialNumber(serialNumber).get(10, TimeUnit.SECONDS).getPartNumber();
+								final PartNumber partNumber = BtrController.getSerialNumber(serialNumber, onRender).get(10, TimeUnit.SECONDS).getPartNumber();
 								return consumer.apply(partNumber.getPartNumber());
 
 							} catch (InterruptedException | ExecutionException | TimeoutException e) {
@@ -360,7 +363,7 @@ public class CalibrationRestController {
     					()->{
     						try {
 
-    							return BtrController.getSerialNumber(serialNumber).get(10, TimeUnit.SECONDS).getPartNumber().getPartNumber();
+    							return BtrController.getSerialNumber(serialNumber, onRender).get(10, TimeUnit.SECONDS).getPartNumber().getPartNumber();
  
     						} catch (InterruptedException | ExecutionException | TimeoutException e) {
     							logger.catching(e);
@@ -428,7 +431,7 @@ public class CalibrationRestController {
 
     @GetMapping("sn")
     SerialNumber getSerialNumber(String sn){
-    	final FutureTask<SerialNumber> ft = BtrController.getSerialNumber(sn);
+    	final FutureTask<SerialNumber> ft = BtrController.getSerialNumber(sn, onRender);
     	try {
 			return ft.get(10, TimeUnit.SECONDS);
 		} catch (InterruptedException | ExecutionException | TimeoutException e) {
@@ -483,7 +486,7 @@ public class CalibrationRestController {
     	try {
 			return CalibrationController.getHomePageInfo(ip, 1000);
 		} catch (IOException | InterruptedException | ExecutionException | TimeoutException e) {
-			logger.catching(Level.DEBUG, e);
+			logger.info(e.getLocalizedMessage());
 		}
 		return Optional.empty();
     }
@@ -784,7 +787,7 @@ public class CalibrationRestController {
     			.orElse(null);
     }
 
-    @GetMapping("diagnostic")
+    @GetMapping({"diagnostic", "device_debug_read"})
     String diagnostic(@RequestParam String sn, Integer devid, String command, Integer groupindex) throws IOException {
     	logger.traceEntry("sn: {}, devid: {}, command: {}, groupindex: {}", sn, devid, command, groupindex);
    		List<NameValuePair> params = new ArrayList<>();
@@ -794,12 +797,30 @@ public class CalibrationRestController {
 		String url = UriComponentsBuilder.newInstance()
 				.scheme("http")
 				.host(sn)
-				.path("/device_debug_write.cgi")
+				.path("/device_debug_read.cgi")
 				.toUriString();
 
-		return IrtHttpRequest.postForString(url, params);
+		return logger.traceExit(IrtHttpRequest.postForString(url, params));
     }
 
+    @PostMapping({"diagnostic", "device_debug_read"})
+    String diagnostic(@RequestParam String sn, @RequestParam String moduleIndex, @RequestParam String command, String index, String address, String value) throws IOException{
+    	logger.traceEntry("sn: {}; moduleIndex: {}; command: {}; index: {}; address: {}; value: {}", sn, moduleIndex, command, index, address, value);
+
+		String url = UriComponentsBuilder.newInstance()
+				.scheme("http")
+				.host(sn)
+				.path("/device_debug_read.cgi")
+				.toUriString();
+
+		List<NameValuePair> params = new ArrayList<>();
+		params.addAll(Arrays.asList(new BasicNameValuePair[]{new BasicNameValuePair("devid", moduleIndex), new BasicNameValuePair("command", command)}));
+
+		Optional.ofNullable(index).ifPresent(i->params.add(new BasicNameValuePair("groupindex", i)));
+		Optional.ofNullable(address).ifPresent(a->params.add(new BasicNameValuePair("address", a)));
+		Optional.ofNullable(value).ifPresent(v->params.add(new BasicNameValuePair("value", v)));
+		return IrtHttpRequest.postForString(url, params);
+    }
 
     @PostMapping("pll_registers")
     RegisterPLL pllRegisters(@RequestParam String sn, String regIndex) throws MalformedURLException, InterruptedException, ExecutionException, ScriptException{
@@ -818,7 +839,7 @@ public class CalibrationRestController {
 		String url = UriComponentsBuilder.newInstance()
 				.scheme("http")
 				.host(sn)
-				.path("/device_debug_write.cgi")
+				.path("/device_debug_read.cgi")
 				.toUriString();
 
 		List<NameValuePair> params = new ArrayList<>();
@@ -869,7 +890,7 @@ public class CalibrationRestController {
 				String url = UriComponentsBuilder.newInstance()
 						.scheme("http")
 						.host(sn)
-						.path("/device_debug_write.cgi")
+						.path("/device_debug_read.cgi")
 						.toUriString();
 
 				List<NameValuePair> list = new ArrayList<>();
@@ -907,7 +928,7 @@ public class CalibrationRestController {
 			    							String u = UriComponentsBuilder.newInstance()
 			    									.scheme("http")
 			    									.host(sn)
-			    									.path("/device_debug_write.cgi")
+			    									.path("/device_debug_read.cgi")
 			    									.toUriString();
 
 											final List<NameValuePair> params = new ArrayList<>();
@@ -938,25 +959,6 @@ public class CalibrationRestController {
     	});
 
     	return map;
-    }
-
-    @PostMapping("diagnostic")
-    String diagnostic(@RequestParam String sn, @RequestParam String moduleIndex, @RequestParam String command, String index, String address, String value) throws IOException{
-    	logger.traceEntry("sn: {}; moduleIndex: {}; command: {}; index: {}; address: {}; value: {}", sn, moduleIndex, command, index, address, value);
-
-		String url = UriComponentsBuilder.newInstance()
-				.scheme("http")
-				.host(sn)
-				.path("/device_debug_write.cgi")
-				.toUriString();
-
-		List<NameValuePair> params = new ArrayList<>();
-		params.addAll(Arrays.asList(new BasicNameValuePair[]{new BasicNameValuePair("devid", moduleIndex), new BasicNameValuePair("command", command)}));
-
-		Optional.ofNullable(index).ifPresent(i->params.add(new BasicNameValuePair("groupindex", i)));
-		Optional.ofNullable(address).ifPresent(a->params.add(new BasicNameValuePair("address", a)));
-		Optional.ofNullable(value).ifPresent(v->params.add(new BasicNameValuePair("value", v)));
-		return IrtHttpRequest.postForString(url, params);
     }
 
     @PostMapping("register/write")
@@ -1005,7 +1007,7 @@ public class CalibrationRestController {
         							url = UriComponentsBuilder.newInstance()
         									.scheme("http")
         									.host(sn)
-        									.path("/device_debug_write.cgi")
+        									.path("/device_debug_read.cgi")
         									.build().toUri().toURL();
 
 	    							params.add(new BasicNameValuePair("group", index));

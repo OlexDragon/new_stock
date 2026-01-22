@@ -124,11 +124,11 @@
 							$biasingLine.text(line).addClass('text-bg-warning').removeClass('text-bg-danger');
 							setTimeout(()=>$biasingLine.removeClass('text-bg-warning'), 2000);
 						})
-						.fail(conectionFail);
+						.fail(connectionFail);
 					}else
 						alert('Failed to save changes.');
 				})
-				.fail(conectionFail);
+				.fail(connectionFail);
 			});
 			var $biasingUpload = $('.biasingUpload').click(function(e){
 				e.preventDefault();
@@ -262,7 +262,7 @@
 				.done(message=>{
 					alert(message);
 				})
-				.fail(conectionFail);
+				.fail(connectionFail);
 			});
 			$('#btnSaveDB').click(()=>{
 
@@ -278,12 +278,12 @@
 							.done(message=>{
 								alert(message);
 							})
-							.fail(conectionFail);
+							.fail(connectionFail);
 						}
 					}else
 						alert(message);
 				})
-				.fail(conectionFail);
+				.fail(connectionFail);
 			});
 			$('#btnEnable').click(()=>{
 				const toSearch = module ? module : serialNumber;
@@ -306,7 +306,7 @@
 					saveRegisterPm2Fpga(deviceId[0], ++config);
 					alert('The gate will be ready in one second');
 				})
-				.fail(conectionFail);
+				.fail(connectionFail);
 			});
 			function saveRegisterPm2Fpga(deviceId, config){
 				$.get('/calibration/rest/register-pm2-fpga', {sn: serialNumber, deviceId: deviceId, address: 5, value: config})
@@ -314,7 +314,7 @@
 					console.log(register);
 					muteUnmute();
 				})
-				.fail(conectionFail);
+				.fail(connectionFail);
 			}
 			function muteUnmute(){
 				setMute('OFF', message=>{
@@ -327,7 +327,7 @@
 			function setMute(mute, action){
 				$.get('/calibration/rest/mute',{sn: serialNumber, mute: mute})
 				.done(action)
-				.fail(conectionFail)
+				.fail(connectionFail)
 			}
 			var $biasingLine = $('.biasingLine');
 			var text = $biasingLine.text();

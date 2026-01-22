@@ -162,7 +162,7 @@ public class BomController {
 	// Search Components URL
 	private String createSearchByBomUrl(String htmlId, String value) throws UnsupportedEncodingException {
 
-		final StringBuilder sb = new StringBuilder(protocol).append(login).append(url).append(ComponentsRestController.encode(bomCatalog)).append('?');
+		final StringBuilder sb = new StringBuilder(protocol).append(login).append(url).append('/').append(ComponentsRestController.encode(bomCatalog)).append('?');
 
 		List<NameValuePair> params = new ArrayList<NameValuePair>();
 //		params.add(new BasicNameValuePair("$format", "json"));
@@ -197,7 +197,7 @@ public class BomController {
 
 	// Single BOM URL
 	private String createBomContentsUrl(String key) throws UnsupportedEncodingException {
-		return new StringBuilder(protocol).append(login).append(url).append(bomContent).append('?')
+		return new StringBuilder(protocol).append(login).append(url).append('/').append(bomContent).append('?')
 				.append(ComponentsRestController.encode("$expand=Products,IRT_SchematicLetter&$select=IRT_Reference,Quantity,Products/Ref_Key,Products/SKU,Products/Description,Products/MfrPNs,Products/ProductsType,IRT_SchematicLetter/Description&$filter=Ref_Key eq guid'")).append(key).append('\'').toString();
 	}
 }

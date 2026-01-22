@@ -135,7 +135,7 @@
 <!-- Profile Dir -->
 				<div class="btn-group" style="width:100%;">
 					<div class="btn-group dropstart" role="group">
- 						<button id="menuModuleProfilePath"
+ 						<button id="menuModuleProfileDir"
  								type="button"
  								class="btn dropdown-toggle dropdown-toggle-split submenu modules"
  								th:classappend="${info==null ? 'disabled list-group-item-light' : ''}"
@@ -143,11 +143,11 @@
  								aria-expanded="false">
     						<span class="visually-hidden">Toggle Dropdown</span>
   						</button>
-   						<div class="dropdown-menu" aria-labelledby="menuModuleProfilePath">
+   						<div class="dropdown-menu" aria-labelledby="menuModuleProfileDir">
     						<a class="dropdown-item disabled">Modules:</a>
 <!--  Profile Dir Modules -->
 <th:block th:remove="all">
-<th:block th:fragment="menuModuleProfilePath">
+<th:block th:fragment="menuModuleProfileDir">
     						<a	th:each="info : ${modules}"
     							th:text="${info.serialNumber}"
     							th:title="${info.name}"
@@ -795,7 +795,9 @@
 	/*]]>*/
 	//# sourceURL=sn.js
 	</script>
-  	<script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+	<script src="/js/np/chart.js"></script>
+<!--   	<script src="https://cdn.jsdelivr.net/npm/chart.js"></script> -->
+	<script type="module" src="../../static/js/calibration.mjs" th:src="@{/js/calibration.mjs}"></script>
 	<script src="../../static/js/calibration.js" th:src="@{/js/calibration.js}"></script>
 	<script src="../../static/js/prologix.js" th:src="@{/js/prologix.js}"></script>
 	<script src="../../static/js/inputTool.js" th:src="@{/js/inputTool.js}"></script>

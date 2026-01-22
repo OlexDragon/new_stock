@@ -226,7 +226,7 @@
 					buzy = false;
 					return;
 				}
-				const name = $sensorName.val();if(calInfo.bias[name]){let value = calInfo.bias[name].value;if(parseInt($opInputValue.text()) != value)$opInputValue.text(value);$btnStartStop.removeClass('disabled');}else{$btnStartStop.addClass('disabled');}buzy = false;}).fail(function(error){if(err){buzy = false;return;}$modal.modal('hide');err = error;if(error.statusText!='abort'){conectionFail(error);err = null;};buzy = false;});
+				const name = $sensorName.val();if(calInfo.bias[name]){let value = calInfo.bias[name].value;if(parseInt($opInputValue.text()) != value)$opInputValue.text(value);$btnStartStop.removeClass('disabled');}else{$btnStartStop.addClass('disabled');}buzy = false;}).fail(function(error){if(err){buzy = false;return;}$modal.modal('hide');err = error;if(error.statusText!='abort'){connectionFail(error);err = null;};buzy = false;});
 			}
 
 			function setInput(outputValue){

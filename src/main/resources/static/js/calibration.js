@@ -154,7 +154,7 @@ function gerSerialPorts(setSerialPorts){
 
 	$.post('/serial_port/rest/serial-ports', {hostName: spHost})
 	.done(setSerialPorts)
-	.fail(conectionFail);
+	.fail(connectionFail);
 }
 function setToolsSerialPorts(ports){
 
@@ -274,7 +274,7 @@ function upload(e, link){
 	.done(function(data){
 		alert(data);
 	})
-	.fail(conectionFail);
+	.fail(connectionFail);
 }
 
 // Login to the unit
@@ -309,7 +309,7 @@ function loginWhithHref(href){
 		console.log(title + ' : ' + data);
 		showToast(title, data, 'text-bg-success');
 	})
-	.fail(conectionFail);
+	.fail(connectionFail);
 }
 
 // Scan IP Addresses
@@ -512,7 +512,7 @@ $calMode.click(function(e){
 	e.preventDefault();
 
 	$.post('/calibration/rest/calibration-mode-toggle', { sn: serialNumber })
-	.fail(conectionFail);
+	.fail(connectionFail);
 });
 
 
@@ -577,7 +577,7 @@ function getProfile(e, link){
 		$message.get(0).scrollIntoView({behavior: 'smooth'});
 	})
 	.fail(function(error) {
-		if(conectionFail(error))
+		if(connectionFail(error))
 			$calMode.removeClass('text-primary text-success').text('Calibration Mode');
 	});
 }
@@ -626,7 +626,7 @@ $('.profileDir').click((e)=>getPath(e));
  		$message.get(0).scrollIntoView({behavior: 'smooth'});
  	})
  	.fail(function(error) {
- 		if(conectionFail(error))
+ 		if(connectionFail(error))
  			$calMode.removeClass('text-primary text-success').text('Calibration Mode');
  	});
 }
@@ -649,7 +649,7 @@ function selectAndCopy(element) {
 	document.execCommand('copy');
 }
  
- function conectionFail(error) {
+ function connectionFail(error) {
 	const errorCode = error.getResponseHeader('error-code');
 	if(errorCode && errorCode<0){
 		alert(error.getResponseHeader('error-line'));
@@ -734,7 +734,7 @@ $('.modules').click(function(){
 	.done(function(data){
 		$menu.append($(data));
 	})
-	.fail(conectionFail);
+	.fail(connectionFail);
 });
 $('.dump_devices').click(function(e){
 	e.preventDefault();
@@ -751,7 +751,7 @@ $('.dump_devices').click(function(e){
 
 		$message.get(0).scrollIntoView({behavior: 'smooth'});
 	})
-	.fail(conectionFail);
+	.fail(connectionFail);
 });
 $('#btn-http-comport').click(()=>{
 	let httpServer = $spServers.val();
@@ -1121,7 +1121,7 @@ function getSerialNumber(moduleIndex, oneCeGroup){
 			return;
 
 		if(typeof data === 'string'){
-			console.warn(data);
+			console.warn('An error page was returned instead of data.', data);
 			return;
 		}
 
@@ -1159,7 +1159,7 @@ function getSerialNumber(moduleIndex, oneCeGroup){
 function moduleInfo(devid, callback) {
 	$.get('/calibration/rest/module-info', { sn: serialNumber, moduleIndex: devid })
 	.done(callback)
-	.fail(conectionFail);
+	.fail(connectionFail);
 }
 function connectFail(error) {
 	if (error.statusText != 'abort') {
@@ -1177,6 +1177,10 @@ async function getInfo(devid, parseInfo){
 	moduleInfo(devid, info=>parseInfo(info, devid));
 }
 function parseSerialNumber(info, devid){
+	if(!info){
+		console.warn('Failed to retrieve unit information.'. devid);
+		return;
+	}
 	const lines = info.split('\n');
 	let sn;
 	for(let line of lines)
@@ -1232,18 +1236,19 @@ function atStart(){
 		checkSerialNumbers();
 
 			// Stickers
-		(async ()=>{
-			const moduleIndexies = await $.get('/calibration/rest/all-modules', {sn: serialNumber});
-			let deley = 300;
-			if(typeof moduleIndexies === 'string'){
-				console.warn('There is no way to get indexex pf the modules')
-				return;
-			}
-			Object.values(moduleIndexies).sort((a,b)=>a-b).forEach(index=>{
-				setTimeout(getInfo, deley, index, parseSerialNumber);
-				deley += 300;
-			});
-		})()
+//		(async ()=>{
+//			const moduleIndexies = await $.get('/calibration/rest/all-modules', {sn: serialNumber});
+//			let deley = 300;
+//			if(typeof moduleIndexies === 'string'){
+//				console.warn('There is no way to get indexex pf the modules');
+//				return;
+//			}
+//			console.log('Modules found: ', moduleIndexies);
+//			Object.values(moduleIndexies).sort((a,b)=>a-b).forEach(index=>{
+//				setTimeout(getInfo, deley, index, parseSerialNumber);
+//				deley += 300;
+//			});
+//		})()
 	}
 }
 setTimeout(atStart, 2000);

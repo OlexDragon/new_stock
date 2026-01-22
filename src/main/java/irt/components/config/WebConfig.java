@@ -26,7 +26,6 @@ public class WebConfig implements WebServerFactoryCustomizer<ConfigurableServlet
 	@Value("${irt.url.api}")
 	private String urlApi;
 
-
     @Bean
     public OneCeUrl oneCeUrl() throws Exception {
 		return new OneCeUrl(scheme, userInfo, url);

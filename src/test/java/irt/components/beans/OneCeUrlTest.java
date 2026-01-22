@@ -101,4 +101,16 @@ class OneCeUrlTest {
 		final Etc etc = IrtHttpRequest.postForIrtObgect(url.toString(), Etc.class, params).get(10, TimeUnit.SECONDS);
 		logger.error(etc);
 	}
+
+	@Test
+	void createUrl() throws MalformedURLException {
+
+		final List<NameValuePair> params = new ArrayList<>();
+		params.add(new BasicNameValuePair("sn", "IRT-2525025".replaceAll("\\D", "")));
+		params.add(new BasicNameValuePair("section", "converter"));
+		URI uri = oneCeApiUrl.createUrl("travelers", params);
+
+		logger.info(uri);
+		assertEquals("http://" + properties.getProperty("irt.url.login") + properties.getProperty("irt.url") + "/category?$top=5", uri.toString());
+	}
 }

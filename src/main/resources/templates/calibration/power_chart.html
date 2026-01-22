@@ -395,7 +395,7 @@ console.log(data);
 						if(data.startsWith('Authorized on'))
 							postCalibrationInfo();
 					})
-					.fail(conectionFail);
+					.fail(connectionFail);
 					return;
 				}
 
@@ -442,7 +442,7 @@ console.log(data);
 				}
 				$children.first().after($('<div>', {class: 'alert alert-danger', text: formater.format(new Date()) + ' -> ' + text}));
 			})
-			.fail(conectionFail);
+			.fail(connectionFail);
 		}
 
 		function setupModal(){

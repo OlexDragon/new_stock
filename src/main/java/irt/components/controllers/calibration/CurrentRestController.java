@@ -105,7 +105,14 @@ public class CurrentRestController {
 							final int typeVersion = info.getTypeVersion();
 							final String moduleId = deviceType + "." + typeVersion;
 
-							final List<CurrentLayout> layout = list.stream().filter(inf->inf.getInfo().getDeviceId().equals(moduleId)).map(inf->inf.getLayout()).findAny().orElseGet(()->currentLayout(sn, topId, moduleId));
+							final List<CurrentLayout> layout = list.stream().filter(inf->{
+								final Info tmp = inf.getInfo();
+								if(tmp==null) {
+									logger.warn("Info is null for module: {}", inf);
+									return false;
+								}
+								return tmp.getDeviceId().equals(moduleId);
+							}).map(inf->inf.getLayout()).findAny().orElseGet(()->currentLayout(sn, topId, moduleId));
 							moduleInfo.setLayout(layout);
 
 						} catch (InterruptedException | ExecutionException | TimeoutException e) {

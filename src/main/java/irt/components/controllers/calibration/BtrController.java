@@ -45,8 +45,8 @@ import jakarta.annotation.PostConstruct;
 public class BtrController {
 	private final static Logger logger = LogManager.getLogger();
 
-	@Value("${irt.btr.templates}")
-	private String templates;
+	@Value("${irt.btr.templates}") 	private String templates;
+	@Value("${irt.onRender}") 		private String onRender;
 
 	@Autowired private OneCeUrl oneCeApiUrl;
 
@@ -79,7 +79,7 @@ public class BtrController {
     String modalBtr(@RequestParam String sn, Model model) throws IOException, InterruptedException, ExecutionException, TimeoutException {
 		logger.traceEntry(sn);
 
-		final FutureTask<SerialNumber> ftSerialNumber = getSerialNumber(sn);
+		final FutureTask<SerialNumber> ftSerialNumber = getSerialNumber(sn, onRender);
 		final OneCeHeader oneCeHeader = OneCeRestController.getOneCHeader(oneCeApiUrl, sn.replaceAll("\\D", "")).get(5, TimeUnit.SECONDS);
 		final Optional<OneCeHeader> oOneCeHeader = Optional.ofNullable(oneCeHeader);
 		final Optional<String> oProduct = oOneCeHeader.map(OneCeHeader::getProduct);
@@ -165,7 +165,7 @@ public class BtrController {
 					()->{
 						try {
 
-							final SerialNumber serialNumberWeb = getSerialNumber(sn).get(10, TimeUnit.SECONDS);
+							final SerialNumber serialNumberWeb = getSerialNumber(sn, onRender).get(10, TimeUnit.SECONDS);
 							final Optional<String> oPartNumber = Optional.ofNullable(serialNumberWeb).map(SerialNumber::getPartNumber).map(PartNumber::getPartNumber);
 							oPartNumber.flatMap(calibrationOutputPowerSettingRepository::findById)
 							.ifPresent(
@@ -213,8 +213,8 @@ public class BtrController {
 		}
 	}
 
-	public static FutureTask<SerialNumber> getSerialNumber(String sn) {
-		String url = "http://www.irttechnologies.com/rest/serial-number/by-sn?serialNumber=" + sn.toUpperCase();
+	public static FutureTask<SerialNumber> getSerialNumber(String sn, String onRender) {
+		String url = onRender + "/rest/serial-number/by-sn?serialNumber=" + sn.toUpperCase();
 		final FutureTask<SerialNumber> ft = IrtHttpRequest.getForObgect(url, SerialNumber.class);
 		return ft;
 	}

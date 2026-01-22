@@ -190,8 +190,8 @@
 				});
 			});
 
-			if(moduleInfo.length)
-				postWithParam('/calibration/rest/current/alias', {topId: topId, moduleId: moduleInfo[0].info['Device ID']}, f_alias, conectionFail);
+			if(Array.isArray(moduleInfo) && moduleInfo.length)
+				postWithParam('/calibration/rest/current/alias', {topId: topId, moduleId: moduleInfo[0].info['Device ID']}, f_alias, connectionFail);
 		}
 		function f_alias(alias){
 			currentAlias = alias;
@@ -290,7 +290,7 @@
 
 		function layoutChanged(e){
 
-			if(!moduleInfo.length)
+			if(!Array.isArray(moduleInfo) || !moduleInfo.length)
 				return;
 
 			const layout = moduleInfo[0].layout.filter(l=>l.creationDate == e.currentTarget.value);
@@ -308,7 +308,7 @@
 		var selection = 0;
 		function getCurrents(){
 
-			if(!$modal.hasClass('show') || !moduleInfo || !moduleInfo.length) return;
+			if(!$modal.hasClass('show') || !Array.isArray(moduleInfo) || !moduleInfo.length) return;
 
 			const layout = getCurrentLayout();
 			if(!layout){
@@ -340,7 +340,7 @@
 		function getCurrentLayout(){
 
 			const val = $currentLayout.val();
-			if(!val || !moduleInfo || !moduleInfo.length){
+			if(!val || !Array.isArray(moduleInfo) || !moduleInfo.length){
 				return;
 			}
 
@@ -437,7 +437,7 @@
 
 		function f_fillSelectLayout(){
 
-			if(moduleInfo.length){
+			if(Array.isArray(moduleInfo) && moduleInfo.length){
 				moduleInfo[0].layout.forEach(l=>$currentLayout.append($('<option>', {text: l.creationDate, value: l.creationDate})));
 				if($currentLayout.val()){
 					$currentLayout.change();
@@ -466,7 +466,7 @@
 			else
 				regUrl = '/calibration/rest/' +  URLs.filter(u=>u.irtArrayId.id=='default')[0].description;
 
-			if(!moduleInfo || !moduleInfo.length || !moduleInfo[0].layout || !moduleInfo[0].layout.length || !moduleInfo[0].layout[0].moduleId){
+			if(!Array.isArray(moduleInfo) || !moduleInfo.length || !moduleInfo[0].layout || !moduleInfo[0].layout.length || !moduleInfo[0].layout[0].moduleId){
 				console.warn('unable to retrieve data');
 				return;
 			}
@@ -475,10 +475,10 @@
 		}
 		function f_startModal(){
 
-			if(moduleInfo)
+			if(Array.isArray(moduleInfo) && moduleInfo.length)
 				f_fillSelectLayout();
 			else
-				postWithParam('/calibration/rest/current/module-info', {sn: serialNumber, topId: topId}, f_moduleInfo, conectionFail);
+				postWithParam('/calibration/rest/current/module-info', {sn: serialNumber, topId: topId}, f_moduleInfo, connectionFail);
 		}
 		function f_stopModal(){
 // 			err = true;
@@ -671,14 +671,14 @@
 				})
 				.fail(error=>{
 					postSetValue = false;
-					conectionFail(error);
+					connectionFail(error);
 				});
 			}
 			var $currentStep = $('#currentStep');
 			var $currentFactor = $('#currentFactor');
 			var $currentMin = $('#currentMin');
 			var $currentMax = $('#currentMax');
-			var $calibrationMode = $('#calibrationMode').click(e=>postWithParam('/calibration/rest/calibration-mode-toggle', {ip: serialNumber}, getRwInfo, conectionFail));
+			var $calibrationMode = $('#calibrationMode').click(e=>postWithParam('/calibration/rest/calibration-mode-toggle', {ip: serialNumber}, getRwInfo, connectionFail));
 			function changeStep(arrowLeft){
 				checkSetting();
 				let step = parseInt($currentStep.val());
@@ -744,7 +744,7 @@
 			var postRwInfo = false;
 			function f_calibRwInfoError(error){
 				$modal.modal('hide');
-				conectionFail(error);
+				connectionFail(error);
 			}
 			var varRange;
 			function setMinMax(range){
@@ -813,7 +813,7 @@
 			}
 			function f_gatesError(error){
 				postStartupValues = false;
-				conectionFail(error)
+				connectionFail(error)
 				console.log(error);
 			}
 			// Modal Start/Stop
@@ -1324,7 +1324,7 @@
 				return;
 			}
 
-			postWithParam('/calibration/rest/current/url', {moduleId: moduleId, url: url}, data=>console.log(data), conectionFail);
+			postWithParam('/calibration/rest/current/url', {moduleId: moduleId, url: url}, data=>console.log(data), connectionFail);
 		});
 
 		$('#mapGates').click(()=>loadModal('/calibration/current-map'))
@@ -1349,7 +1349,7 @@
 			if(currentAlias)
 				showAlias()
 			else
-				postWithParam('/calibration/rest/module-info', {sn: serialNumber, moduleIndex: moduleIndex[0]}, f_infoAlias, conectionFail);
+				postWithParam('/calibration/rest/module-info', {sn: serialNumber, moduleIndex: moduleIndex[0]}, f_infoAlias, connectionFail);
 		});
 		$('.hider').change(e=>{
 
@@ -1448,7 +1448,7 @@
 			new bootstrap.Toast($toast).show();
 		}
 		function f_infoAlias(info){
-			postWithParam('/calibration/rest/current/alias', {topId: topId, moduleId: moduleInfo[0].info['Device ID']}, f_alias, conectionFail);
+			postWithParam('/calibration/rest/current/alias', {topId: topId, moduleId: moduleInfo[0].info['Device ID']}, f_alias, connectionFail);
 		}
 		function f_alias(alias){
 
@@ -1512,7 +1512,7 @@
 					return;
 				}
 
-				postWithParam('/calibration/rest/current/delete', {topId: layout[0].topId, moduleId: layout[0].moduleId, date: layout[0].creationDate}, f_delete, conectionFail);
+				postWithParam('/calibration/rest/current/delete', {topId: layout[0].topId, moduleId: layout[0].moduleId, date: layout[0].creationDate}, f_delete, connectionFail);
 				$modal.modal('hide');
 				return;
 			}
@@ -1540,7 +1540,7 @@
 				toSend.layouts.push(c);
 			});
 
-			if(!toSend.layouts.length || !moduleInfo.length){
+			if(!toSend.layouts.length || !Array.isArray(moduleInfo) || !moduleInfo.length){
 				alert('There is not enough information to save.');
 				return
 			}
@@ -1561,7 +1561,7 @@
  				moduleInfo = null;
  			})
 			.fail(error=>{
-				conectionFail(error);
+				connectionFail(error);
 				console.error(error);
 				$btnSave.prop('disabled', false);
 				$btnSpecial.prop('disabled', false);
@@ -1983,7 +1983,7 @@
 				f_fillNameInProfile();
 			}
 			function f_info(info){
-				postWithParam('/calibration/rest/current/alias', {topId: topId, moduleId: moduleInfo[0].info['Device ID']}, f_alias, conectionFail);
+				postWithParam('/calibration/rest/current/alias', {topId: topId, moduleId: moduleInfo[0].info['Device ID']}, f_alias, connectionFail);
 
 				f_disableFields(false);
 			}
@@ -2006,11 +2006,11 @@
 			function f_saveAlias(){
 				const nameInProfile = $nameInProfile.val();
 				const nameToShow = $nameToShow.val();
-				postWithParam('/calibration/rest/current/save-alias', {topId: topId, moduleId: moduleInfo[0].info['Device ID'], nameInProfile: nameInProfile, nameToShow: nameToShow}, f_alias, conectionFail);
+				postWithParam('/calibration/rest/current/save-alias', {topId: topId, moduleId: moduleInfo[0].info['Device ID'], nameInProfile: nameInProfile, nameToShow: nameToShow}, f_alias, connectionFail);
 			}
 			function f_error(){
 				--hwInfoCount;
-				conectionFail(error);
+				connectionFail(error);
 				console.error('error.responseText: ' + error.responseText + '; error.statusText: ' + error.statusText + '; error.status: ' + error.status);
 			}
 

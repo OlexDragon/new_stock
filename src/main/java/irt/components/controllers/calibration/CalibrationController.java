@@ -77,20 +77,16 @@ public class CalibrationController {
 //	private static final String WO_NOT_FOUND = "WO Not Found";
 //	private static final int SERIAL_NUMBER = 1;
 
-	@Value("${irt.url.protocol}")
-	private String protocol;
+	@Value("${irt.url.protocol}") private String protocol;
 
-	@Value("${irt.url.login}")
-	private String login;
+	@Value("${irt.url.login}") 	private String login;
 
-	@Value("${irt.url}")
-	private String url;
+	@Value("${irt.url}") 		private String url;
 
-	@Value("${irt.profile.path}")
-	private String profileFolder;
+	@Value("${irt.profile.path}") private String profileFolder;
 
-	@Value("${irt.log.file}")
-	private String logFile;
+	@Value("${irt.log.file}") 	private String logFile;
+	@Value("${irt.onRender}") 	private String onRender;
 
 	@Autowired private OneCeUrl oneCeApiUrl;
 
@@ -136,7 +132,7 @@ public class CalibrationController {
     					return;
 
     				} catch (TimeoutException | UnknownHostException | HttpHostConnectException | NullPointerException | ExecutionException e) {
-						logger.catching(Level.DEBUG, e);
+						logger.info(e.getLocalizedMessage());
 
 					} catch (Exception e) {
 						logger.catching(e);
@@ -403,7 +399,7 @@ public class CalibrationController {
     									()->{
 											try {
 
-												return Optional.ofNullable(BtrController.getSerialNumber(s).get(10, TimeUnit.SECONDS))
+												return Optional.ofNullable(BtrController.getSerialNumber(s, onRender).get(10, TimeUnit.SECONDS))
 
 														.map(SerialNumber::getPartNumber)
 														.map(PartNumber::getPartNumber)
