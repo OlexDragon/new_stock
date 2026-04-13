@@ -1,12 +1,12 @@
 package irt.components.config;
 
+import org.codelibs.jcifs.smb.DialectVersion;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.integration.smb.session.SmbSessionFactory;
 
 import irt.components.services.HttpSerialPortServersKeeper;
-import jcifs.DialectVersion;
 
 @Configuration
 public class SmbConfig {

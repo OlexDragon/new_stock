@@ -14,8 +14,6 @@ import jakarta.persistence.Id;
 import jakarta.persistence.JoinColumn;
 import jakarta.persistence.ManyToOne;
 import jakarta.persistence.Table;
-import jakarta.persistence.Temporal;
-import jakarta.persistence.TemporalType;
 import lombok.AllArgsConstructor;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
@@ -34,9 +32,9 @@ public class BtrComment {
 	private String	 comment;
 	private Long	 userId;
 
-	@Temporal(TemporalType.TIMESTAMP)
+//	@Temporal(TemporalType.TIMESTAMP)
 	@JsonFormat(pattern="dd MMM yyyy kk:mm")
-	@Column(insertable = false, updatable= false)
+	@Column(columnDefinition = "TIMESTAMP", insertable = false, updatable= false)
 	private Date date;
 
 

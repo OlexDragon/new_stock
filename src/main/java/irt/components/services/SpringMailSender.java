@@ -26,13 +26,13 @@ public class SpringMailSender implements MailSender {
 	@Override
 	public void send(String subject, String message, Long rmaId, boolean onWeb) {
 		logger.traceEntry("\n\tsubject: {};\n message: {}\n\trmaId: {}\n\tonWeb: {}", subject, message, rmaId, onWeb);
-		ThreadRunner.runThread(()->send(subject, message, ":8089/rma/by-id?rmaId=" + rmaId + (onWeb ? "&onWeb=" + onWeb : "")));
+		ThreadRunner.runThread(()->send(subject, message, ":80/rma/by-id?rmaId=" + rmaId + (onWeb ? "&onWeb=" + onWeb : "")));
 	}
 
 	@Override
 	public void send(String subject, String message, Status status) {
 		logger.traceEntry("\n\tsubject: {};\n message: {}\n\tstatus: {}", subject, message, status);
-		ThreadRunner.runThread(()->send(subject, message, ":8089/rma/by-status?status=" + status ));
+		ThreadRunner.runThread(()->send(subject, message, ":80/rma/by-status?status=" + status ));
 	}
 
 	public void send(String subject, String message) {

@@ -194,11 +194,9 @@
 			}
 
 			function update(){
-
-				clearInterval(interval);
-
+				try{ if(interval) interval.stop(); }catch(e){} interval = null;
 				//get value from unit
-				interval = setInterval(function() {
+				interval = timerWorker.startPoll(function() {
 							let devid = /*[[${devid}]]*/ 1;
 							$.post('/calibration/rest/deviceDebug', {sn : serialNumber, devid: devid, command: 'regs', groupindex: '100', className: 'irt.components.beans.irt.Dacs'})
 							.done(function(dacs){
@@ -242,8 +240,8 @@
 								.fail(gainError);
 							})
 							.fail(gainError);
-				}, 3000);
-			}
+						}, 1000);
+									}
 
 			function gainError(error){
 				if(err)
@@ -382,7 +380,15 @@
 
 				sortModalBody();
 				disableButtons();
-				setTimeout(()=>$gainInputs.find('input:first').focus(), 1000);
+				// focus first input after a short delay (worker-backed)
+				try{
+					if(typeof timerWorker !== 'undefined' && timerWorker && typeof timerWorker.startTimeout === 'function'){
+						try{ timerWorker.startTimeout(()=> $gainInputs.find('input:first').focus(), 1000); }
+						catch(e){ setTimeout(()=> $gainInputs.find('input:first').focus(), 1000); }
+					}else{
+						setTimeout(()=> $gainInputs.find('input:first').focus(), 1000);
+					}
+				}catch(e){ setTimeout(()=> $gainInputs.find('input:first').focus(), 1000); }
 			}
 
 			function addInputFields(name, fieldsCount, rowIndex, btr){
@@ -651,7 +657,7 @@
 					if(error.statusText!='abort'){
 					var responseText = error.responseText;
 						if(responseText)
-							alert(error.responseText);
+							alert(responseText);
 						else
 							alert("Server error. Status = " + error.status)
 					}
@@ -692,7 +698,7 @@
 				});
 
 				$modal.on('hidden.bs.modal', function () {
-					clearInterval(interval);
+					try{ if(interval && typeof interval.stop === 'function') interval.stop(); else clearInterval(interval); }catch(e){}
 					interval = undefined;
 					err = null;
 				});
@@ -771,7 +777,14 @@
 				case "ControlLeft":
 				case "ControlRight":
 					notShift = true;
-					setTimeout(()=>notShift=false, 10000);
+					try{
+						if(typeof timerWorker !== 'undefined' && timerWorker && typeof timerWorker.startTimeout === 'function'){
+							try{ timerWorker.startTimeout(()=>{ notShift = false; }, 10000); }
+							catch(e){ setTimeout(()=>notShift=false, 10000); }
+						}else{
+							setTimeout(()=>notShift=false, 10000);
+						}
+					}catch(e){ setTimeout(()=>notShift=false, 10000); }
 					break;
 
 				case "Enter":
@@ -781,8 +794,16 @@
 
 				default:
 					$modalMessage.text('');
-					clearTimeout(storeTableTimeout);
-					storeTableTimeout = setTimeout(()=>{storeTable();$modalMessage.text('Saved in cookies.');}, 10*60*1000)
+					try{ if(storeTableTimeout && typeof storeTableTimeout.stop === 'function') storeTableTimeout.stop(); else clearTimeout(storeTableTimeout); }catch(e){}
+					// schedule storeTable with worker-backed timeout (fallback)
+					try{
+						if(typeof timerWorker !== 'undefined' && timerWorker && typeof timerWorker.startTimeout === 'function'){
+							try{ storeTableTimeout = timerWorker.startTimeout(()=>{ storeTable(); $modalMessage.text('Saved in cookies.'); }, 10*60*1000); }
+							catch(e){ storeTableTimeout = setTimeout(()=>{storeTable(); $modalMessage.text('Saved in cookies.');}, 10*60*1000); }
+						}else{
+							storeTableTimeout = setTimeout(()=>{storeTable(); $modalMessage.text('Saved in cookies.');}, 10*60*1000);
+						}
+					}catch(e){ storeTableTimeout = setTimeout(()=>{storeTable(); $modalMessage.text('Saved in cookies.');}, 10*60*1000); }
 					return;
 				}
 

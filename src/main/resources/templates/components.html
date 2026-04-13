@@ -149,23 +149,44 @@
 	<script src="../static/js/np/jquery.min.js" th:src="@{/js/np/jquery.min.js}"></script>
 	<script src="../static/js/np/js.cookie.min.js" th:src="@{/js/np/js.cookie.min.js}"></script>
 	<script src="../static/js/np/bootstrap.bundle.min.js" th:src="@{/js/np/bootstrap.bundle.min.js}"></script>
-	<script type="application/javascript" sec:authorize="isAuthenticated()">
+	<script th:inline="javascript">
+		// CSRF token setup for AJAX requests
+		const token = /*[[${_csrf.token}]]*/ '';
+		const header = /*[[${_csrf.headerName}]]*/ 'X-CSRF-TOKEN';
+		$(document).ajaxSend(function(e, xhr) {
+	    	xhr.setRequestHeader(header, token);
+		});
+	</script>
+	<!-- timer-worker module intentionally not loaded here; pages that need it should load timer-worker.mjs explicitly if they contain inline scripts that rely on window.timerWorker -->
+	<script sec:authorize="isAuthenticated()">
 	/*<![CDATA[*/
 		function testLogin(){
-
 			$.post('/components/test-login')
 			.done(function(loggedIn){
-				if(loggedIn === true){
-					setTimeout(testLogin, 10*60*1000);
+				if(loggedIn === true)
 					return;
-				}
 				alert('Your login has expired.\nRefresh this page and log in again.');
 			})
 			.fail(function(error) {
 				alert('Connection error.\nTry to refresh this page.');
 			});
 		}
-		setTimeout(testLogin, 1000);
+		// Prefer worker-backed poll when available, otherwise fall back to native setInterval.
+		var __loginPoll;
+		if(typeof timerWorker !== 'undefined' && timerWorker && typeof timerWorker.startPoll === 'function'){
+			try{
+				__loginPoll = timerWorker.startPoll(testLogin, 10*60*1000);
+			}catch(e){
+				console.error('Failed to start worker-backed login poll', e);
+				__loginPoll = setInterval(testLogin, 10*60*1000);
+			}
+		}else{
+			__loginPoll = setInterval(testLogin, 10*60*1000);
+		}
+		// Ensure poll is stopped when page unloads
+		window.addEventListener('beforeunload', ()=>{
+			try{ if(__loginPoll && typeof __loginPoll.stop === 'function') __loginPoll.stop(); else clearInterval(__loginPoll); }catch(e){}
+		});
 	/*]]>*/
 	//# sourceURL=testLogin.js
 	</script>

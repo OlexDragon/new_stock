@@ -19,8 +19,6 @@ import jakarta.persistence.JoinColumn;
 import jakarta.persistence.ManyToOne;
 import jakarta.persistence.OneToMany;
 import jakarta.persistence.Table;
-import jakarta.persistence.Temporal;
-import jakarta.persistence.TemporalType;
 import lombok.AllArgsConstructor;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
@@ -43,9 +41,9 @@ public class Rma implements DateContainer{
 	@Enumerated(EnumType.ORDINAL)
 	private Status	 status;
 
-	@Temporal(TemporalType.TIMESTAMP)
+//	@Temporal(TemporalType.TIMESTAMP)
 	@JsonFormat(pattern="dd MMM yyyy kk:mm")
-	@Column(insertable = false, updatable= false)
+	@Column(columnDefinition = "TIMESTAMP", insertable = false, updatable= false)
 	private Date date;
 
 	@ManyToOne(fetch = FetchType.EAGER)

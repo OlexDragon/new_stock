@@ -10,6 +10,7 @@ import org.springframework.http.HttpMethod;
 import org.springframework.security.authentication.ProviderManager;
 import org.springframework.security.authentication.dao.DaoAuthenticationProvider;
 import org.springframework.security.config.annotation.web.builders.HttpSecurity;
+import org.springframework.security.config.annotation.web.configurers.AbstractHttpConfigurer;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.security.web.SecurityFilterChain;
 
@@ -25,30 +26,12 @@ public class WebSecurityConfig {
     public SecurityFilterChain filterChain(HttpSecurity http) throws Exception {
 
     	http.authorizeHttpRequests(
-    			request->
-    			request.requestMatchers(HttpMethod.GET,
-										"/",
-										"/bom",
-										"/files",
-										"/files/**",
-										"/css/**",
-										"/js/**",
-										"/calibration/**",
-										"/old",
-										"/old/get_fields",
-										"/eco",
-										"/rma/**",
-										"/calibration/rest/**",
-										"/calibration/biasing/rest/**",
-										"/inventory",
-										"/images/**",
-										"/wo/**",
-										"/wip/**",
-										"/production/**",
-										"/btr/**")
-    			.permitAll()
+    			auth->
+    			auth.requestMatchers(HttpMethod.GET).permitAll()
+    			
     			.requestMatchers(HttpMethod.POST,
 											"/components",
+											"/components/test-login",
 											"/components/single",
 											"/bom/search",
 											"/bom/components",
@@ -58,20 +41,20 @@ public class WebSecurityConfig {
 											"/eco/show_img",
 											"/rma/**",
 											"/calibration/rest/**",
-											"/serial_port/rest/**",
+											"/serial-port/rest/**",
 											"/inventory",
 											"/create/rest/**",
 											"/calibration/biasing/rest/save",
 											"/wo/**",
-											"/btr/**")
-    			.permitAll()
-    			.anyRequest().authenticated())
+											"/btr/**").permitAll().anyRequest().authenticated()
+    			)
+    	.httpBasic(AbstractHttpConfigurer::disable)
     	.formLogin(
     			form->
     			form
     			.successHandler(new IrtUrlAuthenticationSuccessHandler()).permitAll())
 		.logout(logout->logout.logoutSuccessUrl("/").permitAll())
-	    .csrf(csrf->csrf.disable())
+	    .csrf(csrf -> csrf.ignoringRequestMatchers("/serial-port/rest/**"))
 	    .rememberMe(rememberMe->rememberMe.userDetailsService(userService).tokenValiditySeconds((int) TimeUnit.DAYS.toSeconds(21)));
 
 		return http.build();

@@ -31,7 +31,7 @@ import irt.components.services.HttpSerialPortServersKeeper;
 import irt.components.workers.IrtHttpRequest;
 
 @RestController
-@RequestMapping("serial_port/rest")
+@RequestMapping("serial-port/rest")
 public class HttpSerialPortRestController {
 	private final static Logger logger = LogManager.getLogger();
 

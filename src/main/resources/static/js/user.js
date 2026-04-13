@@ -1,9 +1,7 @@
 $('thead tr').dblclick(function(){
-	_csrf= $( "input[name='_csrf']" ).val();
-	$('#modal').load('/users/edit', {_csrf : _csrf});
-})
+	$('#modal').load('/users/edit');
+});
 $('#tableBody tr').dblclick(function(){
 	var userId = $(this).data('value');
-	_csrf= $( "input[name='_csrf']" ).val();
-	$('#modal').load('/users/edit', {_csrf : _csrf, userId : userId});
-})
+	$('#modal').load('/users/edit', {userId : userId});
+});

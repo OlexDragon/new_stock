@@ -41,9 +41,9 @@ public class Eco {
 	private Status	 status = Status.OPEN;
 	private Boolean hasFiles;
 
-	@Temporal(TemporalType.TIMESTAMP)
+//	@Temporal(TemporalType.TIMESTAMP)
 	@JsonFormat(pattern="dd MMM yyyy kk:mm")
-	@Column(insertable = false, updatable= false)
+	@Column(columnDefinition = "TIMESTAMP", insertable = false, updatable= false)
 	private Date date;
 
 	@ManyToOne(fetch = FetchType.EAGER)

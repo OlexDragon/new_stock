@@ -340,7 +340,7 @@ public class RmaRestController {
 		final byte[] bytes = InetAddress.getLocalHost().getAddress();
 		final String address = IntStream.range(0, bytes.length).mapToObj(index->bytes[index]&0xff).map(Number::toString).collect(Collectors.joining("."));
 
-		final String url = String.format("http://%s:8089/rma/camera/%s/%d/%d", address, rmaId, userId, timestamp);
+		final String url = String.format("http://%s:80/rma/camera/%s/%d/%d", address, rmaId, userId, timestamp);
 		QrCode qr = QrCode.encodeText(url, QrCode.Ecc.MEDIUM);
 		BufferedImage img = toImage(qr, 4, 10);
 

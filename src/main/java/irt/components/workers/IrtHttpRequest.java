@@ -12,6 +12,11 @@ import java.net.HttpURLConnection;
 import java.net.URI;
 import java.net.URL;
 import java.net.UnknownHostException;
+import java.net.http.HttpClient;
+import java.net.http.HttpRequest;
+import java.net.http.HttpResponse;
+import java.nio.charset.StandardCharsets;
+import java.time.Duration;
 import java.util.AbstractMap;
 import java.util.ArrayList;
 import java.util.HashMap;
@@ -135,6 +140,24 @@ public class IrtHttpRequest {
 		ThreadRunner.runThread(ft);
 
 		return ft;
+	}
+
+	public static HttpResponse<String> postJson(URI uri, String encodedAuth, String json) throws IOException, InterruptedException {
+		logger.traceEntry("uri: {}; json: {}", uri, json);
+
+		HttpClient client = HttpClient.newBuilder()
+                .connectTimeout(Duration.ofSeconds(5))
+                .build();
+
+		HttpRequest request = HttpRequest.newBuilder()
+                .uri(uri)
+                .timeout(Duration.ofSeconds(10))
+                .header("Content-Type", "application/json")
+                .header("Authorization", "Basic " + encodedAuth)
+                .POST(HttpRequest.BodyPublishers.ofString(json, StandardCharsets.UTF_8))
+                .build();
+
+		return client.send(request, HttpResponse.BodyHandlers.ofString());
 	}
 
 	public static <T> FutureTask<T>postForObgect(URL url, Class<T> classToReturn, Object object) {
@@ -318,7 +341,7 @@ public class IrtHttpRequest {
 				json = EntityUtils.toString(entity);
 				if(json.startsWith("<!DOCTYPE html")) {
 //					logger.error(json);
-					logger.catching(new Throwable(uriRequest.getURI().toString()));
+//					logger.catching(new Throwable(uriRequest.getURI().toString()));
 					return null;
 				}
 				
@@ -482,7 +505,8 @@ public class IrtHttpRequest {
 								return EntityUtils.toString(t);
 
 							} catch (ParseException e) {} catch (IOException e) {
-								logger.catching(e);
+								logger.error("{} : {}", e.getClass().getSimpleName(), e.getLocalizedMessage());
+								logger.catching(Level.DEBUG, e);
 							}
 							return null;
 						}).orElse(null));

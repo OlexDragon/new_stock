@@ -3,7 +3,7 @@
 
     <Properties>
         <Property name="LOG_PATTERN">
-            %5p %d{yyyy-MM-dd HH:mm:ss.SSS} (%F:%L) --- %M [%15.15t] %-40.40c{1.} : %m%n%ex
+           %highlight{%5level} %d{yyyy-MM-dd HH:mm:ss.SSS} (%F:%L) --- %M [%15.15t] %-40.40c{1.} : %m%n%ex
         </Property>
     </Properties>
 
@@ -50,6 +50,7 @@
 <!-- 		<logger name="irt.components.controllers.btr.WorkOrderController" level="all" /> -->
 <!-- 		<logger name="irt.components.controllers.btr.WorkOrderRestController" level="all" /> -->
 <!-- 		<logger name="irt.components.controllers.BomController" level="all" /> -->
+<!-- 		<logger name="irt.components.controllers.components.OnRenderController" level="all" /> -->
 
 <!-- 		<logger name="irt.components.workers.IrtHttpRequest" level="all" /> -->
 <!-- 		<logger name="irt.components.controllers.calibration.HttpSerialPortRestController" level="all" /> -->

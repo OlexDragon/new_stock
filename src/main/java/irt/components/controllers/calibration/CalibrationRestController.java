@@ -50,9 +50,9 @@ import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
-import org.springframework.web.server.ResponseStatusException;
 import org.springframework.web.util.UriComponentsBuilder;
 
+import org.apache.http.conn.ConnectTimeoutException;
 import irt.components.beans.OneCeHeader;
 import irt.components.beans.OneCeUrl;
 import irt.components.beans.PartNumber;
@@ -96,6 +96,7 @@ public class CalibrationRestController {
 	private final static Logger logger = LogManager.getLogger();
 
 	@Value("${irt.onRender}") 	private String onRender;
+	@Value("${irt.onRender.serialNumber.get}") 		private String onRenderSNPath;
 
 	@Autowired private OneCeUrl oneCeApiUrl;
 
@@ -107,7 +108,7 @@ public class CalibrationRestController {
 
 	@RequestMapping(path="monitorInfo", produces = "application/json;charset=utf-8")
     MonitorInfo monitorInfo(@RequestParam(required = false) String sn) {
-//    	logger.error(sn);
+    	logger.traceEntry("sn: {}", sn);
     	return Optional.ofNullable(sn)
 
     			.map(
@@ -117,7 +118,7 @@ public class CalibrationRestController {
     							return CalibrationController.getHttpUpdate(s, MonitorInfo.class, new BasicNameValuePair("exec", "mon_info")).get(5, TimeUnit.SECONDS);
 
     						} catch (MalformedURLException | InterruptedException | ExecutionException e) {
-    							logger.catching(new Throwable(sn, e));
+    							logger.warn("{} - {} : {}", sn, e.getClass().getSimpleName(), e.getLocalizedMessage());
     						} catch (TimeoutException e) {
     							logger.catching(Level.DEBUG, new Throwable(sn, e));
 							}
@@ -127,7 +128,7 @@ public class CalibrationRestController {
     			.orElse(null);
     }
 
-	@PostMapping(path="calibrationInfo", produces = "application/json;charset=utf-8")
+	@PostMapping(path={"calibrationInfo", "calib_ro_info"}, produces = "application/json;charset=utf-8")
     CalibrationInfo calibrationInfo(@RequestParam(required = false) String sn) {
     	logger.traceEntry("sn: {}", sn);
 
@@ -137,6 +138,7 @@ public class CalibrationRestController {
     					s->{
     						try {
 
+    							logger.traceEntry("sn: {}", s);
     							return CalibrationController.getHttpUpdate(s, CalibrationInfo.class, new BasicNameValuePair("exec", "calib_ro_info")).get(10, TimeUnit.SECONDS);
 
     						} catch (MalformedURLException | InterruptedException | ExecutionException e) {
@@ -167,6 +169,28 @@ public class CalibrationRestController {
 		return arrayRepository.save(irtArray);
 	}
 
+	@GetMapping("calib_rw_info")
+	String calibRwInfoString(@RequestParam String sn) throws IOException {
+		logger.traceEntry("sn: {}", sn);
+
+		String url = UriComponentsBuilder.newInstance()
+				.scheme("http")
+				.host(sn)
+				.path("/update.cgi")
+				.toUriString();
+
+		List<NameValuePair> params = new ArrayList<>();
+		params.add(new BasicNameValuePair("exec", "calib_rw_info"));
+
+		try {
+			return IrtHttpRequest.postForString(url, params);
+		} catch (IOException e) {
+			logger.info("{} : {}", e.getClass().getSimpleName(), e.getLocalizedMessage());
+			logger.catching(Level.DEBUG, e);
+		}
+		return "";
+	}
+
 	@PostMapping(path="calib_rw_info", produces = "application/json;charset=utf-8")
 	CalibrationRwInfo calibrationRwInfo(@RequestParam(required = false) String sn) {
 //    	logger.error(sn);
@@ -176,11 +200,16 @@ public class CalibrationRestController {
     					s->{
     						try {
 
-    							return CalibrationController.getHttpUpdate(s, CalibrationRwInfo.class, new BasicNameValuePair("exec", "calib_rw_info")).get(10, TimeUnit.SECONDS);
+    							return CalibrationController.getHttpUpdate(
+    									s,
+    									CalibrationRwInfo.class,
+    									new BasicNameValuePair("exec", "calib_rw_info")
+    								).get(10, TimeUnit.SECONDS);
 
-    						} catch (MalformedURLException | InterruptedException | ExecutionException e) {
+    						} catch (MalformedURLException | ExecutionException e) {
     							logger.catching(new Throwable(sn, e));
-    						} catch (TimeoutException e) {
+    						} catch (TimeoutException | InterruptedException e) {
+    							logger.info("{} : {}", e.getClass().getSimpleName(), e.getLocalizedMessage());
     							logger.catching(Level.DEBUG, new Throwable(sn, e));
 							}
 
@@ -263,7 +292,8 @@ public class CalibrationRestController {
 		    					});
 			};
 
-			return getPartNumber(serialNumber, consumer);
+			final String response = getPartNumber(serialNumber, consumer);
+			return "{\"message\": \"" + response + "\"}";
 
 		} catch (InterruptedException | ExecutionException | TimeoutException e) {
 			logger.catching(e);
@@ -337,7 +367,7 @@ public class CalibrationRestController {
 						()->{
 							try {
 
-								final PartNumber partNumber = BtrController.getSerialNumber(serialNumber, onRender).get(10, TimeUnit.SECONDS).getPartNumber();
+								final PartNumber partNumber = BtrController.getSerialNumber(serialNumber, onRenderSNPath).get(10, TimeUnit.SECONDS).getPartNumber();
 								return consumer.apply(partNumber.getPartNumber());
 
 							} catch (InterruptedException | ExecutionException | TimeoutException e) {
@@ -363,7 +393,7 @@ public class CalibrationRestController {
     					()->{
     						try {
 
-    							return BtrController.getSerialNumber(serialNumber, onRender).get(10, TimeUnit.SECONDS).getPartNumber().getPartNumber();
+    							return BtrController.getSerialNumber(serialNumber, onRenderSNPath).get(10, TimeUnit.SECONDS).getPartNumber().getPartNumber();
  
     						} catch (InterruptedException | ExecutionException | TimeoutException e) {
     							logger.catching(e);
@@ -431,7 +461,7 @@ public class CalibrationRestController {
 
     @GetMapping("sn")
     SerialNumber getSerialNumber(String sn){
-    	final FutureTask<SerialNumber> ft = BtrController.getSerialNumber(sn, onRender);
+    	final FutureTask<SerialNumber> ft = BtrController.getSerialNumber(sn, onRenderSNPath);
     	try {
 			return ft.get(10, TimeUnit.SECONDS);
 		} catch (InterruptedException | ExecutionException | TimeoutException e) {
@@ -441,6 +471,7 @@ public class CalibrationRestController {
     }
     @PostMapping("login")
     String login(@RequestParam String sn) throws IOException {
+		logger.traceEntry("sn: {}", sn);
 
 		URL url = UriComponentsBuilder.newInstance()
 				.scheme("http")
@@ -469,8 +500,7 @@ public class CalibrationRestController {
 		}catch(Exception e) {
 			logger.catching(Level.DEBUG, e);
 			connection.disconnect();
-
-			throw new ResponseStatusException(HttpStatus.NOT_FOUND, e.getLocalizedMessage());
+			return "Error: " + e.getClass().getSimpleName() + " - " + e.getLocalizedMessage();
 		}
 
 		final int responseCode = connection.getResponseCode();
@@ -486,7 +516,7 @@ public class CalibrationRestController {
     	try {
 			return CalibrationController.getHomePageInfo(ip, 1000);
 		} catch (IOException | InterruptedException | ExecutionException | TimeoutException e) {
-			logger.info(e.getLocalizedMessage());
+			logger.info("{} : {}", e.getClass().getSimpleName(), e.getLocalizedMessage());
 		}
 		return Optional.empty();
     }
@@ -691,7 +721,7 @@ public class CalibrationRestController {
 		return entry;
     }
 
-    @PostMapping("alarm_info")
+    @RequestMapping({"alarm_info", "alarms_info"})
     Optional<AlarmInfo> alarmInfo(@RequestParam String sn) throws MalformedURLException, InterruptedException, ExecutionException{
 //    	logger.error(sn);
     	return Optional.ofNullable(sn)
@@ -745,9 +775,17 @@ public class CalibrationRestController {
 	}
 
 	@RequestMapping("all-modules")
-	Map<String, Integer> allModules(@RequestParam String sn) throws IOException, InterruptedException, ExecutionException, TimeoutException, ScriptException {
+	Map<String, Integer> allModules(@RequestParam String sn) {
     	logger.traceEntry("{}", sn);
-		return IrtHttpRequest.getAllModules(sn);
+		try {
+
+			return IrtHttpRequest.getAllModules(sn);
+
+		} catch (IOException | InterruptedException | ExecutionException | TimeoutException | ScriptException e) {
+			logger.info("{} : {}", e.getClass().getSimpleName(), e.getLocalizedMessage());
+			logger.catching(Level.DEBUG, e);
+		}
+		return null;
     }
 
     @PostMapping("pll_register")
@@ -788,7 +826,7 @@ public class CalibrationRestController {
     }
 
     @GetMapping({"diagnostic", "device_debug_read"})
-    String diagnostic(@RequestParam String sn, Integer devid, String command, Integer groupindex) throws IOException {
+    String diagnostic(@RequestParam String sn, Integer devid, String command, Integer groupindex) {
     	logger.traceEntry("sn: {}, devid: {}, command: {}, groupindex: {}", sn, devid, command, groupindex);
    		List<NameValuePair> params = new ArrayList<>();
 		params.addAll(Arrays.asList(new BasicNameValuePair[]{new BasicNameValuePair("devid", devid.toString()), new BasicNameValuePair("command", command)}));
@@ -800,7 +838,14 @@ public class CalibrationRestController {
 				.path("/device_debug_read.cgi")
 				.toUriString();
 
-		return logger.traceExit(IrtHttpRequest.postForString(url, params));
+		try {
+
+			return logger.traceExit(IrtHttpRequest.postForString(url, params));
+
+		} catch (IOException e) {
+			logger.catching(Level.DEBUG, e);
+			return null;
+		}
     }
 
     @PostMapping({"diagnostic", "device_debug_read"})
@@ -834,7 +879,8 @@ public class CalibrationRestController {
     }
 
 	@GetMapping("module-info")
-	String infoString(@RequestParam String sn, String moduleIndex) throws IOException {
+	String infoString(@RequestParam String sn, String moduleIndex) {
+		logger.traceEntry("sn: {}; moduleIndex: {}", sn, moduleIndex);
 
 		String url = UriComponentsBuilder.newInstance()
 				.scheme("http")
@@ -844,7 +890,13 @@ public class CalibrationRestController {
 
 		List<NameValuePair> params = new ArrayList<>();
 		params.addAll(Arrays.asList(new BasicNameValuePair[]{new BasicNameValuePair("devid", moduleIndex), new BasicNameValuePair("command", "info")}));
-		return IrtHttpRequest.postForString(url, params);
+		try {
+			return IrtHttpRequest.postForString(url, params);
+		} catch (IOException e) {
+			logger.info("{} : {}", e.getClass().getSimpleName(), e.getLocalizedMessage());
+			logger.catching(Level.DEBUG, e);
+		}
+		return url;
     }
 
 	@PostMapping("hw-info")
@@ -980,6 +1032,24 @@ public class CalibrationRestController {
 
     	return CalibrationController.getAllIndex(sn);
     }
+    @GetMapping("home-page-info")
+    HomePageInfo homePageInfo(@RequestParam String sn, Integer timeout){
+    	if(sn.isEmpty()) {
+    		logger.warn("Serial number is empty.");
+    		return null;
+    	}
+		try {
+
+			return CalibrationController.getHomePageInfo(sn, Optional.ofNullable(timeout).orElse(300)).orElse(null);
+
+		} catch (UnknownHostException | InterruptedException | TimeoutException | ConnectTimeoutException e) {
+			logger.error("sn: {}; timeout: {}; {} : {}", sn, timeout, e.getClass().getSimpleName(), e.getLocalizedMessage());
+		} catch (IOException | ExecutionException e) {
+			logger.catching(e);
+		}
+
+		return null;
+	}
 
 	public static  <T extends Diagnostics> T diagnostics(Class<T> registerClass, String sn, String command, String moduleIndex, String index, String address, String value, PostFor postFor) {
     	logger.traceEntry("registerClass: {}; sn: {}; command: {}; moduleIndex: {}; index: {}; address: {}; value: {}; postFor: {}",  registerClass, sn, command, moduleIndex, index, address, value, postFor);

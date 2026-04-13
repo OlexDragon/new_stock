@@ -154,13 +154,13 @@ let $address = $('.address').on('input', function(){
 		$toolBtns.addClass('disabled');
 	}
 })
-.focusout(function(){
-	if(this.value)
-		Cookies.set(this.id, this.value, { path: '' });
-
-	let $parent = $(this).parents('.accordion-body');
-	setAccordionHeaderText($parent);
-});
+//.focusout(function(){
+//	if(this.value)
+//		Cookies.set(this.id, this.value, { path: '' });
+//
+//	let $parent = $(this).parents('.accordion-body');
+//	setAccordionHeaderText($parent);
+//});
 $.each($address, function(index, addr){
 	let cookie = Cookies.get(addr.id)
 	if(cookie){
@@ -185,7 +185,7 @@ function getToSendPrologix(prologixComPorts, commands, getAnswer){
 
 	var hostName = getHostName();
 	if(!hostName){
-		console.log("Unable to get hostname.");
+		console.warn("Unable to get hostname.", hostName);
 		alert('Unable to get hostname.');
 		return;
 	}
@@ -206,24 +206,21 @@ function getToSendPrologix(prologixComPorts, commands, getAnswer){
 
 	return toSend;
 }
-$('.accordion-collapse').on('show.bs.collapse', e=>{
-	let $parent = $(e.currentTarget);
-	let comPort = $parent.find('.com-ports').val();
-	if(comPort && comPort!='NI GPIB'){
-		let $btns = $parent.find('.btn-prologix').filter((_,el)=>!el.dataset.commands.includes(' '));
-		$btns.not('.btn-outline-secondary')
-		.each((_,el)=>{
-			let commands = JSON.parse(el.dataset.commands);
-			let c = [];
-			$.each(commands, function(_, command){
-				let t = command.split(' ')[0];
-				c.push(t);
-			});
-			$(el).data('commands', JSON.stringify(c)).data('getAnswer', true);
-		});
-		$btns.click();
-	}
-});
-function getPrologixAuto(){
-	
-}
+//$('.accordion-collapse').on('show.bs.collapse', e=>{
+//	let $parent = $(e.currentTarget);
+//	let comPort = $parent.find('.com-ports').val();
+//	if(comPort && comPort!='NI GPIB'){
+//		let $btns = $parent.find('.btn-prologix').filter((_,el)=>!el.dataset.commands.includes(' '));
+//		$btns.not('.btn-outline-secondary')
+//		.each((_,el)=>{
+//			let commands = JSON.parse(el.dataset.commands);
+//			let c = [];
+//			$.each(commands, function(_, command){
+//				let t = command.split(' ')[0];
+//				c.push(t);
+//			});
+//			$(el).data('commands', JSON.stringify(c)).data('getAnswer', true);
+//		});
+//		$btns.click();
+//	}
+//});

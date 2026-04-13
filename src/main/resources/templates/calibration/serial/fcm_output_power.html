@@ -18,7 +18,7 @@
     		<div class="modal-content">
 <!-- Modal Header -->
       			<div class="modal-header">
-        			<h5 class="modal-title ml-3 text-primary col">Output Power</h5>
+        			<h5 class="modal-title ml-3 text-primary col-auto">Output Power</h5>
         			<div class="col"></div>
         			<div class="col">
         				<select id="cpuType" class="form-control">
@@ -64,10 +64,10 @@
       					</div>
       					<div class="row mb-2">
       						<div class="col">
-	        					<button type="button" id="btnStart" class="btn btn-outline-success form-control disabled">Start</button>
+	        					<button type="button" id="btnStart" class="btn btn-outline-success form-control" disabled>Start</button>
 	        				</div>
 	      					<div class="col">
-			        			<button type="button" id="btnInfo" class="btn btn-outline-primary form-control disabled">Info</button>
+			        			<button type="button" id="btnInfo" class="btn btn-outline-primary form-control" disabled>Info</button>
 			        		</div>
 	      					<div class="col">
 	        					<button type="button" class="btn btn-outline-secondary form-control" data-bs-dismiss="modal">Close</button>
@@ -90,202 +90,6 @@
 	    		</div>
     		</div>
   		</div>
-  			<script>
-			/*<![CDATA[*/
-
-			var skipRun;
-  			var calRun;
- 			var tableName = 'Output Power';
-
-
-  			var times = 3;
-  			var stopValue;
-  			var offset;
-  			var $minVal = $('#minVal');
-  			setConfirmStart(()=>{
-
-  				if(stopValue)
-  					return true;
-
-  				if(!confirm('Does the power meter reading match the maximum value?'))
-  					return false;
-  				stopValue = $toolVal.val();
-  				if(!stopValue){
-  					alert('Input Tool Value needs to be set.')
-  					return false;
-  				}
-
-  				stopValue = parseFloat(stopValue);
-
-  				if(!defaultToolVal){
-  					const max = $maxVal.val();
-  					const drop = max - $minVal.val();
-  					defaultToolVal = stopValue - drop;
-  					$toolVal.val(defaultToolVal);
-  					offset = max - stopValue;
-  				}
-
-  				return true
-  			});
-  			var $numberOfEntries = $('#numberOfEntries');
-  			var stack = 0;
-  			var payloadReadWrite = new Payload(new Parameter(PARAMETER_READ_WRITE), DEVICE_FCM_ADC_OUTPUT_POWER().toBytes());
-  			function run(){
-  				if(skipRun>0){
-  					--skipRun;
-  					return;
-  				}
-
-  				if(stack>10){
-  					stack = 0;
-  					console.warn('stackoverflow');
-  					skipRun = times;
-  					f_stop();
-   					alert('Stackover Flow');
- 					return;
-  				}
-  				++stack;
-
-  				if(calRun)
-  					return;
-
-  				if(x.length==y.length){
-  					const toolV = $inputPower.val();
-  					if(!toolV){
-  						console.warn('No Input Tool Value.');
-  						return;
-  					}
-
-  					if($toolVal.val())
-  						$toolVal.val(toolV);
-
-  					if(x.length && x[x.length-1] == toolV){
-  						f_nextStep();
-  						return;
-  					}
-
-  					const tmp = (parseFloat(toolV) + offset).toFixed(1);
-  					x.push(tmp);
-  					$numberOfEntries.text(x.length);
-  				}
-
-  				calRun = true;
-  				stack = 0;
-
-  				const packet = new Packet(new Header(packetType.request, undefined, packetGroupId.deviceDebug), payloadReadWrite);
-  				const command = getCommand(packet);
-  				sendCommand(command, outputPower);
-  			}
-  			var inputPowerCount = 0
-  			function outputPower(command){
-				const register =  commandToRegister(command);
-  				if(!register){
-  					++outputPowerCount;
-  					console.warn('OutputPowerCount = ' + outputPowerCount);
-  					if(outputPowerCount>3){
-  						skipRun = times;
-  						f_stop();
-  					}
-  	  	  			calRun = false;
- 					return;
-  				}
-
-	  	  		calRun = true;
-	  	  		outputPowerCount = 0;
-  				if(x.length>y.length){
-  					y.push(register.value);
-  					$unitVal.val(register.value);
-  					calChart.update();
-  				}
-  				calRun = false;
-				f_nextStep();
-  			 }
-  			function f_nextStep(){
-  				const toolV = parseFloat($inputPower.val());
-  				if(!startToolValue)
-  					startToolValue = toolV;
-  				if(toolV == stopValue){
-  					skipRun = times;
-  					f_stop();
-  					$btnStart.text('Restart')
-  					$btnInfo.removeClass('disabled').text('Optimize');
-  					reset();
-  					alert('Calibration completes.');
-  					return;
-  				}
-  				const tmp = $stepVal.val();
-  				let step;
-  				if(tmp)
-  					step = parseFloat(tmp);
-  				else{
-  					step = 1;
-  					$stepVal.val(step);
-  				}
-
-  				let newValue = (toolV + step).toFixed(1);
-  				if(newValue>stopValue)
-  					newValue = stopValue;
-
-  				$toolVal.val(newValue);
-  				f_toolValue();
-  			}
-
-  			function setupModal(){
-  				calRun = false;
-  				x.length = y.length = 0;
-  				defaultToolVal = null;
-  	  			skipRun = times;
-   	  			runTimeout = 2000;
- 				init();
-  	  			setRun(run);
-  	  			$toolVal.on('input', ()=>defaultToolVal = stopValue = null);
-  	  			setConfirmStart(()=>{
-
-  	  				if(stopValue)
-  	  					return true;
-
-  	  				if(!confirm('Does the power meter reading match the maximum value?'))
-  	  					return false;
-  	  				stopValue = $toolVal.val();
-  	  				if(!stopValue){
-  	  					alert('Input Tool Value needs to be set.')
-  	  					return false;
-  	  				}
-
-  	  				stopValue = parseFloat(stopValue);
-
-  	  				if(!defaultToolVal){
-  	  					const max = $maxVal.val();
-  	  					const drop = max - $minVal.val();
-  	  					defaultToolVal = stopValue - drop;
-  	  					$toolVal.val(defaultToolVal);
-  	  					offset = max - stopValue;
-  	  				}
-
-  	  				return true
-  	  			});
-  	  			return true;
-  			}
-  			$('#cpuType').change(e=>{
-
-  				switch(e.currentTarget.value){
-
-  				case '732':
-  	  	  			payloadReadWrite = new Payload(new Parameter(PARAMETER_READ_WRITE), DEVICE_FCM_ADC_OUTPUT_POWER_732().toBytes());
-  	  	  			break;
-
-  				default:
-  	  	  			payloadReadWrite = new Payload(new Parameter(PARAMETER_READ_WRITE), DEVICE_FCM_ADC_OUTPUT_POWER().toBytes());
-  				}
-  			});
-			$modal.on('hide.bs.modal', function () {
-				if (document.activeElement) 
-		            document.activeElement.blur();
-			});
-
-  			/*]]>*/
-  			//# sourceURL=fcm-output-power.js
-  			</script>
 	</th:block>
 	</div>
 

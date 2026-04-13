@@ -82,48 +82,48 @@ function init(subInit){
 		}else
 			$btnInfo.addClass('disabled');
 	});
-	$btnStart.click(()=>{
-
-		// Stop Button
-		if($btnStart.text()==='Stop'){
-			f_stop();
-			$btnInfo.removeClass('disabled');
-			return;
-		}
-		if($btnStart.text()=='Reset'){
-			calChart.reset();
-			$numberOfEntries.text(x.length);
-			$btnStart.text('Restart');
-			$btnInfo.text('Optimize');
-			return;
-		}
-		if($btnStart.text()==='Restart'){
-			clear();
-			$toolVal.val(startToolValue);
-			$btnInfo.text('Clear')
-		}
-
-		if(!confirmStart())
-			return;
-
-		$btnInfo.addClass('disabled');
-		$toolVal.prop('readonly', true);
-		$stepVal.prop('readonly', true);
-
-		// Check Serial Port, Tool Addreass and Input Tool Type
-		const toSend = getToSendIT(commandIndex);
-		if(!checkInputTool(toSend)){
-			$modal.modal('hide');
-			$collapseInput.show();
-			return;
-		}
-
-		f_toolValue();
-		if($btnStart.text()==='Start')
-			startToolValue = $toolVal.val();
-		startButtonText(BTN_STOP);
-		f_run();
-	});
+//	$btnStart.click(()=>{
+//
+//		// Stop Button
+//		if($btnStart.text()==='Stop'){
+//			f_stop();
+//			$btnInfo.removeClass('disabled');
+//			return;
+//		}
+//		if($btnStart.text()=='Reset'){
+//			calChart.reset();
+//			$numberOfEntries.text(x.length);
+//			$btnStart.text('Restart');
+//			$btnInfo.text('Optimize');
+//			return;
+//		}
+//		if($btnStart.text()==='Restart'){
+//			clear();
+//			$toolVal.val(startToolValue);
+//			$btnInfo.text('Clear')
+//		}
+//
+//		if(!confirmStart())
+//			return;
+//
+//		$btnInfo.addClass('disabled');
+//		$toolVal.prop('readonly', true);
+//		$stepVal.prop('readonly', true);
+//
+//		// Check Serial Port, Tool Addreass and Input Tool Type
+//		const toSend = getToSendIT(commandIndex);
+//		if(!checkInputTool(toSend)){
+//			$modal.modal('hide');
+//			$collapseInput.show();
+//			return;
+//		}
+//
+//		f_toolValue();
+//		if($btnStart.text()==='Start')
+//			startToolValue = $toolVal.val();
+//		startButtonText(BTN_STOP);
+//		f_run();
+//	});
 	$toolVal.keypress(e=>{
 		if(e.which == 13){  // the enter key code
 			f_toolValue();
@@ -264,68 +264,68 @@ function getCommand(packet, getAnswer){
 	command.getAnswer = typeof getAnswer === "undefined" || getAnswer;
 	return command;
 }
-function showInfo(command){
-
-	if(command.errorMessage){
-		console.warn(command.errorMessage + '; ' + command);
-		alert(command.errorMessage);
-		return;
-	}
-	if(!command.getAnswer){
-		alert("The command has been sent.");
-		return;
-	}
-	const answer = command.answer;
-	const bytes = [];
-	if(answer){
-		const a  = atob(answer);
-		for (var i = 0; i < a.length; i++) {
-			bytes.push(a.charCodeAt(i));
-	    }
-	}else{
-		alert("It's impossible to get an answer.");
-		return;
-	}
-
-	const packets = parsePackets(bytes);
-	if(!packets.length){
-		console.warn('Something went wrong. Answer: ' + answer);
-		alert('Something went wrong.');
-		return;
-	}
-	if(packets.length && packets[0].header.type==packetType.acknowledgement)
-		packets.shift();
-
-	if(!packets.length){
-		read();
-		return;
-	}
-	// Send Acknowledgement
-	const acknowledgement = packets[0].getAcknowledgement();
-	command = getCommand(acknowledgement, false);
-	sendCommand(command, ()=>{});
-
-	const sn = packets[0].getData(deviceInfo.serialNumber);
-	if(sn.length){
-		$serialNumber.text(sn[0]);
-		$btnStart.removeClass('disabled');
-		$('.modal-title').text(tableName + 'r: ' + sn[0]);
-		$btnInfo.text('Clear');
-		serialNumber = sn[0];
-		$profilePath.prop('href', '/calibration/rest/profile/path?sn=' + sn);
-	}else
-		$btnStart.addClass('disabled');
-
-	const dscr = packets[0].getData(deviceInfo.description);
-	if(sn)
-		$('#unit_description').children('h4').text(dscr);
-}
+//function showInfo(command){
+//
+//	if(command.errorMessage){
+//		console.warn(command.errorMessage + '; ' + command);
+//		alert(command.errorMessage);
+//		return;
+//	}
+//	if(!command.getAnswer){
+//		alert("The command has been sent.");
+//		return;
+//	}
+//	const answer = command.answer;
+//	const bytes = [];
+//	if(answer){
+//		const a  = atob(answer);
+//		for (var i = 0; i < a.length; i++) {
+//			bytes.push(a.charCodeAt(i));
+//	    }
+//	}else{
+//		alert("It's impossible to get an answer.");
+//		return;
+//	}
+//
+//	const packets = parsePackets(bytes);
+//	if(!packets.length){
+//		console.warn('Something went wrong. Answer: ' + answer);
+//		alert('Something went wrong.');
+//		return;
+//	}
+//	if(packets.length && packets[0].header.type==packetType.acknowledgement)
+//		packets.shift();
+//
+//	if(!packets.length){
+//		read();
+//		return;
+//	}
+//	// Send Acknowledgement
+//	const acknowledgement = packets[0].getAcknowledgement();
+//	command = getCommand(acknowledgement, false);
+//	sendCommand(command, ()=>{});
+//
+//	const sn = packets[0].getData(deviceInfo.serialNumber);
+//	if(sn.length){
+//		$serialNumber.text(sn[0]);
+//		$btnStart.removeClass('disabled');
+//		$('.modal-title').text(tableName + 'r: ' + sn[0]);
+//		$btnInfo.text('Clear');
+//		serialNumber = sn[0];
+//		$profilePath.prop('href', '/calibration/rest/profile/path?sn=' + sn);
+//	}else
+//		$btnStart.addClass('disabled');
+//
+//	const dscr = packets[0].getData(deviceInfo.description);
+//	if(sn)
+//		$('#unit_description').children('h4').text(dscr);
+//}
 var sendCommandCount = 0;
 function sendCommand(command, action){
 
 	++sendCommandCount;
 
-	const url = command.toSend ? '/serial_port/rest/send-bytes' : '/serial_port/rest/read-bytes';
+	const url = command.toSend ? '/serial-port/rest/send-bytes' : '/serial-port/rest/read-bytes';
 	postObject(url, command)
 	.done(data=>{
 
@@ -349,10 +349,10 @@ function sendCommand(command, action){
 let v_stop = true;;
 let runTimeout = 1000;
 function f_run(run){
-	v_stop = false;
-	if(run) setRun(run);
-	clearInterval(calIntervalID);
-	calIntervalID = setInterval(f_toRun, runTimeout);
+//	v_stop = false;
+//	if(run) setRun(run);
+//	clearInterval(calIntervalID);
+//	calIntervalID = setInterval(f_toRun, runTimeout);
 }
 function f_stop(){
 	v_stop = true;

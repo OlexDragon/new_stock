@@ -21,7 +21,7 @@
         			<h5 id="opInputValue" class="modal-title ml-3 text-primary"></h5>
         			<h5 class="modal-title text-primary">-</h5>
         			<input type="number" id="op_outputValue" placeholder="Output Power" value="30" th:value="${settings.startValue}">
-        			<button type="button" id="addRow" class="form-control btn btn-sm btn-outline-secondary disabled">Add Row</button>
+        			<button type="button" id="addRow" class="form-control btn btn-sm btn-outline-secondary" disabled>Add Row</button>
 <!-- Calibration settings -->
   					<div class="dropdown col-auto">
   						<button class="btn dropdown-toggle" type="button" id="dropdownSettingsButton" data-bs-toggle="dropdown" aria-expanded="false"></button>
@@ -29,13 +29,13 @@
   							<div class="form-group row">
     							<label class="col-sm-5 col-form-label text-end" for="minValue">Min.:</label>
     							<div class="col-sm-7">
-    								<input type="number" class="form-control settings" id="minValue" placeholder="Minimum Value" value="30" th:value="${settings.startValue}">
+    								<input type="number" class="form-control settings" id="minValue" placeholder="Minimum Value" value="30" th:value="${settings.startValue}" data-db-name="startValue">
     							</div>
   							</div>
   							<div class="form-group row">
     							<label class="col-sm-5 col-form-label text-end" for="maxValue">Max.:</label>
     							<div class="col-sm-7">
-    								<input type="number" class="form-control settings" id="maxValue" placeholder="Maximum Value" value="46" th:value="${settings.stopValue}">
+    								<input type="number" class="form-control settings" id="maxValue" placeholder="Maximum Value" value="46" th:value="${settings.stopValue}" data-db-name="stopValue">
     							</div>
   							</div>
   							<div class="form-group row">
@@ -47,7 +47,7 @@
   							<div class="form-group row" th:fragment="power_source">
     							<label class="col-sm-5 col-form-label text-end" for="name" title="Sensor Name">Name:</label>
     							<div class="col-sm-7">
-    								<select class="form-control settings" id="name">
+    								<select class="form-control settings" id="name" autocomplete="off" data-db-name="name">
     									<option value="power1">Power 1</option>
     									<option value="power2" th:selected="${settings.name}==power2">Power 2</option>
     								</select>
@@ -63,385 +63,13 @@
       			</div>
  <!-- Modal Footer -->
       			<div class="modal-footer">
-	        		<button type="button" id="save" class="btn btn-outline-primary disabled">Save to Profile</button>
-	        		<button type="button" id="calc" class="btn btn-outline-secondary disabled">Calculate Max. Value</button>
-	        		<button type="button" id="clear" class="btn btn-outline-secondary disabled">Clear</button>
+	        		<button type="button" id="save" class="btn btn-outline-primary" disabled>Save to Profile</button>
+	        		<button type="button" id="calc" class="btn btn-outline-secondary" disabled>Calculate Max. Value</button>
+	        		<button type="button" id="clear" class="btn btn-outline-secondary" disabled>Clear</button>
 	        		<button type="button" class="btn btn-outline-secondary" data-bs-dismiss="modal">Close</button>
 	    		</div>
     		</div>
   		</div>
-  		<script th:inline="javascript">
-			/*<![CDATA[*/
-
-			$modalBody	 = $('#modal-body');
-			$btnAddRow	 = $('#addRow').click(onAddRow);
-			$btnSave	 = $('#save');
-			$btnCalc	 = $('#calc');
-			$name		 = $('#name');
-			$minValue	 = $('#minValue');
-			$input		 = $('#opInputValue');
-			$out		 = $('#op_outputValue');
-
-			table = Cookies.get(serialNumber + "_opTable");
-			if(table){
-				var array = JSON.parse(table);
-				array.forEach( row => addRow(row.input, row.output));
-			}
-
-			function update(){
-				if(interval)
-					clearInterval(interval);
-
-				buzy = false;
-
-				//get value from unit
-				interval = setInterval(function() {
-
-					if(buzy)
-						return;
-
-					buzy = true;
-
-					$.post('/calibration/rest/calibrationInfo', {sn : serialNumber})
-							.done(function(calInfo){
-
-								if(!calInfo){	// No connection
-									$btnAddRow.addClass('disabled');
-									buzy = false;
-									return;
-								}
-
-								if(!calInfo.bias){
-									login();
-									$btnAddRow.addClass('disabled');
-									buzy = false;
-									return;
-								}
-
-								let name = $name.val();
-								if(calInfo.bias[name]){
-									let value = calInfo.bias[name].value;
-									$input.text(value);
-									$btnAddRow.removeClass('disabled');
-								}else{
-									$btnAddRow.addClass('disabled');
-// 									login();
-								}
-								buzy = false;
-							})
-							.fail(function(error) {
-								if(err){
-									buzy = false;
-									return;
-								}
-
-								$modal.modal('hide');
-
-								err = error;
-								if(error.statusText!='abort'){
-									connectionFail(error);
-									err = null;
-								};
-								buzy = false;
-				   			});
-				}, 2000);
-			}
-
-			update();
-
-			var ops = Cookies.get("outputPowerSteps");
-			if(ops)
-				$('#step').val(ops);
-
-			$('#step').focusout(function(){
-
-				var $this = $(this);
-				var val = $this.val();
-
-				if(val)
-					Cookies.set("outputPowerSteps", val, { expires: 99999, path: '' });
-				else{
-					Cookies.remove("outputPowerSteps", { path: '' });
-					$this.val(3);
-				}
-			});
-
-			function onAddRow(){
-
-				var inputValue = $input.text();
-				var outputValue = $out.val();
-
-				if(!(inputValue && outputValue)){
-					alert('The input field cannot be empty.');
-					return;
-				}
-
-				addRow(inputValue, outputValue);
-
-				var max = parseInt($('#maxValue').val());
-				var out = parseInt(outputValue);
-
-				if(out>max){
-					alert('The value in the table cannot be greater than the maximum set value.');
-					return;
-				}
-
-				var step = parseInt($('#step').val());
-				var newVal = out + step;
-
-				if(newVal >= max){
-					newVal = max;
-					alert('The value in the table has reached its maximum value.');
-				}
-
-				$out.val(newVal);
-			}
-
-			$out.on('keypress', function (e) {
-				 if(e.which === 13)
-					 onAddRow();
-			});
-
-			function sortModalBody(){
-			    var items = $modalBody.children().sort(function(a, b) {
-			        var vA = parseFloat($(a).find('.output').text());
-			        var vB = parseFloat($(b).find('.output').text());
-			        return (vA < vB) ? -1 : (vA > vB) ? 1 : 0;
-			    });
-			    $modalBody.append(items);
-			}
-
-			function disableButtons(){
-
-				var length = $modalBody.children().length;
-
-				if(!length)
-					$('#clear').addClass('disabled');
-				else
-					$('#clear').removeClass('disabled');
-
-				var max = $('#maxValue').val();
-				var out = $modalBody.children().last().find('.output').text();
-
-				if(length<2)
-					$btnCalc.addClass('disabled');
-				else{
-					if(out>=max)
-						$btnCalc.addClass('disabled');
-					else
-						$btnCalc.removeClass('disabled');
-				}
-
-				if(out<max)
-					$btnSave.addClass('disabled');
-				else
-					$btnSave.removeClass('disabled');
-
-				return length;
-			}
-
-			function addRow(inputValue, outputValue){
-				$('<div>', {class: 'row'})
-				.append($('<div>', {class: 'col input'}).text(inputValue))
-				.append($('<div>', {class: 'col output'}).text(outputValue))
-				.append($('<div>', {class: 'col-auto'}).append($('<button>', {class: 'btn btn-link', onclick: 'removeRow(this)'}).text('Remove')))
-				.appendTo($modalBody);
-
-				sortModalBody();
-				disableButtons();
-			}
-
-			function removeRow(button){
-				var parent = $(button).closest('.row').remove();
-				if(!disableButtons())
-		    		$out.val($minValue.val())
-				}
-
-		    	$('#clear').click(function(){
-		    		$modalBody.empty();
-		    		$out.val($minValue.val())
-					disableButtons();
-		    	});
-
-		    	$btnCalc.click(function(){
-		    		var $last = $modalBody.children().last();
-		    		var $prev = $last.prev();
-
-		    		var prevIn = parseInt($prev.find('.input').text());
-		    		var prevOut = parseFloat($prev.find('.output').text());
-
-		    		var lastIn = parseInt($last.find('.input').text());
-		    		var lastOut = parseFloat($last.find('.output').text());
-
-// 		    		calculate the difference
-		    		var inpot;
-		    		if(lastIn>prevIn)
-		    			input = lastIn - prevIn;
-		    		else
-		    			input = prevIn - lastIn;
-
-		    		var out  = lastOut - prevOut;
-
-// 		    		calculate the factor
-					var factor = out ? input/out : 0;
-
-//					calculate max value
-					var max = parseFloat($('#maxValue').val());
-					var calc = (max-lastOut) * factor;
-
-					addRow(Math.round(lastIn + calc), max);
-					$out.val(max);
-		    	});
-
-		    	$btnSave.click(function(){
-
-		    		$btnSave.addClass('disabled');
-
-		    		var hasError = false;
-		    		var direction;
-		    		var prevInput;
-		    		var array = [];
-
-		    		$modalBody.find('.row').each(function(){
-
-		    			if(hasError)
-		    				return;
-
-		    			var $row = $(this);
-		    			var tmp = $row.find('.input').text();
-		    			var input;
-
-		    			if(tmp.indexOf('.') === -1)
-		    				input = parseInt($row.find('.input').text());
-		    			else
-		    				input = parseFloat($row.find('.input').text());
-
-		    			if(prevInput !== undefined){
-		    				if(prevInput==input){
-		    					hasError = true;
-		    				}
-		    				if(direction !== undefined){
-		    					if(direction != prevInput > input){
-			    					hasError = true;
-			    				}
-		    				}else
-		    					direction = prevInput > input;
-		    			}
-
-		    			if(hasError)
-		    				return;
-
-		    			prevInput = input;
-		    			var out = $row.find('.output').text();
-
-		    			array.push({input: input, output: out, comment: null});
-		    		});
-
-			    	if(hasError || !array.length){
-			    		alert('There is an error in this table.');
-		    			return;
-			    	}
-
-	    			table = { serialNumber: serialNumber, name: 'Output Power', values: array };
-		    		$.ajax({
-						url: '/calibration/rest/profile/save',
-						type: 'POST',
-						contentType: "application/json",
-						data: JSON.stringify(table),
-						dataType: 'json'
-					})
-					.done(function(data){
-						$modal.modal('hide');
-						if(confirm(data.content + '\nDo you want to calibrate Power Offset by frequencies?'))
-							$menuPowerOffset.click();
-					})
-					.fail(connectionFail);
-		    	});
-
-		    	$minValue.blur(e=>{
-		    		$out.val(e.currentTarget.value);
-		    	})
-// 		    	$.post('/calibration/rest/login?sn=' + serialNumber);
-
-		    	/*[# sec:authorize="hasAuthority('CALIBRATION_SETTINGS')"]*/
-					$('#dropdownSettingsButton').on('hidden.bs.dropdown', function () {
-						if(confirm('Do you want to save your changes to the database?')){
-
-							let min = $minValue.val();
-							let max = $('#maxValue').val();
-							let name = $('#name').val();
-
-							if(!(min && max)){
-								alert('One of the values is missing.')
-								return;
-							}
-
-							$.ajax({
-        						url: '/calibration/rest/outputpower',
-								type: 'POST',
-								contentType: "application/json",
-								data: JSON.stringify({
-									partNumber: serialNumber,
-									startValue: min,
-									stopValue:  max,
-									name: name
-						        }),
-        						dataType: 'json'
-    						})
-    						.done(function(data){
-    							alert(data);
-							})
-							.fail(function(error) {
-								if(error.statusText!='abort'){
-									$modal.modal('hide');
-									connectionFail(error);
-								}
-							});
-						}
-					});
-			    /*[/]*/
-
-			    $('.modal-footer').dblclick(e=>$btnSave.removeClass('disabled'));
-
-			function setupModal(){
-
-				$modal.on('shown.bs.modal', function (e) {
-					update();
-				});
-
-				$modal.on('hide.bs.modal', e=>{
-
-					if (document.activeElement) 
-			            document.activeElement.blur();
-
-					var array = [];
-
-		    		$modalBody.find('.row').each(function(){
-		    			var $row = $(this);
-		    			var input = $row.find('.input').text();
-		    			var out = $row.find('.output').text();
-		    			array.push({input: input, output: out});
-		    		});
-
-		    		if(!array.length)
-		    			return;
-
-		    		var json = JSON.stringify(array);
-					Cookies.set(serialNumber + "_opTable", json, { expires: 30, path: '' });
-				})
-
-				$modal.on('hidden.bs.modal', function () {
-					clearInterval(interval);
-					interval = undefined;
-					err = null;
-				});
-
-				return true;
-			}
-
-			/*]]>*/
-			//# sourceURL=outputPower.js
-  		</script>
 	</th:block>
 	</div>
 

@@ -15,7 +15,6 @@
 	<script type="application/javascript" src="https://cdn.jsdelivr.net/npm/js-cookie@2/src/js.cookie.min.js"></script>
 	<script type="application/javascript" src="../../static/js/irt.js" th:src="@{/js/irt.js}"></script>
 </head>
-
 <body>
 
  	<button type="button" class="btn btn-outline-primary" data-bs-toggle="modal" data-bs-target="#modal" th:remove="all">Launch modal</button>
@@ -60,172 +59,6 @@
   		</div>
    		<script type="application/javascript" th:inline="javascript">
 			/*<![CDATA[*/
-			$('#pdClear').click(()=>{
-				if(!confirm('Are you sure you want to delete all data?'))
-					return;
-				const $inputs = $('.modal-body').find('input').val('');
-				const cookiesName = "powerDetector" + serialNumber;
-				Cookies.remove(cookiesName);
-			});
-			$('#btnSavePD').click(e=>{
-
-				const principal = /*[[${#authentication.principal}]]*/ "anonymousUser";
-				if(principal === "anonymousUser"){
-					alert("You must log in.");
-					return;
-				}
-				if(!confirm("Are you sure you want to save the data to the database?"))
-					return;
-
-				e.currentTarget.disabled = true;
-
-				const powerDetector = {};
-				powerDetector.serialNumberId = parseInt(serialNumber.replace(/\D/g,''));
-				powerDetector.userId = principal.user.id
-				powerDetector.measurement = {};
-
-				$('.modal-body').find('input').each((_,el)=>{
-					if(!powerDetector.measurement[el.dataset.power])
-						powerDetector.measurement[el.dataset.power] = {};
-					powerDetector.measurement[el.dataset.power][el.id] = el.value;
-				});
-				postObject('/btr/rest/pd/save', powerDetector)
-				.done(function(data){
-
-					if(data.error){
-						alert(data.error);
-						return;
-					}
-					console.log(data)
-				})
-				.fail(function(error) {
-					if(error.statusText!='abort'){
-					var responseText = error.responseText;
-						if(responseText)
-							alert(error.responseText);
-						else
-							alert("Server error. Status = " + error.status)
-					}
-				});
-			});
-			var notShift;
-			var selectedField;
-			function setupModal(){
-
-				const cookiesName = "powerDetector" + serialNumber;
-				const $inputs = $('.modal-body').find('input');
-
-				$inputs.keyup(e=>{
-
-					if(notShift)
-						return;
-
-					const code = e.originalEvent.code;
-					const array = e.currentTarget.id.split('.');
-
-					switch(code){
-
-					case "ArrowDown":
-						++array[0];
-						$inputs.filter((_,el)=>el.id===array.join('.')).focus();
-						break;
-
-					case "ArrowUp":
-						--array[0];
-						$inputs.filter((_,el)=>el.id===array.join('.')).focus();
-						break;
-
-					case "ArrowRight":
-						++array[2];
-						$inputs.filter((_,el)=>el.id===array.join('.')).focus();
-						break;
-
-					case "ArrowLeft":
-						--array[2];
-						$inputs.filter((_,el)=>el.id===array.join('.')).focus();
-						break;
-
-					case "ControlLeft":
-					case "ControlRight":
-						notShift = true;
-						setTimeout(()=>notShift=false, 10000);
-						break;
-
-					case "Enter":
-					case "NumpadEnter":
-						$("#pdPmDetValue").click();
-						
-					}
-				})
-				.focus(e=>{
-					const $inputs = $('.modal-body').find('input').css('background-color','');
-					selectedField = e.currentTarget;
-					selectedField.style.backgroundColor = "yellow";
-				});
-				$('#pdPmDetValue').click(()=>{
-
-					if(selectedField)
-						selectedField.focus();
-
-					$.get('/calibration/rest/monitorInfo', {sn: serialNumber})
-					.done(data=>{
-						if(!data.data.outpower){
-							alert('Something went wrong.');
-							return;
-						}
-						if(!selectedField){
-							alert('Select one of the text fields.');
-							return;
-						}
-						selectedField.value = data.data.outpower;
-						const array = selectedField.id.split('.');
-						++array[0];
-						$inputs.filter((_,el)=>el.id===array.join('.')).focus();
-					});
-				});
-				$modal.on('shown.bs.modal', ()=>{
-
-					if(!$inputs.length)
-						return;
-
-					if(!$inputs.filter((_,el)=>el.value).length){
-						let cookies = Cookies.get(cookiesName);
-						if(cookies){
-							const o = JSON.parse(cookies);
-							Object.keys(o).forEach(k=>{
-								$inputs.filter((_,el)=>el.id===k).val(o[k]);
-							});
-							setTimeout(()=>alert('Note: Values ​​are taken from cookies.\nTo save the values ​​to the database, click the "Save" button.'),10);
-						}
-					}
-				});
-
-				$modal.on('hide.bs.modal', function () {
-					if (document.activeElement) 
-			            document.activeElement.blur();
-				});
-
-				$modal.on('hidden.bs.modal', function () {
-
-					externalInputAction = null;
-					
-					let toCookies = {};
-					$inputs.filter((_,el)=>el.value).each((_,el)=>{
-						toCookies[el.id] = el.value;
-					});
-					if(Object.keys(toCookies).length){
-						var json = JSON.stringify(toCookies);
-						Cookies.set(cookiesName, json, { expires: 7, path: '' });
-					}
-				});
-
-				$modal.on('hide.bs.modal', _=>{
-					$('#btnPdStart').text('Start');
-					clearInterval(pdInterval);
-				});
-
-				return true;
-			}
 // Auto measurement
 			$('#pdAuto').click(e=>{
 				e.currentTarget.disabled = true;
@@ -315,18 +148,18 @@
 			var pdInterval;
 			function pdAuto(e){
 
-				const text = e.currentTarget.innerText;
+                 const text = e.currentTarget.innerText;
 
-				if(text!=='Start'){
-					e.currentTarget.innerText = 'Start';
-					clearInterval(pdInterval);
-					return;
-				}
+                 if(text!=='Start'){
+                     e.currentTarget.innerText = 'Start';
+                     try{ if(pdInterval && typeof pdInterval.stop === 'function'){ pdInterval.stop(); } else { clearInterval(pdInterval); } }catch(e){}
+                     return;
+                 }
 
-				e.currentTarget.innerText = 'Stop';
-				const btrFrequecries = $('.btr-frequency').map((_,el)=>el.value);
-				pdInterval = setInterval(()=>pdProcess(btrFrequecries), 3000);
-			}
+                 e.currentTarget.innerText = 'Stop';
+                 const btrFrequecries = $('.btr-frequency').map((_,el)=>el.value);
+                 pdInterval = timerWorker.startPoll(3000, ()=>pdProcess(btrFrequecries));
+             }
 			function pdProcess(btrFrequecries){
 
 				console.log(btrFrequecries);

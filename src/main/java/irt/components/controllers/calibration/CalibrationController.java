@@ -32,6 +32,7 @@ import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Controller;
 import org.springframework.ui.Model;
 import org.springframework.web.bind.annotation.GetMapping;
+import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.util.UriComponentsBuilder;
@@ -87,6 +88,7 @@ public class CalibrationController {
 
 	@Value("${irt.log.file}") 	private String logFile;
 	@Value("${irt.onRender}") 	private String onRender;
+	@Value("${irt.onRender.serialNumber.get}") 		private String onRenderSNPath;
 
 	@Autowired private OneCeUrl oneCeApiUrl;
 
@@ -102,6 +104,7 @@ public class CalibrationController {
     	model.addAttribute("sn", sn);
 
 		final Map<String, String> httpSerialPortServers = httpSerialPortServersKeeper.getHttpSerialPortServers();
+		logger.debug(httpSerialPortServers);
 		model.addAttribute("serialPortServers", httpSerialPortServers);
 
 		Optional.ofNullable(sn)
@@ -132,10 +135,11 @@ public class CalibrationController {
     					return;
 
     				} catch (TimeoutException | UnknownHostException | HttpHostConnectException | NullPointerException | ExecutionException e) {
-						logger.info(e.getLocalizedMessage());
+						logger.error("{} : {}", e.getClass().getSimpleName(), e.getLocalizedMessage());
 
 					} catch (Exception e) {
-						logger.catching(e);
+						logger.error("Error getting info for {}: {} : {}", s, e.getClass().getSimpleName(), e.getLocalizedMessage());
+						logger.catching(Level.DEBUG, e);
 					}
 
     				try {
@@ -399,7 +403,7 @@ public class CalibrationController {
     									()->{
 											try {
 
-												return Optional.ofNullable(BtrController.getSerialNumber(s, onRender).get(10, TimeUnit.SECONDS))
+												return Optional.ofNullable(BtrController.getSerialNumber(s, onRenderSNPath).get(10, TimeUnit.SECONDS))
 
 														.map(SerialNumber::getPartNumber)
 														.map(PartNumber::getPartNumber)
@@ -592,6 +596,12 @@ public class CalibrationController {
     	return "calibration/power_chart :: modal";
     }
 
+	@GetMapping("modal/{page}/{fragment}")
+	String gegtModal(@PathVariable String page, @PathVariable String fragment) {
+		logger.traceEntry("{} :: {}", page, fragment);
+		return "calibration/" + page + "::" + fragment;
+	}
+
 	private List<Info> getModulesInfo(String sn) throws IOException, InterruptedException, ExecutionException, TimeoutException, ScriptException {
 
 		final Map<String, Integer> allDevices = IrtHttpRequest.getAllModules(sn);
@@ -669,6 +679,7 @@ public class CalibrationController {
 	}
 
 	public static <T> FutureTask<T> getHttpUpdate(String ipAddress, Class<T> toClass, BasicNameValuePair...basicNameValuePairs) throws MalformedURLException {
+		logger.traceEntry("ipAddress: {}, toClass: {}, basicNameValuePairs: {}", ipAddress, toClass, basicNameValuePairs);
 
 		String url = UriComponentsBuilder.newInstance()
 				.scheme("http")

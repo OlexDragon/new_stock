@@ -98,53 +98,29 @@ let $LD_COUNT;
 
 const $comPorts = $('.com-ports').on('change', function(){
 
-	comPortSelected(this);
+//	comPortSelected(this);
 	Cookies.set(this.id, this.value, { expires: 999, path: '' });
 
-	$(this).parents('.accordion-collapse').trigger('show.bs.collapse');
+//	$(this).parents('.accordion-collapse').trigger('show.bs.collapse');
 });
 
-$spServers.change(function(){
+//$spServers.change(function(){
+//
+//	$menuInputPower.removeClass('disabled');
+//	$menuGain.removeClass('disabled');
+//	$menuOPAutoByInput.removeClass('disabled').text('by Input');
+//	$nemuOPAutoByGain.removeClass('disabled').text('by Gain');
+//
+//	const spServers = $(this).val();
+//	Cookies.set("spServers", spServers, { expires: 7, path: '' });
+//	gerSerialPorts(setToolsSerialPorts);
+//});
 
-	$menuInputPower.removeClass('disabled');
-	$menuGain.removeClass('disabled');
-	$menuOPAutoByInput.removeClass('disabled').text('by Input');
-	$nemuOPAutoByGain.removeClass('disabled').text('by Gain');
 
-	const spServers = $(this).val();
-	Cookies.set("spServers", spServers, { expires: 7, path: '' });
-	gerSerialPorts(setToolsSerialPorts);
-});
-
-// Get HTTP Serial Port Server from the cookies
-const cookie = Cookies.get("spServers");
-if(cookie){
-	try {
-		const $toSelect = $('option[value=' + cookie + ']');
-		if($toSelect.length){
-			$toSelect.prop('selected', true);
-			$spServers.trigger('change');
-		}
-	}catch(err) {
-		console.error(err);
-	}
-}
-
-let $saveToCookies = $('.save-to-cookies')
-.change(function(){
-	Cookies.set(this.id, $(this).find('option:selected').text(), { expires: 7, path: '' });
-});
-$.each($saveToCookies, function(i, tool){
-	let cookie = Cookies.get(tool.id)
-	if(cookie){
-		let $tool = $(tool);
-		$tool.children().filter(function () { return $(this).text() == cookie; }).prop('selected', true);
-	}
-});
-$('.tool').change(function(){
-	let $parent = $(this).parent();
-	setAccordionHeaderText($parent);
-});
+//$('.tool').change(function(){
+//	let $parent = $(this).parent();
+////	setAccordionHeaderText($parent);
+//});
 
 function gerSerialPorts(setSerialPorts){
 
@@ -152,9 +128,9 @@ function gerSerialPorts(setSerialPorts){
 	if(!spHost)
 		return;
 
-	$.post('/serial_port/rest/serial-ports', {hostName: spHost})
-	.done(setSerialPorts)
-	.fail(connectionFail);
+//	$.post('/serial_port/rest/serial-ports', {hostName: spHost})
+//	.done(setSerialPorts)
+//	.fail(connectionFail);
 }
 function setToolsSerialPorts(ports){
 
@@ -169,63 +145,63 @@ function setToolsSerialPorts(ports){
 		$('<option>', {value: portName}).text(portName).appendTo($comPorts);
 	});
 
-	$.each($comPorts, (_, select)=>{
-		var value = Cookies.get(select.id)
-		if(value){
-			var $option = $(select).children('[value="' + value + '"]');
-			$option.prop('selected', true);
-			comPortSelected(select);
-			if($option?.val() != 'NI GPIB')
-				setTimeout(()=>$option.parents('.accordion-body').find('.btn-auto').click(), 1000);
-		}
-	});
+//	$.each($comPorts, (_, select)=>{
+//		var value = Cookies.get(select.id)
+//		if(value){
+//			var $option = $(select).children('[value="' + value + '"]');
+//			$option.prop('selected', true);
+//			comPortSelected(select);
+//			if($option?.val() != 'NI GPIB')
+//				setTimeout(()=>$option.parents('.accordion-body').find('.btn-auto').click(), 1000);
+//		}
+//	});
 }
 
-function comPortSelected(select){
-	let $parent = $(select).parents('.accordion-body');
-	setAccordionHeaderText($parent)
-}
+//function comPortSelected(select){
+//	let $parent = $(select).parents('.accordion-body');
+//	setAccordionHeaderText($parent)
+//}
 
-function setAccordionHeaderText($parent){
-
-	const $port = $parent.find('.com-ports');
-	const messageId = $port.attr('data-info-message');
-	const $message = $('#' + messageId);
-	const $toDisable = $parent.find('.to-disable');
-	const $toolBtns = $parent.find('.tool-btn');
-
-	let port = $port.length ? $port.val() : '';
-	if(port && !port.startsWith('Select')){
-		$toDisable.addClass('disabled');
-		if(port==='NI GPIB')
-			$toolBtns.removeClass('disabled');
-	}else{
-		port = '';
-		$message.text(' Serial Port is not selected');
-		$message.addClass('text-danger');
-		$toDisable.addClass('disabled');
-		return;
-	}
-
-	$message.removeClass('text-danger');
-
-	let $tool = $parent.find('.tool');
-	let toolMessage = '';
-
-	if(!$tool.length || $tool.val()){
-		if(port!='NI GPIB')
-			$toDisable.removeClass('disabled');
-		if($tool.length) toolMessage = ', ' + $tool.find('option:selected').text();
-	}else
-		$toDisable.addClass('disabled');
-
-	let $address = $parent.find('.address');
-	let toolAdderss = '';
-	if($address.length && $address.val())
-		toolAdderss = ', Tool Address: ' + $address.val()
-
-	$message.text(port + toolMessage + toolAdderss);
-}
+//function setAccordionHeaderText($parent){
+//
+//	const $port = $parent.find('.com-ports');
+//	const messageId = $port.attr('data-info-message');
+//	const $message = $('#' + messageId);
+//	const $toDisable = $parent.find('.to-disable');
+//	const $toolBtns = $parent.find('.tool-btn');
+//
+//	let port = $port.length ? $port.val() : '';
+//	if(port && !port.startsWith('Select')){
+//		$toDisable.addClass('disabled');
+//		if(port==='NI GPIB')
+//			$toolBtns.removeClass('disabled');
+//	}else{
+//		port = '';
+//		$message.text(' Serial Port is not selected');
+//		$message.addClass('text-danger');
+//		$toDisable.addClass('disabled');
+//		return;
+//	}
+//
+//	$message.removeClass('text-danger');
+//
+//	let $tool = $parent.find('.tool');
+//	let toolMessage = '';
+//
+//	if(!$tool.length || $tool.val()){
+//		if(port!='NI GPIB')
+//			$toDisable.removeClass('disabled');
+////		if($tool.length) toolMessage = ', ' + $tool.find('option:selected').text();
+//	}else
+//		$toDisable.addClass('disabled');
+//
+//	let $address = $parent.find('.address');
+//	let toolAdderss = '';
+//	if($address.length && $address.val())
+//		toolAdderss = ', Tool Address: ' + $address.val()
+//
+//	$message.text(port + toolMessage + toolAdderss);
+//}
 if(!serialNumber)
 	new bootstrap.Modal('#modal').show();
 
@@ -315,141 +291,141 @@ function loginWhithHref(href){
 // Scan IP Addresses
 var scanIpInterval;
 const $scan = $('#scan');
-$scan.click(function(e){
-	e.preventDefault();
-	calibrateId = 'Network Scan';
-
-	$modal.empty();
-	$modalBody = $('<div>', {class:'modal-body'});
-	let $scanBtn = $('<button>', {id: 'scanBtn', type:'button', class: 'btn btn-primary'}).text('Stop');
-	$modal
-	.append(
-		$('<div>', {class:'modal-dialog modal-lg'})
-		.append(
-			$('<div>', {class:'modal-content'})
-			.append(
-				$('<div>', {class:'modal-header'})
-				.append($('<h5>', {id:'modal-header', class: 'modal-title ml-3 text-primary col'}).text('Scaning for online units.'))
-				.append($('<input>', {type:'number', id: 'start-from', class: 'col-1', title: 'Start scan from value.'}))
-				.append($('<button>', {type:'button', class: 'btn-close', 'data-bs-dismiss': 'modal', 'aria-label': 'Close'}))
-			)
-			.append($modalBody)
-			.append(
-				$('<div>', {class:'modal-footer'})
-				.append($scanBtn)
-				.append($('<button>', {type:'button', class: 'btn btn-secondary', 'data-bs-dismiss': 'modal'}).text('Close'))
-			)
-		)
-	);
-
-	$scanBtn.click(function(e){
-		e.preventDefault();
-
-		let $this = $(this);
-		let text = $this.text();
-
-		switch(text){
-
-			case 'Stop':	ip = 250;break;
-
-			case 'Restart':	$modal.modal('hide');
-							setTimeout(()=>$scan.click(), 500);
-		}
-	});
-
-	new bootstrap.Modal('#modal').show();
-
-	if(typeof scanIpInterval !=='undefined')
-		clearInterval(scanIpInterval);
-
-	var $modalHeader = $('#modal-header');
-	let $startFrom = $('#start-from');
-	$startFrom.focusout(function(){
-		let val = $startFrom.val();
-		if(val)
-			Cookies.set("startFrom",  val, { path: '' });
-		else
-			Cookies.set("startFrom",  '', { path: '' });
-	});
-
-
-	var ip = Cookies.get("startFrom")
-	if(ip)
-		$startFrom.val(ip);
-	else{
-		ip = $startFrom.val();
-		if(!ip){
-			ip = 2;
-			$startFrom.val(ip);
-		}
-	}
-	var index = 0;
-	var maxIP = 240;
-
-	scanIpInterval = setInterval(function() {
-
-		if(postWithParamCount>20)
-			return;
-
-		if(ip>maxIP){
-			// Stop IP scan
-			clearInterval(scanIpInterval);
-
-			var tooltipTriggerList = [].slice.call(document.querySelectorAll('[data-bs-toggle="tooltip"]'));
-			tooltipTriggerList.map(function (tooltipTriggerEl) { return new bootstrap.Tooltip(tooltipTriggerEl)});
-			$modalHeader.text('Scan completed.');
-			$('#scanBtn').removeClass('btn-primary').addClass('btn-success').text('Restart');
-			return;
-		}
-
-		var ipAddress = '192.168.30.' + ip;
-		$modalHeader.text('Send Request for ' + ipAddress);
-
-		postWithParam('/calibration/rest/scan', {ip : ipAddress}, function(homePageInfo){
-
-			if(!homePageInfo || !homePageInfo.sysInfo || !homePageInfo.netInfo)
-				return;
-
-			var $text = $('<div>', {class: 'col-sm'});
-			var $row = $('<div>', {class: 'row'})
-
-			$modalBody
-			.append(
-				$row
-				.append(
-					$('<div>', {class: 'col-auto'}).text(++index))
-				.append(
-					$('<div>', {class: 'col-sm'})
-					.append(
-						$('<a>', {href: 'http://' + homePageInfo.netInfo.addr, target: "_blank"}).text(homePageInfo.netInfo.addr)
-					)
-				)
-				.append($text)
-			);
-
-			$text.append($('<a>', {href: 'http://' + homePageInfo.sysInfo.sn, target: "_blank"}).text(homePageInfo.sysInfo.sn));
-			$row
-			.append(
-				$('<div>', {class: 'col-auto'}).append($('<a>', { class: 'btn btn-sm btn-outline-dark', target: "_blank", href: '/calibration?sn=' + homePageInfo.netInfo.addr}).text('Calibrate'))
-			)
-			.append(
-				$('<div>', {class: 'col-auto'}).append($('<a>', { class: 'btn btn-sm btn-outline-info', onclick: 'loginFromScan(event, this)', target: "_blank", href: '/calibration/rest/login?sn=' + homePageInfo.netInfo.addr}).text('Login'))
-			);
-			$row.attr('data-bs-toggle','tooltip').attr('data-bs-placement','top').attr('title', homePageInfo.sysInfo.desc);
-		});
-
-		++ip;
-	}, 100);
-
-	$modal.on('hide.bs.modal', function () {
-		if (document.activeElement) 
-	        document.activeElement.blur();
-	});
-
-	$modal.on('hidden.bs.modal', function () {
-		clearInterval(scanIpInterval);
-	});
-});
+//$scan.click(function(e){
+//	e.preventDefault();
+//	calibrateId = 'Network Scan';
+//
+//	$modal.empty();
+//	$modalBody = $('<div>', {class:'modal-body'});
+//	let $scanBtn = $('<button>', {id: 'scanBtn', type:'button', class: 'btn btn-primary'}).text('Stop');
+//	$modal
+//	.append(
+//		$('<div>', {class:'modal-dialog modal-lg'})
+//		.append(
+//			$('<div>', {class:'modal-content'})
+//			.append(
+//				$('<div>', {class:'modal-header'})
+//				.append($('<h5>', {id:'modal-header', class: 'modal-title ml-3 text-primary col'}).text('Scaning for online units.'))
+//				.append($('<input>', {type:'number', id: 'start-from', class: 'col-1', title: 'Start scan from value.'}))
+//				.append($('<button>', {type:'button', class: 'btn-close', 'data-bs-dismiss': 'modal', 'aria-label': 'Close'}))
+//			)
+//			.append($modalBody)
+//			.append(
+//				$('<div>', {class:'modal-footer'})
+//				.append($scanBtn)
+//				.append($('<button>', {type:'button', class: 'btn btn-secondary', 'data-bs-dismiss': 'modal'}).text('Close'))
+//			)
+//		)
+//	);
+//
+//	$scanBtn.click(function(e){
+//		e.preventDefault();
+//
+//		let $this = $(this);
+//		let text = $this.text();
+//
+//		switch(text){
+//
+//			case 'Stop':	ip = 250;break;
+//
+//			case 'Restart':	$modal.modal('hide');
+//							setTimeout(()=>$scan.click(), 500);
+//		}
+//	});
+//
+//	new bootstrap.Modal('#modal').show();
+//
+//	if(typeof scanIpInterval !=='undefined')
+//		clearInterval(scanIpInterval);
+//
+//	var $modalHeader = $('#modal-header');
+//	let $startFrom = $('#start-from');
+//	$startFrom.focusout(function(){
+//		let val = $startFrom.val();
+//		if(val)
+//			Cookies.set("startFrom",  val, { path: '' });
+//		else
+//			Cookies.set("startFrom",  '', { path: '' });
+//	});
+//
+//
+//	var ip = Cookies.get("startFrom")
+//	if(ip)
+//		$startFrom.val(ip);
+//	else{
+//		ip = $startFrom.val();
+//		if(!ip){
+//			ip = 2;
+//			$startFrom.val(ip);
+//		}
+//	}
+//	var index = 0;
+//	var maxIP = 240;
+//
+//	scanIpInterval = setInterval(function() {
+//
+//		if(postWithParamCount>20)
+//			return;
+//
+//		if(ip>maxIP){
+//			// Stop IP scan
+//			clearInterval(scanIpInterval);
+//
+//			var tooltipTriggerList = [].slice.call(document.querySelectorAll('[data-bs-toggle="tooltip"]'));
+//			tooltipTriggerList.map(function (tooltipTriggerEl) { return new bootstrap.Tooltip(tooltipTriggerEl)});
+//			$modalHeader.text('Scan completed.');
+//			$('#scanBtn').removeClass('btn-primary').addClass('btn-success').text('Restart');
+//			return;
+//		}
+//
+//		var ipAddress = '192.168.30.' + ip;
+//		$modalHeader.text('Send Request for ' + ipAddress);
+//
+//		postWithParam('/calibration/rest/scan', {ip : ipAddress}, function(homePageInfo){
+//
+//			if(!homePageInfo || !homePageInfo.sysInfo || !homePageInfo.netInfo)
+//				return;
+//
+//			var $text = $('<div>', {class: 'col-sm'});
+//			var $row = $('<div>', {class: 'row'})
+//
+//			$modalBody
+//			.append(
+//				$row
+//				.append(
+//					$('<div>', {class: 'col-auto'}).text(++index))
+//				.append(
+//					$('<div>', {class: 'col-sm'})
+//					.append(
+//						$('<a>', {href: 'http://' + homePageInfo.netInfo.addr, target: "_blank"}).text(homePageInfo.netInfo.addr)
+//					)
+//				)
+//				.append($text)
+//			);
+//
+//			$text.append($('<a>', {href: 'http://' + homePageInfo.sysInfo.sn, target: "_blank"}).text(homePageInfo.sysInfo.sn));
+//			$row
+//			.append(
+//				$('<div>', {class: 'col-auto'}).append($('<a>', { class: 'btn btn-sm btn-outline-dark', target: "_blank", href: '/calibration?sn=' + homePageInfo.netInfo.addr}).text('Calibrate'))
+//			)
+//			.append(
+//				$('<div>', {class: 'col-auto'}).append($('<a>', { class: 'btn btn-sm btn-outline-info', onclick: 'loginFromScan(event, this)', target: "_blank", href: '/calibration/rest/login?sn=' + homePageInfo.netInfo.addr}).text('Login'))
+//			);
+//			$row.attr('data-bs-toggle','tooltip').attr('data-bs-placement','top').attr('title', homePageInfo.sysInfo.desc);
+//		});
+//
+//		++ip;
+//	}, 100);
+//
+//	$modal.on('hide.bs.modal', function () {
+//		if (document.activeElement) 
+//	        document.activeElement.blur();
+//	});
+//
+//	$modal.on('hidden.bs.modal', function () {
+//		clearInterval(scanIpInterval);
+//	});
+//});
 
 function getHostName(){
 
@@ -753,17 +729,6 @@ $('.dump_devices').click(function(e){
 	})
 	.fail(connectionFail);
 });
-$('#btn-http-comport').click(()=>{
-	let httpServer = $spServers.val();
-	if(httpServer){
-		let url = 'http://' + httpServer + ':8088'
-		let win = window.open(url, '_blank');
-		if(win) 
-			win.focus();
-		else
-			alert('Please allow popups for this website');
-	}
-});
 function showToast(title, message, headerClass){
 
 	let $toast = $('<div>', {class: 'toast', role: 'alert', 'aria-live': 'assertive', 'aria-atomic': true})
@@ -797,13 +762,13 @@ function sendPrologixCommands(commands, responseProcessing){
 
 	let hostName = getHostName();
 	if(!hostName){
-		console.log("Unable to get hostname.");
+		console.warn("Unable to get hostname.", hostName);
 		alert('Unable to get hostname.');
 		return;
 	}
 
 	commands.hostName = hostName;
-	postObject('/serial_port/rest/send', commands)
+	postObject('/serial-port/rest/send', commands)
 	.done(function(data){
 
 		if(data.error){
@@ -923,177 +888,6 @@ function downloadURL(href) {
   link.click();
   document.body.removeChild(link);
   delete link;
-}
-if(serialNumber){	
-
-	$.get(`/calibration/rest/sn?sn=${serialNumber}`)
-	.done(data=>{
-
-		if(!data)
-			return;
-
-		$('#webSn').text(data.serialNumber);
-		$('#webId').text(data.id);
-		$('#webPn').text(data.partNumber.partNumber);
-		$('#webDescr').text(data.partNumber.description);
-	});
-
-	const $tunedBy =$('#tunedBy');
-	$.get(`/btr/rest/unit-tuning?sn=${serialNumber}`)
-	.done(data=>{
-
-		if(!data)
-			return;
-
-		if(data.payload.startsWith('<!DOCTYPE html')){
-			alert('Unable to connect to the 1C server. (unit-tuning)');
-			return;
-		}
-
-				const o = JSON.parse(data.payload);
-		if(!o.length)
-			return;
-		if(o[0].TunedBy)
-			$tunedBy.text('Tuned by ' + o[0].TunedBy);
-		$('#oneCImd').text(o[0].IMD);
-		$('#oneCNotes').text(o[0].Notes);
-	});
-
-	$.get(`/btr/rest/header?sn=${serialNumber}`)
-	.done(data=>{
-
-		if(!data)
-			return;
-
-		if(data.payload.startsWith('<!DOCTYPE html')){
-			alert('Unable to connect to the 1C server. (header)');
-			return;
-		}
-
-		const o = JSON.parse(data.payload);
-		if(typeof o === "string"){
-			console.log(o);
-			return;
-		}
-
-		$('#oneCHeadDescr').text(o.Description);
-		$('#oneCHeadNotes').text(o.Notes);
-		$('#oneCHeadPn').text(o.SalesSKU);
-		$('#oneCHeadIntern').text(o.Product).click(()=>{
-			const split = o.Product.split('-');
-			let message = '';
-
-			switch(split[0].charAt(0)){
-				case 'A':
-					message = "AntBUC\n";
-					break;
-				case 'P':
-					message = "PicoBUC\n";
-					break;
-				case 'K':
-					message = "KiloBUC\n";
-					break;
-				case 'R':
-					message = "Rack Mount\n";
-					break;
-				case 'F':
-					message = "FemtoBUC\n";
-					break;
-			}
-
-			switch(split[1].charAt(0)){
-				case '1':
-					message += "S-Band\n";
-					break;
-				case '2':
-					message += "C-Band\n";
-					break;
-				case '3':
-					message += "X-Band\n";
-					break;
-				case '4':
-					message += "Ku-Band\n";
-					break;
-					case '5':
-						message += "Ka-Band\n";
-						break;
-			}			
-
-			switch(split[1].substring(0,2)){
-				case '21':
-					message += "LMI 5.725-6.025 GHz\n";
-					break;
-				case '22':
-					message += "Standard 5.85-6.425 GHz\n";
-					break;
-				case '23':
-					message += "Full 5.85-6.75 GHz\n";
-					break;
-				case '24':
-					message += "Russian 5.975-6.475 GHz\n";
-					break;
-				case '25':
-					message += "Txt. 6.425-6.725 GHz\n";
-					break;
-				case '26':
-					message += "Palapa 6.425-6.665 GHz\n";
-					break;
-				case '27':
-					message += "Insat 6.725-7.025 GHz\n";
-					break;
-				case '28':
-					message += "Tropo 4.4-5.0 GHz\n";
-					break;
-				case '31':
-					message += "Std. 7.9-8.1 GHz\n";
-					break;
-				case '32':
-					message += "Ext. 7.9-8.4 GHz\n";
-					break;
-				case '41':
-					message += "Low. 12.75-13.25 GHz\n";
-					break;
-				case '42':
-					message += "Ext. 13.75-14.5 GHz\n";
-					break;
-				case '43':
-					message += "Std. 14.0-14.5 GHz\n";
-					break;
-				case '44':
-					message += "Hifg. 14.5-14.8 GHz\n";
-					break;
-			}
-
-			message += parseInt(split[2]) + ' W\n';
-
-			if(split[3].charAt(0)==='A')
-				message += 'GaAs\n';
-			else
-				message += 'GaN\n';
-
-			switch(split[3].charAt(1)){
-				case '1':
-					message += "External\n";
-					break;
-				case '2':
-					message += "Internal\n";
-					break;
-				case '3':
-					message += "Autosense\n";
-					break;
-			}
-
-			if(split[3].charAt(2)==='A')
-				message += 'AC\n';
-			else
-				message += 'DC\n';
-
-			if(split[3].charAt(4)==='1')
-				message += 'Redundant\n';
-
-			alert(message);
-		});
-	});
 }
 function checkSerialNumbers(){
 	$.get('/calibration/rest/all-modules', {sn: serialNumber})
@@ -1234,22 +1028,7 @@ async function getCPU(devid){
 function atStart(){
 	if(!$calMode.hasClass('disabled')){
 		checkSerialNumbers();
-
-			// Stickers
-//		(async ()=>{
-//			const moduleIndexies = await $.get('/calibration/rest/all-modules', {sn: serialNumber});
-//			let deley = 300;
-//			if(typeof moduleIndexies === 'string'){
-//				console.warn('There is no way to get indexex pf the modules');
-//				return;
-//			}
-//			console.log('Modules found: ', moduleIndexies);
-//			Object.values(moduleIndexies).sort((a,b)=>a-b).forEach(index=>{
-//				setTimeout(getInfo, deley, index, parseSerialNumber);
-//				deley += 300;
-//			});
-//		})()
 	}
 }
-setTimeout(atStart, 2000);
+//setTimeout(atStart, 2000);
 

@@ -16,7 +16,7 @@
     		<div class="modal-content">
       			<div class="modal-header">
          			<h4 id="costTitleLabel" class="modal-title" th:text="${user==null ? 'Add User.' : 'Edit User.'}">Edit User.</h4>
-        			<button type="button" class="close" data-dismiss="modal" aria-label="Close"><span aria-hidden="true">&times;</span></button>
+        			<button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
       			</div>
  
       			<form id="mdal_form" action="#" th:class="${user!=null} ? ${user.status==activeUser ? 'table-success' : 'table-danger'}">
@@ -62,7 +62,7 @@
 
      			<div class="modal-footer">
 						<button type="submit" class="btn btn-outline-success mr-2" disabled>Save User</button>
-						<input type="button" class="btn btn-secondary" data-dismiss="modal" value="Cancel" />
+						<button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Close</button>
      			</div>
  				</form>
 		<script type="text/javascript" th:inline="javascript">
@@ -109,7 +109,7 @@
 				$.post("/users/save", user)
 				.done(function(data){
 
-					var $buttonClose = $('<button>', {type : 'button', class : 'close', 'data-dismiss' : 'alert', 'aria-label' : 'Close'});
+					var $buttonClose = $('<button>', {type : 'button', class : 'btn-close', 'data-bs-dismiss' : 'alert', 'aria-label' : 'Close'});
 					var $span = $('<span>', {'aria-hidden' : 'true', html : '&times;'});
 
 					if(data==true){

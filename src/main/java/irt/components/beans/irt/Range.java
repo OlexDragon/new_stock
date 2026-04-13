@@ -9,4 +9,5 @@ import lombok.ToString;
 public class Range{
 	private Integer min;
 	private Integer max;
+	private Integer step;
 }

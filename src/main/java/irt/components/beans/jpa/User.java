@@ -4,6 +4,7 @@ import java.io.Serializable;
 import java.util.Base64;
 import java.util.Optional;
 
+import jakarta.persistence.Column;
 import jakarta.persistence.Entity;
 import jakarta.persistence.EnumType;
 import jakarta.persistence.Enumerated;
@@ -24,7 +25,8 @@ public class User implements Serializable{
 	private String lastname;
 	private Long permission;
 	private String extension;
-	private String eMail;
+	@Column(name = "e_mail")
+	private String email;
 	@Enumerated(EnumType.ORDINAL)
 	private Status status;
 
@@ -49,7 +51,7 @@ public class User implements Serializable{
 	public String getLastname() 	{ return lastname; }
 	public Long   getPermission() 	{ return permission; }
 	public String getExtension() 	{ return extension; }
-	public String getEmail() 		{ return eMail; }
+	public String getEmail() 		{ return email; }
 	public Status getStatus() 		{ return status; }
 
 	public void setUsername(String username) 	{ this.username = Optional.ofNullable(username).map(String::trim).filter(un->!un.isEmpty()).orElseThrow(()->new NullPointerException("Username can not be null.")); }
@@ -59,7 +61,7 @@ public class User implements Serializable{
 	public void setPermission(Long permission) 	{ this.permission = permission; }
 	public void setExtension(String extension) 	{ this.extension = Optional.ofNullable(extension).map(String::trim).filter(un->!un.isEmpty()).orElse(null); }
 	public void setStatus(Status status) 		{ this.status = status; }
-	public void setEmail(String email) 			{ this.eMail = Optional.ofNullable(email).map(String::trim).filter(un->!un.isEmpty()).orElse(null); }
+	public void setEmail(String email) 			{ this.email = Optional.ofNullable(email).map(String::trim).filter(un->!un.isEmpty()).orElse(null); }
 
 	@Override
 	public int hashCode() {
@@ -87,7 +89,7 @@ public class User implements Serializable{
 	public String toString() {
 		return "User [id=" + id + ", username=" + username + ", password=" + password + ", firstname=" + firstname
 				+ ", lastname=" + lastname + ", permission=" + permission + ", extension=" + extension + ", eMail="
-				+ eMail + ", status=" + status + "]";
+				+ email + ", status=" + status + "]";
 	}
 
 	public enum Status{

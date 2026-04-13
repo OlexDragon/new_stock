@@ -32,5 +32,8 @@ public class CalibrationRwInfo {
 	private CalibrationRwInfo calibrationRwInfo;
 	@JsonProperty("dacs")
 	@JsonAlias("dac")
-	DacsDP dacs;
+	private DacsDP dacs;
+	@JsonAlias("enable")
+	private Integer enable;
+	private Range range;
 }

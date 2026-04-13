@@ -109,11 +109,9 @@
 			});
 
 			function update(){
-				if(interval)
-					clearInterval(interval);
-
+				if(interval){ try{ interval.stop(); }catch(e){} interval = null; }
 				//get value from unit
-				interval = setInterval(function() {
+				interval = timerWorker.startPoll(function() {
 
 					if(buzy)
 						return;
@@ -146,8 +144,7 @@
 // 									login();
 								}
 								buzy = false;
-							})
-							.fail(function(error) {
+							}).fail(function(error) {
 								if(err){
 									buzy = false;
 									return;
@@ -162,7 +159,7 @@
 								};
 								buzy = false;
 				   			});
-				}, 2000);
+				}, 1000);
 			}
 			update();
 

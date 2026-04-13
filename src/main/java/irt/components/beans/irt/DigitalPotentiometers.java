@@ -20,5 +20,5 @@ public class DigitalPotentiometers {
 	private List<DigitalPotentiometer> vars;
 
 	// 100.21 Controller
-	Range range;
+	private Range range;
 }

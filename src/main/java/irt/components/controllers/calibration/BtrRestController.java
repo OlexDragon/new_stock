@@ -73,7 +73,6 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 
 import irt.components.beans.Btr;
 import irt.components.beans.IrtMessage;
-import irt.components.beans.OneCeHeader;
 import irt.components.beans.OneCeUrl;
 import irt.components.beans.UserPrincipal;
 import irt.components.beans.jpa.User;
@@ -90,7 +89,6 @@ public class BtrRestController {
 	private final static Logger logger = LogManager.getLogger();
 
 	@Value("${irt.btr.templates}") 	private String templates;
-	@Value("${irt.url.travelers}") 	private String urlTravelers;
 	@Value("${irt.onRender}") 		private String onRender;
 
 	@Autowired private BtrMeasurementsRepository measurementsRepository;
@@ -128,9 +126,9 @@ public class BtrRestController {
 
 			URI uri = UriComponentsBuilder.newInstance()
 					.scheme("https")
-					.host(onRender)
+					.host("irt-technologies-inc.onrender.com")
 					.path("/rest/serial-number/get-id")
-					.queryParam("serialNumber", btr.getSerialNumber())
+					.queryParam("sn", btr.getSerialNumber())
 					.build().toUri();
 
 			final String id = IrtHttpRequest.getForString(uri, 3, TimeUnit.SECONDS);
@@ -171,33 +169,25 @@ public class BtrRestController {
 	}
 
 	@PostMapping("template/upload")
-	String uploadTemplate(@RequestParam String sn, Boolean localPN, MultipartFile file) throws IllegalStateException, IOException, InterruptedException, ExecutionException, TimeoutException {
-		logger.traceEntry("sn: {}; localPN: {};", sn, localPN);
+	String uploadTemplate(@RequestParam String pn, String localPN, MultipartFile file) throws IllegalStateException, IOException, InterruptedException, ExecutionException, TimeoutException {
+		logger.traceEntry("pn: {}; localPN: {}", pn, localPN);
 
-		final boolean local = Optional.ofNullable(localPN).orElse(false);
-		final OneCeHeader oneCeHeader = OneCeRestController.getOneCHeader(oneCeApiUrl, sn).get(5, TimeUnit.SECONDS);
+		final File f = new File(templates, pn);
+		if(!f.exists() && !f.mkdir())
+				return "The folder " + f + " cannot be created.";
 
-		if(oneCeHeader==null) {
-			logger.error("Something went wrong. Unable to contact the !C.");
-			return "Something went wrong. Unable to contact the !C.";
-		}
-
-		final File f = new File(templates, local ? oneCeHeader.getProduct() : oneCeHeader.getSalesSKU());
-		if(!f.exists())
-			f.mkdir();
-
-		final File toSave = new File(f, oneCeHeader.getSalesSKU() + ".xlsx");
+		final String fileName = Optional.ofNullable(localPN).orElse(pn) + ".xlsx";
+		final File toSave = new File(f, fileName);
 		file.transferTo(toSave);
 
 		return  "The Template has been loaded.";
 	}
 
 	private final DateFormat df = new SimpleDateFormat("yyyy-MM-dd");
-	@GetMapping("template")
-	ResponseEntity<Resource> getBtr(@RequestParam String sn, Long measId) throws FileNotFoundException, IOException, InterruptedException, ExecutionException, TimeoutException{
-		logger.traceEntry("sn: {}; measId: {};", sn, measId);
+	@GetMapping("get-btr")
+	ResponseEntity<Resource> getBtr(@RequestParam String sn, @RequestParam String pn, @RequestParam String localPN, @RequestParam Long measId) throws FileNotFoundException, IOException{
+		logger.traceEntry("pn: {}; localPN: {}; measId: {};", pn, localPN, measId);
 
-		final FutureTask<OneCeHeader> ftOneCHeader = OneCeRestController.getOneCHeader(oneCeApiUrl, sn);
 		final List<NameValuePair> params = new ArrayList<>();
 		final String serialNumber = sn.replaceAll("\\D", "");
 		params.add(new BasicNameValuePair("sn", serialNumber));
@@ -209,28 +199,27 @@ public class BtrRestController {
 		params.remove(section);
 		final FutureTask<String> ftUnit = getUnitTuningFT(serialNumber);
 
-		final OneCeHeader oneCeHeader = ftOneCHeader.get(5, TimeUnit.SECONDS);
-		final String pn = oneCeHeader.getSalesSKU();
-
 		HttpHeaders headers = new HttpHeaders();
 		headers.add("Cache-Control", "no-cache, no-store, must-revalidate");
 		headers.add("Pragma", "no-cache");
 		headers.add("Expires", "0");
-		headers.add("Content-Disposition", "inline; filename=\"" + pn + '_' + sn + ".xlsx" + "\"");
+		headers.add("Content-Disposition", "inline; filename=\"" + (localPN==null ? pn : localPN) + '_' + sn + ".xlsx" + "\"");
 
-		final File f = Optional.of(new File(templates, oneCeHeader.getProduct())).filter(File::exists).orElseGet(()->new File(templates, oneCeHeader.getSalesSKU()));
-		if(!f.exists())
+		final File f = new File(templates, pn);
+		if(!f.exists()) {
+			logger.warn("Folder {} not found.", pn);
 			return ResponseEntity.notFound().headers(headers).build();
+		}
 
-		final File[] listFiles = f.listFiles();
-		if(listFiles.length==0)
+
+		final File file = Optional.of(localPN + ".xlsx").map(fileName->new File(f, fileName)).filter(File::exists).orElseGet(()->Optional.of(pn + ".xlsx").map(fileName->new File(f, fileName)).filter(File::exists).orElse(null));
+		if(file == null) {
+			logger.warn("File {} not found.", file);
 			return ResponseEntity.notFound().headers(headers).build();
-
-		if(listFiles.length>1)
-			logger.warn("More than one file found.");
+		}
+		headers.set("Content-Disposition", "inline; filename=\"" + file.getName().replaceFirst("[.][^.]+$", "") + '_' + sn + ".xlsx\"");
 
 		InputStream is;
-		final File file = listFiles[0];
 		try(	final FileInputStream fis = new FileInputStream(file);
 				final Workbook workbook  = WorkbookFactory.create(fis);
 				final ByteArrayOutputStream bos = new ByteArrayOutputStream();){
@@ -508,12 +497,13 @@ public class BtrRestController {
         map.remove("Component");
         map.remove("Setting");
 
-         Optional.ofNullable(map.remove("IMD")).map(s->(s.contains(":") ? s.split(":")[1] : s).trim()).map(s->s.split("[;/, ]+"))
+         Optional.ofNullable(map.remove("IMD")).map(s->(s.contains(":") ? s.split(":")[1] : s).trim()).map(s->Arrays.stream(s.split("[;/, ]+")).filter(a->(!a.contains("@") && a.matches(".*\\d.*"))).map(String::trim).toArray())
          .ifPresent(
         		 a->{
+
         			 for(int i=0; i<a.length; i++) {
 
-        				 final String trim = a[i].trim();
+        				 final String trim = (String) a[i];
         				 if(trim.isEmpty())
         					 continue;
 

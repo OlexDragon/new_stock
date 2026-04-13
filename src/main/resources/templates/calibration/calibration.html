@@ -36,8 +36,7 @@
 				<option selected="selected" disabled="disabled" hidden="hidden" title="Serial Port Server" value="">Select a Serial Port Server</option>
 				<option
 					 th:each="serialPortServer : ${ serialPortServers.entrySet() }"
-					 th:value="${ serialPortServer.key}"
-					 th:text="${ 'http://' + serialPortServer.key + ':' + serialPortServer.value  }">Serial Port Server Name</option>
+					 th:text="${serialPortServer.key + ':' + serialPortServer.value}">Serial Port Server Name</option>
 			</select>
 		</div>
 
@@ -47,13 +46,17 @@
   			<div class="dropdown-menu" aria-labelledby="dropdownBtrButton">
 <!-- BTR Measurement -->
     			<a id="btrMeasurement" 
-    				class="dropdown-item calibrate" 
-    				th:href="@{${info==null} ? (${sn} == null ? '#' : '/calibration/btr?sn=' + ${sn}) : '/calibration/btr?sn=' + ${info.serialNumber}}">Measurement</a>
+    				class="dropdown-item cal-menu"
+    				href="#"
+    				data-class-name="MeasurementTable"
+    				data-path="./calibration/btr/measurement-table.mjs">Measurement</a>
 <!-- BTR PowerDetector -->
     			<a id="btrPowerDetector" 
-    				class="dropdown-item calibrate"
+    				class="dropdown-item cal-menu"
     				th:classappend="${info==null} ? 'disabled'"
-    				th:href="@{${info==null} ? (${sn} == null ? '#' : '/calibration/btr/pd?sn=' + ${sn}) : '/calibration/btr/pd?sn=' + ${info.serialNumber}}">Power Detector</a>
+    				href="#"
+    				data-class-name="PowerTable"
+    				data-path="./calibration/btr/power-table.mjs">Power Detector</a>
   			</div>
 		</div>
 <!-- Unit Dropdown menu -->
@@ -286,7 +289,7 @@
     					</div>
 					</div>
 <!-- System Soft Path -->
-   					<a class="dropdown-item profilePath" th:href="@{'/calibration/rest/soft/path?sn=' + ${info==null ? serialNumber : info.serialNumber}}" target="_blank">Soft Path</a>
+   					<a class="dropdown-item softPath" th:href="@{'/calibration/rest/soft/path?sn=' + ${info==null ? serialNumber : info.serialNumber}}" target="_blank">Soft Path</a>
  				</div>
 <!-- Upload Soft-->
 				<div class="btn-group" style="width:100%;">
@@ -385,12 +388,16 @@
     			<div><hr class="dropdown-divider"></div>
 <!-- Power Chart -->
     			<a	id="menuPowerChart"
-    				class="dropdown-item calibrate"
-    				th:href="@{${ip==null} ? '#' : '/calibration/power_chart?sn=' + ${ip}}" 
-    				target="_blank">Power Chart</a>
+    				class="dropdown-item cal-menu"
+    				href="#"
+    				data-class-name="PowerChart"
+    				data-path="./calibration/unit/power-chart.mjs">Power Chart</a>
     			<div><hr class="dropdown-divider"></div>
 <!-- Network Scan -->
-    			<a id="scan" class="dropdown-item" href="#">Network Scan</a>
+    			<a class="dropdown-item cal-menu"
+    				 href="#"
+    				data-class-name="NetworkScan"
+    				data-path="./calibration/unit/network-scan.mjs">Network Scan</a>
   			</div>
 		</div>
 
@@ -400,8 +407,10 @@
   			<div id="calMenu" class="dropdown-menu" aria-labelledby="dropdownCalibrateButton">
 <!-- Input Power -->
     			<a	id="menuInputPower"
-    				class="dropdown-item calibrate disabled list-group-item-light"
-    				th:href="@{${(info==null or info.deviceId==null)} ? '/calibration/converter/input-power' : '/calibration/input-power?sn=' + ${info.serialNumber} + '&pn=' + ${partNumber} + '&deviceId=' + ${#strings.substring(info.deviceId, 1, info.deviceId.length()-1)}}">Input Power</a>
+    				class="dropdown-item cal-menu list-group-item-light"
+    				href="#"
+    				data-class-name="InputPower"
+    				data-path="./calibration/calibrate/input-power.mjs">Input Power</a>
 <!-- Output Power -->
 				<div class="btn-group" style="width:100%;">
 					<div class="btn-group dropstart" role="group">
@@ -429,8 +438,10 @@
     					</div>
 					</div>
     				<a	id="menuOutputPower"
-    					class="dropdown-item calibrate"
-    					th:href="@{${(info==null or info.deviceId==null)} ? '/calibration/converter/output-power' : '/calibration/op?sn=' + ${info.serialNumber} + '&pn=' + ${partNumber}}">Output Power</a>
+    					class="dropdown-item cal-menu"
+    					href="#"
+    					data-class-name="OutputPower"
+    					data-path="./calibration/calibrate/output-power.mjs">Output Power</a>
  				</div>
 <!-- Power Offset -->
     			<a	id="menuPowerOffset"
@@ -514,11 +525,11 @@
 <!-- Output -->
 			<div class="accordion-item">
 				<h2 class="accordion-header" id="headingOutput">
-					<button class="accordion-button" type="button" data-bs-toggle="collapse" data-bs-target="#collapseOutput" aria-expanded="true" aria-controls="collapseOutput">Output Tool:<strong id="outputInfo" class="text-danger"> Serial Port is not selected</strong></button>
+					<button class="accordion-button" type="button" data-bs-toggle="collapse" data-bs-target="#collapseOutput" aria-expanded="true" aria-controls="collapseOutput">Output Tool:<strong  class="text-danger ms-2 tool-setting"> Serial Port is not selected</strong></button>
 				</h2>
 				<div id="collapseOutput" class="accordion-collapse collapse" aria-labelledby="headingOutput" data-bs-parent="#accordion">
 					<div class="accordion-body">
-						<div class="row gap-3 mb-3">
+						<div class="row gap-3 mb-3 tool-values">
 							<div class="form-floating col">
 	        					<select id="outputComPorts" class="form-select com-ports" data-info-message="outputInfo" title="Serial Port">
 									<option selected="selected" disabled="disabled" hidden="hidden" value="">Select a Serial Port</option>
@@ -534,30 +545,27 @@
 	        				</div>
 							<div class="col-sm input-group flex-nowrap">
 								<div class="form-floating">
-									<input id="outputToolValue" type="number" class="form-control" onfocus="this.blur();" readonly></input>
+									<input id="outputToolValue" type="number" class="form-control" onfocus="this.blur();" placeholder="Power Meter Value" readonly></input>
 	        						<label for="outputToolValue">Output Value</label>
 	        					</div>
-								<button id="outputGet" class="input-group-text btn btn-outline-secondary tool-btn disabled">Get</button>
+								<button id="outputGet" class="input-group-text btn btn-outline-secondary tool-btn">Get</button>
 							</div>
-<!-- 							<button id="ouputZero" class="input-group-text col btn btn-outline-secondary output-buton to-disable disabled">Zero</button> -->
+<!-- 							<button id="ouputZero" class="input-group-text col btn btn-outline-secondary output-buton">Zero</button> -->
       					</div>
 <!--  Prologix (Output Tool) -->
-      					<div class="row gap-3 prologix">
+      					<div class="row gap-3 prologix" th:fragment="prologix(addr)">
 
-							<div class="col-lg input-group flex-nowrap">
-								<input id="outputToolAddress" type="number" class="form-control address" aria-label="Tool Address" title="Tool Address" placeholder="Address" value="13">
-								<button class="input-group-text btn btn-outline-secondary to-disable disabled"
-										data-commands='["++addr 13"]'
-										data-get-answer='false'>Set</button>
-							</div>
-	        				<button class="form-control col btn btn-outline-secondary to-disable disabled"
+							<div class="col-8 col-sm-3 col-md-2 col-lg-2">
+							<div class="input-group">
+								<input th:id="'addr' + ${addr ?: 13}" type="number" class="form-control address" aria-label="Tool Address" title="Tool Address" placeholder="Address" value="13" th:value="${addr ?: 13}">
+								<button class="input-group-text btn btn-outline-secondary b-addr">Set</button>
+							</div></div>
+	        				<button class="form-control col btn btn-outline-secondary b-set-default"
 	        						title="Press to set default values( SAVE CONFIG = off, MODE = CONTROLLER)"
+	        						data-btn-class='["b-savecfg", "b-mode"]'
 	        						data-commands='["++savecfg 0", "++mode 1"]'>Set Default</button>
-	        				<button class="form-control col btn btn-outline-secondary to-disable disabled"
-	        						data-commands='["++auto", "++savecfg", "++mode", "++addr"]'
-									data-get-answer='true'>Get All</button>
-	        				<button id="outputToolAuto"
-	        						class="form-control col btn btn-outline-secondary to-disable disabled btn-prologix btn-auto"
+	        				<button class="form-control col btn btn-outline-info b-get-all">Get All</button>
+	        				<button class="form-control col btn btn-outline-secondary b-prologix"
 	        						title="Press To get the Auto Setting"
 	        						data-commands-to-choose='["++auto 1", "++auto 0"]'
 	        						data-commands='["++auto"]'
@@ -565,7 +573,7 @@
 	        						data-message='["AUTO OFF", "AUTO ON"]'
 	        						data-title='["Press to set AUTO ON", "Press to set AUTO OFF"]'
 	        						data-classes='["btn-primary", "btn-success"]'>Get AUTO</button>
-	        				<button class="form-control col btn btn-outline-secondary to-disable disabled btn-prologix btn-mode"
+	        				<button class="form-control col btn btn-outline-secondary b-prologix b-mode"
 	        						title="Press To get the Prologix Mode"
 	        						data-commands-to-choose='["++mode 1", "++mode 0"]'
 	        						data-commands='["++mode"]'
@@ -573,7 +581,7 @@
 	        						data-message='["DEVICE", "CONTROLLER"]'
 	        						data-title='["Press to set CONTROLLER mode", "Press to set DEVICE mode"]'
 	        						data-classes='["btn-primary", "btn-success"]'>Get Mode</button>
-	        				<button class="form-control col btn btn-outline-secondary to-disable disabled btn-prologix btn-savecfg"
+	        				<button class="form-control col btn btn-outline-secondary b-prologix b-savecfg"
 	        						title="Press To get the SAVE CONFIG setting"
 	        						data-commands-to-choose='["++savecfg 1", "++savecfg 0"]'
 	        						data-commands='["++savecfg"]'
@@ -581,8 +589,7 @@
 	        						data-message='["SAVE CONF. OFF", "SAVE CONF. ON"]'
 	        						data-title='["Press to set SAVE CONFIG on", "Press to set SAVE CONFIG off"]'
 	        						data-classes='["btn-success", "btn-primary"]'>SAVE CONFIG</button>
-	        				<button id="outputToolPrologixRST"
-	        						class="form-control col btn btn-outline-secondary to-disable disabled"
+	        				<button class="form-control col btn btn-outline-secondary b-reset"
 	        						title="Press to reset of the USB/GPIB controller"
 	        						data-commands='["++rst"]'
 	        						data-get-answer="false">Reset</button>
@@ -594,10 +601,10 @@
 <!-- Input -->
 			<div class="accordion-item">
 				<h2 class="accordion-header" id="headingInput">
-					<button class="accordion-button" type="button" data-bs-toggle="collapse" data-bs-target="#collapseInput" aria-expanded="true" aria-controls="collapseInput">Input Tool :<strong id="inputInfo" class="text-danger"> Serial Port is not selected</strong></button>
+					<button class="accordion-button" type="button" data-bs-toggle="collapse" data-bs-target="#collapseInput" aria-expanded="true" aria-controls="collapseInput">Input Tool :<strong id="inputInfo" class="text-danger ms-2 tool-setting"> Serial Port is not selected</strong></button>
 				</h2>
 				<div id="collapseInput" class="accordion-collapse collapse" aria-labelledby="headingInput" data-bs-parent="#accordion">
-					<div class="accordion-body">
+					<div class="accordion-body tool-values">
 						<div class="row gap-3 mb-3">
 							<div class="form-floating col">
 								<select id="inputComPorts" class="form-select com-ports" data-info-message="inputInfo" title="Serial Port">
@@ -627,7 +634,7 @@
 		        					</select>
 	        						<label for="inputOutput">Output Power</label>
 		        				</div>
-								<button id="inputOutputBtn" class="input-group-text btn btn-outline-secondary input-tool-buton tool-btn disabled" value="0">Get</button>
+								<button id="inputOutputBtn" class="input-group-text btn btn-outline-secondary input-tool-buton tool-btn" value="0">Get</button>
 							</div>
 							<div class="col-lg input-group flex-nowrap">
 								<div class="form-floating">
@@ -639,7 +646,7 @@
 	        						<option value="MHZ" data-divider="1000000">MHz</option>
 	        						<option value="KHZ" data-divider="1000">kHz</option>
 	        					</select>
-								<button id="inputFrequencyBtn" class="input-group-text btn btn-outline-secondary input-tool-buton tool-btn disabled" value="1">Get</button>
+								<button id="inputFrequencyBtn" class="input-group-text btn btn-outline-secondary input-tool-buton tool-btn" value="1">Get</button>
 	        				</div>
 							<div class="col input-group flex-nowrap">
 								<input id="inputPowerUnit" type="hidden">
@@ -647,63 +654,19 @@
 		        					<input id="inputPower" type="number" class="input-value form-control" title="Power" placeholder="Power" data-for="#inputPowerBtn"  data-bs-content="Bottom popover" data-step="1">
 	        						<label for="inputPower">Power Level</label>
 		        				</div>
-								<button id="inputPowerBtn" class="input-group-text btn btn-outline-secondary input-tool-buton tool-btn disabled" value="2">Get</button>
+								<button id="inputPowerBtn" class="input-group-text btn btn-outline-secondary input-tool-buton tool-btn" value="2">Get</button>
 							</div>
 						</div>
-<!--  Prologix (Input Tool) -->
-      					<div class="row gap-3 prologix">
-
-							<div class="col-lg input-group flex-nowrap">
-								<input id="inputToolAddress" type="number" class="form-control address" aria-label="Tool Address" title="Tool Address" placeholder="Address" value="19">
-								<button class="input-group-text btn btn-outline-secondary to-disable disabled"
-										data-commands='["++addr 19"]'
-										data-get-answer='false'>Set</button>
-							</div>
-	        				<button class="form-control col btn btn-outline-secondary to-disable disabled"
-	        						title="Press to set default values( SAVE CONFIG = off, MODE = CONTROLLER)"
-	        						data-commands='["++savecfg 0", "++mode 1"]'>Set Default</button>
-	        				<button class="form-control col btn btn-outline-secondary to-disable disabled"
-	        						data-commands='["++auto", "++savecfg", "++mode", "++addr"]'
-									data-get-answer='true'>Get All</button>
-	        				<button id="inputToolAuto"
-	        						class="form-control col btn btn-outline-secondary to-disable disabled btn-prologix btn-auto"
-	        						title="Press To get the Auto Setting"
-	        						data-commands-to-choose='["++auto 1", "++auto 0"]'
-	        						data-commands='["++auto"]'
-	        						data-get-answer="true"
-	        						data-message='["AUTO OFF", "AUTO ON"]'
-	        						data-title='["Press to set AUTO ON", "Press to set AUTO OFF"]'
-	        						data-classes='["btn-success", "btn-success"]'>Get AUTO</button>
-	        				<button class="form-control col btn btn-outline-secondary to-disable disabled btn-prologix btn-mode"
-	        						title="Press To get the Prologix Mode"
-	        						data-commands-to-choose='["++mode 1", "++mode 0"]'
-	        						data-commands='["++mode"]'
-	        						data-get-answer="true"
-	        						data-message='["DEVICE", "CONTROLLER"]'
-	        						data-title='["Press to set CONTROLLER mode", "Press to set DEVICE mode"]'
-	        						data-classes='["btn-primary", "btn-success"]'>Get Mode</button>
-	        				<button class="form-control col btn btn-outline-secondary to-disable disabled btn-prologix btn-savecfg"
-	        						title="Press To get the SAVE CONFIG setting"
-	        						data-commands-to-choose='["++savecfg 1", "++savecfg 0"]'
-	        						data-commands='["++savecfg"]'
-	        						data-get-answer="true"
-	        						data-message='["SAVE CONF. OFF", "SAVE CONF. ON"]'
-	        						data-title='["Press to set SAVE CONFIG on", "Press to set SAVE CONFIG off"]'
-	        						data-classes='["btn-success", "btn-primary"]'>SAVE CONFIG</button>
-	        				<button id="inputToolPrologixRST"
-	        						class="form-control col btn btn-outline-secondary to-disable disabled"
-	        						title="Press to reset of the USB/GPIB controller"
-	        						data-commands='["++rst"]'
-	        						data-get-answer="false">Reset</button>
-      					</div>
       				</div>
+<!--  Prologix (Input Tool) -->
+      				<div class="row gap-3 prologix" th:replace="~{:: prologix(19)}"></div>
 				</div>
 			</div>
 
 <!-- Furnace -->
 			<div class="accordion-item">
 				<h2 class="accordion-header" id="headingFurnace">
-					<button class="accordion-button" type="button" data-bs-toggle="collapse" data-bs-target="#collapseFurnace" aria-expanded="true" aria-controls="collapseFurnace">Furnace :<strong id="furnaceInfo" class="text-danger"> Serial Port is not selected</strong></button>
+					<button class="accordion-button" type="button" data-bs-toggle="collapse" data-bs-target="#collapseFurnace" aria-expanded="true" aria-controls="collapseFurnace">Furnace :<strong id="furnaceInfo" class="text-danger ms-2 tool-setting"> Serial Port is not selected</strong></button>
 				</h2>
 				<div id="collapseFurnace" class="accordion-collapse collapse" aria-labelledby="headingFurnace" data-bs-parent="#accordion">
 					<div class="accordion-body">
@@ -716,7 +679,7 @@
 				</div>
 			</div>
 		</div>
-		<div class="row">
+		<div id="unitDataCards" class="row">
 			<div class="card col-xxl-2 col-lg-3 col-md-6 col-sm-6">
 				<div class="card-body">
 					<h5 id="webSn" class="card-title">Serial Number</h5>
@@ -728,11 +691,6 @@
 			<div class="card col-xxl-2 col-lg-4 col-md-6 col-sm-6">
 				<div class="card-body">
 					<h5 id="tunedBy" class="card-title">Unit Tuning</h5>
-					<div class="row">
-						<div class="col-auto">IMD:</div>
-						<div id="oneCImd" class="col">0000000</div>
-					</div>
-					<div id="oneCNotes" class="pre-line">Notes</div>
 				</div>
 			</div>
 			<div class="card col-xxl-4 col-lg-5 col-md-12 col-sm-12">
@@ -752,30 +710,25 @@
 	</div>
 <!-- Modal Message -->
 	<div id="modal" class="modal fade" tabindex="-1">
-  		<div class="modal-dialog">
+  		<div class="modal-dialog" th:fragment="modal">
     		<div class="modal-content">
       			<div class="modal-header">
         			<h5 id="modal_title" class="modal-title ml-3 text-primary">Enter the Serial Number of the Unit.</h5>
         			<button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
       			</div>
-      			<div id="modal-body" class="modal-body">
+       			<div class="modal-footer">
+	    		</div>
+     			<div id="modal-body h-75" class="modal-body">
        				<form action="/calibration" method="get">
-          				<div class="form-group row">
-            				<label for="sn" class="col-form-label ml-3"><strong>SN:</strong></label>
-            				<div class="col-sm-10">
-            					<div class="input-group">
-            						<input type="text" class="form-control" id="sn" name="sn" placeholder="Serial Number or IP Address" />
-            						<div class="input-group-append">
-            							<input type="submit" value="Submit">
-    								</div>
-            					</div>
+          				<div class="input-group">
+ 		           			<label for="sn" class="input-group-text"><strong>SN:</strong></label>
+            				<input type="text" class="form-control" id="sn" name="sn" placeholder="Serial Number or IP Address" />
+            				<div class="input-group-append">
+            					<input type="submit" class="btn btn-outline-secondary" value="Submit">
             				</div>
           				</div>
         			</form>
       			</div>
-      			<div class="modal-footer">
-	        		<button type="button" class="btn btn-outline-secondary" data-bs-dismiss="modal">Close</button>
-	    		</div>
     		</div>
   		</div>
 	</div>	
@@ -788,7 +741,8 @@
 </th:block>
 	<script th:inline="javascript">
 	/*<![CDATA[*/
-		let serialNumber =  /*[[${serialNumber}]]*/ 'IRT-2121021';
+		const originalSN =  /*[[${sn}]]*/ 'IRT-2121021';
+		const serialNumber =  /*[[${serialNumber}]]*/ 'IRT-2121021';
 		const info =  /*[[${info}]]*/ '';
 		const topId = info ? info.deviceType + '.' + info.typeVersion : null;
 		const devid =  /*[[${devid}]]*/ 'IRT-2121021';
@@ -797,12 +751,13 @@
 	</script>
 	<script src="/js/np/chart.js"></script>
 <!--   	<script src="https://cdn.jsdelivr.net/npm/chart.js"></script> -->
+	<script type="module" src="../../static/js/calibration/timer-worker.mjs" th:src="@{/js/calibration/timer-worker.mjs}"></script>
 	<script type="module" src="../../static/js/calibration.mjs" th:src="@{/js/calibration.mjs}"></script>
 	<script src="../../static/js/calibration.js" th:src="@{/js/calibration.js}"></script>
-	<script src="../../static/js/prologix.js" th:src="@{/js/prologix.js}"></script>
-	<script src="../../static/js/inputTool.js" th:src="@{/js/inputTool.js}"></script>
-	<script src="../../static/js/outputTool.js" th:src="@{/js/outputTool.js}"></script>
-	<script src="../../static/js/serial/packet.js" th:src="@{/js/serial/packet.js}"></script>
+<!-- 	<script src="../../static/js/prologix.js" th:src="@{/js/prologix.js}"></script> -->
+<!-- 	<script src="../../static/js/inputTool.js" th:src="@{/js/inputTool.js}"></script> -->
+<!-- 	<script src="../../static/js/outputTool.js" th:src="@{/js/outputTool.js}"></script> -->
+<!-- 	<script src="../../static/js/serial/packet.js" th:src="@{/js/serial/packet.js}"></script> -->
 	<script src="../../static/js/serial/chart.js" th:src="@{/js/serial/chart.js}"></script>
   	<script src="../../static/js/serial/calModalInit.js" th:src="@{/js/serial/calModalInit.js}"></script>
   	<script src="../../static/js/management/unit-control.js" th:src="@{/js/management/unit-control.js}"></script>

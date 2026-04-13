@@ -27,7 +27,7 @@
     		<div class="modal-content">
 <!-- Modal Header -->
       			<div class="modal-header row">
-        			<h5 class="modal-title ml-3 text-primary col-auto" th:text="${sn eq null ? 'Something went wrong. Refresh this page and try again.' : sn.serialNumber + ' - ' + sn.partNumber.partNumber + ' - ' + sn.partNumber.description}">IRT-2401001</h5>
+        			<h5 class="modal-title ml-3 text-primary col-auto" th:text="${sn eq null ? 'Something went wrong. Refresh this page and try again.' : sn + ' - ' + pn + ' - ' + description}">IRT-2401001</h5>
  <!-- X Button -->
         			<button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
       			</div>
@@ -56,89 +56,6 @@
 	    		</div>
     		</div>
   		</div>
-   		<script type="application/javascript" th:inline="javascript">
-			/*<![CDATA[*/
-			$('.add-template').click(uploadTemplate);
-			$('.get-excel').click(e=>{
-
-		    	if (e.ctrlKey || e.currentTarget.innerText === 'Save'){
-		    		uploadTemplate(e);
-		    		return;
-
-		    	}else if (e.shiftKey || e.currentTarget.innerText === 'Local'){
-		    		uploadTemplate(e, true);
-		    		return;
-		    	}
-				const measId = e.currentTarget.dataset.measId;
-				const sn = /*[[${sn}]]*/ 'SERIAL-NUMBER';
-				if(sn){
-					const url = `/btr/rest/template?sn=${sn.serialNumber}&measId=${measId}`;
-					downloadURL(url);
-				}
-			}).on({
-			    mouseenter: e=>{
-			    	if (e.ctrlKey){
-						$('.modal-header h5').text(/*[[${sn.serialNumber + ' - ' + salesSKU + ' - ' + sn.partNumber.description}]]*/);
-			    		e.currentTarget.title = 'Add Template';
-				        e.currentTarget.innerText = 'Save';
-			    	}else if (e.shiftKey){
-						$('.modal-header h5').text(/*[[${sn.serialNumber + ' - ' + product + ' - ' + sn.partNumber.description}]]*/);
-			    		e.currentTarget.title = 'Add Template';
-				        e.currentTarget.innerText = 'Local';
-			    	}
-			    },
-			    mouseleave: e=>{
-		    		e.currentTarget.title = 'load Excel';
-			        e.currentTarget.innerText = 'Excel';
-			    }
-			});;
-
-			function uploadTemplate(e, localPN){
-				const input = document.createElement('input');
-				input.type = 'file';
-				input.accept = '.xlsx';
-
-				input.onchange = e => { 
-					const fd = new FormData();
-					fd.append('file', e.target.files[0]);
-					const sn = /*[[${sn}]]*/ 'SERIAL-NUMBER';
-					if(!sn){
-						alert('This operation cannot be performed.')
-						return
-					}
-					fd.append('sn', sn.serialNumber);
-					const local = localPN ? true : false;
-					fd.append('localPN', local);
-
-					const url = '/btr/rest/template/upload';
-					postFormData(url, fd)
-					.done(data=>{
-						alert(data);
-					})
-					.fail(function(error) {
-						if(error.statusText!='abort'){
-						var responseText = error.responseText;
-							if(responseText)
-								alert(error.responseText);
-							else
-								alert("Server error. Status = " + error.status)
-						}
-					});
-				}
-
-				input.click();
-			}
-			function setupModal(){
-				$modal.on('hide.bs.modal', function () {
-					if (document.activeElement) 
-			            document.activeElement.blur();
-				});
-				return true;
-			}
-
-			/*]]>*/
-			//# sourceURL=btr_table.js
-  		</script>
 		</th:block>
 	</div>
 </body>

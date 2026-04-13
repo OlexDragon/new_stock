@@ -18,7 +18,7 @@
     		<div class="modal-content">
 <!-- Modal Header -->
       			<div class="modal-header">
-        			<h5 class="modal-title ml-3 text-primary col">Input Power</h5>
+        			<h5 class="modal-title ml-3 text-primary col-auto">Input Power</h5>
         			<div class="col"></div>
         			<div class="col">
         				<select id="cpuType" class="form-control">
@@ -60,10 +60,10 @@
       					</div>
       					<div class="row mb-2">
       						<div class="col">
-	        					<button type="button" id="btnStart" class="btn btn-outline-success form-control disabled">Start</button>
+	        					<button type="button" id="btnStart" class="btn btn-outline-success form-control" disabled>Start</button>
 	        				</div>
 	      					<div class="col">
-			        			<button type="button" id="btnInfo" class="btn btn-outline-primary form-control disabled">Info</button>
+			        			<button type="button" id="btnInfo" class="btn btn-outline-primary form-control" disabled>Info</button>
 			        		</div>
 	      					<div class="col">
 	        					<button type="button" class="btn btn-outline-secondary form-control" data-bs-dismiss="modal">Close</button>
@@ -86,143 +86,6 @@
 	    		</div>
     		</div>
   		</div>
-  			<script>
-			/*<![CDATA[*/
-
-  			var tableName = 'FCM Input Power';
-  			var $numberOfEntries;
-  			var calRun;
-  			var stack;
-  			var payloadReadWrite;
-  			var inputPowerCount;
-
-  			function run(){
-
-  				if(stack>10){
-  					stack = 0;
-  					console.warn('stackoverflow');
-  					f_stop();
-   					alert('Stackover Flow');
- 					return;
-  				}
-  				++stack;
-
-  				if(calRun)
-  					return;
-  				if(x.length==y.length){
-  					const toolV = $inputPower.val();
-  					if(!toolV){
-  						console.warn('No Input Tool Value.');
-  						return;
-  					}
-  					if($toolVal.val())
-  						$toolVal.val(toolV);
-  					if(x.length && x[x.length-1] == toolV){
-  						f_nextStep();
-  						return;
-  					}
-
-
-  					const tmp = parseFloat(toolV).toFixed(1)
-  					x.push(tmp);
-  					$numberOfEntries.text(x.length);
-  				}
-
-  				calRun = true;
-  				stack = 0;
-
-  				const packet = new Packet(new Header(packetType.request, undefined, packetGroupId.deviceDebug), payloadReadWrite);
-  				const command = getCommand(packet);
-  				sendCommand(command, inputPower);
-  			}
-  			function inputPower(command){
-				const register =  commandToRegister(command);
-  				if(!register){
-  					++inputPowerCount;
-  					console.warn('inputPowerCount = ' + inputPowerCount);
-  					if(inputPowerCount>3)
-  	  					f_stop();
-  	  	  			calRun = false;
- 					return;
-  				}
-
-	  	  		calRun = true;
-	  	  		inputPowerCount = 0;
-  				if(x.length>y.length){
-  					y.push(register.value);
-  					$unitVal.val(register.value);
-  					calChart.update();
-  				}
-  				calRun = false;
-				f_nextStep();
-  			 }
-  			function f_nextStep(){
-  				let tmp = $maxVal.val();
-  				let max;
-  				if(tmp)
-  					max = parseFloat(tmp);
-  				else
-  					max = 0;
-  				const toolV = parseFloat($inputPower.val());
-  				if(!startToolValue)
-  					startToolValue = toolV;
-  				if(toolV == max){
-  					f_stop();
-  					$btnStart.text('Restart')
-  					$btnInfo.removeClass('disabled').text('Optimize');
-  					reset();
-  					alert('Calibration completes.');
-  					return;
-  				}
-  				tmp = $stepVal.val();
-  				let step;
-  				if(tmp)
-  					step = parseFloat(tmp);
-  				else{
-  					step = 1;
-  					$stepVal.val(step);
-  				}
-
-  				let newValue = (toolV + step).toFixed(1);
-  				if(newValue>max)
-  					newValue = max;
-
-  				$toolVal.val(newValue);
-  				f_toolValue();
-  			}
-  			function setupModal(){
-  				x.length = y.length = 0;
-  	  			runTimeout = 2000;
-  				init();
-  	  			setRun(run);
-  	  			$numberOfEntries = $('#numberOfEntries');
-  	  			calRun = false;
-  	  			stack = 0;
-  	  			payloadReadWrite = new Payload(new Parameter(PARAMETER_READ_WRITE), DEVICE_FCM_ADC_INPUT_POWER().toBytes());
-  	  			inputPowerCount = 0
-  	  			setConfirmStart();
-  	  			return true;
-  			}
-  			$('#cpuType').change(e=>{
-
-  				switch(e.currentTarget.value){
-
-  				case '732':
-  	  	  			payloadReadWrite = new Payload(new Parameter(PARAMETER_READ_WRITE), DEVICE_FCM_ADC_INPUT_POWER_732().toBytes());
-  	  	  			break;
-
-  				default:
-  	  	  			payloadReadWrite = new Payload(new Parameter(PARAMETER_READ_WRITE), DEVICE_FCM_ADC_INPUT_POWER().toBytes());
-  				}
-  			});
-			$modal.on('hide.bs.modal', function () {
-				if (document.activeElement) 
-		            document.activeElement.blur();
-			});
-
-  			/*]]>*/
-  			//# sourceURL=fcm-input-power.js
-  			</script>
 	</th:block>
 	</div>
 <th:block th:replace="~{components :: scripts}">

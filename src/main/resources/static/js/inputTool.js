@@ -317,38 +317,6 @@ function inputAction(data, $valueField, divider){
 	if(externalInputAction)
 		externalInputAction($valueField);
 }
-function showSetupToast(target){
-
-	let $input = $('<input>', {type: 'number', class: 'form-control', style: 'text-align:center;', value: target.dataset.step !== 'undefined' ? target.dataset.step : 1})
-	.on('focusout', e=>{
-
-		let step = e.currentTarget.value;
-		if(!step)
-			return;
-
-		target.dataset.step = step;
-		Cookies.set(target.id + "Step", step, { expires: 9999, path: '' });
-	});
-
-	let $toast = $('<div>', {class: 'toast', role: 'alert', 'aria-live': 'assertive', 'aria-atomic': true, 'data-bs-delay': 5*60*1000})
-		.append(
-			$('<div>', {class: 'toast-header'})
-			.append(
-				$('<strong>', {class: 'me-auto', text: target.title + ' Step'})
-			)
-			.append(
-				$('<button>', {class: 'btn-close', type: 'button', 'data-bs-dismiss': 'toast', 'aria-label': 'Close'})
-			)
-		)
-		.append(
-			$('<div>', {class: 'toast-body'})
-			.append($input)
-		)
-	.appendTo($toastContainer)
-	.on('hide.bs.toast', function(){this.remove();});
-
-	new bootstrap.Toast($toast).show();
-}
 
 $('.input-tool-buton').click(e=>{
 

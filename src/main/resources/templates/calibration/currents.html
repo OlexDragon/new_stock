@@ -11,7 +11,8 @@
     <script type="application/javascript" src="https://ajax.googleapis.com/ajax/libs/jquery/3.5.1/jquery.min.js"></script>
     <script type="application/javascript" src="https://cdnjs.cloudflare.com/ajax/libs/popper.js/2.9.2/umd/popper.min.js"></script>
     <script type="application/javascript" src="https://stackpath.bootstrapcdn.com/bootstrap/4.4.1/js/bootstrap.min.js"></script>
-	<script type="application/javascript" src="https://cdn.jsdelivr.net/npm/js-cookie@2/src/js.cookie.min.js"></script>
+    <script type="application/javascript" src="https://cdn.jsdelivr.net/npm/js-cookie@2/src/js.cookie.min.js"></script>
+    <!-- `timerWorker` provided by main calibration page (calibration.html) -->
 </head>
 <body>
 
@@ -213,20 +214,23 @@
 		});
 		function setDelay(d){
 
-			clearInterval(intervalCurrent);
+            if(intervalCurrent){
+                try{ if(typeof intervalCurrent.stop === 'function'){ intervalCurrent.stop(); } else { clearInterval(intervalCurrent); } }catch(e){}
+                intervalCurrent = null;
+            }
 
-			if(d && !d.currentTarget)
-				delay = d;
-			else{
-				let cookiesDelay = Cookies.get('currentDelay');
-				if(cookiesDelay)
-					delay = parseInt(cookiesDelay);
-				else
-					delay = 200;
-			}
-			$currentDelay.text('Delay: ' + delay + ' ms');
+            if(d && !d.currentTarget)
+                delay = d;
+            else{
+                let cookiesDelay = Cookies.get('currentDelay');
+                if(cookiesDelay)
+                    delay = parseInt(cookiesDelay);
+                else
+                    delay = 200;
+            }
+            $currentDelay.text('Delay: ' + delay + ' ms');
 
-			intervalCurrent = setInterval(getCurrents, delay);
+            intervalCurrent = timerWorker.startPoll(getCurrents, delay);
 		}
 		$('#btnReset').click(setDelay);
 
@@ -284,7 +288,7 @@
 				.filter((i,el)=>!Array.from(el.classList).includes(border))
 				.each((i,el)=>{
 					el.classList.add(border);
-					setTimeout(()=>{ el.classList.remove(border); }, timeout);
+					timerWorker.startTimeout(timeout, ()=>{ el.classList.remove(border); });
 				});
 			}
 
@@ -449,8 +453,8 @@
 		}
 		function f_noLayout(){}
 		function f_postForCurrent(){
-			clearInterval(intervalCurrent);
-			intervalCurrent = setInterval(getCurrents, delay);
+			if(intervalCurrent){ try{ if(typeof intervalCurrent.stop === 'function'){ intervalCurrent.stop(); } else { clearInterval(intervalCurrent); } }catch(e){} intervalCurrent = null; }
+            intervalCurrent = timerWorker.startPoll(getCurrents, delay);
 		}
 		function f_moduleInfo(data){
 			moduleInfo = data
@@ -482,7 +486,7 @@
 		}
 		function f_stopModal(){
 // 			err = true;
-			intervalCurrent = clearInterval(intervalCurrent);
+            if(intervalCurrent){ try{ if(typeof intervalCurrent.stop === 'function'){ intervalCurrent.stop(); } else { clearInterval(intervalCurrent); } }catch(e){} intervalCurrent = null; }
 		}
 		function setupModal(){
 			$modal.on('shown.bs.modal', f_startModal);
@@ -945,14 +949,14 @@
 				$modal.on('shown.bs.modal', ()=>{
 					f_startModal();
 					getRwInfo();
-					intervalCalibrationMode = setInterval(getRwInfo, 3001)
-					intervalGateStartupValues = setInterval(gateStartupValues, 10001);
+					intervalCalibrationMode = timerWorker.startPoll(3001, getRwInfo);
+					intervalGateStartupValues = timerWorker.startPoll(gateStartupValues, 10001);
 				});
 				$modal.on('hide.bs.modal', ()=>{
 					f_stopModal();
-					intervalCalibrationMode = clearInterval(intervalCalibrationMode);
-					intervalGateStartupValues = clearInterval(intervalGateStartupValues);
-					setTimeout(()=>loadModal(`/calibration/currents?sn=${serialNumber}`), 200);
+					if(intervalCalibrationMode){ try{ if(typeof intervalCalibrationMode.stop === 'function'){ intervalCalibrationMode.stop(); } else { clearInterval(intervalCalibrationMode); } }catch(e){} intervalCalibrationMode = null; }
+					if(intervalGateStartupValues){ try{ if(typeof intervalGateStartupValues.stop === 'function'){ intervalGateStartupValues.stop(); } else { clearInterval(intervalGateStartupValues); } }catch(e){} intervalGateStartupValues = null; }
+					timerWorker.startTimeout(()=>loadModal(`/calibration/currents?sn=${serialNumber}`), 200);
 				});
 				return true;
 			}
@@ -1209,7 +1213,7 @@
       					</select></td>
        				</tr>
       				<tr class="gates_II">
-       					<td><select id="current21" class="form-control border border-success switch">
+      					<td><select id="current21" class="form-control border border-success switch">
       						<option value="">~ ~</option>
      						<option value="switch1">Switch 1</option>
      						<option value="switch2">Switch 2</option>
@@ -1234,29 +1238,11 @@
      						<option value="switch6">Switch 6</option>
       					</select></td>
       				</tr>
-       				<tr class="gates_II">
-       					<td><select id="channel2" class="form-control border border-danger channel"></select></td>
-       					<td></td><td></td><td></td>
-       					<td><select id="gate39" class="form-control border border-primary gate gate1" disabled></select></td>
-      					<td><select id="current23" class="form-control border border-success switch">
-      						<option value="">~ ~</option>
-     						<option value="switch1">Sw 1</option>
-     						<option value="switch2">Sw 2</option>
-     						<option value="switch3">Sw 3</option>
-     						<option value="switch4">Sw 4</option>
-     						<option value="switch5">Sw 5</option>
-     						<option value="switch6">Sw 6</option>
-      					</select></td>
-      					<td><select id="gate40" class="form-control border border-primary gate" disabled></select></td>
-      					<td><select id="current24" class="form-control border border-success switch">
-      						<option value="">~ ~</option>
-     						<option value="switch1">Switch 1</option>
-     						<option value="switch2">Switch 2</option>
-     						<option value="switch3">Switch 3</option>
-     						<option value="switch4">Switch 4</option>
-     						<option value="switch5">Switch 5</option>
-     						<option value="switch6">Switch 6</option>
-      					</select></td>
+       				<tr><td id="toBlink2" class="border-start"><div class="mt-5"></div></td><td></td><td></td><td></td>
+       					<td><button id="gate39" class="btn btn-outline-dark gate invisible" data-switch="switch5">39</button></td>
+       					<td class="border-start"><strong id="current23" class="form-control form-control-sm text-primary bg-white fw-bold current invisible">23.0 A</strong></td>
+       					<td><button id="gate40" class="btn btn-outline-dark gate invisible" data-switch="switch2">40</button></td>
+       					<td class="border-start"><strong id="current24" class="form-control form-control-sm text-primary bg-white fw-bold current invisible">24.0 A</strong></td>
        				</tr>
       			</table>
       			<div class="row">
@@ -1266,7 +1252,7 @@
       				</div>
      				<div class="col">
 						<input type="checkbox" class="btn-check hider" id="showGates" autocomplete="off" checked="checked">
-						<label class="btn btn-outline-primary form-control" for="showGates">Gaits</label><br>
+						<label class="btn btn-outline-primary form-control" for="showGates">Gates</label><br>
       				</div>
     				<div class="col">
 						<input type="checkbox" class="btn-check hider" id="showSwitches" autocomplete="off" checked="checked">
@@ -1448,7 +1434,7 @@
 			new bootstrap.Toast($toast).show();
 		}
 		function f_infoAlias(info){
-			postWithParam('/calibration/rest/current/alias', {topId: topId, moduleId: moduleInfo[0].info['Device ID']}, f_alias, connectionFail);
+		 postWithParam('/calibration/rest/current/alias', {topId: topId, moduleId: moduleInfo[0].info['Device ID']}, f_alias, connectionFail);
 		}
 		function f_alias(alias){
 

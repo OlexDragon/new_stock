@@ -17,8 +17,6 @@ import jakarta.persistence.Id;
 import jakarta.persistence.JoinColumn;
 import jakarta.persistence.ManyToOne;
 import jakarta.persistence.Table;
-import jakarta.persistence.Temporal;
-import jakarta.persistence.TemporalType;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
 import lombok.NonNull;
@@ -44,9 +42,9 @@ public class BtrMeasurements {
 	@NonNull
 	private Long	 userId;
 
-	@Temporal(TemporalType.TIMESTAMP)
+//	@Temporal(TemporalType.TIMESTAMP)
 	@JsonFormat(pattern="dd MMM yyyy kk:mm")
-	@Column(insertable = false, updatable= false)
+	@Column(columnDefinition = "TIMESTAMP", insertable = false, updatable= false)
 	private Date date;
 
 	@ManyToOne(fetch = FetchType.EAGER)

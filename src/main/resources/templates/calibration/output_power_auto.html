@@ -128,6 +128,8 @@
 
 			var hasStarted;
 			var opInterval;
+			var interval;
+			var intervalPM;
 			var byInput =  /*[[${byInput}]]*/ true;
 
 			var powerOffset;
@@ -139,26 +141,25 @@
 			var $btnStartStop = $('#btnStartStop').click(e=>{if(triggerText(e)) start(); else stop();});
 
 			function start(){
-				if(hasStarted){
-					console.warn('Start skipped.');
-					return;
-				}
-
-				if(intervalPM)
-					intervalPM = clearInterval(intervalPM);
-
-				// Power Offset
-				$powerOffset.prop('disabled', true);
-				const po = $powerOffset.val();
-				if(po)
-					powerOffset = parseFloat(po);
-				else{
-					powerOffset = 0.3;
-					$powerOffset.val(powerOffset);
-				}
-
-				hasStarted = true;
-				opInterval = setInterval(measur, 3000);
+			    if(hasStarted){
+			        console.warn('Start skipped.');
+			        return;
+			    }
+			    if(intervalPM){
+			        try{ intervalPM.stop(); }catch(e){};
+			        intervalPM = null;
+			    }
+			    // Power Offset
+			    $powerOffset.prop('disabled', true);
+			    const po = $powerOffset.val();
+			    if(po)
+			        powerOffset = parseFloat(po);
+			    else{
+			        powerOffset = 0.3;
+			        $powerOffset.val(powerOffset);
+			    }
+			    hasStarted = true;
+			    opInterval = timerWorker.startPoll(3000, measur);
 			}
 
 			function stop(){
@@ -173,7 +174,7 @@
 
 				// stop btn pressed
 				if(!hasStarted)
-					opInterval = clearInterval(opInterval);
+					try{ if(opInterval && typeof opInterval.stop === 'function'){ opInterval.stop(); } else { clearInterval(opInterval); } }catch(e){}
 
 				// an error occurred
 				if($toastContainer.children().length){
@@ -208,11 +209,12 @@
 					return true;
 				case 'Stop':
 					classList.add('disabled');
-					setTimeout(()=>{
-						e.currentTarget.innerText = 'Start';
-						classList.remove('btn-outline-danger');
-						classList.add('btn-outline-primary');
-					}, 1000);
+					// revert button text after short delay via worker (fallback to setTimeout)
+					if(typeof timerWorker !== 'undefined' && timerWorker && typeof timerWorker.startTimeout === 'function'){
+						try{ timerWorker.startTimeout(()=>{ e.currentTarget.innerText = 'Start'; classList.remove('btn-outline-danger'); classList.add('btn-outline-primary'); }, 1000); }catch(err){ setTimeout(()=>{ e.currentTarget.innerText = 'Start'; classList.remove('btn-outline-danger'); classList.add('btn-outline-primary'); }, 1000); }
+					}else{
+						setTimeout(()=>{ e.currentTarget.innerText = 'Start'; classList.remove('btn-outline-danger'); classList.add('btn-outline-primary'); }, 1000);
+					}
 					return false;
 				default:
 					console.log(e.currentTarget.innerText);
@@ -290,24 +292,30 @@
 				if(loaded)
 					return true;
 
-				setTimeout(()=>{
-					f_toolValue();
-					setTimeout(()=>$toolVal.val($inputPower.val()), 300);
-				}, 1000);
+				// replace nested setTimeouts with worker timeout (fallback to setTimeout)
+				if(typeof timerWorker !== 'undefined' && timerWorker && typeof timerWorker.startTimeout === 'function'){
+					try{ timerWorker.startTimeout(1000, function(){ f_toolValue(); try{ timerWorker.startTimeout(function(){ $toolVal.val($inputPower.val()); }, 300); }catch(e){ setTimeout(()=>{ $toolVal.val($inputPower.val()); }, 300); } }); }catch(e){ setTimeout(()=>{ f_toolValue(); setTimeout(()=>{ $toolVal.val($inputPower.val()); }, 300); }, 1000); }
+				}else{
+					setTimeout(()=>{ f_toolValue(); setTimeout(()=>{ $toolVal.val($inputPower.val()); }, 300); }, 1000);
+				}
 
 				init();	// from js/serial/calModalInit.js
 				$sensorName = $('#sensorName');
 				$modal.on('shown.bs.modal', e=>{
 					buzy = false;
 					err = waitTool = null;
-					interval = setInterval(readADC, 1000);
-					intervalPM = setInterval(powerMeter, 3000);
+					if(typeof timerWorker !== 'undefined' && timerWorker && typeof timerWorker.startPoll === 'function'){
+						try{ interval = timerWorker.startPoll(readADC, 1000); intervalPM = timerWorker.startPoll(3000, powerMeter); }catch(err){ console.error('Failed to start worker polls', err); interval = setInterval(readADC, 1000); intervalPM = setInterval(powerMeter, 3000); }
+					}else{
+						interval = setInterval(readADC, 1000);
+						intervalPM = setInterval(powerMeter, 3000);
+					}
 				})
 				.on('hide.bs.modal', ()=>{
 					$btnStartStop.text('Start').removeClass('btn-outline-danger').addClass('btn-outline-primary disabled');
-					interval = clearInterval(interval);
-					intervalPM = clearInterval(intervalPM);
-					opInterval = clearInterval(opInterval);
+					try{ if(interval && typeof interval.stop === 'function') interval.stop(); else clearInterval(interval); }catch(e){}
+					try{ if(intervalPM && typeof intervalPM.stop === 'function') intervalPM.stop(); else clearInterval(intervalPM); }catch(e){}
+					try{ if(opInterval && typeof opInterval.stop === 'function') opInterval.stop(); else clearInterval(opInterval); }catch(e){}
 				});
 
 				return true;

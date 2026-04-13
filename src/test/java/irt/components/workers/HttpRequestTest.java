@@ -23,7 +23,7 @@ import org.apache.http.NameValuePair;
 import org.apache.http.message.BasicNameValuePair;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
-import org.junit.Before;
+import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.springframework.web.util.UriComponentsBuilder;
 
@@ -43,7 +43,7 @@ public class HttpRequestTest {
 	OneCeUrl oneCeUrl;
 	OneCeUrl oneCeApiUrl;
 
-	@Before
+	@BeforeEach
 	public void before() throws IOException {
 		try(final InputStream is = getClass().getClassLoader().getResourceAsStream("application-w.properties");){
 			Optional.ofNullable(is)

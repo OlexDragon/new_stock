@@ -130,10 +130,15 @@
 
 				const pair = data.addrVal.shift();
 
-				postWriteTimeout = setTimeout(postWrite, 6000, button.dataset.moduleId, data);
+				// schedule next write with worker-backed timeout (fallback to setTimeout)
+				if(typeof timerWorker !== 'undefined' && timerWorker && typeof timerWorker.startTimeout === 'function'){
+					try{ postWriteTimeout = timerWorker.startTimeout(()=>postWrite(data, button), 6000); }catch(e){ postWriteTimeout = setTimeout(()=>postWrite(data, button), 6000); }
+				}else{
+					postWriteTimeout = setTimeout(()=>postWrite(data, button), 6000);
+				}
 				$.post('/calibration/rest/register/write', {sn: serialNumber, moduleId: button.dataset.moduleId, index: data.regIndex, address: pair.first, value: pair.second})
 				.done(d=>{
-					clearTimeout(postWriteTimeout);
+					try{ if(postWriteTimeout && typeof postWriteTimeout.stop === 'function') postWriteTimeout.stop(); else clearTimeout(postWriteTimeout); }catch(e){}
 					postWrite(data, button);
 				})
 				.fail(connectionFail);
@@ -141,7 +146,12 @@
 			function postWriteDelay(data, button){
 				console.log('postWriteDelay');
 				if(postWriteTimeout){
-					setTimeout(postWriteDelay, 3000, data, button);
+					// retry later using worker-backed timeout (fallback to setTimeout)
+					if(typeof timerWorker !== 'undefined' && timerWorker && typeof timerWorker.startTimeout === 'function'){
+						try{ timerWorker.startTimeout(()=>postWriteDelay(data, button), 3000); }catch(e){ setTimeout(()=>postWriteDelay(data, button), 3000); }
+					}else{
+						setTimeout(()=>postWriteDelay(data, button), 3000);
+					}
 					return;
 				}
 				postWrite(data, button);
@@ -250,13 +260,15 @@
 				stopModal();
 				getRwInfo();
 				readRegisters();
-				intervalCalibrationMode = setInterval(getRwInfo, 3000);
-				intervalReadRegisters = setInterval(readRegisters, 5000);
+				intervalCalibrationMode = timerWorker.startPoll(3000, getRwInfo);
+				intervalReadRegisters = timerWorker.startPoll(5000, readRegisters);
 			}
 			function stopModal(){
-				clearInterval(intervalCalibrationMode);
-				clearInterval(intervalReadRegisters);
+				try{ if(intervalCalibrationMode) intervalCalibrationMode.stop(); }catch(e){}
+				try{ if(intervalReadRegisters) intervalReadRegisters.stop(); }catch(e){}
 			}
+
+			// `timerWorker` is provided by main calibration page; no module load needed here.
 			$modal.on('shown.bs.modal', startModal);
 			$modal.on('hide.bs.modal', stopModal);
 			$modal.modal('show');

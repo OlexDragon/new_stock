@@ -10,11 +10,10 @@ import java.io.IOException;
 import java.io.InputStream;
 import java.net.InetAddress;
 import java.net.UnknownHostException;
+import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.util.function.Consumer;
-
-import javax.activation.MimetypesFileTypeMap;
 
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
@@ -213,7 +212,15 @@ public class FileRestController {
 
 	private boolean isImage(File file) {
 		
-		final String contentType = new MimetypesFileTypeMap().getContentType(file);
+		String contentType;
+		try {
+
+			contentType = Files.probeContentType(file.toPath());
+
+		} catch (IOException e) {
+			logger.catching(e);
+			return false;
+		}
 		logger.debug(contentType);
 
 		if(contentType.startsWith("image"))

@@ -25,7 +25,6 @@ import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestParam;
 
-import irt.components.beans.OneCeHeader;
 import irt.components.beans.OneCeUrl;
 import irt.components.beans.PartNumber;
 import irt.components.beans.SerialNumber;
@@ -47,6 +46,7 @@ public class BtrController {
 
 	@Value("${irt.btr.templates}") 	private String templates;
 	@Value("${irt.onRender}") 		private String onRender;
+	@Value("${irt.onRender.serialNumber.get}") 		private String onRenderSNPath;
 
 	@Autowired private OneCeUrl oneCeApiUrl;
 
@@ -76,55 +76,21 @@ public class BtrController {
 	}
 
 	@GetMapping
-    String modalBtr(@RequestParam String sn, Model model) throws IOException, InterruptedException, ExecutionException, TimeoutException {
-		logger.traceEntry(sn);
+    String modalBtr(@RequestParam Long id, @RequestParam String sn, @RequestParam String pn, @RequestParam String localPN, @RequestParam String descr, Model model) throws IOException, InterruptedException, ExecutionException, TimeoutException {
+		logger.traceEntry("id: {}; sn: {}, pn: {}; descr: {}", id, sn, pn, descr);
 
-		final FutureTask<SerialNumber> ftSerialNumber = getSerialNumber(sn, onRender);
-		final OneCeHeader oneCeHeader = OneCeRestController.getOneCHeader(oneCeApiUrl, sn.replaceAll("\\D", "")).get(5, TimeUnit.SECONDS);
-		final Optional<OneCeHeader> oOneCeHeader = Optional.ofNullable(oneCeHeader);
-		final Optional<String> oProduct = oOneCeHeader.map(OneCeHeader::getProduct);
-		final Optional<String> oSalesSKU = oOneCeHeader.map(OneCeHeader::getSalesSKU);
-		final Boolean folderExists = oProduct
+//		final File local = new File(templates, localPN);
+		final File f = new File(templates, pn);
+		model.addAttribute("profileExists", f.exists() && (new File(f, localPN + ".xlsx").exists() || new File(f, pn + ".xlsx").exists()));
+		model.addAttribute("sn", sn);
+		model.addAttribute("pn", pn);
+		model.addAttribute("description", descr);
 
-				.map(pn->new File(templates, pn))
-				.map(File::exists)
-				.filter(ex->ex)
-				.orElseGet(
-						()->{
-							return oSalesSKU
-							.map(pn->new File(templates, pn))
-							.map(File::exists)
-							.orElse(false);
-						});
+		final List<BtrMeasurements> measurements = measurementsRepository.findBySerialNumberId(id);
+		model.addAttribute("measurements", measurements);
 
-		final SerialNumber serialNumber = Optional.ofNullable(ftSerialNumber.get(10, TimeUnit.SECONDS))
-				.orElseGet(
-						()->{
-							SerialNumber s = new SerialNumber();
-							s.setSerialNumber(sn);
-							s.setPartNumber(new PartNumber());
-							return s;
-						});
-		model.addAttribute("sn", serialNumber);
-		model.addAttribute("product", oProduct.orElse("N/A"));
-		model.addAttribute("salesSKU", oSalesSKU.orElse("N/A"));
-		
-		logger.debug(serialNumber);
-
-		Optional.ofNullable(serialNumber).filter(s->s.getId()!=null)
-		.ifPresent(
-				s->{
-
-					final List<BtrMeasurements> measurements = measurementsRepository.findBySerialNumberId(s.getId());
-					model.addAttribute("measurements", measurements);
-
-					final String partNumber = s.getPartNumber().getPartNumber();
-					final Integer cols = calibrationGainSettingRepository.findById(partNumber).map(CalibrationGainSettings::getFields).orElse(4);
-					model.addAttribute("cols", cols);
-
-					model.addAttribute("profileExists", folderExists);
-					
-				});
+		final Integer cols = calibrationGainSettingRepository.findById(pn).map(CalibrationGainSettings::getFields).orElse(4);
+		model.addAttribute("cols", cols);
 
 		return "calibration/btr_table :: modal";
     }
@@ -165,7 +131,7 @@ public class BtrController {
 					()->{
 						try {
 
-							final SerialNumber serialNumberWeb = getSerialNumber(sn, onRender).get(10, TimeUnit.SECONDS);
+							final SerialNumber serialNumberWeb = getSerialNumber(sn, onRenderSNPath).get(10, TimeUnit.SECONDS);
 							final Optional<String> oPartNumber = Optional.ofNullable(serialNumberWeb).map(SerialNumber::getPartNumber).map(PartNumber::getPartNumber);
 							oPartNumber.flatMap(calibrationOutputPowerSettingRepository::findById)
 							.ifPresent(
@@ -186,8 +152,7 @@ public class BtrController {
 		return "calibration/btr_power_detector :: modal";
 	}
 
-	public void generateIds(final CalibrationOutputPowerSettings powerSettings, final Integer fieldsNumber,
-			Model model) {
+	public void generateIds(final CalibrationOutputPowerSettings powerSettings, final Integer fieldsNumber, Model model) {
 		final BtrPowerDetector pd = new BtrPowerDetector();
 		model.addAttribute("pd", pd);
 		Map<String, Map<String, String>> measurement = new TreeMap<>();
@@ -214,7 +179,8 @@ public class BtrController {
 	}
 
 	public static FutureTask<SerialNumber> getSerialNumber(String sn, String onRender) {
-		String url = onRender + "/rest/serial-number/by-sn?serialNumber=" + sn.toUpperCase();
+		String url = onRender + "?sn=" + sn.toUpperCase();
+		logger.trace(url);
 		final FutureTask<SerialNumber> ft = IrtHttpRequest.getForObgect(url, SerialNumber.class);
 		return ft;
 	}

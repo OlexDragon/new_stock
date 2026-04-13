@@ -109,20 +109,20 @@ public class ComponentsRestController {
 
 	// Quantities
 	private String createComponentQtyUrl(String key) throws UnsupportedEncodingException {
-		return new StringBuilder(protocol).append(login).append(url)
+		return new StringBuilder(protocol).append(login).append(url).append('/')
 				.append("AccumulationRegister_InventoryInWarehouses/Balance(").append(encode("Dimensions='Products,StructuralUnit',Condition='Products_Key eq guid'")).append(key).append("'')")
 				.append("?$expand=Products,StructuralUnit&$select=QuantityBalance,StructuralUnit/Ref_Key,StructuralUnit/Description,StructuralUnit/PredefinedDataName,Products/Ref_Key,Products/SKU,Products/MfrPNs,Products/ProductsType,Products/Description").toString();
 	}
 
 	// Where use...
 	private String createBomUrl(String componentKey) throws UnsupportedEncodingException {
-		return new StringBuilder(protocol).append(login).append(url).append(bom).append('?')
+		return new StringBuilder(protocol).append(login).append(url).append('/').append(bom).append('?')
 				.append(encode("$filter=Content/Products_Key eq guid'")).append(componentKey).append(encode("'&$select=Ref_Key,Description,Owner/Ref_Key,Owner/SKU,Owner/Description,Status&$orderby=Description&$expand=Owner")).toString();
 	}
 
 	// Related Files
 	private String createFilesUrl(String componentKey) throws UnsupportedEncodingException {
-		return new StringBuilder(protocol).append(login).append(url).append(filesCatalog).append('?')
+		return new StringBuilder(protocol).append(login).append(url).append('/').append(filesCatalog).append('?')
 				.append(encode("$filter=FileOwner_Key eq guid'")).append(componentKey).append(encode("'&$select=Ref_Key,Author,FileOwner_Key,PathToFile")).toString();
 	}
 

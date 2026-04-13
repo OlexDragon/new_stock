@@ -127,12 +127,12 @@
   				
   				const tv = $inputPower.val();
   				if(!tv){
-  					if(!promise){
-  						console.log('Wait for input power update.');
-  						promise = new Promise(resolve => setTimeout(resolve, 500));
-  						promise.then(() => setPoint(command));
-  						return;
-  					}
+                    if(!promise){
+                        console.log('Wait for input power update.');
+                        promise = new Promise(resolve => { (typeof timerWorker !== 'undefined' && timerWorker && typeof timerWorker.startTimeout === 'function') ? timerWorker.startTimeout(resolve, 500) : setTimeout(resolve, 500); });
+                        promise.then(() => setPoint(command));
+                         return;
+                 }
   	  				f_stop();
   	  				console.log('stop');
   	  				alert('The signal generator value was not updated.');
@@ -250,7 +250,7 @@
   					console.log('-');
   					return;
   				}
-  				readCount = 0;
+  			 readCount = 0;
   				$unitVal.val(register.value);
 
 				calRun = false;
@@ -264,10 +264,11 @@
   			});
   			$toolVal.dblclick(()=>{
   				f_toolValue();
-				setTimeout(()=>{
-					$toolVal.val($inputPower.val());
-	  				sendPacket(adcChanged, DEVICE_FCM_ADC_OUTPUT_POWER());
-	  			}, 500);
+  				if(typeof timerWorker !== 'undefined' && timerWorker && typeof timerWorker.startTimeout === 'function'){
+					try{ timerWorker.startTimeout(()=>{ $toolVal.val($inputPower.val()); sendPacket(adcChanged, DEVICE_FCM_ADC_OUTPUT_POWER()); }, 500); }catch(e){ setTimeout(()=>{ $toolVal.val($inputPower.val()); sendPacket(adcChanged, DEVICE_FCM_ADC_OUTPUT_POWER()); }, 500); }
+				}else{
+					setTimeout(()=>{ $toolVal.val($inputPower.val()); sendPacket(adcChanged, DEVICE_FCM_ADC_OUTPUT_POWER()); }, 500);
+				}
   			});
 			$modal.on('hide.bs.modal', function () {
 				if (document.activeElement) 

@@ -3,10 +3,14 @@ package irt.components.controllers.calibration;
 import java.io.IOException;
 import java.io.UnsupportedEncodingException;
 import java.net.MalformedURLException;
+import java.net.SocketTimeoutException;
 import java.net.URI;
+import java.net.URISyntaxException;
 import java.net.URLEncoder;
+import java.net.http.HttpResponse;
 import java.nio.charset.StandardCharsets;
 import java.util.ArrayList;
+import java.util.Base64;
 import java.util.List;
 import java.util.Optional;
 import java.util.concurrent.ExecutionException;
@@ -19,6 +23,7 @@ import org.apache.http.message.BasicNameValuePair;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestBody;
@@ -29,6 +34,7 @@ import org.springframework.web.bind.annotation.RestController;
 import irt.components.beans.OneCeHeader;
 import irt.components.beans.OneCeUrl;
 import irt.components.beans.irt.calibration.OneCeSection;
+import irt.components.beans.irt.calibration.OneCeSectionTosave;
 import irt.components.workers.IrtHttpRequest;
 
 @RestController
@@ -36,15 +42,61 @@ import irt.components.workers.IrtHttpRequest;
 public class OneCeRestController {
 	private final static Logger logger = LogManager.getLogger();
 
+
 	@Autowired private OneCeUrl oneCeApiUrl;
 
-	@GetMapping("profile")
-	String getProfileSection(@RequestParam String sn, String section) throws InterruptedException, ExecutionException, TimeoutException, IOException {
-		logger.traceEntry("sn: {}; section: {}",sn, section);
+	@Value("${irt.url.scheme}")
+	private String scheme;
 
-		final URI uri = getOneCeUrl(oneCeApiUrl, sn, Optional.ofNullable(section).orElse("header"));
-		logger.debug(uri);
-		return IrtHttpRequest.getForString(uri);
+	@Value("${irt.host}")
+	private String host;
+
+	@Value("${irt.url.travelers}")
+	private String travelers;
+
+	@Value("${irt.url.username}")
+	private String username;
+
+	@Value("${irt.url.password}")
+	private String password;
+
+	@GetMapping("profile")
+	String getProfileSection(@RequestParam String sn, @RequestParam String section, Boolean byProfile){
+		logger.traceEntry("sn: {}; section: {}; byProfile: {}",sn, section, byProfile);
+
+		try {
+
+			final URI uri = getOneCeUrl(oneCeApiUrl, sn, Optional.ofNullable(section).orElse("header"), byProfile);
+			logger.debug(uri);
+			return IrtHttpRequest.getForString(uri, 5000, TimeUnit.MILLISECONDS);
+
+		} catch (SocketTimeoutException e) {
+			logger.error("{} - Request to One-C API timed out; section: {}; byProfile: {};", sn, e.getMessage(), section, byProfile);
+			 return "error: Request timed out";
+		} catch (IOException e) {
+			logger.catching(e);
+			 return "error: " + e.getMessage();
+		}
+	}
+
+	@PostMapping(path="profile/save", produces = "application/json;charset=utf-8")
+	String saveProfileSection(@RequestBody OneCeSectionTosave toSave){
+		logger.traceEntry("{}",toSave);
+
+		try {
+			String encodedAuth = Base64.getEncoder() .encodeToString((username + ":" + password).getBytes(StandardCharsets.UTF_8));
+
+			final URI uri = new URI(scheme, host, travelers, "section=" + toSave.getSection() + "&sn=" + toSave.getSerialNumber(), null);
+			logger.debug(uri);
+			final HttpResponse<String> response = IrtHttpRequest.postJson(uri, encodedAuth, toSave.getBody());
+			logger.debug("Response status code: {}", response.statusCode());
+			
+			return response.body();
+
+		} catch (IOException | InterruptedException | URISyntaxException e) {
+			logger.catching(e);
+		}
+		return null;
 	}
 
 	@PostMapping("profile")
@@ -62,7 +114,7 @@ public class OneCeRestController {
 					return "";
 				})
 				.orElse("");
-		final String url = getOneCeUrl(oneCeApiUrl, oneCeSection.getSerialNumber(), oneCeSection.getSection()) + extra;
+		final String url = getOneCeUrl(oneCeApiUrl, oneCeSection.getSerialNumber(), oneCeSection.getSection(), null) + extra;
 		logger.debug(url);
 
 		String json = String.format("{ \"%s\": \"%s\"}", oneCeSection.getFieldName(), oneCeSection.getValue());
@@ -72,15 +124,17 @@ public class OneCeRestController {
 
 	public static FutureTask<OneCeHeader> getOneCHeader(OneCeUrl oneCeApiUrl, String sn) throws MalformedURLException {
 		final String section = "header";
-		String url = getOneCeUrl(oneCeApiUrl, sn, section).toString();
+		String url = getOneCeUrl(oneCeApiUrl, sn, section, null).toString();
 		logger.debug(url);
 		return  IrtHttpRequest.getForObgect(url, OneCeHeader.class);
 	}
 
-	public static URI getOneCeUrl(OneCeUrl oneCeApiUrl, String sn, final String section) throws MalformedURLException {
+	public static URI getOneCeUrl(OneCeUrl oneCeApiUrl, String sn, final String section, Boolean byProfile) throws MalformedURLException {
 
 		final List<NameValuePair> params = new ArrayList<>();
-		params.add(new BasicNameValuePair("sn", sn.replaceAll("\\D", "")));
+		
+		final String name = Optional.ofNullable(byProfile).filter(b->b).map(p->"profile").orElse("sn");
+		params.add(new BasicNameValuePair(name, sn));
 		params.add(new BasicNameValuePair("section", section));
 		return oneCeApiUrl.createUrl("travelers", params);
 	}

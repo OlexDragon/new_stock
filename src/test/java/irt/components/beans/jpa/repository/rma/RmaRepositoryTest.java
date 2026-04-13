@@ -1,7 +1,7 @@
 package irt.components.beans.jpa.repository.rma;
 
 import static irt.components.controllers.rma.RmaController.getPageRequest;
-import static org.junit.Assert.assertFalse;
+import static org.junit.jupiter.api.Assertions.assertFalse;
 
 import java.time.LocalDate;
 import java.time.format.DateTimeFormatter;
@@ -10,18 +10,18 @@ import java.util.List;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 import org.junit.jupiter.api.Test;
-import org.junit.runner.RunWith;
+import org.junit.jupiter.api.extension.ExtendWith;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.data.domain.PageRequest;
-import org.springframework.test.context.junit4.SpringRunner;
+import org.springframework.test.context.junit.jupiter.SpringExtension;
 
 import irt.components.ComponentsApp;
 import irt.components.beans.jpa.rma.Rma;
 import irt.components.beans.jpa.rma.Rma.Status;
 import irt.components.controllers.rma.RmaController.RmaFilter;
 
-@RunWith(SpringRunner.class)
+@ExtendWith(SpringExtension.class)
 @SpringBootTest(classes = ComponentsApp.class)
 class RmaRepositoryTest {
 	private final Logger logger = LogManager.getLogger();
